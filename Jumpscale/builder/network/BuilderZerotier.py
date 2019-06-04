@@ -1,11 +1,11 @@
 from Jumpscale import j
 import json
 
-builder_method = j.builder.system.builder_method
-JSBASE = j.builder.system._BaseClass
+builder_method = j.builders.system.builder_method
+JSBASE = j.builders.system._BaseClass
 
 
-class BuilderZerotier(j.builder.system._BaseClass):
+class BuilderZerotier(j.builders.system._BaseClass):
     NAME = "zerotier"
 
     def _init(self):
@@ -25,7 +25,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builder.network.zerotier.build()'
+        kosmos 'j.builders.network.zerotier.build()'
         :return: 
         """
 
@@ -35,9 +35,9 @@ class BuilderZerotier(j.builder.system._BaseClass):
             # j.sal.process.execute("xcode-select --install", die=False, showout=True)
         # elif j.core.platformtype.myplatform.isUbuntu:
 
-        j.builder.system.package.ensure("gcc")
-        j.builder.system.package.ensure("g++")
-        j.builder.system.package.ensure("make")
+        j.builders.system.package.ensure("gcc")
+        j.builders.system.package.ensure("g++")
+        j.builders.system.package.ensure("make")
 
         self.DIR_CODEL = j.clients.git.pullGitRepo(
             "https://github.com/zerotier/ZeroTierOne", reset=reset, depth=1, branch="master"
@@ -58,7 +58,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
         #     bindir = '{DIR_BIN}'
         #     j.core.tools.dir_ensure(bindir)
         #     for item in ['zerotier-cli', 'zerotier-idtool', 'zerotier-one']:
-        #         j.builder.tools.file_copy('{code}/{item}'.format(code=codedir, item=item), bindir+'/')
+        #         j.builders.tools.file_copy('{code}/{item}'.format(code=codedir, item=item), bindir+'/')
         #     return
         # j.core.tools.dir_ensure(self.DIR_BUILD)
         # cmd = "cd {code} && DESTDIR={build} make install".format(code=codedir, build=self.DIR_BUILD)
@@ -67,7 +67,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         """
-        kosmos 'j.builder.network.zerotier.install()'
+        kosmos 'j.builders.network.zerotier.install()'
         :return:
         """
         self._copy("{DIR_BUILD}/usr/sbin/", "/sandbox/bin/")

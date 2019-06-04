@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderNodeJS(j.builder.system._BaseClass):
+class BuilderNodeJS(j.builders.system._BaseClass):
     NAME = "nodejs"
 
     def _init(self):
@@ -28,17 +28,17 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
 
             url = "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
-            cdest = j.builder.tools.file_download(
+            cdest = j.builders.tools.file_download(
                 url, expand=True, overwrite=False, to="{DIR_TEMP}/phantomjs", removeTopDir=True, deletedest=True
             )
 
-            j.builder.tools.execute("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
-            j.builder.tools.execute("rm -rf %s" % cdest)
+            j.builders.tools.execute("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
+            j.builders.tools.execute("rm -rf %s" % cdest)
 
-            j.builder.system.package.ensure("libfontconfig")
+            j.builders.system.package.ensure("libfontconfig")
 
         elif j.core.platformtype.myplatform.isMac:
-            j.builder.system.package.ensure("phantomjs")
+            j.builders.system.package.ensure("phantomjs")
 
         else:
             raise RuntimeError("phantomjs only supported don ubuntu or osx")
@@ -62,7 +62,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
 
     @builder_method()
     def build(self):
-        j.builder.tools.dir_remove(self.DIR_BUILD)
+        j.builders.tools.dir_remove(self.DIR_BUILD)
         if j.core.platformtype.myplatform.isMac:
             url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (self._version, self._version)
         elif j.core.platformtype.myplatform.isUbuntu:
@@ -70,23 +70,23 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         else:
             raise j.exceptions.Input(message="only support ubuntu & mac")
 
-        j.builder.tools.file_download(
+        j.builders.tools.file_download(
             url, expand=True, overwrite=False, to=self.DIR_BUILD, removeTopDir=True, keepsymlinks=True
         )
 
     @builder_method()
     def install(self, reset=False):
 
-        j.builder.tools.execute("rm -rf %s;cp -r %s %s" % (self.path, self.DIR_BUILD, self.path))
-        j.builder.tools.file_link("%s/bin/node" % self.path, "{DIR_BIN}/node")
-        j.builder.tools.file_link("%s/bin/npm" % self.path, "{DIR_BIN}/npm")
+        j.builders.tools.execute("rm -rf %s;cp -r %s %s" % (self.path, self.DIR_BUILD, self.path))
+        j.builders.tools.file_link("%s/bin/node" % self.path, "{DIR_BIN}/node")
+        j.builders.tools.file_link("%s/bin/npm" % self.path, "{DIR_BIN}/npm")
 
         rc, out, err = j.sal.process.execute("npm -v")
         if out.replace("\n", "") != "3.10.10":
             raise RuntimeError("npm version error")
 
         rc, initmodulepath, err = j.sal.process.execute("npm config get init-module")
-        j.builder.tools.file_unlink(initmodulepath)
+        j.builders.tools.file_unlink(initmodulepath)
         j.sal.process.execute("npm config set global true -g")
         j.sal.process.execute(self._replace("npm config set init-module %s/.npm-init.js -g" % self.path))
         j.sal.process.execute(self._replace("npm config set init-cache %s/.npm -g" % self.path))

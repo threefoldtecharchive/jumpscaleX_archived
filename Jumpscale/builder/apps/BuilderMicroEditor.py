@@ -3,7 +3,7 @@ import os
 import textwrap
 
 
-class BuilderMicroEditor(j.builder.system._BaseClass):
+class BuilderMicroEditor(j.builders.system._BaseClass):
     NAME = "micro"
 
     def install(self, reset=False):
@@ -22,9 +22,9 @@ class BuilderMicroEditor(j.builder.system._BaseClass):
         else:
             raise RuntimeError("not implemented for other platforms")
 
-        dest = j.builder.network.tools.download(
+        dest = j.builders.network.tools.download(
             url=url, to="{DIR_TEMP}/micro/", overwrite=False, retry=3, expand=True, removeTopDir=True
         )
-        j.builder.tools.file_move("{DIR_TEMP}/micro/micro", "/usr/local/bin/micro", recursive=False)
+        j.builders.tools.file_move("{DIR_TEMP}/micro/micro", "/usr/local/bin/micro", recursive=False)
 
         self._done_set("install")

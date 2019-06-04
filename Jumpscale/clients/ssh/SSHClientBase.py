@@ -95,7 +95,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             pubkey = self.sshkey_obj.pubkey
         if not pubkey:
             raise RuntimeError("pubkey not given")
-        j.builder.system.ssh.authorize(user=user, key=pubkey)
+        j.builders.system.ssh.authorize(user=user, key=pubkey)
 
     def shell(self):
         cmd = "ssh {login}@{addr} -p {port}".format(**self.data._ddict)
@@ -127,7 +127,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.portforwardKill(localport)
         C = "ssh -L %s:localhost:%s %s@%s -p %s" % (remoteport, localport, self.login, self.addr, self.port)
         print(C)
-        pm = j.builder.system.processmanager.get()  # need to use other one, no longer working #TODO:
+        pm = j.builders.system.processmanager.get()  # need to use other one, no longer working #TODO:
         pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
         print("Test tcp port to:%s" % localport)
         if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
@@ -141,5 +141,5 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         print("kill portforward %s" % localport)
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.processmanager.stop("ssh_%s" % localport)

@@ -574,7 +574,7 @@ class NetTools(JSBASE):
         # TODO: use getNetworkInfo to return info
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output = list()
-            output = j.builder.system.net.getInfo()
+            output = j.builders.system.net.getInfo()
             result = {"ip": [], "ip6": []}
             for nic in output:
                 if nic["name"] == interface:
@@ -605,7 +605,7 @@ class NetTools(JSBASE):
             raise LookupError("Interface %s not found on the system" % interface)
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output = list()
-            output = j.builder.system.net.getInfo()
+            output = j.builders.system.net.getInfo()
             result = list()
             for nic in output:
                 if nic["name"] == interface:
@@ -680,7 +680,7 @@ class NetTools(JSBASE):
             IpAdress = list()
             IpAdress.append(ipaddress)
             output = list()
-            output = j.builder.system.net.getInfo()
+            output = j.builders.system.net.getInfo()
             result = list()
 
             for nic in output:

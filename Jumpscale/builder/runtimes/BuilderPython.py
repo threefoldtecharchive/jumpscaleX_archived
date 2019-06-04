@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderPython(j.builder.system._BaseClass):
+class BuilderPython(j.builders.system._BaseClass):
     def _init(self):
 
         self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/python3")
@@ -41,8 +41,8 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def build(self, tag="v3.6.7"):  # default "v3.6.7" else may cause locals problem
         """
-        kosmos 'j.builder.runtimes.python.build()'
-            kosmos 'j.builder.runtimes.python.build(reset=True)'
+        kosmos 'j.builders.runtimes.python.build()'
+            kosmos 'j.builders.runtimes.python.build(reset=True)'
 
         will build python and install all pip's inside the build directory
 
@@ -99,8 +99,8 @@ class BuilderPython(j.builder.system._BaseClass):
             make -j12 EXTRATESTOPTS=--list-tests install
             """
         else:
-            j.builder.libs.openssl.build()
-            j.builder.system.package.install(
+            j.builders.libs.openssl.build()
+            j.builders.system.package.install(
                 [
                     "zlib1g-dev",
                     "libncurses5-dev",
@@ -137,7 +137,7 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def build_pip(self):
         """
-        kosmos 'j.builder.runtimes.python.build_pip()'
+        kosmos 'j.builders.runtimes.python.build_pip()'
         :return:
         """
 
@@ -158,7 +158,7 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         """
-        kosmos 'j.builder.runtimes.python.install()'
+        kosmos 'j.builders.runtimes.python.install()'
         """
 
         self.profile_sandbox_select()
@@ -203,7 +203,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def _pip_install(self):
         """
 
-        kosmos 'j.builder.runtimes.python._pip_install()'
+        kosmos 'j.builders.runtimes.python._pip_install()'
 
         will make sure we add env scripts to it as well as add all the required pip modules
         """
@@ -218,12 +218,12 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def _pip_packages_all(self):
         """
-        kosmos 'j.builder.runtimes.python._pip_packages_all()'
+        kosmos 'j.builders.runtimes.python._pip_packages_all()'
         """
 
         self.profile_builder_select()
 
-        j.builder.libs.capnp.install(reset=True)
+        j.builders.libs.capnp.install(reset=True)
         # self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
@@ -231,7 +231,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
         if not self.tools.isMac:
             # TODO: implement zerostor builder and use it
-            # j.builder.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
+            # j.builders.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
             # self._pip(["g8storclient"])
             pass
 
@@ -264,7 +264,7 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         """
-        js_shell 'j.builder.runtimes.python.sandbox()'
+        js_shell 'j.builders.runtimes.python.sandbox()'
         :return:
         """
         path = self._replace("{DIR_SANDBOX}/bin/")
@@ -275,7 +275,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def _copy2sandbox_github(self):
         """
 
-        js_shell 'j.builder.runtimes.python.copy2sandbox_github(reset=False)'
+        js_shell 'j.builders.runtimes.python.copy2sandbox_github(reset=False)'
 
 
         builds python and returns the build dir
@@ -288,9 +288,9 @@ class BuilderPython(j.builder.system._BaseClass):
         self._log_info("sandbox:%s" % path)
 
         if j.core.platformtype.myplatform.isMac:
-            j.builder.system.package.install("redis")
+            j.builders.system.package.install("redis")
         else:
-            j.builder.system.package.install("redis-server")
+            j.builders.system.package.install("redis-server")
 
         if not j.sal.fs.exists("%s/bin/python3.7" % path):
             raise RuntimeError("am not in compiled python dir, need to find %s/bin/python3.7" % path)
@@ -418,7 +418,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def copy2git(self):
         """
-        js_shell 'j.builder.runtimes.python.copy2git()'
+        js_shell 'j.builders.runtimes.python.copy2git()'
         :return:
         """
 
@@ -480,7 +480,7 @@ class BuilderPython(j.builder.system._BaseClass):
             )
 
     def _zip(self, dest="", python_lib_zip=False):
-        j.builder.system.package.install("zip")
+        j.builders.system.package.install("zip")
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
@@ -493,7 +493,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def test(self, build=False):
         """
-        js_shell 'j.builder.runtimes.python.test(build=True)'
+        js_shell 'j.builders.runtimes.python.test(build=True)'
         """
         self.profile_builder_select()
         assert self._execute("{DIR_BUILD}/bin/python3 -c \"print('python')\"")[1] == "python\n"

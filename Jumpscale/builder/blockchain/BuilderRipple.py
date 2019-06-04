@@ -1,7 +1,7 @@
 from Jumpscale import j
 
-JSBASE = j.builder.system._BaseClass
-builder_method = j.builder.system.builder_method
+JSBASE = j.builders.system._BaseClass
+builder_method = j.builders.system.builder_method
 
 
 class BuilderRipple(JSBASE):
@@ -29,7 +29,7 @@ class BuilderRipple(JSBASE):
         )
 
         # install cmake
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.install()
 
         # rippled requires Boost to be compiled
         boost_build_cmd = """

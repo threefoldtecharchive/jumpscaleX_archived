@@ -398,8 +398,8 @@ class BuilderBaseClass(BaseClass):
         """
         src = self._replace(src)
         dst = self._replace(dst)
-        if j.builder.tools.file_is_dir:
-            j.builder.tools.copyTree(
+        if j.builders.tools.file_is_dir:
+            j.builders.tools.copyTree(
                 src,
                 dst,
                 keepsymlinks=keepsymlink,
@@ -412,7 +412,7 @@ class BuilderBaseClass(BaseClass):
                 createdir=True,
             )
         else:
-            j.builder.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
+            j.builders.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
 
     def _write(self, path, txt):
         """
@@ -448,7 +448,7 @@ class BuilderBaseClass(BaseClass):
 
     @property
     def system(self):
-        return j.builder.system
+        return j.builders.system
 
     @property
     def tools(self):
@@ -457,7 +457,7 @@ class BuilderBaseClass(BaseClass):
         , write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
         :return:
         """
-        return j.builder.tools
+        return j.builders.tools
 
     def reset(self):
         """
@@ -524,7 +524,7 @@ class BuilderBaseClass(BaseClass):
         """
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
-            j.builder.tools.dir_ensure(ld_dest)
+            j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)
 
         self._log_info("uploading flist to the hub")

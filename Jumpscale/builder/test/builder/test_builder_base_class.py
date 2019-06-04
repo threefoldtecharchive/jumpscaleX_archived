@@ -10,7 +10,7 @@ class BuilderBaseTest(BaseTest):
 
     def setUp(self):
         BaseTest.setUp(self)
-        self.builder = j.builder.system.dummy
+        self.builder = j.builders.system.dummy
 
     def tearDown(self):
         self.builder._done_reset()

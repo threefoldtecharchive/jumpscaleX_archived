@@ -2,7 +2,7 @@ from Jumpscale import j
 from .GrafanaComponent import GrafanaComponent
 
 
-class GrafanaFactory(j.builder.system._BaseFactoryClass):
+class GrafanaFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders._template"
     _CHILDCLASS = GrafanaComponent
@@ -38,7 +38,7 @@ class GrafanaFactory(j.builder.system._BaseFactoryClass):
     def test(self):
         """
 
-        kosmos 'j.builder._template.test()'
+        kosmos 'j.builders._template.test()'
 
         :return:
         """

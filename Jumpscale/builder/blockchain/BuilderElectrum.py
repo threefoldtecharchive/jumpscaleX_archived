@@ -6,7 +6,7 @@ Builder module to install electrum wallet
 from Jumpscale import j
 
 
-class BuilderElectrum(j.builder.system._BaseClass):
+class BuilderElectrum(j.builders.system._BaseClass):
     """
     Wrapps an electrum wallet application
     """
@@ -19,10 +19,10 @@ class BuilderElectrum(j.builder.system._BaseClass):
         """
         if self._done_get("build") and reset is False:
             return
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("git")
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("git")
         url = "https://github.com/spesmilo/electrum.git"
-        path = j.builder.tools.joinpaths(j.sal.fs.getTmpDirPath(), "electrum")
+        path = j.builders.tools.joinpaths(j.sal.fs.getTmpDirPath(), "electrum")
         dest = j.clients.git.pullGitRepo(url, branch=branch, tag=tag, revision=revision, dest=path, ssh=False)
 
         self._done_set("build")
@@ -37,12 +37,12 @@ class BuilderElectrum(j.builder.system._BaseClass):
             return
 
         base_dir = self.build(branch=branch, tag=tag, revision=revision, reset=reset)
-        electrum_bin_path = j.builder.tools.joinpaths(base_dir, "electrum")
+        electrum_bin_path = j.builders.tools.joinpaths(base_dir, "electrum")
         if not j.sal.fs.isFile(electrum_bin_path):
-            electrum_bin_path = j.builder.tools.joinpaths(electrum_bin_path, "electrum")
+            electrum_bin_path = j.builders.tools.joinpaths(electrum_bin_path, "electrum")
 
         j.core.tools.dir_ensure("{DIR_BIN}")
-        j.builder.tools.file_copy(electrum_bin_path, "{DIR_BIN}/")
+        j.builders.tools.file_copy(electrum_bin_path, "{DIR_BIN}/")
 
         self._done_set("install")
 
@@ -59,7 +59,7 @@ class BuilderElectrum(j.builder.system._BaseClass):
         @param testnet: If true, a connection to Bitcoin testnet will be created, otherwise the mainnet will be used
         """
         if electrum_dir is None:
-            electrum_dir = j.builder.tools.joinpaths(j.dirs.DATADIR, "electrum")
+            electrum_dir = j.builders.tools.joinpaths(j.dirs.DATADIR, "electrum")
         process_name = j.sal.process.getProcessByPort(rpcport)
         if process_name and "electrum" in process_name:
             self._log_info("Electrum daemon is already running")

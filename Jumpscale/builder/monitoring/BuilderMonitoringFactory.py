@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderMonitoringFactory(j.builder.system._BaseFactoryClass):
+class BuilderMonitoringFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.monitoring"
 

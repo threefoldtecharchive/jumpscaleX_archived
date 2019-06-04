@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderFW(j.builder.system._BaseClass):
+class BuilderFW(j.builders.system._BaseClass):
     def _init(self):
         self._fw_enabled = None
         self._fw_type = None
@@ -49,7 +49,7 @@ class BuilderFW(j.builder.system._BaseClass):
         return out
 
     def setRuleset(self, ruleset, pinghost="8.8.8.8"):
-        if not j.builder.system.net.ping(pinghost):
+        if not j.builders.system.net.ping(pinghost):
             raise j.exceptions.Input(
                 message="Cannot set firewall ruleset if we cannot ping to the host we have to check against.",
                 level=1,
@@ -97,4 +97,4 @@ class BuilderFW(j.builder.system._BaseClass):
         pscript = pscript.replace("$ruleset", ruleset)
         pscript = pscript.replace("$pinghost", pinghost)
 
-        j.builder.tools.execute(content=pscript, die=True, interpreter="python3", tmux=True)
+        j.builders.tools.execute(content=pscript, die=True, interpreter="python3", tmux=True)

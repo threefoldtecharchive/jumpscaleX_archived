@@ -81,7 +81,7 @@ class MongoInstance(Startable):
     def _install(self):
         super()._install()
         j.core.tools.dir_ensure(self.dbdir)
-        return j.builder.apps.mongodb.build(start=False)
+        return j.builders.apps.mongodb.build(start=False)
 
     def _gen_service_name(self):
         name = "ourmongos" if self.type_ == "mongos" else "ourmongod"
@@ -108,7 +108,7 @@ class MongoInstance(Startable):
     def _start(self):
         super()._start()
         self._log_info("starting: ", self._gen_service_name(), self._gen_service_cmd())
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.ensure(self._gen_service_name(), self._gen_service_cmd())
         return a
 
@@ -258,7 +258,7 @@ class MongoConfigSvr(Startable):
     __str__ = __repr__
 
 
-class BuilderMongoCluster(j.builder.system._BaseClass):
+class BuilderMongoCluster(j.builders.system._BaseClass):
     def mongoCluster(self, shards_nodes, config_nodes, mongos_nodes, shards_replica_set_counts=1):
         """
         shards_nodes: a list of executors of the shards

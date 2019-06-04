@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderCockroachDB(j.builder.system._BaseClass):
+class BuilderCockroachDB(j.builders.system._BaseClass):
     NAME = "cockroach"
 
     def _init(self):

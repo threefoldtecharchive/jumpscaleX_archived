@@ -2,10 +2,10 @@ from Jumpscale import j
 import random
 import time
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderDocker(j.builder.system._BaseClass):
+class BuilderDocker(j.builders.system._BaseClass):
     NAME = "docker"
 
     def build(self, branch=None):
@@ -16,9 +16,9 @@ class BuilderDocker(j.builder.system._BaseClass):
                     wget -qO- https://get.docker.com/ | sh
                     """
                     self._execute(C)
-                    j.builder.system.package.ensure("module-init-tools, aufs-tools")
+                    j.builders.system.package.ensure("module-init-tools, aufs-tools")
                 return
-            j.builder.system.package.ensure(
+            j.builders.system.package.ensure(
                 "apt-transport-https,linux-modules-extra-$(uname -r),linux-image-extra-virtual,software-properties-common"
             )
             _, release, _ = self._execute("echo $(lsb_release -cs)")
@@ -27,9 +27,9 @@ class BuilderDocker(j.builder.system._BaseClass):
                 self._execute(
                     "add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu %s stable'" % release
                 )
-                j.builder.system.package.mdupdate(reset=True)
-                j.builder.system.package.ensure("libltdl7,aufs-tools")
-                j.builder.system.package.ensure("docker-ce=%s.0~ce-0~ubuntu-xenial" % branch)
+                j.builders.system.package.mdupdate(reset=True)
+                j.builders.system.package.ensure("libltdl7,aufs-tools")
+                j.builders.system.package.ensure("docker-ce=%s.0~ce-0~ubuntu-xenial" % branch)
             else:
                 self._execute(
                     "curl -fsSL 'https://sks-keyservers.net/pks/lookup?op=get&search=0xee6d536cf7dc86e2d7d56f59a178ac6c6238f52e' | apt-key add -"
@@ -38,19 +38,19 @@ class BuilderDocker(j.builder.system._BaseClass):
                     "add-apt-repository 'deb https://packages.docker.com/%s/apt/repo/ ubuntu-%s main'"
                     % (branch, release)
                 )
-                j.builder.system.package.mdupdate(reset=True)
-                j.builder.system.package.ensure("docker-engine")
+                j.builders.system.package.mdupdate(reset=True)
+                j.builders.system.package.ensure("docker-engine")
 
         elif j.core.platformtype.myplatform.isArch:
-            j.builder.system.package.ensure("docker")
+            j.builders.system.package.ensure("docker")
 
     @builder_method()
     def install(self):
-        j.builder.tools.file_copy("/usr/bin/docker", "{DIR_BIN}/docker")
-        j.builder.tools.file_copy("/usr/bin/dockerd", "{DIR_BIN}/dockerd")
-        j.builder.tools.file_copy("/usr/bin/dockerd-ce", "{DIR_BIN}/dockerd-ce")
-        j.builder.tools.file_copy("/usr/bin/docker-proxy", "{DIR_BIN}/docker-proxy")
-        j.builder.tools.file_copy("/usr/bin/docker-init", "{DIR_BIN}/docker-init")
+        j.builders.tools.file_copy("/usr/bin/docker", "{DIR_BIN}/docker")
+        j.builders.tools.file_copy("/usr/bin/dockerd", "{DIR_BIN}/dockerd")
+        j.builders.tools.file_copy("/usr/bin/dockerd-ce", "{DIR_BIN}/dockerd-ce")
+        j.builders.tools.file_copy("/usr/bin/docker-proxy", "{DIR_BIN}/docker-proxy")
+        j.builders.tools.file_copy("/usr/bin/docker-init", "{DIR_BIN}/docker-init")
 
     @property
     def startup_cmds(self):

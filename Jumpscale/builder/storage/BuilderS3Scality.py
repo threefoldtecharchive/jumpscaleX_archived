@@ -1,10 +1,10 @@
 from Jumpscale import j
 from time import sleep
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderS3Scality(j.builder.system._BaseClass):
+class BuilderS3Scality(j.builders.system._BaseClass):
     NAME = "s3scality"
 
     @property
@@ -13,28 +13,28 @@ class BuilderS3Scality(j.builder.system._BaseClass):
 
     @builder_method()
     def build(self, reset=False):
-        j.builder.runtimes.python.build(reset=reset)
-        j.builder.runtimes.nodejs.build(reset=reset)
+        j.builders.runtimes.python.build(reset=reset)
+        j.builders.runtimes.nodejs.build(reset=reset)
 
         path = "%s/%s" % (self.DIR_BUILD, self.NAME)
-        j.builder.tools.dir_remove(path, recursive=True)
+        j.builders.tools.dir_remove(path, recursive=True)
         j.clients.git.pullGitRepo("https://github.com/scality/S3.git", ssh=False, dest=path)
 
     @builder_method()
     def install(self, reset=False, storage="{DIR_VAR}/scality/data/", meta="{DIR_VAR}/scality/meta/"):
-        j.builder.runtimes.python.install(reset=reset)
-        j.builder.runtimes.nodejs.install(reset=reset)
-        j.builder.runtimes.nodejs.npm_install("npm-run-all")
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("build-essential,g++")
+        j.builders.runtimes.python.install(reset=reset)
+        j.builders.runtimes.nodejs.install(reset=reset)
+        j.builders.runtimes.nodejs.npm_install("npm-run-all")
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("build-essential,g++")
 
         j.core.tools.dir_ensure(storage)
         j.core.tools.dir_ensure(meta)
 
-        j.builder.tools.dir_remove(self.path, recursive=True)
+        j.builders.tools.dir_remove(self.path, recursive=True)
         j.core.tools.dir_ensure("{DIR_BASE}/apps/")
-        j.builder.tools.execute("mv %s/%s %s" % (self.DIR_BUILD, self.NAME, self.path))
-        j.builder.tools.execute("cd %s && npm install" % self.path)
+        j.builders.tools.execute("mv %s/%s %s" % (self.DIR_BUILD, self.NAME, self.path))
+        j.builders.tools.execute("cd %s && npm install" % self.path)
 
         cmd = "S3DATAPATH={data} S3METADATAPATH={meta} npm start".format(
             data=self._replace(storage), meta=self._replace(meta)
@@ -48,7 +48,7 @@ class BuilderS3Scality(j.builder.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        path = j.builder.runtimes.nodejs.NODE_PATH
+        path = j.builders.runtimes.nodejs.NODE_PATH
         node_path = "%s/@zenko/cloudserver/node_modules/:%s" % (path, path)
         if self.tools.profile.env_exists("NODE_PATH") and self.tools.profile.env_get("NODE_PATH") != node_path:
             self.tools.profile.env_set("NODE_PATH", node_path)

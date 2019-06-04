@@ -2,7 +2,7 @@ from Jumpscale import j
 import textwrap
 from copy import deepcopy
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 compileconfig = {}
 compileconfig["enable_mbstring"] = True
@@ -20,14 +20,14 @@ compileconfig["with_pdo_mysql"] = True
 compileconfig["with_mysql_sock"] = "/var/run/mysqld/mysqld.sock"
 
 
-class BuilderPHP(j.builder.system._BaseClass):
+class BuilderPHP(j.builders.system._BaseClass):
 
     NAME = "php-fpm"
 
     @builder_method()
     def build(self, **config):
         """
-        kosmos 'j.builder.runtimes.php.build()'
+        kosmos 'j.builders.runtimes.php.build()'
         :param config:
         :return:
         """

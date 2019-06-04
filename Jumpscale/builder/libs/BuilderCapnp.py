@@ -1,8 +1,8 @@
 from Jumpscale import j
 
-JSBASE = j.builder.system._BaseClass
+JSBASE = j.builders.system._BaseClass
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderCapnp(JSBASE):
@@ -13,13 +13,13 @@ class BuilderCapnp(JSBASE):
         """
         install capnp
 
-        kosmos 'j.builder.libs.capnp.build(reset=True)'
-        kosmos 'j.builder.libs.capnp.build()'
+        kosmos 'j.builders.libs.capnp.build(reset=True)'
+        kosmos 'j.builders.libs.capnp.build()'
         """
 
-        # j.builder.buildenv.install()
+        # j.builders.buildenv.install()
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure("g++")
+            j.builders.system.package.ensure("g++")
 
         # build tools
         self.system.package.mdupdate()
@@ -43,11 +43,11 @@ class BuilderCapnp(JSBASE):
         """
         install capnp
 
-        kosmos 'j.builder.libs.capnp.install()'
+        kosmos 'j.builders.libs.capnp.install()'
         """
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure("g++")
-        # j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
+            j.builders.system.package.ensure("g++")
+        # j.builders.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
         bins = ["capnp", "capnp-afl-testcase", "capnpc-c++", "capnp-test", "capnpc-capnp", "capnp-evolution-test"]
 
         libs = [
@@ -131,7 +131,7 @@ class BuilderCapnp(JSBASE):
     @builder_method()
     def test(self):
         """
-        kosmos 'j.builder.builder.libs.capnp.test()'
+        kosmos 'j.builders.builder.libs.capnp.test()'
         """
         return_code, _, _ = self._execute("capnp-test")
         assert return_code == 0

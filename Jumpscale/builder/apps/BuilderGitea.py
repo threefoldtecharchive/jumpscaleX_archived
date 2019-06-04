@@ -3,7 +3,7 @@ import textwrap
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderGitea(BuilderGolangTools):
@@ -50,11 +50,11 @@ class BuilderGitea(BuilderGolangTools):
         sys packages: git-core, gcc, golang
         db: postgresql
         """
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("git-core")
-        j.builder.system.package.ensure("gcc")
-        j.builder.runtimes.golang.install()
-        j.builder.db.postgres.install()
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("git-core")
+        j.builders.system.package.ensure("gcc")
+        j.builders.runtimes.golang.install()
+        j.builders.db.postgres.install()
 
     @builder_method()
     def configure(self, org_client_id, org_client_secret):
@@ -122,11 +122,11 @@ class BuilderGitea(BuilderGolangTools):
     @property
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
-        return j.builder.db.postgres.startup_cmds + [cmd]
+        return j.builders.db.postgres.startup_cmds + [cmd]
 
     @builder_method()
     def sandbox(self):
-        j.builder.db.postgres.sandbox()
+        j.builders.db.postgres.sandbox()
 
         # add certs
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "etc/ssl/certs/")

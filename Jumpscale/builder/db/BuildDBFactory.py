@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuildDBFactory(j.builder.system._BaseFactoryClass):
+class BuildDBFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.db"
 

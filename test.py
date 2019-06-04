@@ -19,9 +19,9 @@ def bcdb():
 def servers():
     j.tools.tmux.kill()
     if j.core.platformtype.myplatform.isUbuntu:
-        j.builder.web.traefik.install()
-        # j.builder.db.etcd.install()
-        j.builder.network.coredns.install()
+        j.builders.web.traefik.install()
+        # j.builders.db.etcd.install()
+        j.builders.network.coredns.install()
 
 
 def ssh():

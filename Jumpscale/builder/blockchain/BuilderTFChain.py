@@ -1,15 +1,15 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderTFChain(j.builder.system._BaseClass):
+class BuilderTFChain(j.builders.system._BaseClass):
     NAME = "tfchain"
 
     @builder_method()
     def _init(self, reset=False):
         self.GIT_BRANCH = "master"
-        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get(
+        self.DIR_BUILD = j.builders.runtimes.golang.package_path_get(
             self.__class__.NAME, host="github.com/threefoldfoundation"
         )
 
@@ -17,9 +17,9 @@ class BuilderTFChain(j.builder.system._BaseClass):
     def build(self, branch=None, tag=None, revision=None, reset=False):
         if self._done_get("build") and reset is False:
             return
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("git")
-        golang = j.builder.runtimes.golang
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("git")
+        golang = j.builders.runtimes.golang
         golang.install()
         GOPATH = golang.GOPATH
         url = "github.com/threefoldfoundation"
@@ -32,14 +32,14 @@ class BuilderTFChain(j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         self.build(branch=branch, tag=tag, revision=revision, reset=reset)
-        tfchaindpath = j.builder.tools.joinpaths(j.builder.runtimes.golang.GOPATH, "bin", "tfchaind")
-        tfchaincpath = j.builder.tools.joinpaths(j.builder.runtimes.golang.GOPATH, "bin", "tfchainc")
-        j.builder.tools.file_copy(tfchaindpath, "{DIR_BIN}/")
-        j.builder.tools.file_copy(tfchaincpath, "{DIR_BIN}/")
+        tfchaindpath = j.builders.tools.joinpaths(j.builders.runtimes.golang.GOPATH, "bin", "tfchaind")
+        tfchaincpath = j.builders.tools.joinpaths(j.builders.runtimes.golang.GOPATH, "bin", "tfchainc")
+        j.builders.tools.file_copy(tfchaindpath, "{DIR_BIN}/")
+        j.builders.tools.file_copy(tfchaincpath, "{DIR_BIN}/")
 
     def test(self):
         """
-        kosmos 'j.builder.blockchain.tfchain.test()'
+        kosmos 'j.builders.blockchain.tfchain.test()'
         :return:
         """
         self.install()

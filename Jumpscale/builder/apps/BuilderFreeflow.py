@@ -1,10 +1,10 @@
 from Jumpscale import j
 import textwrap
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderFreeflow(j.builder.system._BaseClass):
+class BuilderFreeflow(j.builders.system._BaseClass):
 
     NAME = "freeflow"
 
@@ -15,16 +15,16 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         self.HUMHUB_VERSION = humhub_version
         self.HUMHUB_PATH = "/var/www/html/humhub"
         self.profile.env_set("DEBIAN_FRONTEND", "noninteractive")
-        j.builder.system.package.install(["lamp-server^"])
-        j.builder.system.package._apt_wait_free()
-        j.builder.system.package.install(
+        j.builders.system.package.install(["lamp-server^"])
+        j.builders.system.package._apt_wait_free()
+        j.builders.system.package.install(
             ["php-curl", "php-gd", "php-mbstring", "php-intl", "php-zip", "php-ldap", "php-apcu", "php-sqlite3"]
         )
-        j.builder.tools.file_download(
+        j.builders.tools.file_download(
             "https://www.humhub.org/en/download/package/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION),
             "/var/www/html/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION),
         )
-        j.builder.tools.file_expand(
+        j.builders.tools.file_expand(
             "/var/www/html/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION), self.HUMHUB_PATH, removeTopDir=True
         )
         sql_init_script = """
@@ -33,7 +33,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mysql -e "GRANT ALL ON humhub.* TO 'humhub'@'localhost' IDENTIFIED BY 'Hum_flist_hubB';"
         mysql -e "FLUSH PRIVILEGES;"
         """
-        j.builder.tools.execute(sql_init_script)
+        j.builders.tools.execute(sql_init_script)
         j.sal.fs.chmod("/var/www", 0o775)
         j.sal.fs.chown("/var/www", "www-data", "www-data")
         self._done_set("install")
@@ -71,23 +71,23 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         for bin_name in self.bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
-            j.builder.tools.dir_ensure(dir_dest)
+            j.builders.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
         lib_dest = j.sal.fs.joinPaths(dest_path, "sandbox/lib")
-        j.builder.tools.dir_ensure(lib_dest)
+        j.builders.tools.dir_ensure(lib_dest)
         for bin in self.bins:
             j.tools.sandboxer.libs_sandbox(bin, lib_dest, exclude_sys_libs=False)
         self.share = ["/usr/share/mysql"]
         for mysqlshare in self.share:
             share_dest = j.sal.fs.joinPaths(dest_path, "sandbox/share/mysql")
-            j.builder.tools.dir_ensure(share_dest)
+            j.builders.tools.dir_ensure(share_dest)
             self.tools.copyTree(mysqlshare, share_dest)
 
         apache_dir = ["/etc/apache2", "/usr/lib/apache2", "/etc/php", "/usr/lib/php", "/var/lib/php"]
         for dir in apache_dir:
             relative_dir = dir.strip("/")
             dest_dir = j.sal.fs.joinPaths(dest_path, "sandbox", relative_dir)
-            j.builder.tools.dir_ensure(dest_dir)
+            j.builders.tools.dir_ensure(dest_dir)
             self.tools.copyTree(dir, dest_dir, keepsymlinks=True)
 
         copy_php_share_script = """
@@ -98,21 +98,21 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         chmod +x -R /tmp/package/freeflow/sandbox/lib
         cd 
         """
-        j.builder.tools.execute(copy_php_share_script)
+        j.builders.tools.execute(copy_php_share_script)
         startup_file = (
             "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/builder/apps/templates/freeflow_startup.toml"
         )
         startup = j.sal.fs.readFile(startup_file)
         startup_dest = j.sal.fs.joinPaths(dest_path, ".startup.toml")
-        j.builder.tools.file_ensure(startup_dest)
-        j.builder.tools.file_write(startup_dest, startup)
+        j.builders.tools.file_ensure(startup_dest)
+        j.builders.tools.file_write(startup_dest, startup)
         apache_file = (
             "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/builder/apps/templates/freeflow_apache_prepare.sh"
         )
         apache_conf = j.sal.fs.readFile(apache_file)
         apache_conf_dest = j.sal.fs.joinPaths(dest_path, ".apache_prepare.sh")
-        j.builder.tools.file_ensure(apache_conf_dest)
-        j.builder.tools.file_write(apache_conf_dest, apache_conf)
+        j.builders.tools.file_ensure(apache_conf_dest)
+        j.builders.tools.file_write(apache_conf_dest, apache_conf)
         self._done_set("sandbox")
         if create_flist:
             # import ipdb; ipdb.set_trace()
@@ -123,7 +123,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         /etc/init.d/apache2 stop
         /etc/init.d/mysql stop
         """
-        j.builder.tools.execute(stop_script)
+        j.builders.tools.execute(stop_script)
 
     def start(self):
         start_script = """
@@ -134,7 +134,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         /etc/init.d/mysql start
         /etc/init.d/apache2 start
         """
-        j.builder.tools.execute(start_script)
+        j.builders.tools.execute(start_script)
 
     def test(self):
         self.stop()

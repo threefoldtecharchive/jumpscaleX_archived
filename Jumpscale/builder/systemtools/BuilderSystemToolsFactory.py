@@ -3,7 +3,7 @@ from .BuildersRsync import BuilderRsync
 from .BuildersTFMUX import BuildersTFMUX
 
 
-class BuilderSystemToolsFactory(j.builder.system._BaseFactoryClass):
+class BuilderSystemToolsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.systemtools"
 

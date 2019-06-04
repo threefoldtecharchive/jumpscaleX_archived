@@ -3,7 +3,7 @@ import os
 import textwrap
 
 
-class BuilderDuplicacy(j.builder.system._BaseClass):
+class BuilderDuplicacy(j.builders.system._BaseClass):
     NAME = "duplicacy"
 
     def build(self, reset=False, install=False):
@@ -16,7 +16,7 @@ class BuilderDuplicacy(j.builder.system._BaseClass):
             return
 
         dup_url = "https://github.com/gilbertchen/duplicacy/releases/download/v2.0.10/duplicacy_linux_x64_2.0.10"
-        j.builder.tools.file_download(dup_url, overwrite=True, to="{DIR_TEMP}/duplicacy")
+        j.builders.tools.file_download(dup_url, overwrite=True, to="{DIR_TEMP}/duplicacy")
         self._done_set("build")
 
         if install:

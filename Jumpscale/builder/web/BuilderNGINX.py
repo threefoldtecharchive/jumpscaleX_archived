@@ -3,10 +3,10 @@ import os
 import textwrap
 from time import sleep
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderNGINX(j.builder.system._BaseClass):
+class BuilderNGINX(j.builders.system._BaseClass):
     NAME = "nginx"
 
     def get_basic_nginx_conf(self):

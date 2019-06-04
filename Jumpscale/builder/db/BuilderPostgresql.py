@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderPostgresql(j.builder.system._BaseClass):
+class BuilderPostgresql(j.builders.system._BaseClass):
     NAME = "psql"
 
     def _init(self):
@@ -13,8 +13,8 @@ class BuilderPostgresql(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         postgres_url = "https://ftp.postgresql.org/pub/source/v9.6.13/postgresql-9.6.13.tar.gz"
-        j.builder.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
-        j.builder.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
+        j.builders.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
+        j.builders.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
 
         cmd = self._replace(
             """

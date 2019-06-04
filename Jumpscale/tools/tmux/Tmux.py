@@ -252,7 +252,7 @@ class Tmux(j.application.JSBaseClass):
 
         :return:
         """
-        j.builder.system.package.ensure("htop")
+        j.builders.system.package.ensure("htop")
 
         self.panes_2x2_get()
         window = self.window_get("multi")

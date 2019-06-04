@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderWebFactory(j.builder.system._BaseFactoryClass):
+class BuilderWebFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.web"
 

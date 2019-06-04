@@ -3,21 +3,21 @@ import os
 import textwrap
 from time import sleep
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderOpenResty(j.builder.system._BaseClass):
+class BuilderOpenResty(j.builders.system._BaseClass):
     NAME = "openresty"
 
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builder.web.openresty.build()'
+        kosmos 'j.builders.web.openresty.build()'
         :return:
         """
         if j.core.platformtype.myplatform.isUbuntu:
-            j.builder.system.package.mdupdate()
-            j.builder.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
+            j.builders.system.package.mdupdate()
+            j.builders.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
             url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
 
             dest = self._replace("{DIR_BUILD}/openresty")
@@ -50,7 +50,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         else:
             # build with system openssl, no need to include custom build
-            # j.builder.libs.openssl.build()
+            # j.builders.libs.openssl.build()
 
             url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
             dest = self.DIR_BUILD
@@ -156,7 +156,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     @builder_method()
     def clean(self, reset=False):
         """
-        js_shell 'j.builder.web.openresty.clean()'
+        js_shell 'j.builders.web.openresty.clean()'
         :return:
         """
         C = """
@@ -176,8 +176,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
     def copy_to_github(self, reset=False):
         """
-        js_shell 'j.builder.web.openresty.copy_to_github(reset=True)'
-        js_shell 'j.builder.web.openresty.copy_to_github()'
+        js_shell 'j.builders.web.openresty.copy_to_github(reset=True)'
+        js_shell 'j.builders.web.openresty.copy_to_github()'
         :return:
         """
         self.build(reset=reset)

@@ -1,10 +1,10 @@
 from Jumpscale import j
 import time
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderMariadb(j.builder.system._BaseClass):
+class BuilderMariadb(j.builders.system._BaseClass):
     NAME = "mariadb"
     PORT = "3306"
 
@@ -34,7 +34,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
         self.system.package.mdupdate()
         self._execute("apt-get build-dep mysql-server -y")
         self.system.package.install(["libgnutls28-dev"])
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.install()
         cmd = """
         set -ex
         cd {}

@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderBitcoin(j.builder.system._BaseClass):
+class BuilderBitcoin(j.builders.system._BaseClass):
     NAME = "bitcoind"
 
     def _init(self):
@@ -13,12 +13,12 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
 
-        j.builder.buildenv.install()
+        j.builders.buildenv.install()
         self.profile_builder_select()
 
         # dependancies
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure("g++")
+            j.builders.system.package.ensure("g++")
             self.system.package.mdupdate()
             self.system.package.install(
                 [

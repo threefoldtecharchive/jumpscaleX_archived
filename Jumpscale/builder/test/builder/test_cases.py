@@ -6,218 +6,218 @@ import time
 
 class TestCases(BaseTest):
     def test001_zbd(self):
-        j.builder.db.zdb.build(reset=True)
-        j.builder.db.zdb.install()
-        j.builder.db.zdb.start()
+        j.builders.db.zdb.build(reset=True)
+        j.builders.db.zdb.install()
+        j.builders.db.zdb.start()
         self.assertEqual(1, len(j.sal.process.getProcessPid("zdb")))
-        j.builder.db.zdb.stop()
+        j.builders.db.zdb.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("zdb")))
 
     @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
     def test002_caddy(self):
-        j.builder.web.caddy.build(reset=True)
-        j.builder.web.caddy.install()
-        j.builder.web.caddy.start()
+        j.builders.web.caddy.build(reset=True)
+        j.builders.web.caddy.install()
+        j.builders.web.caddy.start()
         self.assertEqual(1, len(j.sal.process.getProcessPid("caddy")))
-        j.builder.web.caddy.stop()
+        j.builders.web.caddy.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("caddy")))
 
     def test003_nginx(self):
-        j.builder.web.nginx.build(reset=True)
-        j.builder.web.nginx.install()
-        j.builder.web.nginx.start()
+        j.builders.web.nginx.build(reset=True)
+        j.builders.web.nginx.install()
+        j.builders.web.nginx.start()
         self.assertTrue(len(j.sal.process.getProcessPid("nginx")))
-        j.builder.web.nginx.stop()
+        j.builders.web.nginx.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("nginx")))
 
     def test004_traefik(self):
-        j.builder.web.traefik.build(reset=True)
-        j.builder.web.traefik.install()
-        j.builder.web.traefik.start()
+        j.builders.web.traefik.build(reset=True)
+        j.builders.web.traefik.install()
+        j.builders.web.traefik.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("traefik")))
-        j.builder.web.traefik.stop()
+        j.builders.web.traefik.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("traefik")))
 
     def test005_minio(self):
-        j.builder.storage.minio.build(reset=True)
-        j.builder.storage.minio.install()
-        j.builder.storage.minio.start()
+        j.builders.storage.minio.build(reset=True)
+        j.builders.storage.minio.install()
+        j.builders.storage.minio.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("minio")))
-        j.builder.storage.minio.stop()
+        j.builders.storage.minio.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("minio")))
 
     def test006_golang(self):
-        j.builder.runtimes.golang.build(reset=True)
-        j.builder.runtimes.golang.install()
-        self.assertTrue(j.builder.runtimes.golang.is_installed)
+        j.builders.runtimes.golang.build(reset=True)
+        j.builders.runtimes.golang.install()
+        self.assertTrue(j.builders.runtimes.golang.is_installed)
 
     def test007_lua(self):
-        j.builder.runtimes.lua.build(reset=True)
-        j.builder.runtimes.lua.install()
+        j.builders.runtimes.lua.build(reset=True)
+        j.builders.runtimes.lua.install()
         try:
             j.sal.process.execute("which lua")
         except:
             self.assertTrue(False)
-        j.builder.web.openresty.start()
+        j.builders.web.openresty.start()
         time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid("openresty")))
-        j.builder.web.openresty.stop()
+        j.builders.web.openresty.stop()
         time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid("openresty")))
 
     def test008_nimlang(self):
-        j.builder.runtimes.nimlang.build(reset=True)
-        j.builder.runtimes.nimlang.install()
+        j.builders.runtimes.nimlang.build(reset=True)
+        j.builders.runtimes.nimlang.install()
         try:
             j.sal.process.execute("which nim")
         except:
             self.assertTrue(False)
 
     def test009_python(self):
-        j.builder.runtimes.python.build(reset=True)
-        j.builder.runtimes.python.install()
+        j.builders.runtimes.python.build(reset=True)
+        j.builders.runtimes.python.install()
         try:
             j.sal.process.execute("which python")
         except:
             self.assertTrue(False)
 
     def test010_digitalme(self):
-        j.builder.apps.digitalme.build(reset=True)
-        j.builder.apps.digitalme.install()
-        j.builder.apps.digitalme.start()
+        j.builders.apps.digitalme.build(reset=True)
+        j.builders.apps.digitalme.install()
+        j.builders.apps.digitalme.start()
         self.assertTrue(len(j.sal.process.getProcessPid("openresty")))
-        j.builder.apps.digitalme.stop()
+        j.builders.apps.digitalme.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("openresty")))
 
     def test011_bitcoin(self):
-        j.builder.blockchain.bitcoin.build(reset=True)
-        j.builder.blockchain.bitcoin.install()
-        j.builder.blockchain.bitcoin.start()
+        j.builders.blockchain.bitcoin.build(reset=True)
+        j.builders.blockchain.bitcoin.install()
+        j.builders.blockchain.bitcoin.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("bitcoind")))
-        j.builder.blockchain.bitcoin.stop()
+        j.builders.blockchain.bitcoin.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("bitcoind")))
 
     def test012_ethereum(self):
-        j.builder.blockchain.ethereum.build(reset=True)
-        j.builder.blockchain.ethereum.install()
-        j.builder.blockchain.ethereum.start()
+        j.builders.blockchain.ethereum.build(reset=True)
+        j.builders.blockchain.ethereum.install()
+        j.builders.blockchain.ethereum.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("ethereum")))
-        j.builder.blockchain.ethereum.stop()
+        j.builders.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("ethereum")))
 
     def test013_etcd(self):
-        j.builder.db.etcd.build(reset=True)
-        j.builder.db.etcd.install()
-        j.builder.db.etcd.start()
+        j.builders.db.etcd.build(reset=True)
+        j.builders.db.etcd.install()
+        j.builders.db.etcd.start()
         time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid("etcd")))
-        j.builder.db.etcd.stop()
+        j.builders.db.etcd.stop()
         time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid("etcd")))
 
     def test014_capnp(self):
-        j.builder.libs.capnp.build(reset=True)
-        j.builder.libs.capnp.install()
-        j.builder.libs.capnp.start()
+        j.builders.libs.capnp.build(reset=True)
+        j.builders.libs.capnp.install()
+        j.builders.libs.capnp.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("capnp")))
-        j.builder.libs.capnp.stop()
+        j.builders.libs.capnp.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("capnp")))
 
     def test015_coredns(self):
-        j.builder.network.coredns.build(reset=True)
-        j.builder.network.coredns.install()
-        j.builder.network.coredns.start()
+        j.builders.network.coredns.build(reset=True)
+        j.builders.network.coredns.install()
+        j.builders.network.coredns.start()
         self.assertTrue(j.sal.process.getProcessPid("coredns"))
-        j.builder.network.coredns.stop()
+        j.builders.network.coredns.stop()
         time.sleep(10)
         self.assertFalse(j.sal.process.getProcessPid("coredns"))
 
     def test016_zerotier(self):
-        j.builder.network.zerotier.build(reset=True)
-        j.builder.network.zerotier.install()
-        j.builder.network.zerotier.start()
+        j.builders.network.zerotier.build(reset=True)
+        j.builders.network.zerotier.install()
+        j.builders.network.zerotier.start()
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("zerotier")))
-        j.builder.network.zerotier.stop()
+        j.builders.network.zerotier.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("zerotier")))
 
     def test017_rust(self):
-        j.builder.runtimes.rust.build(reset=True)
-        j.builder.runtimes.rust.install()
+        j.builders.runtimes.rust.build(reset=True)
+        j.builders.runtimes.rust.install()
         try:
             j.sal.process.execute("which rustup")
         except:
             self.assertTrue(False)
 
     def test018_redis(self):
-        j.builder.db.redis.build(reset=True)
-        j.builder.db.redis.install()
-        j.builder.db.redis.start()
+        j.builders.db.redis.build(reset=True)
+        j.builders.db.redis.install()
+        j.builders.db.redis.start()
         self.assertEqual(2, len(j.sal.process.getProcessPid("redis-server")))
-        j.builder.db.redis.stop()
+        j.builders.db.redis.stop()
         self.assertEqual(1, len(j.sal.process.getProcessPid("redis-server")))
 
     def test019_syncthing(self):
-        j.builder.storage.syncthing.build(reset=True)
-        j.builder.storage.syncthing.install()
-        j.builder.storage.syncthing.start()
+        j.builders.storage.syncthing.build(reset=True)
+        j.builders.storage.syncthing.install()
+        j.builders.storage.syncthing.start()
         time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid("syncthing")))
-        j.builder.storage.syncthing.stop()
+        j.builders.storage.syncthing.stop()
         time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid("syncthing")))
 
     def test020_freeflow(self):
-        j.builder.apps.freeflow.build(reset=True)
-        j.builder.apps.freeflow.install(reset=True)
-        j.builder.apps.freeflow.start()
+        j.builders.apps.freeflow.build(reset=True)
+        j.builders.apps.freeflow.install(reset=True)
+        j.builders.apps.freeflow.start()
         self.assertTrue(len(j.sal.process.getProcessPid("apache2")))
-        j.builder.apps.freeflow.stop()
+        j.builders.apps.freeflow.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
 
     def test021_cmake(self):
-        j.builder.libs.cmake.build(reset=True)
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.build(reset=True)
+        j.builders.libs.cmake.install()
         try:
             j.sal.process.execute("which cmake")
         except:
             self.assertTrue(False)
 
     def test022_libffi(self):
-        j.builder.libs.libffi.build(reset=True)
-        j.builder.libs.libffi.install()
+        j.builders.libs.libffi.build(reset=True)
+        j.builders.libs.libffi.install()
         try:
             j.sal.process.execute("which libtoolize")
         except:
             self.assertTrue(False)
 
     def test023_brotli(self):
-        j.builder.libs.brotli.build(reset=True)
-        j.builder.libs.brotli.install()
+        j.builders.libs.brotli.build(reset=True)
+        j.builders.libs.brotli.install()
         try:
             j.sal.process.execute("which brotli")
         except:
             self.assertTrue(False)
 
     def test024_ardb(self):
-        j.builder.db.ardb.build(reset=True)
-        j.builder.db.ardb.install()
-        j.builder.db.ardb.start()
+        j.builders.db.ardb.build(reset=True)
+        j.builders.db.ardb.install()
+        j.builders.db.ardb.start()
         self.assertTrue(j.sal.process.getProcessPid("ardb"))
-        j.builder.db.ardb.stop()
+        j.builders.db.ardb.stop()
         self.assertFalse(j.sal.process.getProcessPid("ardb"))
 
     def test025_postgres(self):
-        j.builder.db.postgres.build(reset=True)
-        j.builder.db.postgres.install()
-        j.builder.db.postgres.start()
+        j.builders.db.postgres.build(reset=True)
+        j.builders.db.postgres.install()
+        j.builders.db.postgres.start()
         self.assertTrue(j.sal.process.getProcessPid("postgres"))
-        j.builder.db.postgres.stop()
+        j.builders.db.postgres.stop()
         self.assertFalse(j.sal.process.getProcessPid("postgres"))
 
     def test026_influx(self):
-        j.builder.db.influxdb.build(reset=True)
-        j.builder.db.influxdb.install()
-        j.builder.db.influxdb.start()
+        j.builders.db.influxdb.build(reset=True)
+        j.builders.db.influxdb.install()
+        j.builders.db.influxdb.start()
         self.assertTrue(j.sal.process.getProcessPid("influx"))
-        j.builder.db.influxdb.stop()
+        j.builders.db.influxdb.stop()
         self.assertFalse(j.sal.process.getProcessPid("influx"))

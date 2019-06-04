@@ -37,7 +37,7 @@ class Capacity:
         :rtype: str
         """
         if self._disk_info is None:
-            j.builder.monitoring.smartmontools.install()
+            j.builders.monitoring.smartmontools.install()
 
             self._disk_info = {}
 

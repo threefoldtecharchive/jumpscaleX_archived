@@ -1,10 +1,10 @@
 from Jumpscale import j
 import requests
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderTIDB(j.builder.system._BaseClass):
+class BuilderTIDB(j.builders.system._BaseClass):
     """
     Installs TIDB.
     """

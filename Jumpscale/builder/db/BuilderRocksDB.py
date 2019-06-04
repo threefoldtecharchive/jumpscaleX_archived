@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderRocksDB(j.builder.system._BaseClass):
+class BuilderRocksDB(j.builders.system._BaseClass):
     def build(self, reset=True, install=True):
         self.install(reset=reset)
 
@@ -9,7 +9,7 @@ class BuilderRocksDB(j.builder.system._BaseClass):
         # install required packages to run.
         if self._done_check("install", reset):
             return
-        j.builder.system.python_pip.install(
+        j.builders.system.python_pip.install(
             "http://home.maxux.net/wheelhouse/python_rocksdb-0.6.9-cp35-cp35m-manylinux1_x86_64.whl"
         )
 

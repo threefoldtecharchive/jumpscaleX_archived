@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
+class BuilderBlockchainFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.blockchain"
 

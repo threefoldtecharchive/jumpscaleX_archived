@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
+class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.virtualization"
 

@@ -4,7 +4,7 @@ from Jumpscale import j
 # TODO: is this still correct
 
 
-class BuilderAydoStor(j.builder.system._BaseClass):
+class BuilderAydoStor(j.builders.system._BaseClass):
 
     NAME = "stor"
 
@@ -18,11 +18,11 @@ class BuilderAydoStor(j.builder.system._BaseClass):
             self._log_info("Aydostor is already installed, pass reinstall=True parameter to reinstall")
             return
 
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("build-essential")
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("build-essential")
 
-        j.builder.tools.dir_remove("%s/src" % j.builder.sandbox.env_get("GOPATH"))
-        j.builder.runtimes.golang.get("github.com/g8os/stor")
+        j.builders.tools.dir_remove("%s/src" % j.builders.sandbox.env_get("GOPATH"))
+        j.builders.runtimes.golang.get("github.com/g8os/stor")
 
         if install:
             self.install(addr, backend, start)
@@ -32,12 +32,12 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         download, install, move files to appropriate places, and create relavent configs
         """
         j.core.tools.dir_ensure("{DIR_BIN}")
-        j.builder.tools.file_copy(
-            j.builder.tools.joinpaths(j.builder.tools.dir_paths["GODIR"], "bin", "stor"), "{DIR_BIN}", overwrite=True
+        j.builders.tools.file_copy(
+            j.builders.tools.joinpaths(j.builders.tools.dir_paths["GODIR"], "bin", "stor"), "{DIR_BIN}", overwrite=True
         )
-        # j.builder.sandbox.path_add("{DIR_BASE}/bin")
+        # j.builders.sandbox.path_add("{DIR_BASE}/bin")
 
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.stop("stor")  # will also kill
 
         j.core.tools.dir_ensure("{DIR_BASE}/cfg/stor")
@@ -58,12 +58,12 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         else:
             addr, port = res[0], "8090"
 
-            j.builder.ufw.allowIncoming(port)
-            if j.builder.system.process.tcpport_check(port, ""):
+            j.builders.ufw.allowIncoming(port)
+            if j.builders.system.process.tcpport_check(port, ""):
                 raise RuntimeError("port %d is occupied, cannot start stor" % port)
 
         j.core.tools.dir_ensure("{DIR_BASE}/cfg/stor/", recursive=True)
-        j.builder.tools.file_copy("{DIR_VAR}/templates/cfg/stor/config.toml", "{DIR_BASE}/cfg/stor/")
+        j.builders.tools.file_copy("{DIR_VAR}/templates/cfg/stor/config.toml", "{DIR_BASE}/cfg/stor/")
         cmd = self.tools.command_check("stor")
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.ensure("stor", "%s --config {DIR_BASE}/cfg/stor/config.toml" % cmd)
