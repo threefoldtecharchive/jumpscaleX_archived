@@ -61,7 +61,7 @@ def cli():
 
 ### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
 @click.option("--codedir", default=None, help="path where the github code will be checked out, default sandbox/code")
 @click.option(
     "--basedir",
@@ -84,7 +84,6 @@ def cli():
 )
 def configure(
     basedir=None,
-    configdir=None,
     codedir=None,
     debug=False,
     sshkey=None,
@@ -92,6 +91,7 @@ def configure(
     no_interactive=False,
     privatekey=None,
     secret=None,
+    configdir=None,
 ):
     """
     initialize 3bot (JSX) environment
@@ -99,7 +99,6 @@ def configure(
 
     return _configure(
         basedir=basedir,
-        configdir=configdir,
         codedir=codedir,
         debug=debug,
         sshkey=sshkey,
@@ -113,7 +112,6 @@ def configure(
 # have to do like this, did not manage to call the click enabled function (don't know why)
 def _configure(
     basedir=None,
-    configdir=None,
     codedir=None,
     debug=False,
     sshkey=None,
@@ -121,11 +119,11 @@ def _configure(
     no_interactive=False,
     privatekey_words=None,
     secret=None,
+    configdir=None,
 ):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
     IT.MyEnv.configure(
-        configdir=configdir,
         basedir=basedir,
         readonly=None,
         codedir=codedir,
@@ -134,6 +132,7 @@ def _configure(
         debug_configure=debug,
         interactive=interactive,
         secret=secret,
+        configdir=configdir,
     )
     j = jumpscale_get(die=False)
 
@@ -150,7 +149,7 @@ def _configure(
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option(
     "-s", "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
@@ -180,7 +179,6 @@ def _configure(
 @click.option("--no_interactive", is_flag=True, help="default is interactive")
 def container_install(
     name="3bot",
-    configdir=None,
     scratch=False,
     delete=True,
     wiki=False,
@@ -190,6 +188,7 @@ def container_install(
     reinstall=False,
     no_interactive=False,
     pull=False,
+    configdir=None,
 ):
     """
     create the 3bot container and install jumpcale inside
@@ -232,7 +231,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
 @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
@@ -249,7 +248,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=False):
+def install(wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=False, configdir=None):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -276,12 +275,12 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
 @click.option("-p", "--path", default=None, help="image location")
 @click.option("--no-start", is_flag=True, help="container will start auto")
-def container_import(name="3bot", path=None, configdir=None, imagename="despiegk/3bot", no_start=False):
+def container_import(name="3bot", path=None, imagename="despiegk/3bot", no_start=False, configdir=None):
     """
     import container from image file, if not specified will be /tmp/3bot.tar
     :param args:
@@ -293,12 +292,12 @@ def container_import(name="3bot", path=None, configdir=None, imagename="despiegk
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-p", "--path", default=None, help="image location")
 @click.option("--no-overwrite", is_flag=True, help="std container will overwrite the existing one")
 @click.option("--skip-if-exists", is_flag=True, help="std container will overwrite the existing one")
-def container_export(name="3bot", path=None, configdir=None, no_overwrite=False, skip_if_exists=False):
+def container_export(name="3bot", path=None, no_overwrite=False, skip_if_exists=False, configdir=None):
     """
     export the 3bot to image file, if not specified will be /tmp/3bot.tar
     :param name:
@@ -312,7 +311,7 @@ def container_export(name="3bot", path=None, configdir=None, no_overwrite=False,
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_clean(name="3bot", configdir=None):
     """
@@ -327,7 +326,7 @@ def container_clean(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_stop(name="3bot", configdir=None):
     """
@@ -341,7 +340,7 @@ def container_stop(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_start(name="3bot", configdir=None):
     """
@@ -355,7 +354,7 @@ def container_start(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_delete(name="3bot", configdir=None):
     """
@@ -369,7 +368,7 @@ def container_delete(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 def containers_reset(configdir=None):
     """
     remove all docker containers
@@ -381,7 +380,7 @@ def containers_reset(configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_kosmos(name="3bot", configdir=None):
     """
@@ -406,7 +405,7 @@ def container_kosmos(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-t", "--target", default="auto", help="auto,local,container, default is auto will try container first")
 def kosmos(name="3bot", target="auto", configdir=None):
@@ -420,7 +419,7 @@ def kosmos(name="3bot", target="auto", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_shell(name="3bot", configdir=None):
     """
@@ -437,7 +436,7 @@ def container_shell(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 def wireguard(configdir=None):
     """
     jsx wireguard
@@ -458,9 +457,9 @@ def wireguard(configdir=None):
 
 
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("--url", default="3bot", help="git url e.g. https://github.com/myfreeflow/kosmos")
-def modules_install(configdir=None, url=None):
+def modules_install(url=None, configdir=None):
     """
     install jumpscale module in local system
     :return:
