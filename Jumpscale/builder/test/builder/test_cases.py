@@ -221,3 +221,11 @@ class TestCases(BaseTest):
         self.assertTrue(j.sal.process.getProcessPid("influx"))
         j.builders.db.influxdb.stop()
         self.assertFalse(j.sal.process.getProcessPid("influx"))
+
+    def test027_php(self):
+        j.builders.runtimes.php.build(reset=True)
+        j.builders.runtimes.php.install()
+        j.builders.runtimes.php.start()
+        self.assertTrue(j.sal.process.getProcessPid("php-fpm"))
+        j.builders.runtimes.php.stop()
+        self.assertFalse(j.sal.process.getProcessPid("php-fpm"))

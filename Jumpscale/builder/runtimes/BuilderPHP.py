@@ -212,10 +212,14 @@ class BuilderPHP(j.builders.system._BaseClass):
         phpini_dest = self.tools.joinpaths(self.DIR_SANDBOX, phpini_src[1:])
         self._copy(phpini_src, phpini_dest)
 
-    def _test(self, name=""):
+    def test(self, name=""):
         """Run tests under tests directory
 
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
         self._test_run(name=name, obj_key="test_main")
+
+    def clean(self):
+        self._remove("{DIR_BUILD}/php-src")
+        self._remove("{DIR_BUILD}/oniguruma")
