@@ -16,7 +16,7 @@ class EmailClient(JSConfigClient):
         @url = jumpscale.Email.client
         name* = "" (S)
         smtp_server = "" (S)
-        smtp_port = 0 (ipport)
+        smtp_port = 25 (ipport)
         login = "" (S)
         password = "" (S)
         Email_from = "" (S)
