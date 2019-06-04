@@ -2047,12 +2047,13 @@ class MyEnv:
             if secret is None:
                 if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
                     if interactive:
-                        while not secret: # keep asking till the secret is not empty
+                        while not secret:  # keep asking till the secret is not empty
                             secret = Tools.ask_password("provide secret to use for encrypting private key")
                     else:
                         print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
                         sys.exit(1)
-
+                else:
+                    secret = MyEnv.config["SECRET"]
             if secret:
                 secret = secret.encode()
 
@@ -2064,7 +2065,8 @@ class MyEnv:
                 MyEnv.config["SECRET"] = m.hexdigest()
                 # is same as what is used to read from ssh-agent in SSHAgent client
             else:
-                sys.exit(1) # we must have a secret here otherwise it will fails later on
+                print("SECRET IS NEEDED")
+                sys.exit(1)  # we must have a secret here otherwise it will fails later on
 
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
