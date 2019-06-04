@@ -2,7 +2,7 @@ import textwrap
 
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 # /tmp is the default directory for postgres unix socket
 SIMPLE_CFG = """
@@ -12,7 +12,7 @@ db_host = /tmp
 db_user = odoouser"""
 
 
-class BuilderOdoo(j.builder.system._BaseClass):
+class BuilderOdoo(j.builders.system._BaseClass):
     NAME = "odoo"
 
     def _init(self):
@@ -27,8 +27,8 @@ class BuilderOdoo(j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         """install odoo"""
-        j.builder.db.postgres.install()
-        j.builder.runtimes.nodejs.install()
+        j.builders.db.postgres.install()
+        j.builders.runtimes.nodejs.install()
 
         self.tools.dir_ensure(self.APP_DIR)
 
@@ -43,7 +43,7 @@ class BuilderOdoo(j.builder.system._BaseClass):
         """
         )
 
-        j.builder.system.package.install("libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev")
+        j.builders.system.package.install("libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev")
 
         self._execute(
             """
@@ -60,7 +60,7 @@ class BuilderOdoo(j.builder.system._BaseClass):
         )
 
         self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
-        j.builder.runtimes.nodejs.npm_install("rtlcss")
+        j.builders.runtimes.nodejs.npm_install("rtlcss")
 
     @property
     def startup_cmds(self):
