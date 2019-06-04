@@ -110,7 +110,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def block_get(self, value):
         """
         Get a block from an available explorer Node.
-        
+
         @param value: the identifier or height that points to the desired block
         """
         endpoint = "/explorer/?"
