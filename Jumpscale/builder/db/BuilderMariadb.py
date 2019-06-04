@@ -30,7 +30,7 @@ class BuilderMariadb(j.builders.system._BaseClass):
         # install dependancies and clone repo
         url = "https://github.com/MariaDB/server"
         self.tools.dir_ensure(self.code_dir)
-        self._execute("sudo sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list")
+        self._execute("sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list")
         self.system.package.mdupdate()
         self._execute("apt-get build-dep mysql-server -y")
         self.system.package.install(["libgnutls28-dev"])
