@@ -71,7 +71,9 @@ class BuilderLedis(j.builders.system._BaseClass):
         j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg")
         j.builders.tools.file_copy("/tmp/ledisconfig.toml", dest="{DIR_VAR}/templates/cfg/ledisconfig.toml")
         j.builders.tools.file_copy("{ledisdir}/bin/*".format(ledisdir=ledisdir), dest="{DIR_BIN}")
-        j.builders.tools.file_copy("{ledisdir}/dev.sh".format(ledisdir=ledisdir), dest="{DIR_VAR}/templates/ledisdev.sh")
+        j.builders.tools.file_copy(
+            "{ledisdir}/dev.sh".format(ledisdir=ledisdir), dest="{DIR_VAR}/templates/ledisdev.sh"
+        )
 
         self._done_set("install")
 

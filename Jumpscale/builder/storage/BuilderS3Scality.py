@@ -60,7 +60,7 @@ class BuilderS3Scality(j.builders.system._BaseClass):
 
     def stop(self):
         # killing the daemon
-         j.tools.tmux.pane_get(self.NAME).kill()
+        j.tools.tmux.pane_get(self.NAME).kill()
 
     @builder_method()
     def test(self):
