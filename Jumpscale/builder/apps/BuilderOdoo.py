@@ -43,7 +43,9 @@ class BuilderOdoo(j.builders.system._BaseClass):
         """
         )
 
-        j.builders.system.package.install("libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev")
+        j.builders.system.package.install(
+            "sudo libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev"
+        )
 
         self._execute(
             """
