@@ -237,7 +237,7 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set("LC_ALL", "en_US.UTF-8")
         self.profile.env_set("LANG", "en_US.UTF-8")
 
-        self.profile.path_add("${PATH}", end=True)
+        # self.profile.path_add("${PATH}", end=True)
 
     def _profile_builder_set(self):
         def _build_flags(env_name, delimiter):
@@ -246,6 +246,7 @@ class BuilderBaseClass(BaseClass):
             return '"{}"'.format(" ".join(flags))
 
         self._remove("{DIR_BUILD}/env.sh")
+
         self._bash = j.tools.bash.get(self._replace("{DIR_BUILD}"))
 
         self.profile.state = "builder"

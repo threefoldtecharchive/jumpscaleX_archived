@@ -17,8 +17,8 @@ class BuilderLua(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builder.system.package.install(["libsqlite3-dev"])
 
-        j.builder.web.openresty.build(reset=True)
-        j.builder.libs.openssl.build(reset=True)
+        j.builder.web.openresty.build(reset=False)
+        j.builder.libs.openssl.build(reset=False)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
@@ -96,21 +96,16 @@ class BuilderLua(j.builder.system._BaseClass):
         lua-resty-iputils
 
         lsqlite3
-
         bcrypt
         md5
-
         date
         uuid
         lua-resty-cookie
         lua-path
-
+        
         # various encryption
         luazen
-
         alt-getopt
-
-
         lua-messagepack
         """
 

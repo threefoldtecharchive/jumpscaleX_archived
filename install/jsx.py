@@ -270,8 +270,8 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
     installer = IT.JumpscaleInstaller(branch=branch)
     installer.install(sandboxed=False, force=force, gitpull=pull)
     if wiki:
-        IT.Tools.shell()
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.tools.markdowndocs.test()'" % SANDBOX, showout=False)
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.db.zdb.install()'" % SANDBOX, showout=True)
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install()'" % SANDBOX, showout=True)
     print("Jumpscale X installed successfully")
 
 
@@ -437,14 +437,14 @@ def container_shell(name="3bot", configdir=None):
 
 
 @click.command()
-@click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-def wireguard(name="3bot", configdir=None):
+def wireguard(configdir=None):
     """
     jsx wireguard
     enable wireguard, can be on host or server
     :return:
     """
+    name = "3bot"
     if not IT.DockerFactory.indocker():
         docker = container_get(name=name)
         # remotely execute wireguard

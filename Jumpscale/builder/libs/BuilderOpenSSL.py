@@ -42,7 +42,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
-        self.tools.dir_ensure("{DIR_BUILD}")
+        self.tools.dir_ensure(self._replace("{DIR_BUILD}"))
         self._write("{DIR_BUILD}/mycompile_all.sh", C)
         self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 

@@ -32,6 +32,8 @@ class ZDBServer(j.application.JSBaseClass):
             cl = self.client_admin_get()
             return cl.ping()
         except Exception as e:
+            raise e
+
             j.shell()
 
     def start(self, destroydata=False):

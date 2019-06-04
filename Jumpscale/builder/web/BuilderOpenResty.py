@@ -80,7 +80,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             cp /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
-            self.tools.execute(C)
+            self._execute(C)
 
     @builder_method()
     def sandbox(
