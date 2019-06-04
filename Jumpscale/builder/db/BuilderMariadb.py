@@ -136,9 +136,9 @@ class BuilderMariadb(j.builder.system._BaseClass):
         cd {}/server
         make install DESTDIR={}
         """.format(
-            self.code_dir
+            self.code_dir, sandbox_dir
         )
-        self._execute(install_cmd, sandbox_dir)
+        self._execute(install_cmd)
 
         # startup.toml
         templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
