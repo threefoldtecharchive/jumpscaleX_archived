@@ -25,9 +25,6 @@ class BuilderPostgresql(j.builders.system._BaseClass):
         )
         self._execute(cmd)
 
-    def _group_exists(self, groupname):
-        return groupname in self._read("/etc/group")
-
     @builder_method()
     def install(self, port=5432):
         cmd = self._replace(
@@ -38,7 +35,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
         )
         self._execute(cmd)
 
-        if not self._group_exists("postgres"):
+        if not self.tools.group_exists("postgres"):
             self._execute(
                 'adduser --system --quiet --home {DIR_BASE} --no-create-home \
         --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres'

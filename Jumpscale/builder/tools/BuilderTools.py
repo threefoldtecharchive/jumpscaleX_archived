@@ -864,3 +864,6 @@ class BuilderTools(j.builders.system._BaseClass):
     @property
     def isCygwin(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1
+
+    def group_exists(self, groupname):
+        return groupname in self._read("/etc/group")
