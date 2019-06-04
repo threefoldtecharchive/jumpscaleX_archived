@@ -40,7 +40,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        explorer_nodes = (LO) !jumpscale.tfchain.explorer
+        explorer_nodes = (LS)
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
