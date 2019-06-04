@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderBrotli(j.builder.system._BaseClass):
+class BuilderBrotli(j.builders.system._BaseClass):
     NAME = "brotli"
 
     def _init(self):
@@ -13,7 +13,7 @@ class BuilderBrotli(j.builder.system._BaseClass):
     def build(self):
 
         # install cmake
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.install()
 
         # build from source code
         src_url = "https://github.com/google/brotli.git"

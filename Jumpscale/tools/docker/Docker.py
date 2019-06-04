@@ -189,7 +189,7 @@ class Docker(j.application.JSBaseClass):
             if container.id == id:
                 return container
         if die:
-            raise j.exceptions.RuntimeError("Container with name %s doesn't exists" % name)
+            raise j.exceptions.RuntimeError("Container with id %s doesn't exists" % id)
         else:
             return None
 

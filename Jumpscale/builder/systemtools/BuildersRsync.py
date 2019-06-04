@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderRsync(j.builder.system._BaseClass):
+class BuilderRsync(j.builders.system._BaseClass):
     def __init(self):
 
         self.BUILDDIRL = self._replace("{DIR_VAR}/build/rsync/")
@@ -23,11 +23,11 @@ class BuilderRsync(j.builder.system._BaseClass):
 
         j.core.tools.dir_ensure(self.BUILDDIRL)
 
-        j.builder.system.package.ensure("gcc")
-        j.builder.system.package.ensure("g++")
-        j.builder.system.package.ensure("make")
+        j.builders.system.package.ensure("gcc")
+        j.builders.system.package.ensure("g++")
+        j.builders.system.package.ensure("make")
 
-        j.builder.tools.file_download(
+        j.builders.tools.file_download(
             "https://download.samba.org/pub/rsync/src/%s.tar.gz" % self.VERSION,
             to="%s/%s.tar.gz" % (self.BUILDDIRL, self.VERSION),
         )
@@ -52,11 +52,11 @@ class BuilderRsync(j.builder.system._BaseClass):
         if build:
             if not self._done_get("build"):
                 self.build(install=False)
-            # self.tools.profile.path_add(j.builder.tools.replace("{DIR_BIN}"))
+            # self.tools.profile.path_add(j.builders.tools.replace("{DIR_BIN}"))
             # self.tools.profile.save()
-            j.builder.tools.file_copy("%s/%s/rsync" % (self.BUILDDIRL, self.VERSION), "{DIR_BIN}")
+            j.builders.tools.file_copy("%s/%s/rsync" % (self.BUILDDIRL, self.VERSION), "{DIR_BIN}")
         else:
-            j.builder.system.package.ensure("rsync")
+            j.builders.system.package.ensure("rsync")
 
     def configure(self):
         self.install(build=False)

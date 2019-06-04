@@ -1,9 +1,9 @@
 from Jumpscale import j
 
 
-class BuildDBFactory(j.builder.system._BaseFactoryClass):
+class BuildDBFactory(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.db"
+    __jslocation__ = "j.builders.db"
 
     def _init(self):
         self._etcd = None

@@ -1,9 +1,9 @@
 from Jumpscale import j
 
 
-class BuilderLibsFactory(j.builder.system._BaseFactoryClass):
+class BuilderLibsFactory(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.libs"
+    __jslocation__ = "j.builders.libs"
 
     def _init(self):
         self._openssl = None

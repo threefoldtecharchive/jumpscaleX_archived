@@ -1,24 +1,24 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderLua(j.builder.system._BaseClass):
+class BuilderLua(j.builders.system._BaseClass):
 
     NAME = "lua"
 
     @builder_method()
     def build(self):
         """
-        kosmos 'j.builder.runtimes.lua.build()'
+        kosmos 'j.builders.runtimes.lua.build()'
         :param install:
         :return:
         """
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
-            j.builder.system.package.install(["libsqlite3-dev"])
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.builders.system.package.install(["libsqlite3-dev"])
 
-        j.builder.web.openresty.build(reset=False)
-        j.builder.libs.openssl.build(reset=False)
+        j.builders.web.openresty.build(reset=True)
+        j.builders.libs.openssl.build(reset=True)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
@@ -52,14 +52,14 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def lua_rocks_install(self):
         """
-        kosmos 'j.builder.runtimes.lua.lua_rocks_install()'
+        kosmos 'j.builders.runtimes.lua.lua_rocks_install()'
         :param install:
         :return:
         """
 
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
-            # j.builder.system.package.mdupdate()
-            j.builder.system.package.ensure("geoip-database,libgeoip-dev")
+        if j.core.platformtype.myplatform.isUbuntu:
+            # j.builders.system.package.mdupdate()
+            j.builders.system.package.ensure("geoip-database,libgeoip-dev")
 
         C = """
         luaossl
@@ -96,16 +96,21 @@ class BuilderLua(j.builder.system._BaseClass):
         lua-resty-iputils
 
         lsqlite3
+
         bcrypt
         md5
+
         date
         uuid
         lua-resty-cookie
         lua-path
-        
+
         # various encryption
         luazen
+
         alt-getopt
+
+
         lua-messagepack
         """
 
@@ -117,7 +122,7 @@ class BuilderLua(j.builder.system._BaseClass):
                 continue
             self.lua_rock_install(line)
 
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             self.lua_rock_install("lua-geoip")
             self.lua_rock_install("lua-resty-jwt")
             self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
@@ -145,7 +150,7 @@ class BuilderLua(j.builder.system._BaseClass):
     @builder_method()
     def clean(self):
         """
-        kosmos 'j.builder.runtimes.lua.cleanup()'
+        kosmos 'j.builders.runtimes.lua.cleanup()'
         :param install:
         :return:
         """
@@ -174,7 +179,7 @@ class BuilderLua(j.builder.system._BaseClass):
     def install(self):
         """
         will build & install in sandbox
-        kosmos 'j.builder.runtimes.lua.install()'
+        kosmos 'j.builders.runtimes.lua.install()'
         :return:
         """
         src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
@@ -197,7 +202,7 @@ class BuilderLua(j.builder.system._BaseClass):
         """
         self._execute(C)
 
-        self.tools.dir_copy(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
+        self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
         self._log_info("install lua & openresty done.")
 
@@ -215,7 +220,7 @@ class BuilderLua(j.builder.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua"]
         for bin_name in bins:
@@ -232,17 +237,17 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def copy_to_github(self):
         """
-        kosmos 'j.builder.runtimes.lua.copy_to_github()'
+        kosmos 'j.builders.runtimes.lua.copy_to_github()'
         :return:
         """
         # assert self.executor.type=="local"
         path = "/sandbox/openresty/lualib"
 
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_ubuntu.git"
             )
-        elif j.core.platformtype.myplatform.platform_is_osx:
+        elif j.core.platformtype.myplatform.isMac:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_osx.git"
             )

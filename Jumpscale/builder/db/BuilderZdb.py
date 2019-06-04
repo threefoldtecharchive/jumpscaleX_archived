@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderZdb(j.builder.system._BaseClass):
+class BuilderZdb(j.builders.system._BaseClass):
     NAME = "0-db"
 
     def _init(self):
@@ -31,7 +31,7 @@ class BuilderZdb(j.builder.system._BaseClass):
         """
         Installs the zdb binary to the correct location
         """
-        zdb_bin_path = j.builder.tools.joinpaths(self.DIR_BUILD, "0-db/bin/zdb")
+        zdb_bin_path = j.builders.tools.joinpaths(self.DIR_BUILD, "0-db/bin/zdb")
         self._copy(zdb_bin_path, "{DIR_BIN}")
 
     @property
@@ -71,7 +71,7 @@ class BuilderZdb(j.builder.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["zdb"]
         for bin_name in bins:

@@ -1,9 +1,9 @@
 from Jumpscale import j
 
 
-class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
+class BuilderBlockchainFactory(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.blockchain"
+    __jslocation__ = "j.builders.blockchain"
 
     def _init(self):
         self._tfchain = None

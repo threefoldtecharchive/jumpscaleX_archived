@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderOpenSSL(j.builder.system._BaseClass):
+class BuilderOpenSSL(j.builders.system._BaseClass):
 
     NAME = "openssl"
 
@@ -13,7 +13,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         else:
             self.TARGET = "linux-generic64"
 
-        j.builder.system._BaseClass.__init__(self)
+        j.builders.system._BaseClass.__init__(self)
 
     @builder_method()
     def reset(self):
@@ -22,7 +22,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builder.libs..openssl.build()'
+        kosmos 'j.builders.libs..openssl.build()'
         """
         if not self.tools.exists(self.DIR_BUILD):
             C = """
@@ -48,7 +48,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
 
     def test(self, build=False):
         """
-        kosmos 'j.builder.buildenv(build=True)'
+        kosmos 'j.builders.buildenv(build=True)'
         """
         if build:
             self.build()

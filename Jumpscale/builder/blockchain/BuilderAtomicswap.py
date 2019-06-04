@@ -1,15 +1,15 @@
 from Jumpscale import j
 
 
-class BuilderAtomicswap(j.builder.system._BaseClass):
+class BuilderAtomicswap(j.builders.system._BaseClass):
     NAME = "atomicswap"
 
     def build(self, branch=None, tag=None, revision=None, reset=False):
         if self._done_get("build") and reset is False:
             return
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("git")
-        golang = j.builder.runtimes.golang
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.ensure("git")
+        golang = j.builders.runtimes.golang
         golang.install()
         GOPATH = golang.GOPATH
         url = "github.com/rivine"
@@ -27,10 +27,10 @@ class BuilderAtomicswap(j.builder.system._BaseClass):
             return
 
         self.build(branch=branch, tag=tag, revision=revision, reset=reset)
-        tfchaindpath = j.builder.tools.joinpaths(j.builder.runtimes.golang.GOPATH, "bin", "btcatomicswap")
-        tfchaincpath = j.builder.tools.joinpaths(j.builder.runtimes.golang.GOPATH, "bin", "ethatomicswap")
+        tfchaindpath = j.builders.tools.joinpaths(j.builders.runtimes.golang.GOPATH, "bin", "btcatomicswap")
+        tfchaincpath = j.builders.tools.joinpaths(j.builders.runtimes.golang.GOPATH, "bin", "ethatomicswap")
 
-        j.builder.tools.file_copy(tfchaindpath, "{DIR_BIN}/")
-        j.builder.tools.file_copy(tfchaincpath, "{DIR_BIN}/")
+        j.builders.tools.file_copy(tfchaindpath, "{DIR_BIN}/")
+        j.builders.tools.file_copy(tfchaincpath, "{DIR_BIN}/")
 
         self._done_set("install")

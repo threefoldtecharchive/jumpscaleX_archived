@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderInfluxdb(BuilderGolangTools):
@@ -17,12 +17,13 @@ class BuilderInfluxdb(BuilderGolangTools):
         self.system.package.mdupdate()
         self.system.package.install(["npm", "bzr"])
         # golang dependancy
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
 
         # build from source
         cmd = """
         cd {DIR_BUILD}
         mkdir -p github && cd github
+        rm -rf influxdb
         git clone --depth 1 https://github.com/influxdata/influxdb
         cd influxdb
         go get ./...
@@ -64,7 +65,8 @@ class BuilderInfluxdb(BuilderGolangTools):
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest)
 
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "github")
+        self._remove(code_dir)
 
     @builder_method()
     def reset(self):

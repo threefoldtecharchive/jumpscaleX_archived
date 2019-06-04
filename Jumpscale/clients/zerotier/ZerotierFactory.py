@@ -31,14 +31,14 @@ class ZerotierFactory(JSConfigs):
 
     def client_start(self):
         # make sure zerotier is installed and started
-        j.builder.network.zerotier.build()
+        j.builders.network.zerotier.build()
 
         # start the daemon
-        j.builder.network.zerotier.start()
+        j.builders.network.zerotier.start()
 
     def _cmd_get(self, cmd, pre=None, post=None):
 
-        CLI = j.builder.network.zerotier._replace("{CLI}")
+        CLI = j.builders.network.zerotier._replace("{CLI}")
         c = CLI + " "
         if self.config_path:
             c += "-D%s " % self.config_path

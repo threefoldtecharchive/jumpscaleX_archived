@@ -2,7 +2,7 @@ from Jumpscale import j
 from time import sleep
 
 
-class BuilderMongodb(j.builder.system._BaseClass):
+class BuilderMongodb(j.builders.system._BaseClass):
     NAME = "mongod"
 
     def install(self, start=True, reset=False):
@@ -12,19 +12,19 @@ class BuilderMongodb(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
 
-        if j.core.platformtype.myplatform.platform_is_osx:
+        if j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew uninstall mongodb", die=False)
 
-        appbase = "%s/" % j.builder.tools.dir_paths["BINDIR"]
+        appbase = "%s/" % j.builders.tools.dir_paths["BINDIR"]
         j.core.tools.dir_ensure(appbase)
 
         url = None
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             url = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz"
             dest = "{DIR_TEMP}/mongodb-linux-x86_64-ubuntu1604-3.4.0/bin/"
-        elif j.builder.tools.platform_is_arch:
-            j.builder.system.package.ensure("mongodb")
-        elif j.core.platformtype.myplatform.platform_is_osx:
+        elif j.builders.tools.isArch:
+            j.builders.system.package.ensure("mongodb")
+        elif j.core.platformtype.myplatform.isMac:
             url = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.4.0.tgz"
             dest = "{DIR_TEMP}/mongodb-osx-x86_64-3.4.0/bin/"
         else:
@@ -32,17 +32,17 @@ class BuilderMongodb(j.builder.system._BaseClass):
 
         if url:
             self._log_info("Downloading mongodb.")
-            j.builder.tools.file_download(url, to="{DIR_TEMP}", overwrite=False, expand=True)
-            tarpaths = j.builder.tools.find("{DIR_TEMP}", recursive=False, pattern="*mongodb*.tgz", type="f")
+            j.builders.tools.file_download(url, to="{DIR_TEMP}", overwrite=False, expand=True)
+            tarpaths = j.builders.tools.find("{DIR_TEMP}", recursive=False, pattern="*mongodb*.tgz", type="f")
             if len(tarpaths) == 0:
                 raise j.exceptions.Input(
                     message="could not download:%s, did not find in %s" % (url, self._replace("{DIR_TEMP}"))
                 )
             tarpath = tarpaths[0]
-            j.builder.tools.file_expand(tarpath, "{DIR_TEMP}")
+            j.builders.tools.file_expand(tarpath, "{DIR_TEMP}")
 
-            for file in j.builder.tools.find(dest, type="f"):
-                j.builder.tools.file_copy(file, appbase)
+            for file in j.builders.tools.find(dest, type="f"):
+                j.builders.tools.file_copy(file, appbase)
 
         j.core.tools.dir_ensure("{DIR_VAR}/data/mongodb")
         self._done_set("install")
@@ -57,10 +57,10 @@ class BuilderMongodb(j.builder.system._BaseClass):
             return
         j.core.tools.dir_ensure("{DIR_VAR}/data/mongodb")
         cmd = "mongod --dbpath '{DIR_VAR}/data/mongodb'"
-        j.builder.system.process.kill("mongod")
-        pm = j.builder.system.processmanager.get()
+        j.builders.system.process.kill("mongod")
+        pm = j.builders.system.processmanager.get()
         pm.ensure(name="mongod", cmd=cmd, env={}, path="", autostart=True)
 
     def stop(self):
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.stop("mongod")

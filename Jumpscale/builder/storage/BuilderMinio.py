@@ -4,7 +4,7 @@ from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 import os
 import textwrap
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderMinio(BuilderGolangTools):
@@ -23,7 +23,7 @@ class BuilderMinio(BuilderGolangTools):
         """
         Builds minio
         """
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
         self.get("github.com/minio/minio")
 
     @builder_method()
@@ -53,7 +53,7 @@ class BuilderMinio(BuilderGolangTools):
     @builder_method()
     def clean(self):
         self._remove(self.DIR_SANDBOX)
-        self._remove("{}/bin/minio".format(j.builder.runtimes.golang.DIR_GO_PATH))
+        self._remove("{}/bin/minio".format(j.builders.runtimes.golang.DIR_GO_PATH))
 
     @builder_method()
     def sandbox(

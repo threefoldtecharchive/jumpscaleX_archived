@@ -9,5 +9,5 @@ class KrakenFactory(JSConfigs):
     _CHILDCLASS = KrakenClient
 
     def install(self, reset=False):
-        j.builder.runtimes.pip.install("pykrakenapi", reset=reset)
-        j.builder.runtimes.pip.install("krakenex", reset=reset)
+        j.builders.runtimes.pip.install("pykrakenapi", reset=reset)
+        j.builders.runtimes.pip.install("krakenex", reset=reset)

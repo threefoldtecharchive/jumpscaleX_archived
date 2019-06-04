@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderEtcd(BuilderGolangTools):
@@ -19,15 +19,15 @@ class BuilderEtcd(BuilderGolangTools):
         """
         Build etcd
         """
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
         # https://github.com/etcd-io/etcd/blob/master/Documentation/dl_build.md#build-the-latest-version
         self.get("go.etcd.io/etcd")
         self.get("go.etcd.io/etcd/etcdctl")
 
     @builder_method()
     def install(self):
-        j.builder.tools.file_copy("%s/etcd" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcd")
-        j.builder.tools.file_copy("%s/etcdctl" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcdctl")
+        j.builders.tools.file_copy("%s/etcd" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcd")
+        j.builders.tools.file_copy("%s/etcdctl" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcdctl")
 
     @property
     def startup_cmds(self):
@@ -52,7 +52,7 @@ class BuilderEtcd(BuilderGolangTools):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["etcd", "etcdctl"]
         for bin_name in bins:

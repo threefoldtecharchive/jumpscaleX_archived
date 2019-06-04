@@ -2,7 +2,7 @@ from Jumpscale import j
 import os
 
 
-class BuilderLedis(j.builder.system._BaseClass):
+class BuilderLedis(j.builders.system._BaseClass):
     NAME = "ledis-server"
 
     def build(self, backend="leveldb", install=True, start=True, reset=False):
@@ -21,7 +21,7 @@ class BuilderLedis(j.builder.system._BaseClass):
 
             make
             """
-            j.builder.runtimes.golang.install()
+            j.builders.runtimes.golang.install()
             j.clients.git.pullGitRepo(
                 "https://github.com/siddontang/ledisdb", dest="{DIR_BASE}/go/src/github.com/siddontang/ledisdb"
             )
@@ -69,9 +69,11 @@ class BuilderLedis(j.builder.system._BaseClass):
 
         # rc, out, err = j.sal.process.execute("cd {ledisdir} && source dev.sh && make install".format(ledisdir=ledisdir), profile=True)
         j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg")
-        j.builder.tools.file_copy("/tmp/ledisconfig.toml", dest="{DIR_VAR}/templates/cfg/ledisconfig.toml")
-        j.builder.tools.file_copy("{ledisdir}/bin/*".format(ledisdir=ledisdir), dest="{DIR_BIN}")
-        j.builder.tools.file_copy("{ledisdir}/dev.sh".format(ledisdir=ledisdir), dest="{DIR_VAR}/templates/ledisdev.sh")
+        j.builders.tools.file_copy("/tmp/ledisconfig.toml", dest="{DIR_VAR}/templates/cfg/ledisconfig.toml")
+        j.builders.tools.file_copy("{ledisdir}/bin/*".format(ledisdir=ledisdir), dest="{DIR_BIN}")
+        j.builders.tools.file_copy(
+            "{ledisdir}/dev.sh".format(ledisdir=ledisdir), dest="{DIR_VAR}/templates/ledisdev.sh"
+        )
 
         self._done_set("install")
 
@@ -80,5 +82,5 @@ class BuilderLedis(j.builder.system._BaseClass):
 
     def start(self):
         cmd = "source {DIR_VAR}/templates/ledisdev.sh && {DIR_BIN}/ledis-server -config {DIR_VAR}/templates/cfg/ledisconfig.toml"
-        pm = j.builder.system.processmanager.get("tmux")
+        pm = j.builders.system.processmanager.get("tmux")
         pm.ensure(name="ledis", cmd=cmd)

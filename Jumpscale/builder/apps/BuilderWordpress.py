@@ -3,7 +3,7 @@ import textwrap
 import time
 
 
-class BuilderWordpress(j.builder.system._BaseClass):
+class BuilderWordpress(j.builders.system._BaseClass):
     NAME = "wordpress"
 
     def _init(self):
@@ -20,25 +20,25 @@ class BuilderWordpress(j.builder.system._BaseClass):
         if self._done_check("build", reset):
             return
         # 1- install php
-        j.builder.system.package.ensure(
+        j.builders.system.package.ensure(
             "php7.0-fpm, php7.0-mysql, php7.0-curl, php7.0-gd, php7.0-mbstring, php7.0-mcrypt, php7.0-xml, php7.0-xmlrpc"
         )
 
         # 2- install mysql
-        j.builder.db.mariadb.install(start=True)
+        j.builders.db.mariadb.install(start=True)
 
         # 3- install caddy
-        j.builder.web.caddy.install(plugins=["iyo"])
+        j.builders.web.caddy.install(plugins=["iyo"])
 
         # 4- nstall wp-cli
         url = "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
         cli_path = "/usr/local/bin/wp"
         cli_path = self._replace(cli_path)
-        j.builder.tools.file_download(url=url, to=cli_path, overwrite=True, retry=3, timeout=0, removeTopDir=False)
+        j.builders.tools.file_download(url=url, to=cli_path, overwrite=True, retry=3, timeout=0, removeTopDir=False)
 
-        j.builder.executor.execute("chmod +x %s" % cli_path)
-        if not j.builder.system.user.check(self.user):
-            j.builder.system.user.create(self.user)
+        j.builders.executor.execute("chmod +x %s" % cli_path)
+        if not j.builders.system.user.check(self.user):
+            j.builders.system.user.create(self.user)
         self._done_set("build")
 
     def install(
@@ -78,11 +78,11 @@ class BuilderWordpress(j.builder.system._BaseClass):
         self.build(reset=reset)
 
         # create a database
-        j.builder.db.mariadb.sql_execute(
+        j.builders.db.mariadb.sql_execute(
             None, "CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" % db_name
         )
         # create a new super user for this database
-        j.builder.db.mariadb.admin_create(db_user, db_password)
+        j.builders.db.mariadb.admin_create(db_user, db_password)
 
         j.core.tools.dir_ensure(path)
         j.sal.process.execute("chown {0}:{0} {1}".format(self.user, path))
@@ -97,11 +97,11 @@ class BuilderWordpress(j.builder.system._BaseClass):
         """.format(
             port, path
         )
-        j.builder.web.caddy.add_website("wordpress", cfg)
+        j.builders.web.caddy.add_website("wordpress", cfg)
 
-        j.builder.executor.execute("rm -rf {}/*".format(path))
+        j.builders.executor.execute("rm -rf {}/*".format(path))
         # download wordpress
-        j.builder.executor.execute("sudo -u {} -i -- wp core download --path={}".format(self.user, path))
+        j.builders.executor.execute("sudo -u {} -i -- wp core download --path={}".format(self.user, path))
 
         # configure wordpress
         configure_command = """
@@ -109,7 +109,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
         """.format(
             user=self.user, db_name=db_name, db_user=db_user, db_password=db_password, path=path
         )
-        j.builder.executor.execute(configure_command)
+        j.builders.executor.execute(configure_command)
 
         # install wordpress
         install_command = """
@@ -123,7 +123,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
             admin_email=admin_email,
             path=path,
         )
-        j.builder.executor.execute(install_command)
+        j.builders.executor.execute(install_command)
 
         # install themes
         self.install_theme(path, theme)
@@ -141,7 +141,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
         """.format(
             path=path
         )
-        j.builder.executor.execute(cmd)
+        j.builders.executor.execute(cmd)
 
         self._done_set("install")
 
@@ -198,13 +198,13 @@ class BuilderWordpress(j.builder.system._BaseClass):
         backup_path = "/tmp/backup_{}".format(str(time.time()))
         j.core.tools.dir_ensure(backup_path)
         # export database
-        j.builder.db.mariadb.db_export(dbname, backup_path)
+        j.builders.db.mariadb.db_export(dbname, backup_path)
         # get wordpress files
         j.core.tools.dir_ensure(backup_path + path)
-        j.builder.tools.dir_copy(path, backup_path + path)
+        j.builders.tools.copyTree(path, backup_path + path)
         # get get cfgs
         j.core.tools.dir_ensure(backup_path + cfg_path)
-        j.builder.tools.dir_copy(cfg_path, backup_path + cfg_path)
+        j.builders.tools.copyTree(cfg_path, backup_path + cfg_path)
 
         backup_tar_name = "/tmp/backup_{}.tar.gz".format(str(time.time()))
 
@@ -215,4 +215,4 @@ class BuilderWordpress(j.builder.system._BaseClass):
             self._log_info("an error happened while compressing your backup")
 
         # clean up
-        j.builder.tools.dir_remove(backup_path)
+        j.builders.tools.dir_remove(backup_path)

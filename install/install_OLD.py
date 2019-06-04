@@ -344,7 +344,7 @@ if "1" in args or "2" in args:
     #     if "1" in args:
 
     #         #in system need to install the lua env
-    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
+    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
     #     IT.Tools.execute("source %s/env.sh;js_shell 'j.tools.markdowndocs.test()'"%SANDBOX, showout=False)
     #     print("Jumpscale X installed successfully")
 

@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderLibffi(j.builder.system._BaseClass):
+class BuilderLibffi(j.builders.system._BaseClass):
     NAME = "libffi"
 
     def _init(self):

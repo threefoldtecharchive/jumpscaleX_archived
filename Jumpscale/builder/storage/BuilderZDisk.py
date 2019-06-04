@@ -6,7 +6,7 @@ _NBDSERVER_CONFIG_FILE = "{DIR_BASE}/config/nbdserver/config.yaml"
 _DEFAULT_LOCAL_CONFIG_FILE = "./config.yaml"
 
 
-class BuilderZDisk(j.builder.system._BaseClass):
+class BuilderZDisk(j.builders.system._BaseClass):
     """
     Manages 0-Disk over prefab
     """
@@ -24,11 +24,11 @@ class BuilderZDisk(j.builder.system._BaseClass):
             return
 
         # install dependencies
-        j.builder.system.package.ensure("git")
-        j.builder.runtimes.golang.install()
+        j.builders.system.package.ensure("git")
+        j.builders.runtimes.golang.install()
 
         # install 0-Disk
-        install_path = j.sal.fs.joinPaths(j.builder.runtimes.golang.GOPATH, "src", "github.com", "zero-os")
+        install_path = j.sal.fs.joinPaths(j.builders.runtimes.golang.GOPATH, "src", "github.com", "zero-os")
         j.core.tools.dir_ensure(install_path)
         cmd = """
         cd {0}
@@ -60,9 +60,9 @@ class BuilderZDisk(j.builder.system._BaseClass):
         """Returns True if 0-Disk is installed"""
 
         return (
-            j.builder.tools.command_check("nbdserver")
-            and j.builder.tools.command_check("tlogserver")
-            and j.builder.tools.command_check("zeroctl")
+            j.builders.tools.command_check("nbdserver")
+            and j.builders.tools.command_check("tlogserver")
+            and j.builders.tools.command_check("zeroctl")
         )
 
     def start_nbdserver(
@@ -99,13 +99,13 @@ class BuilderZDisk(j.builder.system._BaseClass):
                 config_file = _DEFAULT_LOCAL_CONFIG_FILE
             if not os.path.isfile(config_file):
                 raise ValueError("Could not find local config file: {}".format(config_file))
-            j.builder.tools.upload(config_file, _NBDSERVER_CONFIG_FILE)
+            j.builders.tools.upload(config_file, _NBDSERVER_CONFIG_FILE)
             # set config to file location
-            j.builder.tools.file_ensure(_NBDSERVER_CONFIG_FILE)
+            j.builders.tools.file_ensure(_NBDSERVER_CONFIG_FILE)
             config = _NBDSERVER_CONFIG_FILE
             pass
 
-        j.builder.system.process.kill("nbdserver")
+        j.builders.system.process.kill("nbdserver")
 
         # assemble command
         cmd = "nbdserver"
@@ -139,7 +139,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
 
     def stop_nbdserver(self):
         """Stops the 0-disk\'s nbdserver"""
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.stop("nbdserver")
 
     def stop_tlogserver(self):

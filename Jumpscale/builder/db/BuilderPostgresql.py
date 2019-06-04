@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderPostgresql(j.builder.system._BaseClass):
+class BuilderPostgresql(j.builders.system._BaseClass):
     NAME = "psql"
 
     def _init(self):
@@ -13,8 +13,8 @@ class BuilderPostgresql(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         postgres_url = "https://ftp.postgresql.org/pub/source/v9.6.13/postgresql-9.6.13.tar.gz"
-        j.builder.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
-        j.builder.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
+        j.builders.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
+        j.builders.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
 
         cmd = self._replace(
             """
@@ -24,9 +24,6 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         """
         )
         self._execute(cmd)
-
-    def _group_exists(self, groupname):
-        return groupname in self._read("/etc/group")
 
     @builder_method()
     def install(self, port=5432):
@@ -38,7 +35,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         )
         self._execute(cmd)
 
-        if not self._group_exists("postgres"):
+        if not self.tools.group_exists("postgres"):
             self._execute(
                 'adduser --system --quiet --home {DIR_BASE} --no-create-home \
         --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres'

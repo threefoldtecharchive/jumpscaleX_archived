@@ -167,7 +167,7 @@ class ZDBServer(j.application.JSBaseClass):
         """
         kosmos 'j.servers.zdb.build()'
         """
-        j.builder.db.zdb.install(reset=reset)
+        j.builders.db.zdb.install(reset=reset)
 
     def test(self, build=False):
         """

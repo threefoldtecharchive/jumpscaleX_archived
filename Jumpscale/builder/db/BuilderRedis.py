@@ -1,19 +1,19 @@
 from Jumpscale import j
 from random import randint
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderRedis(j.builder.system._BaseClass):
+class BuilderRedis(j.builders.system._BaseClass):
     NAME = "redis-server"
 
     @builder_method()
     def build(self):
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
-            j.builder.system.package.mdupdate()
-            j.builder.system.package.ensure("build-essential")
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.builders.system.package.mdupdate()
+            j.builders.system.package.ensure("build-essential")
 
-            j.builder.tools.dir_remove("{DIR_TEMP}/build/redis")
+            j.builders.tools.dir_remove("{DIR_TEMP}/build/redis")
 
             C = """
             #!/bin/bash
@@ -40,7 +40,7 @@ class BuilderRedis(j.builder.system._BaseClass):
         self.build()
         self._copy("{DIR_TEMP}/build/redis/redis-stable/src/redis-server", "{DIR_BIN}", overwrite=False)
         self._copy("{DIR_TEMP}/build/redis/redis-stable/src/redis-cli", "{DIR_BIN}", overwrite=False)
-        j.builder.tools.dir_remove("{DIR_BASE}/apps/redis")
+        j.builders.tools.dir_remove("{DIR_BASE}/apps/redis")
 
     @property
     def startup_cmds(self):
@@ -67,7 +67,7 @@ class BuilderRedis(j.builder.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["redis-server", "redis-cli"]
         for bin_name in bins:

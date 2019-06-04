@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderARDB(j.builder.system._BaseClass):
+class BuilderARDB(j.builders.system._BaseClass):
     NAME = "ardb-server"
 
     def _init(self):
@@ -17,7 +17,7 @@ class BuilderARDB(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         """
-        kosmos 'j.builder.db.ardb.build()'
+        kosmos 'j.builders.db.ardb.build()'
         """
         # build_forest_db
         self.build_forest_db()
@@ -50,7 +50,7 @@ class BuilderARDB(j.builder.system._BaseClass):
     # build forest_db as backend
     def build_forest_db(self):
 
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.install()
         self.system.package.mdupdate()
         self.system.package.install(["git-core", "libsnappy-dev", "g++", "libaio-dev"])
 
@@ -111,12 +111,12 @@ class BuilderARDB(j.builder.system._BaseClass):
         """
         do some test through normal redis client
         """
-        j.builder.db.ardb.start()
+        j.builders.db.ardb.start()
         r = j.clients.redis.get(ipaddr="0.0.0.0", port=16379)
         r.set("test", "test")
         assert r.get("test") == b"test"
         r.delete("test")
-        j.builder.db.ardb.stop()
+        j.builders.db.ardb.stop()
         print("TEST OK")
 
     @property

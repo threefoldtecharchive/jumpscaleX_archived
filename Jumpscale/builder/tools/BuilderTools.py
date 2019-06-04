@@ -8,16 +8,16 @@ from .BuilderToolsLib import *
 # from pygments.formatters import get_formatter_by_name
 
 
-class BuilderTools(j.builder.system._BaseClass):
+class BuilderTools(j.builders.system._BaseClass):
 
-    __jslocation__ = "j.builder.tools"
+    __jslocation__ = "j.builders.tools"
 
     def _init(self):
 
         self._cd = "/tmp"
 
-    def _replace(self, txt, args={}):
-        return j.core.tools.text_replace(txt, args=args)
+    def _replace(self, txt):
+        return j.core.tools.text_replace(txt)
 
     def shell_safe(self, path):
         SHELL_ESCAPE = " '\";`|"
@@ -73,7 +73,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #
     # =============================================================================
 
-    def dir_copy(
+    def copyTree(
         self,
         source,
         dest,
@@ -150,6 +150,7 @@ class BuilderTools(j.builder.system._BaseClass):
         minsizekb=40,
         removeTopDir=False,
         deletedest=False,
+        keepsymlinks=False,
     ):
         """
         download from url
@@ -236,11 +237,11 @@ class BuilderTools(j.builder.system._BaseClass):
                 raise j.exceptions.RuntimeError("not implemented yet")
 
         if expand:
-            return self.file_expand(to, destination, removeTopDir=removeTopDir)
+            return self.file_expand(to, destination, removeTopDir=removeTopDir, keepsymlinks=keepsymlinks)
 
         return to
 
-    def file_expand(self, path, destination="", removeTopDir=False):
+    def file_expand(self, path, destination="", removeTopDir=False, keepsymlinks=False):
         self._log_info("file_expand:%s" % path)
         path = self._replace(path)
         base = j.sal.fs.getBaseName(path)
@@ -270,10 +271,10 @@ class BuilderTools(j.builder.system._BaseClass):
         if path.endswith(".tar.gz") or path.endswith(".tgz"):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
-            if self.platform_is_osx:
-                j.builder.system.package.ensure("xz")
+            if self.isMac:
+                j.builders.system.package.ensure("xz")
             else:
-                j.builder.system.package.ensure("xz-utils")
+                j.builders.system.package.ensure("xz-utils")
             cmd = "tar -C %s -xf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
@@ -292,7 +293,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if removeTopDir:
             res = self.find(destination, recursive=False, type="d")
             if len(res) == 1:
-                self.dir_copy(res[0], destination)
+                self.copyTree(res[0], destination, keepsymlinks=keepsymlinks)
                 self.dir_remove(res[0])
 
         if self.dir_exists(self.joinpaths(destination, base)):
@@ -369,7 +370,7 @@ class BuilderTools(j.builder.system._BaseClass):
         location = self._replace(location)
         location = location.replace("//", "/")
         if self.file_exists(location):
-            if self.platform_is_osx:
+            if self.isMac:
                 fs_check = self.execute("stat -f %s %s" % ('"%a %u %g"', location), showout=False)[1]
             else:
                 fs_check = self.execute("stat %s %s" % (location, '--format="%a %U %G"'), showout=False)[1]
@@ -402,7 +403,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if val == self.hostname:
             return
         val = val.strip()
-        if self.platform_is_osx:
+        if self.isMac:
             hostfile = "/private/etc/hostname"
             self.file_write(hostfile, val)
         else:
@@ -424,7 +425,7 @@ class BuilderTools(j.builder.system._BaseClass):
     @property
     def hostfile(self):
         def get():
-            if self.platform_is_osx:
+            if self.isMac:
                 hostfile = "/private/etc/hosts"
             else:
                 hostfile = "/etc/hosts"
@@ -434,7 +435,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @hostfile.setter
     def hostfile(self, val):
-        if self.platform_is_osx:
+        if self.isMac:
             hostfile = "/private/etc/hosts"
             self.file_write(hostfile)
         else:
@@ -530,6 +531,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if self.file_exists(destination) and (not self.file_is_link(destination)):
             raise Exception("Destination already exists and is not a link: %s" % (destination))
         self.file_attribs(destination, mode, owner, group)
+        j.sal.fs.symlink(source, destination)
 
     def replace(self, text, args={}):
         text = self._replace(text, args=args)
@@ -568,7 +570,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #
     # =============================================================================
 
-    def networkinfo_iterator(self):
+    def getNetworkInfoGenerator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
 
         exitcode, output, err = self.execute("ip a", showout=False)
@@ -577,10 +579,10 @@ class BuilderTools(j.builder.system._BaseClass):
             yield parseBlock(block)
 
     @property
-    def networkinfo(self):
+    def networking_info(self):
         from Jumpscale.tools.nettools.NetTools import getNetworkInfo
 
-        if not self._networkinfo:
+        if not self._networking_info:
             all_info = list()
             for device in getNetworkInfo():
                 all_info.append(device)
@@ -752,7 +754,7 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("cmd cannot be empty")
 
         if profile:
-            cmd = "%s\n%s" % (j.builder.system.bash.profile, cmd)
+            cmd = "%s\n%s" % (j.builders.system.bash.profile, cmd)
 
         rc, out, err = j.sal.process.execute(
             cmd,
@@ -815,7 +817,7 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
-    # USE:j.builder.system.package.ensure
+    # USE:j.builders.system.package.ensure
 
     # def command_ensure(self, command, package=None):
     #     """Ensures that the given command is present, if not installs the
@@ -835,30 +837,33 @@ class BuilderTools(j.builder.system._BaseClass):
     #     if package is None:
     #         package = command
     #     if not self.command_check(command):
-    #         j.builder.system.package.ensure(package)
+    #         j.builders.system.package.ensure(package)
     #     assert self.command_check(command), \
     #         "Command was not installed, check for errors: %s" % (command)
 
     @property
-    def platform_is_ubuntu(self):
+    def isUbuntu(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu") != -1
 
     @property
-    def platform_is_linux(self):
+    def isLinux(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux") != -1
 
     @property
-    def platform_is_alpine(self):
+    def isAlpine(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine") != -1
 
     @property
-    def platform_is_arch(self):
+    def isArch(self):
         return False
 
     @property
-    def platform_is_osx(self):
+    def isMac(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin") != -1
 
     @property
-    def platform_is_cygwin(self):
+    def isCygwin(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1
+
+    def group_exists(self, groupname):
+        return groupname in self._read("/etc/group")

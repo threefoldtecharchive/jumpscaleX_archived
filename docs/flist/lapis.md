@@ -6,7 +6,7 @@ The autostart script creates a lapis project under `/lapis_project` on the conta
 To build the flist and upload it to the hub, simply run the following command where hub is the name of the zhub client instance on your system.
 
 ```python
-j.builder.web.lapis.flist_create(hub)
+j.builders.web.lapis.flist_create(hub)
 ```
 
 Alternatively, you can use the [lapis flist](https://hub.grid.tf/tf-official-apps/lapis.flist) from our official apps, to create a container that will autostart openresty.

@@ -1,9 +1,9 @@
 from Jumpscale import j
 
 
-class BuildEnv(j.builder.system._BaseFactoryClass):
+class BuildEnv(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.buildenv"
+    __jslocation__ = "j.builders.buildenv"
 
     def install(self, reset=False, upgrade=True):
 
@@ -18,29 +18,29 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
 
         # out = ""
         # make sure all dirs exist
-        # for key, item in j.builder.tools.dir_paths.items():
+        # for key, item in j.builders.tools.dir_paths.items():
         #     out += "mkdir -p %s\n" % item
         # j.sal.process.execute(out)
 
-        j.builder.system.package.mdupdate()
+        j.builders.system.package.mdupdate()
 
-        # if not j.core.platformtype.myplatform.platform_is_osx and not j.builder.tools.platform_is_cygwin:
-        #     j.builder.system.package.ensure("fuse")
+        # if not j.core.platformtype.myplatform.isMac and not j.builders.tools.isCygwin:
+        #     j.builders.system.package.ensure("fuse")
 
-        if j.builder.tools.platform_is_arch:
+        if j.builders.tools.isArch:
             # is for wireless auto start capability
-            j.builder.system.package.ensure("wpa_actiond,redis-server")
+            j.builders.system.package.ensure("wpa_actiond,redis-server")
 
-        if j.core.platformtype.myplatform.platform_is_osx:
+        if j.core.platformtype.myplatform.isMac:
             C = ""
         else:
             C = "sudo net-tools python3 python3-distutils python3-psutil"
 
         C += " openssl wget curl git mc tmux rsync"
-        j.builder.system.package.ensure(C)
+        j.builders.system.package.ensure(C)
 
-        # j.builder.sandbox.profileJS.path_add("{DIR_BIN}")
-        # j.builder.sandbox.profileJS.save()
+        # j.builders.sandbox.profileJS.path_add("{DIR_BIN}")
+        # j.builders.sandbox.profileJS.save()
 
         if upgrade:
             self.upgrade(reset=reset, update=False)
@@ -52,7 +52,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         install all components required for building (compiling)
 
         to use e.g.
-            kosmos 'j.builder.buildenv.development()'
+            kosmos 'j.builders.buildenv.development()'
 
         """
 
@@ -67,7 +67,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         """
         C = j.core.text.strip(C)
 
-        if j.core.platformtype.myplatform.platform_is_osx:
+        if j.core.platformtype.myplatform.isMac:
 
             if not self._done_get("xcode_install"):
                 j.sal.process.execute("xcode-select --install", die=False, showout=True)
@@ -92,15 +92,15 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         self.install()
         if self._done_check("development", reset):
             return
-        j.builder.system.package.ensure(C)
+        j.builders.system.package.ensure(C)
         self._done_set("development")
 
     def upgrade(self, reset=False, update=True):
         if self._done_check("upgrade", reset):
             return
         if update:
-            j.builder.system.package.mdupdate(reset=reset)
-        j.builder.system.package.upgrade(reset=reset)
-        j.builder.system.package.clean()
+            j.builders.system.package.mdupdate(reset=reset)
+        j.builders.system.package.upgrade(reset=reset)
+        j.builders.system.package.clean()
 
         self._done_set("upgrade")

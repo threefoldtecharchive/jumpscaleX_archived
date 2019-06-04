@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderBootstrapBot(j.builder.system._BaseClass):
+class BuilderBootstrapBot(j.builders.system._BaseClass):
     """
     specs:
 
@@ -28,14 +28,14 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         will build python & openresty & copy all to the right git sandboxes works for Ubuntu only
         :return:
         """
-        j.builder.db.zdb.build(reset=reset)
+        j.builders.db.zdb.build(reset=reset)
 
     @builder_method()
     def install(self):
         """
         Installs the zdb binary to the correct location
         """
-        j.builder.db.zdb.install()
+        j.builders.db.zdb.install()
 
     @builder_method()
     def sandbox(
@@ -45,8 +45,8 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         flist_create=True,
         merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
     ):
-        j.builder.db.zdb.sandbox(reset=reset)
-        j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
+        j.builders.db.zdb.sandbox(reset=reset)
+        j.tools.sandboxer.copyTo(j.builders.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "bot_configure.toml")
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "bot_configure.toml")

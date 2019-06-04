@@ -7,7 +7,7 @@ The authentication is done using `access` directive [access_by_lua](https://gith
 
 In jumpscale, `lua-resty-iyo-auth` will be installed by default when installing lua/openresty using:
 
-`j.builder.runtimes.lua.install()`
+`j.builders.runtimes.lua.install()`
 
 
 We will need to get an itsyou.online organization (client id) and secret to use them in nginx config, [see how to get them here](iyo_api_key.md).

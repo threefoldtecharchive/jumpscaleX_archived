@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderCmake(j.builder.system._BaseClass):
+class BuilderCmake(j.builders.system._BaseClass):
     NAME = "cmake"
 
     def _init(self):

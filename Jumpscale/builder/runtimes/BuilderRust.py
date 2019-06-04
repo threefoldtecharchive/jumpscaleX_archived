@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderRust(j.builder.system._BaseClass):
+class BuilderRust(j.builders.system._BaseClass):
     NAME = "rust"
     DOWNLOAD_URL = "https://sh.rustup.rs"
 
@@ -29,7 +29,7 @@ class BuilderRust(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         """
-        kosmos 'j.builder.runtimes.rust.sandbox()'
+        kosmos 'j.builders.runtimes.rust.sandbox()'
         :return:
         """
         dest_path = self.DIR_SANDBOX

@@ -1,7 +1,7 @@
 from Jumpscale import j
 
-JSBASE = j.builder.system._BaseClass
-builder_method = j.builder.system.builder_method
+JSBASE = j.builders.system._BaseClass
+builder_method = j.builders.system.builder_method
 
 
 class BuilderRipple(JSBASE):
@@ -29,7 +29,7 @@ class BuilderRipple(JSBASE):
         )
 
         # install cmake
-        j.builder.libs.cmake.install()
+        j.builders.libs.cmake.install()
 
         # rippled requires Boost to be compiled
         boost_build_cmd = """
@@ -47,6 +47,7 @@ class BuilderRipple(JSBASE):
         # clone and build ripple
         ripple_build_cmd = """
             cd {DIR_BUILD}
+            rm -rf rippled
             git clone https://github.com/ripple/rippled.git
             cd rippled
             git checkout master
@@ -81,7 +82,8 @@ class BuilderRipple(JSBASE):
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "rippled")
+        self._remove(code_dir)
 
     @property
     def startup_cmds(self):

@@ -237,7 +237,7 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set("LC_ALL", "en_US.UTF-8")
         self.profile.env_set("LANG", "en_US.UTF-8")
 
-        # self.profile.path_add("${PATH}", end=True)
+        self.profile.path_add("${PATH}", end=True)
 
     def _profile_builder_set(self):
         def _build_flags(env_name, delimiter):
@@ -246,7 +246,6 @@ class BuilderBaseClass(BaseClass):
             return '"{}"'.format(" ".join(flags))
 
         self._remove("{DIR_BUILD}/env.sh")
-
         self._bash = j.tools.bash.get(self._replace("{DIR_BUILD}"))
 
         self.profile.state = "builder"
@@ -307,7 +306,7 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_delete("${PATH}")
 
-        if j.core.platformtype.myplatform.platform_is_osx:
+        if j.core.platformtype.myplatform.isMac:
             self.profile.path_add("${PATH}", end=True)
 
         self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
@@ -399,8 +398,8 @@ class BuilderBaseClass(BaseClass):
         """
         src = self._replace(src)
         dst = self._replace(dst)
-        if j.builder.tools.file_is_dir:
-            j.builder.tools.dir_copy(
+        if j.builders.tools.file_is_dir:
+            j.builders.tools.copyTree(
                 src,
                 dst,
                 keepsymlinks=keepsymlink,
@@ -413,7 +412,7 @@ class BuilderBaseClass(BaseClass):
                 createdir=True,
             )
         else:
-            j.builder.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
+            j.builders.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
 
     def _write(self, path, txt):
         """
@@ -449,7 +448,7 @@ class BuilderBaseClass(BaseClass):
 
     @property
     def system(self):
-        return j.builder.system
+        return j.builders.system
 
     @property
     def tools(self):
@@ -458,7 +457,7 @@ class BuilderBaseClass(BaseClass):
         , write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
         :return:
         """
-        return j.builder.tools
+        return j.builders.tools
 
     def reset(self):
         """
@@ -523,9 +522,9 @@ class BuilderBaseClass(BaseClass):
         :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-        if j.core.platformtype.myplatform.platform_is_linux:
+        if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
-            j.builder.tools.dir_ensure(ld_dest)
+            j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)
 
         self._log_info("uploading flist to the hub")

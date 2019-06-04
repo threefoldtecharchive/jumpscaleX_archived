@@ -1,10 +1,10 @@
 from Jumpscale import j
 
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderNIM(j.builder.system._BaseClass):
+class BuilderNIM(j.builders.system._BaseClass):
     NAME = "nim"
 
     def _init(self):
@@ -15,7 +15,7 @@ class BuilderNIM(j.builder.system._BaseClass):
     def build(self):
 
         """
-        kosmos 'j.builder.runtimes.nim.build()'
+        kosmos 'j.builders.runtimes.nim.build()'
         :return:
         """
         self.profile_sandbox_select()
@@ -38,7 +38,7 @@ class BuilderNIM(j.builder.system._BaseClass):
         self.build()
         nim_bin_path = self.tools.joinpaths(self.DIR_BUILD, "bin")
 
-        j.builder.tools.dir_ensure(nim_bin_path)
+        j.builders.tools.dir_ensure(nim_bin_path)
         self._copy("%s/nim" % nim_bin_path, "{DIR_BIN}/nim")
 
     @builder_method()

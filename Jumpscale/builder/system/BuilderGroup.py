@@ -1,13 +1,13 @@
 from Jumpscale import j
 
 
-class BuilderGroup(j.builder.system._BaseClass):
+class BuilderGroup(j.builders.system._BaseClass):
     def create(self, name, gid=None):
         """Creates a group with the given name, and optionally given gid."""
         options = []
         if gid:
             options.append("-g '%s'" % (gid))
-        j.builder.tools.sudo("groupadd %s '%s'" % (" ".join(options), name))
+        j.builders.tools.sudo("groupadd %s '%s'" % (" ".join(options), name))
 
     def check(self, name):
         """Checks if there is a group defined with the given name,
@@ -35,7 +35,7 @@ class BuilderGroup(j.builder.system._BaseClass):
             self.create(name, gid)
         else:
             if gid is not None and d.get("gid") != gid:
-                j.builder.tools.sudo("groupmod -g %s '%s'" % (gid, name))
+                j.builders.tools.sudo("groupmod -g %s '%s'" % (gid, name))
 
     def user_check(self, group, user):
         """Checks if the given user is a member of the given group. It
@@ -50,7 +50,7 @@ class BuilderGroup(j.builder.system._BaseClass):
         """Adds the given user/list of users to the given group/groups."""
         assert self.check(group), "Group does not exist: %s" % (group)
         if not self.user_check(group, user):
-            j.builder.tools.sudo("usermod -a -G '%s' '%s'" % (group, user))
+            j.builders.tools.sudo("usermod -a -G '%s' '%s'" % (group, user))
 
     def user_ensure(self, group, user):
         """Ensure that a given user is a member of a given group."""
@@ -73,9 +73,9 @@ class BuilderGroup(j.builder.system._BaseClass):
             _, out, _ = j.sal.process.execute(cmd)
             for_user = out.splitlines()
             if for_user:
-                j.builder.tools.sudo("usermod -G '%s' '%s'" % (",".join(for_user), user))
+                j.builders.tools.sudo("usermod -G '%s' '%s'" % (",".join(for_user), user))
             else:
-                j.builder.tools.sudo("usermod -G '' '%s'" % (user))
+                j.builders.tools.sudo("usermod -G '' '%s'" % (user))
 
     def remove(self, group=None, wipe=False):
         """ Removes the given group, this implies to take members out the group
@@ -92,11 +92,11 @@ class BuilderGroup(j.builder.system._BaseClass):
                 for user in members:
                     self.user_del(group, user)
             if is_primary_group:
-                j.builder.system.user.remove(group)
+                j.builders.system.user.remove(group)
             else:
-                j.builder.tools.sudo("groupdel %s" % group)
+                j.builders.tools.sudo("groupdel %s" % group)
         elif not is_primary_group:
             if len(members_of_group):
                 for user in members:
                     self.user_del(group, user)
-            j.builder.tools.sudo("groupdel %s" % group)
+            j.builders.tools.sudo("groupdel %s" % group)

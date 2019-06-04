@@ -42,8 +42,8 @@ if the container is created, you should be able to access filemanager on `http:/
 ## Build filemanager flist
 to build caddy with itsyouonline and filemanager plugins
 
-`j.builder.web.filemanager.build()`
+`j.builders.web.filemanager.build()`
 
 to create and publish your flist
 
-`j.builder.web.filemanager.flist_create('your_hub_instance')`
+`j.builders.web.filemanager.flist_create('your_hub_instance')`

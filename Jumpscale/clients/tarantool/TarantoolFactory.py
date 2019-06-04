@@ -31,7 +31,7 @@ class TarantoolFactory(JSConfigBaseFactory):
         self._tarantoolq = {}
 
     def install(self):
-        j.builder.db.tarantool.install()
+        j.builders.db.tarantool.install()
 
     # def client_configure(self, name="main", ipaddr="localhost", port=3301, login="root", password="admin007"):
     #     """

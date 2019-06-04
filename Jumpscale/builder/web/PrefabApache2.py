@@ -2,19 +2,19 @@ from Jumpscale import j
 import textwrap
 
 
-class BuilderApache2(j.builder.system._BaseClass):
+class BuilderApache2(j.builders.system._BaseClass):
 
     NAME = "apachectl"
 
     def build(self, reset=True):
 
         pkgs = "wget curl gcc libssl-dev zlib1g-dev libaprutil1-dev libapr1-dev libpcre3-dev libxml2-dev build-essential unzip".split()
-        j.builder.system.package.ensure(pkgs)
+        j.builders.system.package.ensure(pkgs)
 
         httpdir = "/optvar/build/httpd"
 
-        if reset and j.builder.tools.dir_exists(httpdir):
-            j.builder.tools.dir_remove("{DIR_BASE}/apps/apache2")
+        if reset and j.builders.tools.dir_exists(httpdir):
+            j.builders.tools.dir_remove("{DIR_BASE}/apps/apache2")
 
         j.core.tools.dir_ensure("/optvar/build")
 
@@ -22,8 +22,8 @@ class BuilderApache2(j.builder.system._BaseClass):
         DOWNLOADLINK = "www-eu.apache.org/dist//httpd/httpd-2.4.29.tar.bz2"
         dest = j.sal.fs.joinPaths("/optvar", "httpd-2.4.29.tar.bz2")
 
-        if not j.builder.tools.file_exists(dest):
-            j.builder.tools.file_download(DOWNLOADLINK, dest)
+        if not j.builders.tools.file_exists(dest):
+            j.builders.tools.file_download(DOWNLOADLINK, dest)
 
         # EXTRACT SROURCE CODE
         j.sal.process.execute(
@@ -62,7 +62,7 @@ class BuilderApache2(j.builder.system._BaseClass):
         j.sal.process.execute(installscript)
 
         # COPY APACHE BINARIES to /opt/jumpscale/bin
-        j.builder.tools.file_copy("{DIR_BASE}/apps/apache2/bin/*", "{DIR_BIN}/")
+        j.builders.tools.file_copy("{DIR_BASE}/apps/apache2/bin/*", "{DIR_BIN}/")
 
     def configure(self):
         conffile = j.core.tools.file_text_read("{DIR_BASE}/apps/apache2/conf/httpd.conf")
@@ -97,7 +97,7 @@ class BuilderApache2(j.builder.system._BaseClass):
             if line:
                 mod = "#" + line
                 conffile = conffile.replace(line, mod)
-        sitesdirconf = j.builder.tools.replace("\nInclude %s/apache2/sites-enabled/*" % j.dirs.CFGDIR)
+        sitesdirconf = j.builders.tools.replace("\nInclude %s/apache2/sites-enabled/*" % j.dirs.CFGDIR)
         conffile += sitesdirconf
         conffile += "\nAddType application/x-httpd-php .php"
 
