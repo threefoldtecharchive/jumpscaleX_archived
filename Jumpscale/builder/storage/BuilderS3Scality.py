@@ -58,10 +58,9 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         )
         return [cmd]
 
-    @builder_method()
     def stop(self):
         # killing the daemon
-        j.sal.process.killProcessByName(self.NAME)
+         j.tools.tmux.pane_get(self.NAME).kill()
 
     @builder_method()
     def test(self):

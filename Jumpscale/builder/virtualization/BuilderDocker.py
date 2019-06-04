@@ -58,7 +58,6 @@ class BuilderDocker(j.builder.system._BaseClass):
         cmd = j.tools.startupcmd.get(self.NAME, cmd="dockerd")
         return [cmd]
 
-    @builder_method()
     def stop(self):
         # killing the daemon
         j.sal.process.killProcessByName(self.NAME)
