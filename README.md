@@ -11,7 +11,8 @@
 Jumpscale is a cloud automation product and a branch from what used to be 
 Pylabs. About 9 years ago Pylabs was the basis of a cloud automation product 
 which was acquired by SUN Microsystems from Q-Layer. In the mean time we are 
-4 versions further and we have rebranded it to Jumpscale.
+4 versions further and we have rebranded it to Jumpscale. 
+Our newest release is version 10, called JSX.
 
 - [Jumpscale](#jumpscale)
   - [About Jumpscale](#about-jumpscale)
@@ -43,13 +44,9 @@ Some tools available in jumpscale
 
 ## Installing Jumpscale
 
-[See documentation](/docs/Installation/install.md)
-
+[See documentation](/docs/Installation)
 
 ## Usage
-
-* The jsshell
-  in your terminal, type `js_shell`
 
 * Kosmos in your terminal, type `kosmos`
 
@@ -83,5 +80,6 @@ def test_main(self)
 [Check Documentation](docs/howto/README.md)
 
 
-## Collaboration Conventions
-[check conventions](docs/CONTRIBUTING.md)
+## Collaboration
+
+[please read more here about how to collaborate](https://github.com/threefoldtech/home/tree/master/contribution)
