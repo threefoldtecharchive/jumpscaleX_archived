@@ -127,7 +127,7 @@ class ZeroHubClient(JSConfigClient):
         """
         return self.api.flist.flist_meflistlinklinkname_get(source, linkname).json()
 
-    def delete(self, filename):
+    def delete_flist(self, filename):
         """
         Delete one of your flist. Warning, this action cannot be reverted.
 
@@ -148,7 +148,5 @@ class ZeroHubClient(JSConfigClient):
         return self.upload(tarfile)
 
     def exists(self, chunks):
-        import ipdb
 
-        ipdb.set_trace()
         self.api.exists.exists_post(chunks).json()

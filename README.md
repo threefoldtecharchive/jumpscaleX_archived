@@ -1,10 +1,6 @@
-**Master:**   
-[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=master)](https://travis-ci.com/threefoldtech/jumpscaleX)
-[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/master/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)  
 **Development:**  
-[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
-[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
-
+[![Build Status](http://188.165.233.148:6010/status?project=build)](http://188.165.233.148:6010/status?project=build&&file=True)
+[![Builders Status](http://188.165.233.148:6010/status?project=builders)](http://188.165.233.148:6010/status?project=builders&&file=True)
 
 # Jumpscale
 
