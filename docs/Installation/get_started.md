@@ -58,10 +58,10 @@ root@3bot:~$ source /sandbox/env.sh; kosmos;
 ```
 
 once kosmos is launched you will see this line
-```
+
+```bash
 JSX>
 ```
-
 
 # 1. Using kosmos to create a wallet on the ThreeFold blockchain aka TFChain
 
