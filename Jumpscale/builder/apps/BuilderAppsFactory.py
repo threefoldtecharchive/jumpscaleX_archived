@@ -10,6 +10,7 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
         self._freeflow = None
         self._digitalme = None
         self._userbot = None
+        self._corex = None
 
     @property
     def gitea(self):
@@ -42,3 +43,11 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
             self._userbot = BuilderUserBot()
         return self._userbot
+
+    @property
+    def corex(self):
+        if self._corex is None:
+            from .BuilderCoreX import BuilderCoreX
+
+            self._corex = BuilderCoreX()
+        return self._corex
