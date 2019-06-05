@@ -308,12 +308,10 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
     def index_rebuild(self):
-
         self._log_warning("REBUILD INDEX")
         self.meta.reset()
-        for url, model in self.models.items():
-            if model.bcdb != self:
-                raise RuntimeError("bcdb on model needs to be same as myself")
+        for o in self.meta.data.schemas:
+            model = self.model_get_from_sid(o.sid)
             model.index_rebuild()
             self.meta._schema_set(model.schema)
 

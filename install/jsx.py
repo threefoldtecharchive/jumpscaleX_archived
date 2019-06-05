@@ -15,9 +15,6 @@ from urllib.request import urlopen
 
 DEFAULT_BRANCH = "development_installer"
 
-# CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
-# CONTAINER_BASE_IMAGE = "despiegk/3bot:latest"
-
 
 def load_install_tools():
     # get current install.py directory
@@ -471,6 +468,22 @@ def modules_install(url=None, configdir=None):
 
 
 @click.command()
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def bcdb_indexrebuild(name=None, configdir=None):
+    """
+    rebuilds the index for all BCDB or a chosen one (with name),
+    use this to fix corruption issues with index
+    if name is not given then will walk over all known BCDB's and rebuild index
+    :return:
+    """
+    from Jumpscale import j
+
+    j.shell()
+    bcdb.index_rebuild()
+
+
+@click.command()
 def generate():
     """
     generate the loader file, important to do when new modules added
@@ -503,6 +516,7 @@ if __name__ == "__main__":
     cli.add_command(generate)
     cli.add_command(wireguard)
     cli.add_command(modules_install)
+    cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     IT = load_install_tools()
