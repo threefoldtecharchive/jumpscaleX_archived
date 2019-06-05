@@ -10,3 +10,7 @@
 ## License
 
 [Jumpscale](http://www.jumpscale.com/) is a BSD 2-Clause license.
+
+# Get Started
+
+Follow these [simple steps](Installation/get_started.md) to understand how jumpscale works.

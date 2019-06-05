@@ -34,7 +34,7 @@ def main():
                 {"type": "default", "name": "nat0"},
                 {"type": "zerotier", "id": ZT_ID, "name": "zt0", "ztClient": zt_client_instance},
             ],
-            "flist": "https://hub.gig.tech/gig-bootable/ubuntu:lts.flist",
+            "flist": "https://hub.grid.tf/gig-bootable/ubuntu:lts.flist",
             "disks": [{"url": disk_url, "name": "data1", "mountPoint": "/mnt", "filesystem": "btrfs"}],
             "configs": [{"name": "sshkey", "path": "/root/.ssh/authorized_keys", "content": KEY_PUB}],
         }
