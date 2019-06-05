@@ -139,7 +139,7 @@ class Mongodb:
         :method destroy: stop the container.
 """
 
-    FLIST = "https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist"
+    FLIST = "https://hub.grid.tf/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist"
     _CONFIG_DIR = "/data/configdb"
     _SHARD_DIR = "/data/db"
 

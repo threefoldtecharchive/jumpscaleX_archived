@@ -31,7 +31,7 @@ def do_pkgsandbox_and_push(prefabpkg, flistname="cryptosandbox", bins=None):
 
     prefab.core.execute_bash("cd {} && tar -czf /tmp/{}.tar.gz .".format(DATA_DIR, flistname))
     prefab.core.execute_bash(
-        """curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz https://hub.gig.tech/api/flist/me/upload""".format(
+        """curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz https://hub.grid.tf/api/flist/me/upload""".format(
             iyo_client.jwt, flistname
         )
     )
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
         cryptosandboxtarget = "cryptosandbox.flist"
 
-        zhub_data = {"token_": iyo_client.jwt_get(), "username": username, "url": "https://hub.gig.tech/api"}
+        zhub_data = {"token_": iyo_client.jwt_get(), "username": username, "url": "https://hub.grid.tf/api"}
         zhub_client = j.clients.zhub.get(instance="mainbe", data=zhub_data)
         if hasattr(zhub_client, "authentificate"):
             zhub_client.authentificate()
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         ubuntucryptoflist = merge(zhub_client, ubuntucryptotarget, ubuntucryptosources)
 
-        print("https://hub.gig.tech/{}".format(ubuntucryptoflist))
+        print("https://hub.grid.tf/{}".format(ubuntucryptoflist))
 
         # try to do localhub
         zhub_dataeg = {"token_": iyo_client.jwt_get(), "username": username, "url": "http://192.168.20.132:8080/api"}
