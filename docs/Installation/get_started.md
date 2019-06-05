@@ -6,6 +6,7 @@
     * to see if SSL key has been loaded `ssh-add -L` 
     * :warning: you must have only one ssh key if you choose NOT to provide secret to use for passphrase and use SSH-Agent instead during the install
 * Docker installed 
+* Python3 installed
 
 ## philosophy
 JumpscaleX aka JSX was created at the beginning so that junior system administrators can easily use this tool to manage resources, provision machines, create and deploy containers.
@@ -17,72 +18,65 @@ It will even be able to engage in trade with others and this network of 3bots wi
 Don't worry nobody except you can take control over your 3bot as all your config files are encrypted (securely stored) and your keys never leaves your device.
 
 
-# Starting Steps
+# Installation
 
-## getting the files and installation application
+## Launch a Jumpscale X container
 
-make sure to create a directory `{MY_DIR}` where your user has full access.
-For instance I will choose to install inside this directory /home/ben/3bot/
-so I will replace here below `{MY_DIR}` by /home/ben/3bot/
-
+### How it works
+The python script will load a docker image and start a docker container on your machine. It will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch the shell (aka kosmos) to manipulate the Jumpscale X library .
 
 ```bash
-#create directory, make sure your user has full access to this directory
-mkdir -p `{MY_DIR}`/github/threefoldtech; \
-cd `{MY_DIR}`/github/threefoldtech; \
-git clone git@github.com:threefoldtech/jumpscaleX.git; \
-cd jumpscaleX; \
-git checkout master; \
-git pull; \
+#get the installer
+# TODO CHANGE BRANCH WITH MASTER
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
+chmod 777 /tmp/jsx; \
+#install
+/tmp/jsx container-install; 
 ```
-Now go to the [latest release](https://github.com/threefoldtech/jumpscaleX/releases) of the 3bot  
-and get the application for your operating system
 
-## launching the installation application
-Launch the interactive installation with this command
+get more help about the jsx command
+```bash
+/tmp/jsx --help
+```
+
+## launching kosmos the jumpscale X REPL(read–eval–print loop) shell
+
+you can launch kosmos the easy way with this command
  
 ```bash
-./3bot_dev --code-path `{MY_DIR}` install
+#get first time your kosmos shell
+$ /tmp/jsx container-kosmos;
 ```
 
-Just answer the questions till the end of the installation. If you don't know what to answer just hit enter to continue.
+or by connecting to your container through ssh
 
-:warning: If you already have multiple ssh key on your machine be sure to answer no and enter a passphrase at the step
 ```bash
-> Optional: provide secret to use for passphrase, if ok to use SSH-Agent just press 'ENTER'
-``` 
-
-at the end of the process you should have a container named 3bot running and see this
-```bash
-install succesfull:
-
 # to login to the docker using ssh use (if std port)
-ssh root@localhost -A -p 9122
-
-# to start using the kosmos shell when you're using the 3bot_devel tools do: 
-python3 3bot_dev.py connect
+$ ssh root@localhost -A -p 9122
+root@3bot:~$ source /sandbox/env.sh; kosmos;
 ```
 
-You can now connect with SSH. Enter this to have a shell access to the container
-```bash
-ssh root@localhost -A -p 9122
+once kosmos is launched you will see this line
+```
+JSX>
 ```
 
-## launching kosmos
-Now the fun part let's run our kosmos shell
-```bash
-$ source /sandbox/env.sh; kosmos 
-```
 
-# 1. Using kosmos to create a wallet on the TFchain 
+# 1. Using kosmos to create a wallet on the ThreeFold blockchain aka TFChain
 
-In kosmos, create a TFChain client.
+The ThreeFold blockchain is used as a ledger for the ThreeFold Token ("TFT"), a digital currency backed by neutral and sustainable internet capacity. You can learn more about the ThreeFold token on threefoldtoken.com. For more informations check out the docs on the ThreeFold chain [github repository](https://github.com/threefoldfoundation/tfchain).
 
-**The `network_type` is important, it specify you want to use the TestNet.**
-**You will play with real TFT otherwise, so be careful**
 
 ```python
-c = j.clients.tfchain.new(name='my_client', network_type='TEST')
+JSX> j.clients.tfchain.new(name='my_client', network_type='TEST')
+```
+
+**The `network_type` is important, it specify you want to use the TestNet.**
+**Otherwise you will play with real TFT, so be careful**
+
+now are client is accessible like this
+```python
+JSX> j.clients.tfchain.my_client
 ```
 
 With your new client, create a TFChain wallet, if you don't already have one.
@@ -90,9 +84,22 @@ As soon as your wallet is created, please save your seed somewhere. This is the 
 wallet back for recovery.
 
 ```python
-JSX> w = c.wallets.new("my_wallet")
-JSX> w.seed
+JSX> j.clients.tfchain.my_client.wallets.new("my_wallet")
+JSX> j.clients.tfchain.my_client.wallets.my_wallet.seed
 'trust faculty frame ...'
+```
+
+to make things more compact we can create variables
+```python
+JSX> c = j.clients.tfchain.my_client
+JSX> w = j.clients.tfchain.my_client.wallets.my_wallet
+```
+
+note that all the _new_ commands have another form
+```python
+JSX> c.wallets.new("pocket_money")
+#is equivalent to
+JSX> c.wallets.pocket_money
 ```
 
 If you already have one, you can recover it using its seed:
@@ -101,30 +108,54 @@ If you already have one, you can recover it using its seed:
 JSX> w = c.wallets.new('my_wallet', seed='bullet absurd cabin dose void wink toward oven catalog chef venture edge suggest strategy note merry mechanic buffalo bronze creek select walk click snow')
 ```
 
-**TIP : at any moment hit the question mark key to display the interactive help to know more about a function arguments.** 
+**TIPS : at any moment hit the question mark key to display the interactive help to know more about a function arguments.** 
 
 
-Get the address of your wallet
+Get the first address of your wallet
 
 ```python
 JSX> w.address
 '01d761561e7203276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0fd08c5f91'
 ```
 
-note that if you want to be able to quickly get access to your wallet if for instance you loose the connection with your container you can save the variable and load them again
+you can create more addresses
+```python
+JSX> w.address_new()
+'015cd2821abc03276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0f65dbcc8'
+JSX> w.addresses
+['01d761561e7203276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0fd08c5f91','015cd2821abc03276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0f65dbcc8']
+```
+
+note that if you want to be able to quickly get access to your wallet if for instance you loose the connection with your container you can save it and all the other objects.
 
 ```python
 JSX> w.save()
+JSX> c.save()
 ```
 
-kill your terminal then connect to your container and launch kosmos again
+kill your terminal (CTRL + D) and then restart your container and launch kosmos again `/tmp/jsx container-kosmos;`
+
+Note that now the instances are still accesible by their name (not by the variable name) from the shell.
+```python
+JSX> j.clients.tfchain.my_client
+## tfchainclient Instance: 'my_client'
+JSX> j.clients.tfchain.my_client.wallets.my_wallet
+## j.clients.tfchain Instance: 'my_wallet'
+```
+
+but the variables don't exist anymore
+```python
+JSX> c
+name 'c' is not defined
+JSX> w
+name 'w' is not defined
+```
+
+be sure to reassign those variables before going further
 
 ```python
-JSX> c = j.clients.tfchain.new(name='my_client', network_type='TEST')
-JSX> w = c.wallets.get("my_wallet")
-Mon 03 13:24:37 BCDB.py          - 428 - bcdb:bcdb                          : load model:jumpscale.tfchain.wallet
-JSX> w.address
-'01d761561e7203276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0fd08c5f91'
+JSX> c = j.clients.tfchain.my_client
+JSX> w = c.wallets.my_wallet
 ```
  
 # 2. get some test TFT token on our faucet 
@@ -138,7 +169,7 @@ JSX> w.address
 ```
 
 Head to https://faucet.testnet.threefoldtoken.com/ and fill the from with your wallet address.
-Then check the balance on your wallet, after a couple of minutes you should see the `300 TFT` from the faucet.
+Then check the balance on your wallet address, after a couple of minutes you should see the `300 TFT` from the faucet.
 
 ```python
 JSX> w.balance
@@ -155,19 +186,37 @@ wallet balance on height 251955 at 2019/04/12 09:40:50
 
 # 3.Register a ThreeBot
 
-Creating a new 3bot record can be done as follows:
+To be able to interact in the threefold grid we need to register a 3bot.
+Creating a new 3bot record on the TFChain can be done with your wallet.
+We will call the threebot registration function with these arguments:
 
 - `months`: for how long time do you want your 3bot, you pay for that amount of time (default is 1, can be from 1 to 24)
 - `names`: list of names which will be used later to identify your 3bot
 - `addresses`: list of addresses
-- `key_index`: optional key index
 
-**TO BE REMOVED result= w.threebot.record_new(1,["robot2000.sonnom"],["robot2000.org"])**
+**Bot names should follow a specific format**
+the bot name must begin with a letter followed by 3 to 61 letters and digit and end with a letter. You can then add a point and follow the same rule.
+
+e.g. of valid name
+* t1000
+* t1000.robot
+* t1000.terminator
+* robot.that1.daycould.easily.surpass.evenmore.than1000humans
+
+e.g. of invalid name
+
+* 3robot
+* t1000.com
+* www.t1000.robot
+
+if you want to be sure that your name is valid you can visit [this website](https://regex101.com/) and enter this regular expression `^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$`
+
+Then type your name under _test string_. Your name will be highlighted if it is valid.
 
 ```python
 JSX> result = w.threebot.record_new(
     months=1,
-    names=["your3bot.name"],
+    names=["your3bot.fancyname"],
     addresses=["your3bot.org"])
 
 
@@ -182,30 +231,29 @@ True
 
 you can then check your 3bot registration transaction on the [testnet explorer]
 (https://explorer.testnet.threefoldtoken.com/)
-You can search the 3bot by name. Here we would enter my3bot.example and click the search button. You should see the detail about the 3bot and a link to the creation transaction.
-
+You can search the 3bot by name. Here we would enter your3bot.fancyname and click the search button. You should see the detail about the 3bot and a link to the creation transaction.
 
 For mode detail about the 3Bot registration and updates, [go to the full documentation](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/clients/blockchain/tfchain/README.md#create-and-manage-3bot-records)
 
-**You'll need to wait some time before your 3bot being available.**
 
 # 4. Rent a virtual machine running our light weight, secure and super efficient OS called zero OS on the TF grid
 
-First we should look for a farm that provide what we look for. We have a convenient [website for capacity](https://capacity.threefoldtoken.com) selection. Let's say that we need at least 2 CPU 4GiB RAM and we need it to be located in austria. We just have to move a few sliders around and we got the [results](https://capacity.threefoldtoken.com/?cru=2&mru=4&country=Austria&farmer=)
-The first result is the node ac1f6b84a330 from the green edge cloud.austria.vienna  Farmer located in Wien (Austria). Click on the details button if you want more information on that node.
+First we should look for a farm that provide what we look for. We have a convenient [website for capacity](https://capacity.threefoldtoken.com) selection. 
 
-Now that we have the node id that suits our need we will book the capacity:
+Let's say that we need at least 2 CPU 4GiB RAM and we need it to be located in austria. We just have to move a few sliders around and we got the [results](https://capacity.threefoldtoken.com/?cru=2&mru=4&country=Austria&farmer=).
+
+The first result is the node ac1f6b84a330 from the _green edge cloud.austria.vienna_  Farmer located in Wien (Austria). Click on the details button if you want more information on that node.
+
+Now that we have the node _id_ that suits our need we will book the capacity:
 
 ```python
 JSX> result = w.capacity.reserve_zos_vm(
     email='user@email.com',       # the email on which you will received the connection information
-    threebot_id='your3bot.name', # your threebot id, it can be any of the names you gave to your 3bot
+    threebot_id='your3bot.fancyname', # your threebot id, it can be any of the names you gave to your 3bot
     location='ac1f6b84a330',         # name of the farm or node id where to deploy the workload
     size=2                        # each workload have a different size available
 )
 ```
-
-**TO BE REMOVED result = w.capacity.reserve_zos_vm('ben@cogarius.com','my3bot2.example', 'ac1f6b84a330', 2)**
 
 **Be sure to enter a valid email as we will receive the IP of our reserved virtual machine by mail.**  
 
@@ -214,22 +262,29 @@ As soon as it is ready, usually within a few minutes, you will receive an email 
 
 # 5. Connect to your virtual machine
 
-Any workload deployed on the grid will be reachable on the public threefold network. This also means any workload in this network is able to communicate to any other workload deployed anywhere else on the grid, you can see it as the internet of the grid. As long as you don't have to expose your services to the outside of the grid, this network is all you need to use.
+Any workload deployed on the grid will be reachable on the public threefold network.
+
+This also means any workload in this network is able to communicate to any other workload deployed anywhere else on the grid, you can see it as the internet of the grid. 
+
+As long as you don't have to expose your services to the outside of the grid, this network is all you need to use.
 
 This public threefold network is a zero tier public network with the id `9bee8941b5717835`
 
 - Download and install the [zerotier application](https://www.zerotier.com/download.shtml).
 - connect to the network `$sudo zerotier-cli join 9bee8941b5717835`
-- verify that you are connected by listing the zerotier networks `$sudo zerotier-cli listnetworks` you should see `9bee8941b5717835 tfgrid_public 36:f5:2f:5b:f6:b9 OK` in the output
+- verify that you are connected by listing the zerotier networks
+```bash
+$sudo zerotier-cli listnetworks
+.....9bee8941b5717835 tfgrid_public 36:f5:2f:5b:f6:b9 OK.....
+```
 
 if you want to quit the network `$sudo zerotier-cli leave 9bee8941b5717835`
 
 Previously when we booked a virtual machine we received a mail that contains a 0-bot url. Now that we are connected we can reach that url e.g., `0-robot url: http://10.244.28.174:6600`. If you browse that url you should be able to see the 0-robot homepage.
 
-Inside the mail you will also find your zos ip e.g.,`0-OS address: 10.244.28.174:6379` . You can use Kosmos shell to connect to it.
+Inside the mail you will also find your zos _ip_ e.g.,`0-OS address: 10.244.28.174:6379` . You can use Kosmos shell to connect to it.
 ```python
-$ python3 install/jsx.py container-kosmos
-JSX> vm = j.clients.zos.get("zos", host="${your_zos_ip_here_without_the_port}")
+JSX>j.clients.zos.get("my_vm", host="${your_zos_ip_here_without_the_port}")
 
 # Check for connectivity
 JSX> vm.ping()
@@ -282,10 +337,7 @@ We will create a container on our previsously reserved zos virtual machine.
 If you can connect to your zos vm (see above) you can start making a container with our newly created flist.
 
 ```python
-$ python3 install/jsx.py container-kosmos
-JSX> vm = j.clients.zos.get("zos", host="${your_zos_ip_here_without_the_port}")
-
-JSX> vm.containers.create(name="simple-nginx-website", flist="https://hub.grid.tf/ben_mat_1/nginxdemos-hello-latest.flist", ports={'8081':80})
+JSX> j.clients.zos.my_vm.containers.create(name="simple-nginx-website", flist="https://hub.grid.tf/ben_mat_1/nginxdemos-hello-latest.flist", ports={'8081':80})
 JSX> site = vm.containers.get(name="simple-nginx-website")
 JSX> site.is_running()
 True
@@ -296,6 +348,7 @@ That's it ! If everything works as expected, you should be able to reach your ng
 
 ### Stream logs
 First we need to find the id of the nginx process running in our container
+let's check all the processes that are running on our container
 ```python
 JSX> site.client.job.list()
 [
@@ -310,86 +363,88 @@ JSX> site.client.job.list()
 Here above we can see that the nginx process has the id _entry_.
 Let's stream the output of the process
 ```python
-JSX>sub = vm.client.subscribe('entry')
+JSX>sub = site.client.subscribe('entry')
 JSX>sub.stream()
 10.244.211.254 -[1/Jun/2019:13:55:49 ] "GET / HTTP/1.1" 200 7225 "-" "Mozilla/5.0 (X11; Linux x86_64) Chrome/"
 ```
 
-If you want to create your flist without using the docker converter you can follow these steps [here](https://github.com/threefoldtech/home/blob/dd7e396a921c74ccfa2c082e34af95c5a28e314e/.archives/zero-os/docs/tutorials/Create_a_Flist_and_Start_a_Container.md)
-
 # 7. Go further with Jumpscale X
 
-## What can we do with it ?
+## What have we done with it so far ?
 
  * Connect and interact with the ThreeFold blockchain (TFT token)
  * provision virtual machines on the ThreeFold grid
  * deploy containers
  * build (builders) and deploy flist (light weight and secure container)
-and much more 
+and much more
 
-Shell interface is intuitive and doesn't need you to learn a syntax.
-You have builtin types schema and database (BCDB wich will be decentralized using erasure coding and it is based on redis protocol more efficient than rest can do pipeline etc ..) 
+the kosmos shell interface is intuitive and doesn't need you to learn a syntax.
+You have builtin types schema and database.
+
+
+## Play around with schema
 
 for instance you can define schema (data structure) like this 
 ```python
-my_schema_text = """
+JSX>my_schema_text = """
 @url = my.first.schema.1
 mynumber = 42
 mydate = 0 (D)
 mylist = "1,2,3" (L)
-mybool = 1 (B)
+mybool = 0 (B)
 mystring= "yolo" (S) #you only live once
 mymoney = "10 USD" (N)
 myenum = "red,green,blue" (E) #first one specified is the default one
 mydictionary = {"number": 468} (dict)
 """
-my_schema_object = j.data.schema.get_from_text(my_schema_text)
-my_schema_instance = my_schema_object.new()
-you can then do 
-my_schema_instance.mynumber
-it will answer 
+JSX> my_schema_object = j.data.schema.get_from_text(my_schema_text)
+JSX> my_schema_instance = my_schema_object.new()
+#you can then do 
+JSX> my_schema_instance.mynumber 
 42
-my_schema_instance.mybool = True
-my_schema_instance.mybool = true
-my_schema_instance.mybool = 1
-my_schema_instance.mybool = "true"
+JSX> my_schema_instance.mybool = True
+JSX> my_schema_instance.mybool = true
+JSX> my_schema_instance.mybool = 1
+JSX> my_schema_instance.mybool = "true"
+#all the above commands will have the same result
 ```
 
-they will all have the same result
-
-now try my_schema_instance.mymoney.value_currency("eur") 
+now try 
+```python
+JSX> my_schema_instance.mymoney.value_currency("eur")
+8.45101
+# which is the equivalent in eur of our 10$ previously defined in the schema_text
+```
 play around and try these commands and check the value or the property
 ```python
-my_schema_instance.mylist = "yolo,42,kawai"
-my_schema_instance.mylist = [1,[2,5],"yolo"] 
-my_schema_instance.myenum = 2
-my_schema_instance.mymoney = "10k GBP"
-my_schema_instance.mymoney.usd
-my_schema_instance.mymoney = my_schema_instance.mymoney * "10%"
-my_schema_instance.mydate = "18/04/1980"
-my_schema_instance.mydate = "01/18"
-my_schema_instance.mydate = "+4d"
-my_schema_instance.mydictionary["number"]
-my_schema_instance.mydictionary["string"] = "iolo"
+JSX> my_schema_instance.mylist = "yolo,42,kawai"
+JSX> my_schema_instance.mylist
+JSX> my_schema_instance.mylist = [1,[2,5],"yolo"]
+JSX> my_schema_instance.mylist
+JSX> my_schema_instance.myenum = 2
+JSX> my_schema_instance.myenum
+JSX> my_schema_instance.mymoney = "10k GBP"
+JSX> my_schema_instance.mymoney
+JSX> my_schema_instance.mymoney.usd
+JSX> my_schema_instance.mymoney = my_schema_instance.mymoney * "10%"
+JSX> my_schema_instance.mymoney
+JSX> my_schema_instance.mydate = "18/04/1980"
+JSX> my_schema_instance.mydate
+JSX> my_schema_instance.mydate = "01/18"
+JSX> my_schema_instance.mydate
+JSX> my_schema_instance.mydate = "+4d"
+JSX> my_schema_instance.mydate
+JSX> my_schema_instance.mydictionary["number"]
+JSX> my_schema_instance.mydictionary["string"] = "iolo"
 ```
 
+Jumpscale X relies on several _Domain Specific Language_ like the one used by the schema this approach is more efficient than a librairie because you don't need to be a developer to use it.
 
-JSX relies on several Domain Specific Language like the one used by the schema this approach is more efficient than a librairie because you don't need to be a developer to use it.
+## Builders
 
-Builders /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/builders 
-are a way to create flist 
-flist can be deploy inside a zos and package an application basically 
+[Builders](https://github.com/threefoldtech/jumpscaleX/tree/master/docs/Internals/builders)
+are a way to create flist.
+
+flist can be deploy inside a zos and package an application.
 flist can be built on flist
-take a look at jumpscale/builders
-
-For the coders who develop JSX 
-we need to use JSX to get inspired by it and to know all the functions it can provide. What we see now is coders that uses python to create builders instead of using the fucntions built in in jsx that are more efficient 
-self.build(reset=reset)
-bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
-bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
-self.tools.dir_ensure(bin_dest)
-self.tools.file_copy(bin_path, bin_dest)
-
-
-## How it works
-The install application will create an image and start a docker container on your machine. It will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch kosmos the shell to .
+take a look at [jumpscale/builders](https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/builder)
