@@ -14,7 +14,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
     def build(self):
         postgres_url = "https://ftp.postgresql.org/pub/source/v9.6.13/postgresql-9.6.13.tar.gz"
         j.builders.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
-        j.builders.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
+        j.builders.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev", "sudo"])
 
         cmd = self._replace(
             """
