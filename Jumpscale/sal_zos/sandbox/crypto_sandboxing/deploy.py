@@ -141,7 +141,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     zrobot_cl = j.clients.zrobot.robots[zos_node_name]
     tft_node_name = "tft_node"
     tft_node_data = {
-        "flist": "https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
+        "flist": "https://hub.grid.tf/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
         "memory": 1024 * 14,
         "cpu": 2,
         "nics": [{"type": "default", "name": "nic01"}],
@@ -209,7 +209,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     btc_node_name = "btc_node"
 
     btc_node_data = {
-        "flist": "https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
+        "flist": "https://hub.grid.tf/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
         "memory": 1024 * 14,
         "cpu": 2,
         "nics": [{"type": "default", "name": "nic01"}],
