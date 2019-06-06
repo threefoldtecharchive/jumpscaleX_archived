@@ -247,7 +247,7 @@ class BuilderLua(j.builders.system._BaseClass):
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_ubuntu.git"
             )
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_osx.git"
             )

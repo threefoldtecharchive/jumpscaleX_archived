@@ -20,7 +20,7 @@ class BuilderTarantool(j.builders.system._BaseClass):
 
         j.builders.buildenv.install()
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             # cmd="brew install tarantool"
             j.builders.system.package.ensure("lua,tarantool,luajit,cmake,msgpuck")
 
@@ -51,7 +51,7 @@ class BuilderTarantool(j.builders.system._BaseClass):
             sudo tarantoolctl rocks install expirationd
             sudo tarantoolctl rocks install connpool
             sudo tarantoolctl rocks install http
-            
+
 
             # sudo luarocks install luatweetnacl
 

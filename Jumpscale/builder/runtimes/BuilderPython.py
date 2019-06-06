@@ -12,7 +12,7 @@ class BuilderPython(j.builders.system._BaseClass):
         self.DIR_CODE_L = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
         j.sal.fs.createDir(self.DIR_CODE_L)
 
-        if not j.core.platformtype.myplatform.isMac:
+        if not j.core.platformtype.myplatform.platform_is_osx:
             self.PATH_OPENSSL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
         else:
             rc, out, err = j.sal.process.execute("brew --prefix openssl")
@@ -76,7 +76,7 @@ class BuilderPython(j.builders.system._BaseClass):
                 )
             )
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             # clue to get it finally working was in
             # https://stackoverflow.com/questions/46457404/
             # how-can-i-compile-python-3-6-2-on-macos-with-openssl-from-homebrew
@@ -287,7 +287,7 @@ class BuilderPython(j.builders.system._BaseClass):
         path = self.DIR_BUILD
         self._log_info("sandbox:%s" % path)
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             j.builders.system.package.install("redis")
         else:
             j.builders.system.package.install("redis-server")
@@ -398,7 +398,7 @@ class BuilderPython(j.builders.system._BaseClass):
                     j.sal.fs.remove(item)
                     pass
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             C = """
             mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
             rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-darwin
@@ -461,7 +461,7 @@ class BuilderPython(j.builders.system._BaseClass):
                 rsyncdelete=True,
             )
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             url = "git@github.com:threefoldtech/sandbox_osx.git"
             path = j.clients.git.getContentPathFromURLorPath(url)
             src0 = "%s/lib/pythonbin/" % self.DIR_SANDBOX

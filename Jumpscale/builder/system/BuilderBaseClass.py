@@ -306,7 +306,7 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_delete("${PATH}")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.profile.path_add("${PATH}", end=True)
 
         self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
