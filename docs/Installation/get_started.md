@@ -26,13 +26,15 @@ It will even be able to engage in trade with others and this network of 3bots wi
   
 Don't worry nobody except you can take control over your 3bot as all your config files are encrypted (securely stored) and your keys never leaves your device.
 
-
 # Installation
 
 ## Launch a Jumpscale X container
 
 ### How it works
+
 The python script will load a docker image and start a docker container on your machine. You just need to answer a few questions during the install script. The container will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch the shell (aka kosmos) to manipulate the Jumpscale X library .
+
+### Install scripts
 
 ```bash
 #get the installer
@@ -41,21 +43,30 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_inst
 #install
 python3 /tmp/jsx.py container-install; \
 cp /tmp/jsx.py /tmp/jsx; \
-chmod 777 /tmp/jsx;
+chmod +x /tmp/jsx; \
 ```
-
-
-
 
 get more help about the jsx command
 ```bash
 /tmp/jsx --help
 ```
 
+### shortcut to jsx
+
+if you want to be able to launch `jsx` directly instead of typing `/tmp/jsx` you should either.
+* add it to  your `$PATH`
+```
+$ PATH=$PATH:/tmp
+```
+* move the `jsx` binary to your `/usr/local/bin`
+```
+$ sudo mv /tmp/jsx /usr/local/bin
+```
+
 ## launching kosmos the jumpscale X REPL(read–eval–print loop) shell
 
 you can launch kosmos the easy way with this command
- 
+
 ```bash
 #get first time your kosmos shell
 $ /tmp/jsx container-kosmos;
