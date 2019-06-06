@@ -249,6 +249,8 @@ For mode detail about the 3Bot registration and updates, [go to the full documen
 
 # 4. Rent a virtual machine running our light weight, secure and super efficient OS called zero OS on the TF grid
 
+![](../images/zos_components.png)
+
 First we should look for a farm that provide what we look for. We have a convenient [website for capacity](https://capacity.threefoldtoken.com) selection. 
 
 Let's say that we need at least 2 CPU 4GiB RAM and we need it to be located in austria. We just have to move a few sliders around and we got the [results](https://capacity.threefoldtoken.com/?cru=2&mru=4&country=Austria&farmer=).
