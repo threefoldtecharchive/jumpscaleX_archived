@@ -2,8 +2,10 @@
 ## Prerequisite
 * Mac OS X 10.7 (Lion) or newer or a linux OS (tested on ubuntu 18.04)
 * Git installed with a github account
-* an [ssh key](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) added to [github](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account)
-    * to see if SSL key has been loaded `ssh-add -L` 
+* an ssh key added to github
+    * go [here](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to generate a ssh key
+    * go [here](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account) to add a ssh key to your github account
+    * to list your public ssh keys `ssh-add -L`
 * Docker
     * installation [guide](https://docs.docker.com/v17.12/install/#server)
     * verify installation with `$docker --version`
