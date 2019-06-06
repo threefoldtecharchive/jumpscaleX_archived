@@ -455,6 +455,14 @@ JSX> my_schema_instance.mydictionary["string"] = "iolo"
 
 Jumpscale X relies on several _Domain Specific Language_ like the one used by the schema this approach is more efficient than a librairie because you don't need to be a developer to use it.
 
+## Capacity reservation
+
+If you want to know more about capacity reservation like :
+* Make your container accessible from internet
+* reserve S3 archive storage
+* reserve a Zero DB namespace
+check out this [documentation](https://github.com/threefoldfoundation/info_grid/blob/development/docs/capacity_reservation/README.md)
+
 ## Builders
 
 [Builders](https://github.com/threefoldtech/jumpscaleX/tree/master/docs/Internals/builders)
