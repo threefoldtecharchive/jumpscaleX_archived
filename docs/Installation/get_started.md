@@ -39,11 +39,10 @@ The python script will load a docker image and start a docker container on your 
 ```bash
 #get the installer
 # TODO CHANGE BRANCH WITH MASTER
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx.py ; \
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
 #install
-python3 /tmp/jsx.py container-install; \
-cp /tmp/jsx.py /tmp/jsx; \
 chmod +x /tmp/jsx; \
+/tmp/jsx container-install;
 ```
 
 get more help about the jsx command
