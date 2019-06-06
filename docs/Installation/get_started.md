@@ -4,9 +4,16 @@
 * Git installed with a github account
 * an [ssh key](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) added to [github](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account)
     * to see if SSL key has been loaded `ssh-add -L` 
-    * :warning: you must have only one ssh key if you choose NOT to provide secret to use for passphrase and use SSH-Agent instead during the install
-* Docker installed 
-* Python3 installed
+* Docker
+    * installation [guide](https://docs.docker.com/v17.12/install/#server)
+    * verify installation with `$docker --version`
+* Python3
+    * installation [guide](https://www.python.org/downloads/)
+    * verify installation with `$python3 --version`
+* pip3  
+    * `$sudo apt install python3-pip`
+* click python package  
+    *  `$pip3 install click `  
 
 ## philosophy
 JumpscaleX aka JSX was created at the beginning so that junior system administrators can easily use this tool to manage resources, provision machines, create and deploy containers.
@@ -23,7 +30,7 @@ Don't worry nobody except you can take control over your 3bot as all your config
 ## Launch a Jumpscale X container
 
 ### How it works
-The python script will load a docker image and start a docker container on your machine. It will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch the shell (aka kosmos) to manipulate the Jumpscale X library .
+The python script will load a docker image and start a docker container on your machine. You just need to answer a few questions during the install script. The container will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch the shell (aka kosmos) to manipulate the Jumpscale X library .
 
 ```bash
 #get the installer
@@ -34,6 +41,9 @@ python3 /tmp/jsx.py container-install; \
 cp /tmp/jsx.py /tmp/jsx; \
 chmod 777 /tmp/jsx;
 ```
+
+
+
 
 get more help about the jsx command
 ```bash
