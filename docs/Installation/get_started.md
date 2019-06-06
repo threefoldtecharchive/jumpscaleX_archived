@@ -64,7 +64,7 @@ sudo mv /tmp/jsx /usr/local/bin
 
 ## Launching kosmos the jumpscale X REPL(read–eval–print loop) shell
 
-### easy way
+### Easy way
 
 you can launch kosmos the easy way with this command
 
@@ -73,7 +73,7 @@ you can launch kosmos the easy way with this command
 $ /tmp/jsx container-kosmos;
 ```
 
-### alternative way: connecting to your container through ssh
+### Alternative way: connecting to your container through ssh
 
 ```bash
 # to login to the docker using ssh use (if std port)
@@ -91,7 +91,7 @@ JSX>
 
 The ThreeFold blockchain is used as a ledger for the ThreeFold Token ("TFT"), a digital currency backed by neutral and sustainable internet capacity. You can learn more about the ThreeFold token on threefoldtoken.com. For more information check out the docs on the ThreeFold chain [github repository](https://github.com/threefoldfoundation/tfchain).
 
-## fastest way: create a new wallet
+## Fastest way: create a new wallet
 Enter the following instructions to create a client and a wallet:
 ```python
 JSX> c = j.clients.tfchain.new(name='my_client', network_type='TEST')
@@ -101,7 +101,7 @@ JSX> w = c.wallets.new("my_wallet")
 **The `network_type` is important, it specify you want to use the TestNet.**
 **Otherwise you will play with real TFT, so be careful**.
 
-### save your wallet seed
+### Save your wallet seed
 
 As soon as your wallet is created, please save your seed somewhere.
 __This is the only way to get your wallet back for recovery purposes.__
@@ -113,9 +113,9 @@ JSX> j.clients.tfchain.my_client.wallets.my_wallet.seed
 'trust faculty frame ...' # save these word
 ```
 
-Once you have a wallet set up, you can direclty go to the [next section to get some TFT token](#2.-get-some-test-tft-token-on-our-faucet).
+Once you have a wallet set up, you can direclty go to the [next section to get some TFT token](#-2-tft-token).
 
-### alternative way
+## Alternative way
 
 ```python
 JSX> j.clients.tfchain.new(name='my_client', network_type='TEST')
@@ -172,7 +172,7 @@ JSX> w.addresses
 ['01d761561e7203276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0fd08c5f91','015cd2821abc03276ef2944628bfde5bfcabf0960b69eda69ac1d317bcdcc53af06a0f65dbcc8']
 ```
 
-## saving
+## Saving your work
 
 If you want to be able to quickly get access to your wallet (if for instance you loose the connection with your container) you can save it and all the other objects:
 
@@ -209,7 +209,9 @@ JSX> w = c.wallets.my_wallet
 
 **Hint : at any moment hit the question mark key to display the interactive help to know more about a function arguments.**
 
-# 2. get some test TFT token on our faucet
+# 2. TFT token
+
+Let's get some test TFT token on our faucet. We will need it to pay for grid capacity.
 
 Get the address of your wallet
 
