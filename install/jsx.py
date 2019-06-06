@@ -32,6 +32,7 @@ def load_install_tools():
                     raise RuntimeError("fail to download InstallTools.py")
                 with open(path, "w+") as f:
                     f.write(resp.read().decode("utf-8"))
+                print("DOWNLOADED INSTALLTOOLS TO %s" % path)
 
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()

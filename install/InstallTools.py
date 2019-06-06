@@ -3220,11 +3220,11 @@ class DockerContainer:
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")
-            for item in ["jsx.py", "InstallTools.py"]:
+            for item in ["jsx", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P %s %s root@localhost:/tmp/" % (self.config.sshport, src1)
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx.py install"
+            cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
