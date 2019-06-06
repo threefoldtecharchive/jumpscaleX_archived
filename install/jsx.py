@@ -36,7 +36,20 @@ def load_install_tools():
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
+    check_branch(IT)
     return IT
+
+
+def check_branch(IT):
+    HOMEDIR = os.environ["HOME"]
+    paths = ["/sandbox/code/github/threefoldtech/jumpscaleX", "%s/code/github/threefoldtech/jumpscaleX" % HOMEDIR]
+    for path in paths:
+        if os.path.exists(path):
+            cmd = "cd %s; git branch | grep \* | cut -d ' ' -f2" % path
+            rc, out, err = IT.Tools.execute(cmd)
+            if out.strip() != DEFAULT_BRANCH:
+                print("cannot install, the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
+                sys.exit(1)
 
 
 def jumpscale_get(die=True):
