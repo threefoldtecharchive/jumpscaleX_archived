@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development_installer", "development"]
+DEFAULTBRANCH = ["development"]
 
 import socket
 import grp
@@ -649,7 +649,7 @@ class Tools:
                     echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
                 fi
                 apt-get update
-                apt-get install -y python3-pip 
+                apt-get install -y python3-pip
                 apt-get install -y locales
                 apt-get install -y curl rsync
                 apt-get install -y unzip
@@ -2028,9 +2028,9 @@ class MyEnv:
             Is it ok to continue without SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
-    
+
             if you never used an ssh-agent or github, just say "y"
-    
+
             """
             print(Tools.text_strip(T))
             if interactive:
@@ -2938,11 +2938,11 @@ class DockerContainer:
         rm -rf /tmp
         mkdir -p /tmp
         chmod -R 0777 /tmp
-        rm -rf /var/backups        
+        rm -rf /var/backups
         find . -name "*.bak" -exec rm -rf {} \;
         apt-get clean
         apt-get autoremove --purge
-        touch /tmp/cleanedup     
+        touch /tmp/cleanedup
         """
         for line in CMD.split("\n"):
             line = line.strip()
@@ -3244,9 +3244,9 @@ class DockerContainer:
 
         install succesfull:
 
-        # if you use a container do:  
+        # if you use a container do:
         jsx container_kosmos
-        or 
+        or
         kosmos
 
         """
@@ -3645,14 +3645,14 @@ class WireGuard:
             config = Tools.config_load("/sandbox/cfg/wireguard.toml")
 
             C = """
-            [Interface] 
-            Address = 10.10.10.1/24 
-            SaveConfig = true 
+            [Interface]
+            Address = 10.10.10.1/24
+            SaveConfig = true
             PrivateKey = {WIREGUARD_SERVER_PRIVKEY}
             ListenPort = {WIREGUARD_PORT}
-            
-            [Peer] 
-            PublicKey = {WIREGUARD_CLIENT_PUBKEY} 
+
+            [Peer]
+            PublicKey = {WIREGUARD_CLIENT_PUBKEY}
             AllowedIPs = 10.10.10.0/24
             """
             path = "/tmp/wg0.conf"
@@ -3666,14 +3666,14 @@ class WireGuard:
     def connect(self):
         config_container = Tools.config_load("/sandbox/var/containers/%s/cfg/wireguard.toml" % self.container.name)
         C = """
-        [Interface] 
-        Address = 10.10.10.2/24 
+        [Interface]
+        Address = 10.10.10.2/24
         PrivateKey = {WIREGUARD_CLIENT_PRIVKEY}
-        
-        [Peer] 
-        PublicKey = {WIREGUARD_SERVER_PUBKEY} 
+
+        [Peer]
+        PublicKey = {WIREGUARD_SERVER_PUBKEY}
         Endpoint = localhost:{WIREGUARD_PORT}
-        AllowedIPs = 10.10.10.0/24 
+        AllowedIPs = 10.10.10.0/24
         PersistentKeepalive = 25
         """
         path = "/tmp/wg0.conf"
