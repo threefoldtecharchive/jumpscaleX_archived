@@ -13,7 +13,7 @@ import sys
 from importlib import util
 from urllib.request import urlopen
 
-DEFAULT_BRANCH = "development"
+DEFAULT_BRANCH = "master"
 
 
 def load_install_tools():

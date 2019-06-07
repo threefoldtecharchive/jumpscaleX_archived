@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development"]
+DEFAULTBRANCH = ["master"]
 
 import socket
 import grp

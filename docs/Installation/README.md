@@ -3,7 +3,7 @@
 
 ```bash
 #get the installer
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/jsx.py?$RANDOM > /tmp/jsx
 chmod 777 /tmp/jsx
 #install
 /tmp/jsx container-install
@@ -64,7 +64,7 @@ cd /sandbox/code/github/threefoldtech;
 #if you have a permission denied add sudo at the beginning of the command
 # then do a sudo chown -R $USER:$USER /sandbox
 git clone git@github.com:threefoldtech/jumpscaleX.git; cd jumpscaleX;
-git checkout development
+git checkout master
 git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial

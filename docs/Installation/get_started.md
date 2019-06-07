@@ -40,7 +40,7 @@ The python script will load a docker image and start a docker container on your 
 ```bash
 #get the installer
 # TODO CHANGE BRANCH WITH MASTER
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx ; \
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/jsx.py?$RANDOM > /tmp/jsx ; \
 #install
 chmod +x /tmp/jsx; \
 /tmp/jsx container-install;
@@ -286,7 +286,7 @@ you can then check your 3bot registration transaction on the [testnet explorer]
 (https://explorer.testnet.threefoldtoken.com/)
 You can search the 3bot by name. Here we would enter your3bot.fancyname and click the search button. You should see the detail about the 3bot and a link to the creation transaction.
 
-For mode detail about the 3Bot registration and updates, [go to the full documentation](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/clients/blockchain/tfchain/README.md#create-and-manage-3bot-records)
+For mode detail about the 3Bot registration and updates, [go to the full documentation](https://github.com/threefoldtech/jumpscaleX/blob/master/Jumpscale/clients/blockchain/tfchain/README.md#create-and-manage-3bot-records)
 
 
 # 4. Rent a virtual machine running our light weight, secure and super efficient OS called zero OS on the TF grid
