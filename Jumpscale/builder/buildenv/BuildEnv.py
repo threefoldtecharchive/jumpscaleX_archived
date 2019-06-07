@@ -57,9 +57,9 @@ class BuildEnv(j.builders.system._BaseFactoryClass):
         """
 
         C = """
-        autoconf        
+        autoconf
         gcc
-        make        
+        make
         autoconf
         libtool
         pkg-config

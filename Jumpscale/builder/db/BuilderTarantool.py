@@ -51,7 +51,7 @@ class BuilderTarantool(j.builders.system._BaseClass):
             sudo tarantoolctl rocks install expirationd
             sudo tarantoolctl rocks install connpool
             sudo tarantoolctl rocks install http
-            
+
 
             # sudo luarocks install luatweetnacl
 

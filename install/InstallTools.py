@@ -820,13 +820,13 @@ class Tools:
                     pass  # e.g. if { is
                 else:
                     sorted = [i for i in args.keys()]
-                    raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
+                    # raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
             if not ignore_error:
                 if "{" in content:
                     content = content.format_map(replace_args)  # this to deal with nested {
                     if "{" in content:
                         sorted = [i for i in args.keys()]
-                        raise RuntimeError("could not replace \n%s \nin \n%s, remaining {" % (sorted, content))
+                        # raise RuntimeError("could not replace \n%s \nin \n%s, remaining {" % (sorted, content))
 
         if text_strip:
             content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)

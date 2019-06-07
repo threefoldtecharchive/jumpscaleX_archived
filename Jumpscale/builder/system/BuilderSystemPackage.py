@@ -198,13 +198,13 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
                 rm -rf /bd_build
                 rm -rf /var/tmp/*
                 rm -f /etc/dpkg/dpkg.cfg.d/02apt-speedup
-    
+
                 find -regex '.*__pycache__.*' -delete
                 rm -rf /var/log
                 mkdir -p /var/log/apt
                 rm -rf /var/tmp
                 mkdir -p /var/tmp
-    
+
                 """
                 j.sal.process.execute(C)
 
