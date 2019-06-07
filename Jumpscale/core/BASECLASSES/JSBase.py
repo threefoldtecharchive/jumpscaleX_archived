@@ -160,7 +160,7 @@ class JSBase:
                 if parents:
                     parent = self._parent
                     while parent is not None:
-                        parent._logger_minlevel_set(minlevel)
+                        parent._logger_set(minlevel=minlevel)
                         parent = parent._parent
 
                 if children:

@@ -9,7 +9,7 @@ class BuilderDocker(j.builders.system._BaseClass):
     NAME = "docker"
 
     def build(self, branch=None):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             if not branch:
                 if not self.tools.command_check("docker"):
                     C = """

@@ -17,7 +17,7 @@ class BuilderBitcoin(j.builders.system._BaseClass):
         self.profile_builder_select()
 
         # dependancies
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             j.builders.system.package.ensure("g++")
             self.system.package.mdupdate()
             self.system.package.install(

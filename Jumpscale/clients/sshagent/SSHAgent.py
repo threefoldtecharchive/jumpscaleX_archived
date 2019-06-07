@@ -44,18 +44,13 @@ class SSHAgent(j.application.JSBaseClass):
         :rtype: sshkey object or None
         """
         if not self._default_key:
-            raise RuntimeError("not implemented yet")
-            self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key)
-            # for path, key in self.keys_list(True):
-            #     name = j.sal.fs.getBaseName(path).lower()
-            #     if name == MyEnv.config["SSH_KEY_DEFAULT"]:
-            #         if Tools.exists(path):
-            #             self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key)
-            #         else:
-            #             self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key, path=path)
-            #
-            #         return self._default_key
-            # return None
+            name = j.clients.sshagent.key_default_name
+            if j.clients.sshkey.exists(name):
+                self._default_key = j.clients.sshkey.get(name)
+            else:
+                k = j.clients.sshkey.new(name, path="%s/.ssh/%s" % (j.core.myenv.config["DIR_HOME"], name))
+                k.save()
+                self._default_key = k
         return self._default_key
 
     def key_path_get(self, keyname="", die=True):

@@ -9,7 +9,7 @@ class BuilderRedis(j.builders.system._BaseClass):
 
     @builder_method()
     def build(self):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.mdupdate()
             j.builders.system.package.ensure("build-essential")
 

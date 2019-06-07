@@ -445,7 +445,7 @@ class Tools:
         return cl
 
     @staticmethod
-    def _isUnix():
+    def _platform_is_unix():
         return "posix" in sys.builtin_module_names
 
     # @staticmethod
@@ -486,8 +486,8 @@ class Tools:
                     raise RuntimeError(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" % (cmd, returncode)
                     )
-            return returncode
-        return returncode
+            return returncode, "", ""
+        return returncode, "", ""
 
     @staticmethod
     def file_touch(path):
@@ -1085,7 +1085,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._isUnix(),
+                    close_fds=MyEnv._platform_is_unix(),
                     shell=True,
                     universal_newlines=False,
                     cwd=cwd,
@@ -1099,7 +1099,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._isUnix(),
+                    close_fds=MyEnv._platform_is_unix(),
                     shell=False,
                     env=env,
                     universal_newlines=False,
@@ -1120,7 +1120,7 @@ class Tools:
                 return p
 
             def readout(stream):
-                if MyEnv._isUnix():
+                if MyEnv._platform_is_unix():
                     # Store all intermediate data
                     data = list()
                     while True:
@@ -1169,7 +1169,7 @@ class Tools:
                     # print("wait")
 
                     if timeout != 0 and now > end:
-                        if Tools._isUnix():
+                        if Tools._platform_is_unix():
                             # Soft and hard kill on Unix
                             try:
                                 p.terminate()
@@ -1773,7 +1773,7 @@ class MyEnv:
         return sys.platform
 
     @staticmethod
-    def _isUnix():
+    def _platform_is_unix():
         return "posix" in sys.builtin_module_names
 
     @staticmethod

@@ -12,19 +12,19 @@ class BuilderMongodb(j.builders.system._BaseClass):
         if self._done_check("install", reset):
             return
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             j.sal.process.execute("brew uninstall mongodb", die=False)
 
         appbase = "%s/" % j.builders.tools.dir_paths["BINDIR"]
         j.core.tools.dir_ensure(appbase)
 
         url = None
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             url = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz"
             dest = "{DIR_TEMP}/mongodb-linux-x86_64-ubuntu1604-3.4.0/bin/"
         elif j.builders.tools.isArch:
             j.builders.system.package.ensure("mongodb")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             url = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.4.0.tgz"
             dest = "{DIR_TEMP}/mongodb-osx-x86_64-3.4.0/bin/"
         else:

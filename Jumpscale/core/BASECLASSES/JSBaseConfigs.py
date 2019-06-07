@@ -2,6 +2,8 @@ from Jumpscale import j
 
 from .JSBase import JSBase
 
+# from .JSBaseDataObj import JSBaseDataObj
+
 
 class JSBaseConfigs(JSBase):
     def __init__(self, parent=None, topclass=True, **kwargs):

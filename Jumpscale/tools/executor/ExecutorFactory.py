@@ -14,6 +14,10 @@ class ExecutorFactory(j.application.JSBaseClass):
         self.__jslocation__ = "j.tools.executor"
         JSBASE.__init__(self)
 
+    @property
+    def local(self):
+        return self.local_get()
+
     def local_get(self):
         if "localhost" not in self._executors:
             self._executors["localhost"] = ExecutorLocal()

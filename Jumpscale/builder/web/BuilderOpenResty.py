@@ -15,7 +15,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         kosmos 'j.builders.web.openresty.build()'
         :return:
         """
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.mdupdate()
             j.builders.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
             url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
@@ -182,9 +182,9 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         """
         self.build(reset=reset)
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             CODE_SB_BIN = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             CODE_SB_BIN = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
             raise RuntimeError("only ubuntu & osx support")

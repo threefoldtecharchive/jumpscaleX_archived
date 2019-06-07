@@ -306,7 +306,7 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_delete("${PATH}")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.profile.path_add("${PATH}", end=True)
 
         self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
@@ -522,7 +522,7 @@ class BuilderBaseClass(BaseClass):
         :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
             j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)

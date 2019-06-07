@@ -11,13 +11,16 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     def _init(self):
         self._clients = {}
+        self._SSHClientBaseClass = SSHClientBase
 
     def _childclass_selector(self, **kwargs):
         """
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
         """
-        if j.core.platformtype.myplatform.platform_is_osx:
+        if "client_type" in kwargs and kwargs["client_type"] == "pssh":
+            return SSHClient
+        elif j.core.platformtype.myplatform.platform_is_osx:
             return SSHClientParamiko
         else:
             return SSHClient
@@ -33,16 +36,89 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         #                     myinit=True, sharecode=True)
 
         # TODO: then connect to the just created docker and do some more tests
-        cl = j.clients.ssh.get(name="remote1", addr="188.166.116.127")
 
-        s = j.clients.ssh.test2
-        s.addr = "188.166.116.127"
-        s.port = 1053
-        s.sshkey_name = "test"
+        addr = "104.248.87.200"
+        port = 22
 
-        j.clients.ssh.test2.data_update(addr="188.166.116.127", port=1054, sshkey_name="test2", passwd="passwd")
-        print(j.clients.ssh.test2)
+        # make sure we enforce pssh
+        cl = j.clients.ssh.get(name="remote1", addr=addr, port=port, client_type="pssh")
+        ex = cl.executor
 
-        assert j.clients.ssh.test2.port == 1054
+        cl.reset()
+        assert ex.state == {}
+        assert cl._connected == None
+        assert ex.env_on_system_toml == ""
+        assert ex.config_toml == ""
 
-        # j.clients.ssh.instances.test2.shell()  #NOT TO BE DONE IN TEST but can use to do ssh
+        rc, out, err = ex.execute("ls /")
+        assert rc == 0
+        assert err == ""
+        assert out.endswith("\n")
+
+        ex.state_set("bla")
+        assert ex.state == {"bla": None}
+        assert ex.state_exists("bla")
+        assert ex.state_exists("blabla") == False
+        assert ex.state_get("bla") == None
+        ex.state_reset()
+        assert ex.state_exists("bla") == False
+        assert ex.state == {}
+        ex.state_set("bla", 1)
+        assert ex.state == {"bla": 1}
+
+        e = ex.env_on_system
+
+        assert e["HOME"] == "/root"
+
+        ex.file_write("/tmp/1", "a")
+        assert ex.file_read("/tmp/1").strip() == "a"
+
+        ftp = cl.sftp
+
+        stat = cl.sftp_stat("/tmp/1")
+        statdir = cl.sftp_stat("/tmp")
+        assert stat.filesize == 1
+
+        assert ex.path_isdir("/tmp")
+        assert ex.path_isfile("/tmp") == False
+        assert ex.path_isfile("/tmp/1")
+
+        path = ex.download("/tmp/1", "/tmp/something.txt")
+        path = ex.upload("/tmp/something.txt", "/tmp/2")
+
+        assert ex.file_read("/tmp/2").strip() == "a"
+
+        assert j.sal.fs.readFile("/tmp/something.txt").strip() == "a"
+        j.sal.fs.remove("/tmp/something.txt")
+
+        j.sal.fs.createDir("/tmp/8888")
+        j.sal.fs.createDir("/tmp/8888/5")
+        j.sal.fs.writeFile("/tmp/8888/1.txt", "a")
+        j.sal.fs.writeFile("/tmp/8888/2.txt", "a")
+        j.sal.fs.writeFile("/tmp/8888/5/3.txt", "a")
+
+        path = ex.upload("/tmp/8888")
+
+        r = ex.find("/tmp/8888")
+        assert r == ["/tmp/8888/1.txt", "/tmp/8888/2.txt", "/tmp/8888/5", "/tmp/8888/5/3.txt"]
+
+        ex.download("/tmp/8888", "/tmp/8889")
+
+        r2 = j.sal.fs.listFilesAndDirsInDir("/tmp/8889")
+        r2.sort()
+        assert r2 == ["/tmp/8889/1.txt", "/tmp/8889/2.txt", "/tmp/8889/5", "/tmp/8889/5/3.txt"]
+
+        cl.executor.delete("/tmp/8888")
+        r2 = ex.find("/tmp/8888")
+        assert r2 == []
+
+        j.sal.fs.remove("/tmp/8888")
+        j.sal.fs.remove("/tmp/8889")
+
+        cl.reset()
+        assert ex.state == {}
+        assert cl._connected == None
+        assert ex.env_on_system_toml == ""
+        assert ex.config_toml == ""
+
+        self._log_info("TEST FOR SSHCLIENT IS OK")

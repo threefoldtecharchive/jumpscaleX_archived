@@ -41,7 +41,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
     #     key = "upgrade_%s" % package
     #     if self._done_check(key, reset):
     #         return
-    #     if j.core.platformtype.myplatform.isUbuntu:
+    #     if j.core.platformtype.myplatform.platform_is_ubuntu:
     #         if package is None:
     #             return self._apt_get("-q --yes update")
     #         else:
@@ -62,11 +62,11 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
         update metadata of system
         """
         self._log_info("packages mdupdate")
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.sal.process.execute("apt-get update")
         elif j.builders.tools.isAlpine:
             j.builders.tools.execute("apk update")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             location = j.builders.tools.command_location("brew")
             # j.sal.process.execute("run chown root %s" % location)
             j.sal.process.execute("brew update")
@@ -80,7 +80,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
         """
         self.mdupdate()
         self._log_info("packages upgrade")
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             if distupgrade:
                 raise NotImplementedError()
                 # return self._apt_get("dist-upgrade")
@@ -89,7 +89,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
         # elif j.builders.tools.isArch:
         #     j.sal.process.execute(
         #         "pacman -Syu --noconfirm;pacman -Sc --noconfirm")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.sal.process.execute("brew upgrade")
         elif j.builders.tools.isAlpine:
             j.builders.tools.execute("apk update")
@@ -110,7 +110,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
             package = packages[0]
 
             self._log_info("package install :%s" % package)
-            if j.core.platformtype.myplatform.isUbuntu:
+            if j.core.platformtype.myplatform.platform_is_ubuntu:
                 cmd = "%s install %s -y" % (CMD_APT_GET, package)
 
             elif j.builders.tools.isAlpine:
@@ -127,7 +127,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
 
                 cmd = "pacman -S %s  --noconfirm\n" % package
 
-            elif j.core.platformtype.myplatform.isMac:
+            elif j.core.platformtype.myplatform.platform_is_osx:
                 for unsupported in [
                     "libpython3.4-dev",
                     "python3.4-dev",
@@ -185,7 +185,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
 
             package = packages[0]
 
-            if j.core.platformtype.myplatform.isUbuntu:
+            if j.core.platformtype.myplatform.platform_is_ubuntu:
 
                 if package is not None:
                     return self._apt_get("-y --purge remove %s" % package)
@@ -216,7 +216,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
             #     if agressive:
             #         j.sal.process.execute("pacman -Qdttq", showout=False)
 
-            elif j.core.platformtype.myplatform.isMac:
+            elif j.core.platformtype.myplatform.platform_is_osx:
                 if package:
                     j.sal.process.execute("brew cleanup %s" % package)
                     j.sal.process.execute("brew remove %s" % package)
@@ -238,9 +238,9 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
 
     @builder_method()
     def remove(self, package, autoclean=False):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             self._apt_get("remove " + package)
             if autoclean:
                 self._apt_get("autoclean")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo " "" % package)

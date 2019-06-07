@@ -29,7 +29,7 @@ class SystemProcess(j.application.JSBaseClass):
         self._isunix = None
 
     @property
-    def isUnix(self):
+    def platform_is_unix(self):
         if self._isunix == None:
             if "posix" in sys.builtin_module_names:
                 self._isunix = True
@@ -398,7 +398,7 @@ class SystemProcess(j.application.JSBaseClass):
            or pythonw.exe
         """
         self._log_info("Checking whether process with PID %d is alive" % pid)
-        if self.isUnix:
+        if self.platform_is_unix:
             # Unix strategy: send signal SIGCONT to process pid
             # Achilles heal: another process which happens to have the same pid could be running
             # and incorrectly considered as this process
@@ -411,7 +411,7 @@ class SystemProcess(j.application.JSBaseClass):
 
             return True
 
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             return j.sal.windows.isPidAlive(pid)
 
     def checkInstalled(self, cmdname):
@@ -428,7 +428,7 @@ class SystemProcess(j.application.JSBaseClass):
         """
         pid = int(pid)
         self._log_debug("Killing process %d" % pid)
-        if self.isUnix:
+        if self.platform_is_unix:
             try:
                 if sig is None:
                     sig = signal.SIGKILL
@@ -438,7 +438,7 @@ class SystemProcess(j.application.JSBaseClass):
             except OSError as e:
                 raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
 
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import win32api
             import win32process
             import win32con
@@ -584,7 +584,7 @@ class SystemProcess(j.application.JSBaseClass):
 
         if process is None:
             raise j.exceptions.RuntimeError("process cannot be None")
-        if self.isUnix:
+        if self.platform_is_unix:
 
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
@@ -658,14 +658,14 @@ class SystemProcess(j.application.JSBaseClass):
         @return True if ok
         """
         self._log_debug("Checking whether at least %d processes %s are running" % (min, process))
-        if self.isUnix:
+        if self.platform_is_unix:
             pids = self.getProcessPid(process)
             if len(pids) >= min:
                 return True
             return False
 
         # Windows platform
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
 
             return j.sal.windows.checkProcess(process, min)
 
@@ -677,7 +677,7 @@ class SystemProcess(j.application.JSBaseClass):
         @return status: (int) 0 when ok, 1 when not ok.
         """
         self._log_info("Checking whether process with PID %d is actually %s" % (pid, process))
-        if self.isUnix:
+        if self.platform_is_unix:
             command = "ps -p %i" % pid
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             i = 0
@@ -692,7 +692,7 @@ class SystemProcess(j.application.JSBaseClass):
                 return 0
             return 1
 
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
 
             return j.sal.windows.checkProcessForPid(process, pid)
 
@@ -860,9 +860,9 @@ class SystemProcess(j.application.JSBaseClass):
     #     @return: If redirectStreams is true, this function returns a subprocess.Popen object representing the started process. Otherwise, it will return the pid-number of the started process.
     #     """
     #     if useShell is None:  # The default value depends on which platform we're using.
-    #         if self.isUnix:
+    #         if self.platform_is_unix:
     #             useShell = True
-    #         elif j.core.platformtype.myplatform.isWindows:
+    #         elif j.core.platformtype.myplatform.platform_is_windows:
     #             useShell = False
     #         else:
     #             raise j.exceptions.RuntimeError("Platform not supported")
@@ -871,7 +871,7 @@ class SystemProcess(j.application.JSBaseClass):
     #     if printCommandToStdout:
     #         print(("system.process.executeAsync [%s]" % command))
     #
-    #     if j.core.platformtype.myplatform.isWindows:
+    #     if j.core.platformtype.myplatform.platform_is_windows:
     #         if argsInCommand:
     #             cmd = subprocess.list2cmdline([command] + args)
     #         else:
@@ -912,7 +912,7 @@ class SystemProcess(j.application.JSBaseClass):
     #                                              sui)         # Startup Information
     #             retVal = pid
     #
-    #     elif self.isUnix:
+    #     elif self.platform_is_unix:
     #         if useShell:
     #             if argsInCommand:
     #                 cmd = command

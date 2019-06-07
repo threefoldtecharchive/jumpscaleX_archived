@@ -1,0 +1,200 @@
+from Jumpscale import j
+
+import digitalocean
+from .DigitalOceanVM import DigitalOceanVM
+
+
+class DigitalOcean(j.application.JSBaseConfigClass):
+    _SCHEMATEXT = """
+    @url = jumpscale.digitalocean.client
+    name* = "" (S)
+    token_ = "" (S)
+    project_name = "" (S)
+    """
+    # _CHILDCLASS = DigitalOceanVM
+
+    def _init(self):
+        self._client = None
+        self.reset()
+
+    def reset(self):
+        self._droplets = []
+        self._digitalocean_images = None
+        self._digitalocean_sizes = None
+        self._digitalocean_regions = None
+        self._sshkeys = None
+
+    @property
+    def client(self):
+        """If client not set, a new client is created
+        
+        :raises RuntimeError: Auth token not configured
+        :return: client
+        :rtype: 
+        """
+
+        if not self._client:
+            self._client = digitalocean.Manager(token=self.token_)
+        return self._client
+
+    @property
+    def digitalocean_images(self):
+        if not self._digitalocean_images:
+            self._digitalocean_images = self.client.get_distro_images()
+        return self._digitalocean_images
+
+    @property
+    def digitalocean_sizes(self):
+        if not self._digitalocean_sizes:
+            self._digitalocean_sizes = self.client.get_all_sizes()
+        return self._digitalocean_sizes
+
+    @property
+    def digitalocean_regions(self):
+        if not self._digitalocean_regions:
+            self._digitalocean_regions = self.client.get_all_regions()
+        return self._digitalocean_regions
+
+    @property
+    def sshkeys(self):
+        if not self._sshkeys:
+            self._sshkeys = self.client.get_all_sshkeys()
+        return self._sshkeys
+
+    def droplet_exists(self, name):
+        for droplet in self.droplets:
+            if droplet.name.lower() == name.lower():
+                return True
+        return False
+
+    def _droplet_get(self, name):
+        for droplet in self.droplets:
+            if droplet.name.lower() == name.lower():
+                return droplet
+        return False
+
+    def _sshkey_get_default(self):
+        sshkey_ = j.clients.sshkey.default
+        for item in self.sshkeys:
+            if sshkey_.pubkey.strip() == item.public_key.strip():
+                return item
+        return None
+
+    def sshkey_get(self, name):
+        for item in self.sshkeys:
+            if name == item.name:
+                return item
+        raise RuntimeError("did not find key:%s" % name)
+
+    def region_get(self, name):
+        for item in self.digitalocean_regions:
+            if name == item.name:
+                return item
+        raise RuntimeError("did not find region:%s" % name)
+
+    def image_get(self, name):
+        for item in self.digitalocean_images:
+            if item.description:
+                name_do = item.description.lower()
+            else:
+                name_do = item.distribution + " " + item.name
+            if name_do.lower().find(name) != -1:
+                return item
+        raise RuntimeError("did not find image:%s" % name)
+
+    def image_names_get(self, name=""):
+        res = []
+        name = name.lower()
+        for item in self.digitalocean_images:
+            if item.description:
+                name_do = item.description.lower()
+            else:
+                name_do = item.distribution + " " + item.name
+            if name_do.find(name) != -1:
+                res.append(name_do)
+        return res
+
+    def droplet_create(
+        self, name="test", sshkey=None, region="Amsterdam 3", image="ubuntu 18.04", size_slug="s-1vcpu-2gb", delete=True
+    ):
+        """
+
+        :param name:
+        :param sshkey:
+        :param region:
+        :param image:
+        :param size_slug: s-1vcpu-2gb,
+        :param delete:
+        :param mosh: when mosh will be used to improve ssh experience
+        :return: droplet,sshclient
+        """
+        if not sshkey:
+            sshkey_do = self._sshkey_get_default()
+            if not sshkey_do:
+                # means we did not find the sshkey on digital ocean yet, need to create
+                j.shell()
+            sshkey = sshkey_do.name
+
+        if self.droplet_exists(name):
+            dr0 = self._droplet_get(name=name)
+            if delete:
+                dr0.destroy()
+            else:
+                sshcl = j.clients.ssh.get(name="do_%s" % name, addr=dr0.ip_address, client_type="pssh")
+                sshcl.save()
+                return dr0, sshcl
+
+        sshkey = self.sshkey_get(sshkey)
+        region = self.region_get(region)
+
+        imagedo = self.image_get(image)
+
+        if region.slug not in imagedo.regions:
+            j.shell()
+
+        droplet = digitalocean.Droplet(
+            token=self.token_,
+            name=name,
+            region=region.slug,
+            image=imagedo.slug,
+            size_slug=size_slug,
+            ssh_keys=[sshkey],
+            backups=False,
+        )
+        droplet.create()
+        # dr = self.get(name=name)
+        # dr.do_id = droplet.id
+        self._droplets.append(droplet)
+        self.reset()
+
+        # dr.droplet = droplet
+
+        def actions_wait():
+            while True:
+                actions = droplet.get_actions()
+                if len(actions) == 0:
+                    return
+                for action in actions:
+                    action.load()
+                    # Once it shows complete, droplet is up and running
+                    print(action.status)
+                    if action.status == "completed":
+                        return
+
+        actions_wait()
+        droplet.load()
+
+        sshcl = j.clients.ssh.get(name="do_%s" % name, addr=droplet.ip_address, client_type="pssh")
+        sshcl.save()
+
+        return droplet, sshcl
+
+    @property
+    def droplets(self):
+        if not self._droplets:
+            self._droplets = self.client.get_all_droplets()
+        return self._droplets
+
+    def droplets_all_shutdown(self):
+        for droplet in self.droplets:
+            droplet.shutdown()

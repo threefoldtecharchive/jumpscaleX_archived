@@ -284,7 +284,7 @@ class Application(object):
     #     """
     #     try:
     #         pid = os.getpid()
-    #         if self._j.core.platformtype.myplatform.isWindows:
+    #         if self._j.core.platformtype.myplatform.platform_is_windows:
     #             return 0
     #         if self._j.core.platformtype.myplatform.platform_is_linux:
     #             command = "ps -o pcpu %d | grep -E --regex=\"[0.9]\"" % pid
