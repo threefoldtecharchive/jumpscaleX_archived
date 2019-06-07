@@ -10,9 +10,9 @@ requirements
 You can create the sandbox flist if you don't have the link to itby executing the script in this url
 https://docs.grid.tf/despiegk/itenv_test/src/branch/master/jumpscale_sandbox_flist.py
 it will ask for your itsyouonline and will upload the flist to a directory with your name like
-https://hub.gig.tech/hossameldeen_abdullah_1
+https://hub.grid.tf/hossameldeen_abdullah_1
 
-You can merge it from the following url https://hub.gig.tech/merge
+You can merge it from the following url https://hub.grid.tf/merge
 
 choose "based on" as your generated flist
 
@@ -20,7 +20,7 @@ choose "merge with" as the ubuntu image you will merge with
 
 ![Screenshot](mergedflist)
 now you will have the merged flist under your directory
-https://hub.gig.tech/hossameldeen_abdullah_1
+https://hub.grid.tf/hossameldeen_abdullah_1
 
 On the machine with jumpscale, we need to have a connection to te zero_os machine
 ```bash
