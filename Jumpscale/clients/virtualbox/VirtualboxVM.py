@@ -127,7 +127,7 @@ class VirtualboxVM(j.application.JSBaseClass):
         # variable DISPLAY not set, we are probably
         # on a headless server (no X running), let's run
         # the virtual machine in background
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             if not "DISPLAY" in os.environ:
                 args += "--type headless"
 

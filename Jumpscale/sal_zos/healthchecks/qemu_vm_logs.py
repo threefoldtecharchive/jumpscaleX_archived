@@ -12,7 +12,7 @@ Check on vm logs for errors.
 
 class QemuVMLogs(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("qemu-vm-logs", "Qemu VM Logs", "Qemu Logs", resource)
         self.node = node
 

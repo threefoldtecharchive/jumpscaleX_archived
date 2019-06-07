@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderGrafana(j.builder.system._BaseClass):
+class BuilderGrafana(j.builders.system._BaseClass):
 
     NAME = "grafana-server"
 
@@ -10,7 +10,7 @@ class BuilderGrafana(j.builder.system._BaseClass):
         if reset is False and self.isInstalled():
             return
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             C = """
             cd {DIR_TEMP}
             wget https://grafanarel.s3.amazonaws.com/builds/grafana_3.1.1-1470047149_amd64.deb
@@ -24,12 +24,12 @@ class BuilderGrafana(j.builder.system._BaseClass):
 
     def install(self, start=False, influx_addr="127.0.0.1", influx_port=8086, port=3000):
         j.core.tools.dir_ensure("{DIR_BIN}")
-        j.builder.tools.file_copy("/usr/sbin/grafana*", dest="{DIR_BIN}")
+        j.builders.tools.file_copy("/usr/sbin/grafana*", dest="{DIR_BIN}")
 
         j.core.tools.dir_ensure("{DIR_BASE}/apps/grafana")
-        j.builder.tools.file_copy("/usr/share/grafana/", "{DIR_BASE}/apps/", recursive=True)
+        j.builders.tools.file_copy("/usr/share/grafana/", "{DIR_BASE}/apps/", recursive=True)
 
-        if j.builder.tools.file_exists("/usr/share/grafana/conf/defaults.ini"):
+        if j.builders.tools.file_exists("/usr/share/grafana/conf/defaults.ini"):
             cfg = j.core.tools.file_text_read("/usr/share/grafana/conf/defaults.ini")
         else:
             cfg = j.core.tools.file_text_read("{DIR_TEMP}/cfg/grafana/conf/defaults.ini")
@@ -43,11 +43,11 @@ class BuilderGrafana(j.builder.system._BaseClass):
         cmd = "{DIR_BIN}/grafana-server --config={DIR_BASE}/cfg/grafana/grafana.ini\n"
         cmd = self._replace(cmd)
         j.sal.fs.writeFile("/opt/jumpscale/bin/start_grafana.sh", cmd, 777, replaceArgs=True)
-        j.builder.system.process.kill("grafana-server")
-        pm = j.builder.system.processmanager.get()
+        j.builders.system.process.kill("grafana-server")
+        pm = j.builders.system.processmanager.get()
         pm.ensure("grafana-server", cmd=cmd, env={}, path="{DIR_BASE}/apps/grafana")
         grafanaclient = j.clients.grafana.get(
-            url="http://%s:%d" % (j.builder.tools.executor.addr, port), username="admin", password="admin"
+            url="http://%s:%d" % (j.builders.tools.executor.addr, port), username="admin", password="admin"
         )
         data = {
             "type": "influxdb",

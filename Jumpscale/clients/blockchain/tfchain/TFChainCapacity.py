@@ -319,7 +319,7 @@ def vm_price(size):
 
 
 def namespace_price(size):
-    return size * decimal.Decimal("83.3")
+    return size * decimal.Decimal("0.0833")
 
 
 def proxy_price():

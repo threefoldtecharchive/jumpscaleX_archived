@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 ALL_PLUGINS = {
@@ -78,7 +78,7 @@ class BuilderCaddy(BuilderGolangTools):
     def clean(self):
         self.stop()
         self._init()
-        j.builder.tools.dir_remove("{DIR_BIN}/caddy")
+        j.builders.tools.dir_remove("{DIR_BIN}/caddy")
 
     def get_plugin(self, name):
         """get a supported plugin
@@ -107,11 +107,11 @@ class BuilderCaddy(BuilderGolangTools):
         :type plugins: list, optional
         :raises j.exceptions.RuntimeError: if platform is not supported
         """
-        if not j.core.platformtype.myplatform.isUbuntu:
+        if not j.core.platformtype.myplatform.platform_is_ubuntu:
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
         # install go runtime
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
 
         # get caddy and plugins
         if not plugins:
@@ -135,12 +135,12 @@ class BuilderCaddy(BuilderGolangTools):
 
         :param plugins: plugins to build with if not build already, defaults to None
 
-        kosmos 'j.builder.web.caddy.install()'
+        kosmos 'j.builders.web.caddy.install()'
 
         """
 
         caddy_bin_path = self.tools.joinpaths(self.DIR_GO_PATH_BIN, self.NAME)
-        j.builder.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
+        j.builders.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
 
     @property
     def startup_cmds(self):

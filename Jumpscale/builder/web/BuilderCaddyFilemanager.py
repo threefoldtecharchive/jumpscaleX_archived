@@ -1,14 +1,14 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderCaddyFilemanager(j.builder.system._BaseClass):
+class BuilderCaddyFilemanager(j.builders.system._BaseClass):
     NAME = "filemanager"
     PLUGINS = ["iyo", "filemanager"]
 
     def _init(self):
-        self.go_runtime = j.builder.runtimes.golang
+        self.go_runtime = j.builders.runtimes.golang
         self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
         # self.root_dirs = {
         #     '/etc/ssl/certs': '/etc/ssl/certs'
@@ -22,7 +22,7 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         :param reset: reset the build process, defaults to False
         :type reset: bool, optional
         """
-        j.builder.web.caddy.build(plugins=self.PLUGINS)
+        j.builders.web.caddy.build(plugins=self.PLUGINS)
 
     @builder_method()
     def install(self):
@@ -32,7 +32,7 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         :param reset: reset build and installation, defaults to False
         :type reset: bool, optional
         """
-        j.builder.web.caddy.install()
+        j.builders.web.caddy.install()
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
@@ -63,20 +63,20 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         # copy /etc/ssl/cert
         certs = self.tools.joinpaths(dest_path, "etc", "ssl", "certs")
         self.tools.dir_ensure(certs)
-        self.tools.copyTree(source="/etc/ssl/certs", dest=certs)
+        self.tools.dir_copy(source="/etc/ssl/certs", dest=certs)
         if flist_create:
             print(self._flist_create(zhub_client=zhub_client))
         self._done_set("sandbox")
 
     def test(self):
-        if not j.sal.process.checkInstalled(j.builder.web.caddy.NAME):
-            j.builder.web.caddy.stop()
-            j.builder.web.caddy.build(reset=True)
-            j.builder.web.caddy.install()
-            j.builder.web.caddy.sandbox()
+        if not j.sal.process.checkInstalled(j.builders.web.caddy.NAME):
+            j.builders.web.caddy.stop()
+            j.builders.web.caddy.build(reset=True)
+            j.builders.web.caddy.install()
+            j.builders.web.caddy.sandbox()
 
         # try to start/stop
-        tmux_pane = j.builder.web.caddy.start()
+        tmux_pane = j.builders.web.caddy.start()
         tmux_process = tmux_pane.process_obj
         child_process = tmux_pane.process_obj_child
         assert child_process.is_running()

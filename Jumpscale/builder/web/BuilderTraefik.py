@@ -1,22 +1,22 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderTraefik(j.builder.system._BaseClass):
+class BuilderTraefik(j.builders.system._BaseClass):
     NAME = "traefik"
     VERSION = "1.7.9"  # latest
     URL = "https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}"
 
     def _init(self):
 
-        self.go_runtime = j.builder.runtimes.golang
+        self.go_runtime = j.builders.runtimes.golang
 
     @builder_method()
     def install(self, reset=True):
         """
 
-        kosmos 'j.builder.web.traefik.install()'
+        kosmos 'j.builders.web.traefik.install()'
 
         """
         version = tuple(map(int, self.go_runtime.STABLE_VERSION.split(".")))
@@ -26,7 +26,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # get the prebuilt binary, as the building needs docker...etc
         # only check for linux for now
         arch = self.go_runtime.current_arch
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")
@@ -106,7 +106,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["traefik"]
         for bin_name in bins:

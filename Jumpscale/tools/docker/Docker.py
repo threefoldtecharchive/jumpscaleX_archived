@@ -74,7 +74,7 @@ class Docker(j.application.JSBaseClass):
 
         res = []
         for container in self.containers:
-            if container.isRunning():
+            if container.is_running():
                 res.append(container.name)
         return res
 
@@ -94,7 +94,7 @@ class Docker(j.application.JSBaseClass):
     @property
     def containers_running(self):
         """lists only running containers
-        
+
         Returns:
             [Container] -- list of containers
         """
@@ -150,13 +150,13 @@ class Docker(j.application.JSBaseClass):
         j.sal.docker.container_get(name)
         Arguments:
             name {String} -- name of the container
-        
+
         Keyword Arguments:
             die {bool} -- if True it will die if container not found (default: {True})
-        
+
         Raises:
             j.exceptions.RuntimeError -- when no container with this id exists
-        
+
         Returns:
             Container -- container
         """
@@ -174,13 +174,13 @@ class Docker(j.application.JSBaseClass):
         j.sal.docker.container_get_by_id(id)
         Arguments:
             id {string} -- id of the container
-        
+
         Keyword Arguments:
             die {bool} -- if True it will die if container not found (default: {True})
-        
+
         Raises:
             j.exceptions.RuntimeError -- when no container with this id exists
-        
+
         Returns:
             Container -- container
         """
@@ -189,7 +189,7 @@ class Docker(j.application.JSBaseClass):
             if container.id == id:
                 return container
         if die:
-            raise j.exceptions.RuntimeError("Container with name %s doesn't exists" % name)
+            raise j.exceptions.RuntimeError("Container with id %s doesn't exists" % id)
         else:
             return None
 
@@ -217,7 +217,7 @@ class Docker(j.application.JSBaseClass):
         vols="",
         volsro="",
         stdout=True,
-        base="phusion/baseimage",
+        base="phusion/baseimage:0.11",
         nameserver=["8.8.8.8"],
         replace=True,
         cpu=None,
@@ -250,7 +250,7 @@ class Docker(j.application.JSBaseClass):
         running = [item.name for item in self.containers_running]
 
         if not replace:
-            if name in self.containerNamesRunning:
+            if name in running:
                 if getIfExists:
                     return self.container_get(name=name)
                 else:
@@ -376,6 +376,7 @@ class Docker(j.application.JSBaseClass):
             volumes_from=None,
             network_mode=None,
         )
+
         res = self.client.create_container(
             image=base,
             command=command,
@@ -437,7 +438,7 @@ class Docker(j.application.JSBaseClass):
 
     def images_get(self):
         """lists images
-        
+
         Returns:
             [String] -- list of image names
         """
@@ -453,7 +454,7 @@ class Docker(j.application.JSBaseClass):
 
     def images_remove(self, tag="<none>:<none>"):
         """Delete a certain Docker image using tag
-        
+
         Keyword Arguments:
             tag {str} -- images tag (default: {"<none>:<none>"})
         """
@@ -464,7 +465,7 @@ class Docker(j.application.JSBaseClass):
 
     def ping(self):
         """pings the docker
-        
+
         Returns:
             bool -- true if ping is successful
         """
@@ -478,7 +479,7 @@ class Docker(j.application.JSBaseClass):
     def destroy_all(self, images_remove=False):
         """destroy all containers
         if images_remove is true it will remove all images too
-        
+
         Keyword Arguments:
             images_remove {bool} -- [description] (default: {False})
         """
@@ -503,41 +504,11 @@ class Docker(j.application.JSBaseClass):
         j.sal.process.execute("systemctl stop docker")
 
         if j.sal.fs.exists(path="/var/lib/docker/btrfs/subvolumes"):
-            j.sal.btrfs.subvolumesDelete("/var/lib/docker/btrfs/subvolumes")
+            j.sal.btrfs.getBtrfs().subvolumesDelete("/var/lib/docker/btrfs/subvolumes")
 
         if j.sal.fs.exists(path="/var/lib/docker/volumes"):
             for item in j.sal.fs.listDirsInDir("/var/lib/docker/volumes"):
                 j.sal.fs.remove(item)
-
-    def removeDocker(self):
-        self._destroyAllKill()
-
-        rc, out, _ = j.sal.process.execute("mount")
-        mountpoints = []
-        for line in out.split("\n"):
-            if line.find("type btrfs") != -1:
-                mountpoint = line.split("on ")[1].split("type")[0].strip()
-                mountpoints.append(mountpoint)
-
-        for mountpoint in mountpoints:
-            j.sal.btrfs.subvolumesDelete(mountpoint, "/docker/")
-
-        j.sal.btrfs.subvolumesDelete("/storage", "docker")
-
-        j.sal.process.execute("apt-get remove docker-engine -y")
-        # j.sal.process.execute("rm -rf /var/lib/docker")
-
-        j.sal.fs.remove("/var/lib/docker")
-
-    def reInstallDocker(self):
-        """
-        ReInstall docker on your system
-        """
-        self.removeDocker()
-
-        j.builder.docker.install(force=True)
-
-        self.init()
 
     def pull(self, imagename):
         """

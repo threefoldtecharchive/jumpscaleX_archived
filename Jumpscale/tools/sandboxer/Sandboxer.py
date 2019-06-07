@@ -6,6 +6,40 @@ from .Dep import Dep
 
 JSBASE = j.application.JSBaseClass
 
+SYSTEM_LIBS = [
+    "libpthread.so",
+    "libltdl.so",
+    "libm.so",
+    "libresolv.so",
+    "libc.so",
+    "libx",
+    "libdl.so" "libz.so",
+    "libgcc",
+    "librt",
+    "libstdc++",
+    "libapt",
+    "libdbus",
+    "libselinux",
+]
+
+IGNORED_EXTENSIONS = [
+    "py",
+    "pyc",
+    "cfg",
+    "bak",
+    "txt",
+    "png",
+    "gif",
+    "css",
+    "js",
+    "wiki",
+    "spec",
+    "sh",
+    "jar",
+    "xml",
+    "lua",
+]
+
 
 class Sandboxer(j.application.JSBaseClass):
     """
@@ -19,83 +53,47 @@ class Sandboxer(j.application.JSBaseClass):
         self.original_size = 0
         self.new_size = 0
 
-    def _ldd(self, path, result=dict(), done=list(), exclude_sys_libs=True):
+    def should_exclude_lib(self, name_or_path):
+        for lib in SYSTEM_LIBS:
+            if lib in name_or_path.lower():
+                return True
+        return False
+
+    def _ldd(self, path, exclude_sys_libs=True):
         self._log_debug("find deb:%s" % path)
-        if j.sal.fs.getFileExtension(path) in [
-            "py",
-            "pyc",
-            "cfg",
-            "bak",
-            "txt",
-            "png",
-            "gif",
-            "css",
-            "js",
-            "wiki",
-            "spec",
-            "sh",
-            "jar",
-            "xml",
-            "lua",
-        ]:
+        result = {}
+        if j.sal.fs.getFileExtension(path) in IGNORED_EXTENSIONS:
             return result
-        if exclude_sys_libs:
-            exclude = [
-                "libpthread.so",
-                "libltdl.so",
-                "libm.so",
-                "libresolv.so",
-                "libc.so",
-                "libx",
-                "libdl.so" "libz.so",
-                "libgcc",
-                "librt",
-                "libstdc++",
-                "libapt",
-                "libdbus",
-                "libselinux",
-            ]
-        else:
-            exclude = []
 
-        if path not in done:
-            cmd = "ldd %s" % path
-            rc, out, _ = j.sal.process.execute(cmd, die=False)
-            if rc > 0:
-                if out.find("not a dynamic executable") != -1:
-                    return result
-            for line in out.split("\n"):
-                line = line.strip()
-                if line == "":
-                    continue
-                if line.find("=>") == -1:
-                    continue
+        rc, out, _ = j.sal.process.execute("ldd %s" % path, die=False)
+        if rc > 0:
+            if out.find("not a dynamic executable") != -1:
+                return result
 
-                name, lpath = line.split("=>")
-                name = name.strip().strip("\t")
-                name = name.replace("\\t", "")
-                lpath = lpath.split("(")[0]
-                lpath = lpath.strip()
-                if lpath == "":
-                    continue
-                if lpath.find("not found") != -1:
-                    continue
-                if name not in done:
-                    excl = False
-                    for toexeclude in exclude:
-                        if name.lower().find(toexeclude.lower()) != -1:
-                            excl = True
-                    if not excl:
-                        self._log_debug(("found:%s" % name))
+        for line in out.split("\n"):
+            if "not found" in line:
+                continue
 
-                        result[lpath] = Dep(name, lpath)
-                        result = self._ldd(lpath, result, done=done)
-                        # try:
-                        #     result = self._ldd(lpath, result, done=done)
-                        # except Exception as e:
-                        #     self._log_debug(e)
-            done.append(path)
+            parts = [part.strip() for part in line.split()]
+            if len(parts) == 2:
+                name = ""
+                path, _ = parts
+                if not j.sal.fs.exists(path):
+                    continue
+            elif len(parts) == 4:
+                name, _, path, _ = parts
+
+            if exclude_sys_libs and self.should_exclude_lib(path):
+                continue
+            result[path] = Dep(name, path)
+
         return result
+
+    def ldd(self, path, exclude_sys_libs=True):
+        def do():
+            return self._ldd(path, exclude_sys_libs)
+
+        return self._cache.get("ldd_%s_%s" % (path, exclude_sys_libs), method=do)
 
     def _otool(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         """
@@ -184,11 +182,28 @@ class Sandboxer(j.application.JSBaseClass):
         not needed to use manually, is basically ldd
         """
         self._log_info("find deb:%s" % path)
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             result = self._otool(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
         else:
-            result = self._ldd(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
+            result = self.ldd(path, exclude_sys_libs=exclude_sys_libs)
         return result
+
+    def libs_walk(self, path, dest, callback, recursive=True, exclude_sys_libs=True):
+        """
+        walk libs and apply callback to them
+        """
+        j.sal.fs.createDir(dest)
+
+        if j.sal.fs.isDir(path):
+            # do all files in dir
+            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
+                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
+                    self.libs_walk(item, dest, callback, recursive=False, exclude_sys_libs=exclude_sys_libs)
+        else:
+            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
+                result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
+                for _, deb in list(result.items()):
+                    callback(deb)
 
     def libs_sandbox(self, path, dest=None, recursive=True, exclude_sys_libs=True):
         """
@@ -206,22 +221,24 @@ class Sandboxer(j.application.JSBaseClass):
 
         self._log_info("lib sandbox:%s" % path)
 
-        j.sal.fs.createDir(dest)
+        def callback(dep):
+            dep.copyTo(dest)
 
-        if j.sal.fs.isDir(path):
-            # do all files in dir
-            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
-                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
-                    self.libs_sandbox(item, dest, recursive=False)
-            # if recursive:
-            #     for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
-            #         self.libs_sandbox(item, dest, recursive)
+        self.libs_walk(path, dest, callback, recursive, exclude_sys_libs)
 
-        else:
-            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
-                result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
-                for _, deb in list(result.items()):
-                    deb.copyTo(dest)
+    def libs_clone_under(self, path, dest, recursive=True):
+        self._log_info("lib clone to:%s" % dest)
+
+        def callback(dep):
+            dep_path = dep.path
+            if dep_path.startswith("/"):
+                dep_path = dep_path[1:]
+            dest_path = j.sal.fs.joinPaths(dest, dep_path)
+            j.sal.fs.createDir(j.sal.fs.getDirName(dest_path))
+            if not j.sal.fs.exists(dest_path):
+                j.sal.fs.copyFile(dep.path, dest_path)
+
+        self.libs_walk(path, dest, callback, recursive, exclude_sys_libs=False)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 

@@ -14,7 +14,12 @@ class PyInstaller(j.application.JSBaseClass):
         pass
 
     def install(self):
+        """
+        kosmos 'j.tools.pyinstaller.install()'
+        :return:
+        """
+
         j.shell()
 
-    def build_kosmos(self):
+    def build_jsx(self):
         j.shell()

@@ -74,7 +74,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
     # def configs_add(self,path,args={}):
     #     args["j"]=j
     #
-    #     if j.core.platformtype.myplatform.isMac:
+    #     if j.core.platformtype.myplatform.platform_is_osx:
     #         dest="/usr/local/etc/openresty/configs/"
     #     else:
     #         dest="/etc/openresty/configs/"
@@ -91,7 +91,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
     #
     #     if p.core.doneGet("openresty") is False:
     #
-    #         if p.platformtype.isMac:
+    #         if p.platformtype.platform_is_osx:
     #
     #             self._log_info("INSTALLING OPENRESTY")
     #

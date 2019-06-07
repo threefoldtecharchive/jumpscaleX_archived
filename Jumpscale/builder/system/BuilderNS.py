@@ -1,12 +1,12 @@
 from Jumpscale import j
 
 
-class BuilderNS(j.builder.system._BaseClass):
+class BuilderNS(j.builders.system._BaseClass):
     def hostfile_get(self):
         """
         """
         result = {}
-        for line in j.builder.tools.hostfile.splitlines():
+        for line in j.builders.tools.hostfile.splitlines():
             ipaddr_found = re.search(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", line)
             if ipaddr_found is not None:
                 ipaddr_found = ipaddr_found.group()
@@ -49,7 +49,7 @@ class BuilderNS(j.builder.system._BaseClass):
             C += "%-19s %s\n" % (addr, names2)
 
         # TODO: need to do ipv6
-        j.builder.tools.hostfile = C
+        j.builders.tools.hostfile = C
 
     def hostfile_set_fromlocal(self):
         """

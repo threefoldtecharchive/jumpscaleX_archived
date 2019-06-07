@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 CONFIGTEMPLATE = """
@@ -19,7 +19,7 @@ CONFIGTEMPLATE = """
 """
 
 
-class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
+class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
     NAME = "coredns"
 
     def _init(self):
@@ -30,14 +30,14 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         """
-        kosmos 'j.builder.network.coredns.build(reset=True)'
+        kosmos 'j.builders.network.coredns.build(reset=True)'
 
         installs and runs coredns server with redis plugin
         """
 
         # install golang
-        j.builder.runtimes.golang.install()
-        j.builder.db.etcd.install()
+        j.builders.runtimes.golang.install()
+        j.builders.db.etcd.install()
         self.tools.dir_ensure(self.package_path)
 
         # https://github.com/coredns/coredns#compilation-from-source
@@ -56,7 +56,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         """
-        kosmos 'j.builder.network.coredns.install()'
+        kosmos 'j.builders.network.coredns.install()'
 
         installs and runs coredns server with redis plugin
         """

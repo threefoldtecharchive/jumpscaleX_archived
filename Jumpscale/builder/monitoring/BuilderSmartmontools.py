@@ -2,7 +2,7 @@ import os
 from Jumpscale import j
 
 
-class BuilderSmartmontools(j.builder.system._BaseClass):
+class BuilderSmartmontools(j.builders.system._BaseClass):
     """
     Builder module for smartmontools (smartctl command)
     """
@@ -26,10 +26,10 @@ class BuilderSmartmontools(j.builder.system._BaseClass):
 
         self._log_info("installing smartctl...")
 
-        tmp_location = j.builder.tools.file_download(self._DOWNLOAD_URL, expand=True)
+        tmp_location = j.builders.tools.file_download(self._DOWNLOAD_URL, expand=True)
 
         # move downloaded binary to installation destination
-        j.builder.tools.execute(
+        j.builders.tools.execute(
             "mv %s %s"
             % (
                 j.sal.fs.joinPaths(tmp_location, self._REL_INSTALL_LOCATION, "smartctl"),
@@ -38,7 +38,7 @@ class BuilderSmartmontools(j.builder.system._BaseClass):
         )
 
         # cleanup
-        j.builder.tools.dir_remove(tmp_location)
+        j.builders.tools.dir_remove(tmp_location)
 
         if not self.isInstalled():
             raise RuntimeError("Failed to install Smartmontools")

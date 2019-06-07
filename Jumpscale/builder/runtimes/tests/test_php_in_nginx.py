@@ -48,11 +48,11 @@ def test_main(self=None):
 
     """
     # check if nginx is installed, if not then install it
-    if not j.sal.process.checkInstalled(j.builder.web.nginx.NAME):
-        j.builder.web.nginx.build(install=True)
+    if not j.sal.process.checkInstalled(j.builders.web.nginx.NAME):
+        j.builders.web.nginx.build(install=True)
     # check if php is installed, if not then install it
-    if not j.sal.process.checkInstalled(j.builder.runtimes.php.NAME):
-        j.builder.runtimes.php.build(install=True)
+    if not j.sal.process.checkInstalled(j.builders.runtimes.php.NAME):
+        j.builders.runtimes.php.build(install=True)
     try:
         www_path = self._replace("{DIR_TEMP}/www/html")
         j.core.tools.dir_ensure(www_path)
@@ -62,9 +62,9 @@ def test_main(self=None):
         j.sal.fs.moveFile(default_site_path, default_site_backup_path)
         j.sal.fs.writeFile(default_site_path, contents=default_enabled_sites_conf)
         j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, "index.php"), contents="<?php phpinfo(); ?>")
-        j.builder.runtimes.php.start()
-        j.builder.web.nginx.stop()
-        j.builder.web.nginx.start()
+        j.builders.runtimes.php.start()
+        j.builders.web.nginx.stop()
+        j.builders.web.nginx.start()
 
         # wait until port is ready
         time.sleep(30)
@@ -77,6 +77,6 @@ def test_main(self=None):
         j.sal.fs.remove(os.path.dirname(www_path))
         if j.sal.fs.exists(default_site_backup_path):
             j.sal.fs.moveFile(default_site_backup_path, default_site_path)
-        j.builder.web.nginx.stop()
-        j.builder.web.nginx.start()
-        j.builder.runtimes.php.start()
+        j.builders.web.nginx.stop()
+        j.builders.web.nginx.start()
+        j.builders.runtimes.php.start()

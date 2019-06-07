@@ -1,5 +1,6 @@
 from Jumpscale.sal.bash.Profile import Profile
 from Jumpscale import j
+from functools import wraps
 import inspect
 import os
 
@@ -7,6 +8,13 @@ BaseClass = j.application.JSBaseClass
 
 
 class builder_method(object):
+    """A Decorator to be used in all builder methods
+    this will provide:
+    1- State check to make sure not to do one action multiple times
+    2- Making sure that actions are done in the correct order, for instance it will make sure that build is done before
+       installation
+    """
+
     def __init__(self, **kwargs_):
         if "log" in kwargs_:
             self.log = j.data.types.bool.clean(kwargs_["log"])
@@ -17,7 +25,16 @@ class builder_method(object):
         else:
             self.done_check = True
 
-    def get_default_zhub_client(self, kwargs):
+    @staticmethod
+    def get_default_zhub_client(kwargs):
+        """Gets the zhub client to be used to upload the flist
+        this will depend on two parameters (zhub_client and flist_create)
+        - if zerohub instance provided it will be used
+        - if no zhub instance but flist_create = True will try to use the main zhub instance
+        :param kwargs: kwargs passed to the builder method
+        :return: zhub_client to be used
+        :raises: RuntimeError if no zhub instance provided and the main instance is not configured
+        """
         # only use "main" client, because should be generic usable
         zhub_client = kwargs.get("zhub_client")
         if not zhub_client and kwargs.get("flist_create"):
@@ -29,7 +46,13 @@ class builder_method(object):
             zhub_client.list(username=zhub_client.username)
         return zhub_client
 
-    def get_argument_names(self, func):
+    @staticmethod
+    def get_argument_names(func):
+        """Gets the args of a function ordered
+
+        :param func: a method to get parameters from
+        :return: list of args names
+        """
         argspec = inspect.getargspec(func)
         args = argspec.args
         if argspec.varargs:
@@ -39,6 +62,13 @@ class builder_method(object):
         return args
 
     def get_all_as_keyword_arguments(self, func, args, kwargs):
+        """Converts all passed parameters to dict
+        we needed this because we need a unified way to deal with the parameters passed to the method
+        :param func: a function to get the arguments data from
+        :param args: the passed args
+        :param kwargs: the passed kwargs
+        :return: dict of args and kwargs as if it was all kwargs
+        """
         arg_names = self.get_argument_names(func)
         if "self" in arg_names:
             arg_names.remove("self")
@@ -62,36 +92,60 @@ class builder_method(object):
         kwargs = {key: value for key, value in kwargs.items() if key in arg_names}
         return func(**kwargs)
 
+    def already_done(self, func, builder, key, reset):
+        """ Check if this method was already done or not
+
+        *Note* if you pass reset=True to any method it will be executed again
+        :param func: the function called
+        :param builder: the builder used
+        :param kwargs: kwargs passed to the method (use get_all_as_keyword_arguments to get anything passed to the
+        method as kwargs)
+        :return: True means it was already done and you don't need to redo, False means not done before or reset=True
+        """
+
+        reset = j.data.types.bool.clean(reset)
+        if reset is True:
+            builder._done_reset()
+            builder.reset()
+            return False
+
+        if self.done_check and builder._done_check(key, reset):
+            return True
+        else:
+            return False
+
     def __call__(self, func):
+        @wraps(func)
         def wrapper_action(builder, *args, **kwargs):
+            """The main wrapper method for the decorator, it will do:
+            1- check if the method is going to be executed or it's already done before
+            2- make sure that the previous method were executed in the correct order
+            3- choose the correct env file for the action
+            4- prepare any needed parameters AKA zerohub client in case of creating a flist
+            :param builder: the builder self
+            :param args: args passed to the method
+            :param kwargs: kwargs passed to the method
+            :return: if the method was already done it will return BuilderBase.ALREADY_DONE_VALUE
+            """
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
-
-            if self.log:
-                builder._log_debug("do once:%s" % name)
-
-            if "reset" in kwargs:
-                reset = j.data.types.bool.clean(kwargs["reset"])
-            else:
-                reset = False
-
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
+            reset = kwargs.get("reset", False)
 
-            if self.done_check and builder._done_check(done_key, reset):
-                builder._log_debug("action:%s() no need to do, was already done" % done_key)
-                return
+            if self.already_done(func, builder, done_key, reset):
+                return builder.ALREADY_DONE_VALUE
 
-            if reset:
-                builder._done_reset()
-                builder.reset()
-
+            # Make sure to call _init before any method
             if name is not "_init":
                 builder._init()
+
             if name == "build":
                 builder.profile_builder_select()
+
             if name == "install":
                 builder.build()
+
             if name == "sandbox":
                 builder.profile_sandbox_select()
                 builder.install()
@@ -110,8 +164,7 @@ class builder_method(object):
             if name == "sandbox" and kwargs.get("flist_create", False):
                 res = builder._flist_create(kwargs["zhub_client"], kwargs.get("merge_base_flist"))
 
-            if self.done_check:
-                builder._done_set(done_key)
+            builder._done_set(done_key)
 
             if name == "build":
                 builder.profile_sandbox_select()
@@ -128,6 +181,8 @@ class BuilderBaseClass(BaseClass):
     """
     doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/builders/Builders.md
     """
+
+    ALREADY_DONE_VALUE = "ALREADY DONE"
 
     def __init__(self):
         if hasattr(self.__class__, "NAME"):
@@ -251,7 +306,7 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_delete("${PATH}")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.profile.path_add("${PATH}", end=True)
 
         self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
@@ -278,8 +333,6 @@ class BuilderBaseClass(BaseClass):
             if key.upper() == key:
                 args[key] = item
         res = j.core.tools.text_replace(content=txt, args=args, text_strip=True)
-        if res.find("{") != -1:
-            raise RuntimeError("replace was not complete, still { inside, '%s'" % res)
         return res
 
     def _execute(self, cmd, die=True, args={}, timeout=600, replace=True, showout=True, interactive=False):
@@ -345,8 +398,8 @@ class BuilderBaseClass(BaseClass):
         """
         src = self._replace(src)
         dst = self._replace(dst)
-        if j.builder.tools.file_is_dir:
-            j.builder.tools.copyTree(
+        if j.builders.tools.file_is_dir:
+            j.builders.tools.copyTree(
                 src,
                 dst,
                 keepsymlinks=keepsymlink,
@@ -359,7 +412,7 @@ class BuilderBaseClass(BaseClass):
                 createdir=True,
             )
         else:
-            j.builder.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
+            j.builders.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
 
     def _write(self, path, txt):
         """
@@ -395,7 +448,7 @@ class BuilderBaseClass(BaseClass):
 
     @property
     def system(self):
-        return j.builder.system
+        return j.builders.system
 
     @property
     def tools(self):
@@ -404,7 +457,7 @@ class BuilderBaseClass(BaseClass):
         , write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
         :return:
         """
-        return j.builder.tools
+        return j.builders.tools
 
     def reset(self):
         """
@@ -471,7 +524,7 @@ class BuilderBaseClass(BaseClass):
         """
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
-            j.builder.tools.dir_ensure(ld_dest)
+            j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)
 
         self._log_info("uploading flist to the hub")

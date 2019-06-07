@@ -1,15 +1,16 @@
 from Jumpscale import j
 
 
-class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
+class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.apps"
+    __jslocation__ = "j.builders.apps"
 
     def _init(self):
         self._gitea = None
         self._freeflow = None
         self._digitalme = None
         self._userbot = None
+        self._odoo = None
 
     @property
     def gitea(self):
@@ -42,3 +43,11 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
             self._userbot = BuilderUserBot()
         return self._userbot
+
+    @property
+    def odoo(self):
+        if self._odoo is None:
+            from .BuilderOdoo import BuilderOdoo
+
+            self._odoo = BuilderOdoo()
+        return self._odoo

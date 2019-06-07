@@ -1,10 +1,10 @@
 from Jumpscale import j
 import textwrap
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderDigitalME(j.builder.system._BaseClass):
+class BuilderDigitalME(j.builders.system._BaseClass):
     """
     specs:
 
@@ -33,16 +33,16 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         will build python & openresty & copy all to the right git sandboxes works for Ubuntu only
         :return:
         """
-        j.builder.runtimes.python.build(reset=reset)
-        j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
+        j.builders.runtimes.python.build(reset=reset)
+        j.builders.runtimes.lua.build()  # will build openresty & lua & openssl
         j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch=self.branch)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        j.builder.runtimes.python.sandbox(reset=reset)
-        j.builder.runtimes.lua.sandbox(reset=reset)
-        j.tools.sandboxer.copyTo(j.builder.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
-        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX, self.DIR_SANDBOX)
+        j.builders.runtimes.python.sandbox(reset=reset)
+        j.builders.runtimes.lua.sandbox(reset=reset)
+        j.tools.sandboxer.copyTo(j.builders.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
+        j.tools.sandboxer.copyTo(j.builders.runtimes.lua.DIR_SANDBOX, self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
         j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_SANDBOX, git_repo_path[1:]))
 
@@ -53,7 +53,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
 
     def gslides(self):
         """
-        kosmos 'j.builder.apps.digitalme.gslides()'
+        kosmos 'j.builders.apps.digitalme.gslides()'
         google slides option
         :return:
         """
@@ -62,7 +62,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
 
     def test(self, zos_client=None):
         """
-        j.builder.apps.digitalme.test()
+        j.builders.apps.digitalme.test()
         test locally, start openresty and do network check
         :return:
         """

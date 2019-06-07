@@ -3,8 +3,8 @@
 Make sure you have the required dependencies
 
 ```python
-j.builder.db.rocksdb.install()
-j.builder.zero_os.zos_stor_client.install()
+j.builders.db.rocksdb.install()
+j.builders.zero_os.zos_stor_client.install()
 ```
 
 ## Creating a flist

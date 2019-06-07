@@ -13,7 +13,7 @@ class Temperature(IPMIHealthCheck):
 
     def __init__(self, node):
         self.node = node
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("temperature", "Node Temperature Check", "Hardware", resource)
 
     def run(self, container):

@@ -32,6 +32,8 @@ class ZDBServer(j.application.JSBaseClass):
             cl = self.client_admin_get()
             return cl.ping()
         except Exception as e:
+            raise e
+
             j.shell()
 
     def start(self, destroydata=False):
@@ -165,7 +167,7 @@ class ZDBServer(j.application.JSBaseClass):
         """
         kosmos 'j.servers.zdb.build()'
         """
-        j.builder.db.zdb.install(reset=reset)
+        j.builders.db.zdb.install(reset=reset)
 
     def test(self, build=False):
         """

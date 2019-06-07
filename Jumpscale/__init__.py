@@ -85,6 +85,7 @@ class Core:
 
         self._db = fakeredis.FakeStrictRedis()
         self._db_fakeredis = True
+        return self._db
 
     @property
     def db(self):

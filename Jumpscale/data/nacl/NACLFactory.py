@@ -21,9 +21,7 @@ class NACLFactory(j.application.JSBaseClass):
         if isinstance(j.core.db, fakeredis.FakeStrictRedis):
             j.clients.redis.core_get()
 
-    def configure(
-        self, name="default", privkey_words=None, secret=None, sshagent_use=None, interactive=False, generate=False
-    ):
+    def configure(self, name="default", privkey_words=None, sshagent_use=None, generate=False, interactive=True):
         """
         secret is used to encrypt/decrypt the private key when stored on local filesystem
         privkey_words is used to put the private key back
@@ -31,22 +29,13 @@ class NACLFactory(j.application.JSBaseClass):
         will ask for the details of the configuration
         :param: sshagent_use is True, will derive the secret from the private key of the ssh-agent if only 1 ssh key loaded
                                 secret needs to be None at that point
-        :param: secret only used when sshagent not used, will be stored encrypted in redis
-                sha256 is used on the secret as specified above before storing/encrypting/decrypting the private key
-
         :param: generate if True and interactive is False then will autogenerate a key
 
         :return: None
 
         """
         n = self.get(name=name, load=False)
-        n.configure(
-            privkey_words=privkey_words,
-            secret=secret,
-            sshagent_use=sshagent_use,
-            interactive=interactive,
-            generate=generate,
-        )
+        n.configure(privkey_words=privkey_words, sshagent_use=sshagent_use, generate=generate, interactive=False)
         return n
 
     def get(self, name="default", load=True):
@@ -114,6 +103,28 @@ class NACLFactory(j.application.JSBaseClass):
         a = cl.encrypt("something", hex=True)  # non binary start
         b = cl.decrypt(a, hex=True)
         assert b == b"something"
+
+        # LETS HOW TEST THAT WE CAN START FROM WORDS
+
+        words = j.data.nacl.default.words
+        j.sal.fs.copyDirTree("/sandbox/cfg/keys/default", "/sandbox/cfg/keys/default_backup")  # make backup
+        j.sal.fs.remove("/sandbox/cfg/keys/default")
+
+        self.default.reset()
+        try:
+            self.default.load()
+            raise RuntimeError("should have given error")
+        except:
+            pass
+
+        self.default._keys_generate(words=words)
+        self.default.load()
+
+        b = cl.decrypt(a, hex=True)
+        assert b == b"something"
+
+        j.sal.fs.copyDirTree("/sandbox/cfg/keys/default_backup", "/sandbox/cfg/keys/default")
+        j.sal.fs.remove("/sandbox/cfg/keys/default_backup")
 
         self._log_info("TEST OK")
         print("TEST OK")

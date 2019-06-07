@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderFW(j.builder.system._BaseClass):
+class BuilderFW(j.builders.system._BaseClass):
     def _init(self):
         self._fw_enabled = None
         self._fw_type = None
@@ -9,7 +9,7 @@ class BuilderFW(j.builder.system._BaseClass):
     @property
     def fw_type(self):
         if self._fw_type is None:
-            if j.core.platformtype.myplatform.isMac:
+            if j.core.platformtype.myplatform.platform_is_osx:
                 raise j.exceptions.Input(
                     message="cannot enable fw, mac  not supported ", level=1, source="", tags="", msgpub=""
                 )
@@ -23,14 +23,14 @@ class BuilderFW(j.builder.system._BaseClass):
 
     def allowIncoming(self, port, protocol="tcp"):
         """as alternative on ufw"""
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return
         j.sal.process.execute(
             "nft add rule filter input {protocol} dport {port} log accept".format(protocol=protocl, port=port)
         )
 
     def denyIncoming(self, port):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return
         j.sal.process.execute(
             "nft add rule filter input {protocol} dport {port} log reject".format(protocol=protocl, port=port)
@@ -49,7 +49,7 @@ class BuilderFW(j.builder.system._BaseClass):
         return out
 
     def setRuleset(self, ruleset, pinghost="8.8.8.8"):
-        if not j.builder.system.net.ping(pinghost):
+        if not j.builders.system.net.ping(pinghost):
             raise j.exceptions.Input(
                 message="Cannot set firewall ruleset if we cannot ping to the host we have to check against.",
                 level=1,
@@ -97,4 +97,4 @@ class BuilderFW(j.builder.system._BaseClass):
         pscript = pscript.replace("$ruleset", ruleset)
         pscript = pscript.replace("$pinghost", pinghost)
 
-        j.builder.tools.execute(content=pscript, die=True, interpreter="python3", tmux=True)
+        j.builders.tools.execute(content=pscript, die=True, interpreter="python3", tmux=True)

@@ -1,66 +1,91 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
+
+builder_method = j.builders.system.builder_method
 
 
-class BuilderInfluxdb(j.builder.system._BaseClass):
+class BuilderInfluxdb(BuilderGolangTools):
     NAME = "influxd"
 
-    def install(self, dependencies=False, start=False, reset=False):
-        if self._done_check("install", reset):
-            return
+    def profile_builder_set(self):
+        super().profile_builder_set()
+        self.profile.env_set("GO111MODULE", "on")
 
-        if dependencies:
-            j.builder.system.package.mdupdate()
+    @builder_method()
+    def build(self):
+        # install dependancies
+        self.system.package.mdupdate()
+        self.system.package.install(["npm", "bzr"])
+        # golang dependancy
+        j.builders.runtimes.golang.install()
 
-        j.core.tools.dir_ensure("{DIR_BIN}")
+        # build from source
+        cmd = """
+        cd {DIR_BUILD}
+        mkdir -p github && cd github
+        rm -rf influxdb
+        git clone --depth 1 https://github.com/influxdata/influxdb
+        cd influxdb
+        go get ./...
+        go install ./...
+        """
+        self._execute(cmd, timeout=2000)
 
-        if j.core.platformtype.myplatform.isMac:
-            j.builder.system.package.ensure("influxdb")
-            j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
-            j.builder.tools.file_copy("/usr/local/etc/influxdb.conf", "{DIR_VAR}/templates/cfg/influxdb/influxdb.conf")
+    @builder_method()
+    def install(self):
+        self.tools.dir_ensure("{DIR_BIN}")
+        self._copy("/sandbox/go_proj/bin/influx", "{DIR_BIN}")
+        self._copy("/sandbox/go_proj/bin/influxd", "{DIR_BIN}")
 
-        elif j.core.platformtype.myplatform.isUbuntu:
-            j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
-            C = """
-            set -ex
-            cd {DIR_TEMP}
-            wget https://dl.influxdata.com/influxdb/releases/influxdb-1.6.0-static_linux_amd64.tar.gz
-            tar xvfz influxdb-1.6.0-static_linux_amd64.tar.gz
-            cp influxdb-1.6.0-1/influxd {DIR_BIN}/influxd
-            cp influxdb-1.6.0-1/influx {DIR_BIN}/influx
-            cp influxdb-1.6.0-1/influx_inspect {DIR_BIN}/influx_inspect
-            cp influxdb-1.6.0-1/influx_stress {DIR_BIN}/influx_stress
-            cp influxdb-1.6.0-1/influx_tsm {DIR_BIN}/influx_tsm
-            cp influxdb-1.6.0-1/influxdb.conf {DIR_VAR}/templates/cfg/influxdb/influxdb.conf"""
-            j.sal.process.execute(C, profile=True)
-        else:
-            raise RuntimeError("cannot install, unsuported platform")
-        # j.builder.sandbox.profileJS.path_add(self._replace("{DIR_BIN}"))
-        # j.builder.sandbox.profileJS.save()
-        binPath = self.tools.command_check("influxd")
-        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb")
-        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/meta")
-        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/data")
-        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/wal")
-        content = j.core.tools.file_text_read("{DIR_VAR}/templates/cfg/influxdb/influxdb.conf")
-        cfg = j.data.serializers.toml.loads(content)
-        cfg["meta"]["dir"] = self._replace("{DIR_VAR}/data/influxdb/meta")
-        cfg["data"]["dir"] = self._replace("{DIR_VAR}/data/influxdb/data")
-        cfg["data"]["wal-dir"] = self._replace("{DIR_VAR}/data/influxdb/wal")
-        j.core.tools.dir_ensure("$CFGDIR/influxdb")
-        j.sal.fs.writeFile("$CFGDIR/influxdb/influxdb.conf", j.data.serializers.toml.dumps(cfg))
-        cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
-        cmd = self._replace(cmd)
-        j.sal.fs.writeFile("{DIR_BIN}/start_influxdb.sh", cmd, mode=0o777)
+    @builder_method()
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and reate flist if create_flist = True
 
-        if start:
-            self.start()
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :type flist_create:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        """
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
+        self.tools.dir_ensure(bin_dest)
+        bins = ["influx", "influxd"]
+        for bin in bins:
+            self._copy("{DIR_BIN}/" + bin, bin_dest)
 
-    def build(self, start=True):
-        raise RuntimeError("not implemented")
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(bin_dest, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest)
 
-    def start(self):
-        binPath = self.tools.command_check("influxd")
-        cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
-        j.builder.system.process.kill("influxdb")
-        pm = j.builder.system.processmanager.get()
-        pm.ensure("influxdb", cmd=cmd, env={}, path="")
+    def clean(self):
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "github")
+        self._remove(code_dir)
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+
+    @property
+    def startup_cmds(self):
+        cmds = j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)
+        return [cmds]
+
+    @builder_method()
+    def stop(self):
+        j.sal.process.killProcessByName(self.NAME)
+
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
+        self.start()
+        assert self.running()
+        print("TEST OK")

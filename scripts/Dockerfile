@@ -10,7 +10,7 @@ RUN cd /sandbox/code/github/threefoldtech; git clone --branch $branch https://gi
 RUN cd /sandbox/code/github/threefoldtech/jumpscaleX/; git reset --hard $commit
 
 RUN python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y -w -p
-RUN /bin/bash -c "source /sandbox/env.sh; js_shell 'j.builder.db.zdb.install()'"
+RUN /bin/bash -c "source /sandbox/env.sh; js_shell 'j.builders.db.zdb.install()'"
 RUN pip3 install pytest nose nose-progressive nose-testconfig requests>=2.11.1 parameterized
 COPY ./test.toml /sandbox/code/github/threefoldtech/
 COPY ./cred.json /sandbox/code/github/threefoldtech/digitalmeX/packages/gdrive/tests

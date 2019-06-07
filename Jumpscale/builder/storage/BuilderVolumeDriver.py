@@ -2,7 +2,7 @@ from Jumpscale import j
 from time import sleep
 
 
-class BuilderVolumeDriver(j.builder.system._BaseClass):
+class BuilderVolumeDriver(j.builders.system._BaseClass):
     NAME = "volumedriver"
 
     def build(self, reset=False):
@@ -16,8 +16,8 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         j.sal.process.execute(
             'echo "deb http://us.archive.ubuntu.com/ubuntu xenial main universe" >> /etc/apt/sources.list'
         )
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.upgrade(distupgrade=True)
+        j.builders.system.package.mdupdate()
+        j.builders.system.package.upgrade(distupgrade=True)
 
         apt_deps = """
         gcc g++ clang-3.8 valgrind \
@@ -40,7 +40,7 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         supervisor rpcbind \
         libxio0 libxio-dev libev4
         """
-        j.builder.system.package.ensure(apt_deps, allow_unauthenticated=True)
+        j.builders.system.package.ensure(apt_deps, allow_unauthenticated=True)
 
     def _build(self, version="6.0.0"):
         workspace = self._replace("{DIR_TEMP}/volumedriver-workspace")
@@ -54,8 +54,8 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         )
         j.sal.process.execute("cd %(volumedriver)s;git checkout tags/%(version)s" % str_repl)
 
-        j.builder.tools.file_link(str_repl["buildtools"], j.sal.fs.joinPaths(workspace, "volumedriver-buildtools"))
-        j.builder.tools.file_link(str_repl["volumedriver"], j.sal.fs.joinPaths(workspace, "volumedriver"))
+        j.builders.tools.file_link(str_repl["buildtools"], j.sal.fs.joinPaths(workspace, "volumedriver-buildtools"))
+        j.builders.tools.file_link(str_repl["volumedriver"], j.sal.fs.joinPaths(workspace, "volumedriver"))
 
         build_script = (
             """
@@ -73,4 +73,4 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         )
 
         j.sal.process.execute(build_script)
-        j.builder.tools.file_copy("{DIR_TEMP}/volumedriver-workspace/volumedriver/build/bin/*", "{DIR_BIN}")
+        j.builders.tools.file_copy("{DIR_TEMP}/volumedriver-workspace/volumedriver/build/bin/*", "{DIR_BIN}")

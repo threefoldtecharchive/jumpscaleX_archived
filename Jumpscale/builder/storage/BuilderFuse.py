@@ -1,11 +1,11 @@
 from Jumpscale import j
 
 
-class BuilderFuse(j.builder.system._BaseClass):
+class BuilderFuse(j.builders.system._BaseClass):
     NAME = "fuse"
 
     def install(self):
-        j.builder.system.package.ensure(
+        j.builders.system.package.ensure(
             [
                 "python3.5",
                 "python3-pkgconfig",

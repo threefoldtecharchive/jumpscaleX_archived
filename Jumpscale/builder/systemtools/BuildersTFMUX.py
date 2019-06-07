@@ -1,11 +1,11 @@
 from Jumpscale import j
 
 
-class BuildersTFMUX(j.builder.system._BaseClass):
+class BuildersTFMUX(j.builders.system._BaseClass):
     def build(self, reset=False):
         """
 
-        kosmos 'j.builder.systemtools.tfmux.build()'
+        kosmos 'j.builders.systemtools.tfmux.build()'
 
         """
 
@@ -15,9 +15,9 @@ class BuildersTFMUX(j.builder.system._BaseClass):
         if self._done_get("build") and not reset:
             return
 
-        j.builder.system.package.ensure("gcc,g++,make")
+        j.builders.system.package.ensure("gcc,g++,make")
 
-        j.builder.system.package.ensure(
+        j.builders.system.package.ensure(
             "cmake, g++ pkg-config, git, vim-common, libwebsockets-dev, libjson-c-dev, libssl-dev"
         )
 

@@ -352,6 +352,11 @@ class JSBase:
         - DEBUG 	10
 
         """
+        if j.application._in_autocomplete == 2:
+            raise RuntimeError("s")
+        if j.application._in_autocomplete:
+            return None
+
         if j.application.debug or self.__class__._logger_min_level - 1 < level:
             # now we will log
 

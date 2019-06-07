@@ -10,7 +10,7 @@ Monitors if disk usage is too high
 
 class DiskUsage(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("disk-usage", "Disk Usage Check", "Hardware", resource)
         self.node = node
 

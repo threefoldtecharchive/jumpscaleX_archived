@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderGateOne(j.builder.system._BaseClass):
+class BuilderGateOne(j.builders.system._BaseClass):
     NAME = "gateone"
 
     def build(self, reset=False):
@@ -36,7 +36,7 @@ cp /usr/local/bin/gateone {DIR_BIN}/gateone
 ln -s /usr/bin/python3 /usr/bin/python
 """
         j.sal.process.execute(cmd)
-        j.builder.system.ssh.keygen(name="id_rsa")
+        j.builders.system.ssh.keygen(name="id_rsa")
         self._done_set("install")
 
     def start(self, name="main", address="localhost", port=10443):
@@ -52,14 +52,14 @@ ln -s /usr/bin/python3 /usr/bin/python
         cmd = "eval `ssh-agent -s` ssh-add /root/.ssh/id_rsa && gateone --address={} --port={} --disable_ssl".format(
             address, port
         )
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.ensure(name="gateone_{}".format(name), cmd=cmd)
 
     def stop(self, name="main"):
         """
         Stops gateone 
         """
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.stop(name="gateone_{}".format(name))
 
     def restart(self, name="main"):

@@ -51,7 +51,7 @@ class Client(BaseClient):
         self.timeout = timeout
 
         BaseClient.__init__(self, self.timeout)
-        self.__redis = None
+        self._redis = None
 
         self._container_manager = ContainerManager(self)
         self._bridge_manager = BridgeManager(self)
@@ -80,7 +80,7 @@ class Client(BaseClient):
         return self._socat
 
     @property
-    def _redis(self):
+    def redis(self):
         # make sure the jwt token used as password is still valid
         # if not, we try to refresh it and force to re-created the redis connection
         password = self.password
@@ -91,13 +91,13 @@ class Client(BaseClient):
             password = j.clients.itsyouonline.jwt_refresh(password, validity=3600)
             self.password = password
             # force recreation of redis connection
-            if self.__redis:
-                self.__redis = None
+            if self._redis:
+                self._redis = None
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
-        if self.__redis is None:
+        if self._redis is None:
             if self.unixsocket:
-                self.__redis = redis.Redis(unix_socket_path=self.unixsocket, db=self.db)
+                self._redis = redis.Redis(unix_socket_path=self.unixsocket, db=self.db)
             else:
                 timeout = self.timeout
                 socket_timeout = (timeout + 5) if timeout else 15
@@ -109,7 +109,7 @@ class Client(BaseClient):
                 if hasattr(socket, "TCP_KEEPIDLE"):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-                self.__redis = redis.Redis(
+                self._redis = redis.Redis(
                     host=self.host,
                     port=self.port,
                     password=self.password,
@@ -121,7 +121,7 @@ class Client(BaseClient):
                     socket_keepalive_options=socket_keepalive_options,
                 )
 
-        return self.__redis
+        return self._redis
 
     @property
     def zfs(self):
@@ -268,8 +268,8 @@ class Client(BaseClient):
 
         self._raw_chk.check(payload)
         flag = "result:{}:flag".format(id)
-        self._redis.rpush("core:default", json.dumps(payload))
-        if self._redis.brpoplpush(flag, flag, DEFAULT_TIMEOUT) is None:
+        self.redis.rpush("core:default", json.dumps(payload))
+        if self.redis.brpoplpush(flag, flag, DEFAULT_TIMEOUT) is None:
             TimeoutError("failed to queue job {}".format(id))
 
         return Response(self, id)

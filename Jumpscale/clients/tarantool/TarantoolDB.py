@@ -61,7 +61,7 @@ class TarantoolDB(j.application.JSBaseClass):
         # rm 000*;rm -rf /Users/kristofdespiegeleer1/opt/var/data/tarantool/test;tarantoolctl start test; cat /Users/kristofdespiegeleer1/opt/var/data/tarantool/test/instance.log
 
     def start(self):
-        # j.builder.db.tarantool.start()
+        # j.builders.db.tarantool.start()
         self._setConfig()
         cpath = j.clients.tarantool.cfgdir + "/%s.lua" % self.name
         j.tools.tmux.execute("tarantool -i %s" % cpath, window="tarantool")

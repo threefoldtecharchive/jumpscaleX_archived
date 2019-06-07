@@ -14,7 +14,7 @@ Result will be shown in the "System Load" section of the Grid Portal / Status Ov
 
 class Memory(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("memory", "Memory", "System Load", resource)
         self.node = node
 
@@ -37,7 +37,7 @@ class Memory(HealthCheckRun):
 
 class CPU(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("CPU", "CPU", "System Load", resource)
         self.node = node
 

@@ -5,7 +5,7 @@ import time
 import socket
 
 
-class BuilderProxyClassic(j.builder.system._BaseClass):
+class BuilderProxyClassic(j.builders.system._BaseClass):
     """
     all methods to do to allow a local lan to work more efficient with internet e.g. cache for apt-get, web proxy, ...
 
@@ -14,7 +14,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
     """
 
     def removeFromSystemD(self):
-        pm = j.builder.system.processmanager.get("systemd")
+        pm = j.builders.system.processmanager.get("systemd")
         pm.remove("polipo")
         pm.remove("privoxy")
 
@@ -22,9 +22,9 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
         """
         installs privoxy
         """
-        j.builder.ufw.ufw_enable(force=False)
-        j.builder.ufw.allowIncoming(port)
-        j.builder.system.package.ensure("privoxy")
+        j.builders.ufw.ufw_enable(force=False)
+        j.builders.ufw.allowIncoming(port)
+        j.builders.system.package.ensure("privoxy")
 
         CONFIG = """
             #trust-info-url  http://www.example.com/why_we_block.html
@@ -178,7 +178,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
     def start(self):
 
         cmd = "privoxy --no-daemon /etc/privoxy/config"
-        pm = j.builder.system.processmanager.get("tmux")
+        pm = j.builders.system.processmanager.get("tmux")
         pm.ensure("privoxy", cmd)  # in tmux will always restart
 
         cmd = "polipo -c /etc/polipo/config"
@@ -188,20 +188,20 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
 
         port = 8123
 
-        j.builder.ufw.ufw_enable(force=False)
-        j.builder.ufw.allowIncoming(port)
+        j.builders.ufw.ufw_enable(force=False)
+        j.builders.ufw.allowIncoming(port)
 
-        if not j.builder.tools.dir_exists(storagemntpoint):
+        if not j.builders.tools.dir_exists(storagemntpoint):
             raise j.exceptions.RuntimeError("Cannot find storage mountpoint:%s" % storagemntpoint)
 
         cachedir = "%s/polipo_cache" % storagemntpoint
 
         if btrfs:
-            j.builder.storage.btrfs.subvolumeCreate(cachedir)
+            j.builders.storage.btrfs.subvolumeCreate(cachedir)
         else:
             j.core.tools.dir_ensure(cachedir)
 
-        j.builder.system.package.ensure("polipo")
+        j.builders.system.package.ensure("polipo")
 
         forbiddentunnels = """
             # simple case, exact match of hostnames
@@ -338,18 +338,18 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
 
         self._log_info("INSTALL OK")
         self._log_info("to see status: point webbrowser to")
-        self._log_info("http://%s:%s/polipo/status?" % (j.builder.tools.executor.addr, port))
+        self._log_info("http://%s:%s/polipo/status?" % (j.builders.tools.executor.addr, port))
         self._log_info(
-            "configure your webproxy client to use %s on tcp port %s" % (j.builder.tools.executor.addr, port)
+            "configure your webproxy client to use %s on tcp port %s" % (j.builders.tools.executor.addr, port)
         )
 
         self.removeFromSystemD(force=False)
 
     def configureClient(self, addr="", port=8123):
         if addr == "":
-            addr = j.builder.executor.addr
+            addr = j.builders.executor.addr
         config = 'Acquire::http::Proxy "http://%s:%s";' % (addr, port)
-        if j.builder.prefab.platformtype.myplatform.startswith("ubuntu"):
+        if j.builders.prefab.platformtype.myplatform.startswith("ubuntu"):
             f = j.core.tools.file_text_read("/etc/apt/apt.conf", "")
             f += "\n%s\n" % config
             j.sal.fs.writeFile("/etc/apt/apt.conf", f)
