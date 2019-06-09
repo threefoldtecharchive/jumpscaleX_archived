@@ -15,6 +15,8 @@ def main(self):
 
         db, model = self._load_test_model()
 
+        assert model.zdbclient.nsinfo["entries"] == 1
+
         for i in range(10):
             model_obj = model.new()
             model_obj.llist.append(1)
