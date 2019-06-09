@@ -15,8 +15,6 @@ def main(self):
 
         db, model = self._load_test_model()
 
-        assert model.zdbclient.nsinfo["entries"] == 1
-
         for i in range(10):
             model_obj = model.new()
             model_obj.llist.append(1)
@@ -33,6 +31,7 @@ def main(self):
             model_obj2 = model._set(model_obj)
 
         model_obj3 = model.get(model_obj2.id)
+
         assert model_obj3.id == model_obj2.id
 
         assert model_obj3._ddict == model_obj2._ddict

@@ -154,14 +154,14 @@ class BCDBFactory(j.application.JSBaseClass):
         if self.latest != None:
             self.latest.stop()
         if sqlitestor:
-            bcdb = j.data.bcdb.new(name="test", zdbclient=None)
+            bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=reset)
             assert j.data.bcdb.latest.zdbclient == None
             if reset:
                 bcdb.reset()  # empty
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
             zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
-            bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient)
+            bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=reset)
 
         schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
