@@ -72,23 +72,16 @@ class SSHAgent(j.application.JSBaseClass):
 
         _, out = get_key_list()
         keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
-<<<<<<< HEAD
         self._keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
         # get key_names loaded
-=======
-        self._keys = list(map(lambda key: [key[2], ' '.join(key[0:2])], keys))
-        #get key_names loaded
->>>>>>> development
+
         key_names = [j.sal.fs.getBaseName(i[0]) for i in self._keys]
 
         if "SSH_KEY_DEFAULT" not in j.core.myenv.config:
             j.core.myenv.config["SSH_KEY_DEFAULT"] = ""
 
-<<<<<<< HEAD
         if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names) == 1:
-=======
-        if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names)==1:
->>>>>>> development
+
             j.core.myenv.config["SSH_KEY_DEFAULT"] = key_names[0]
             j.core.myenv.config_save()
 
