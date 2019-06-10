@@ -18,9 +18,6 @@ class MySQLFactory(JSConfigs):
         self.clients = {}
 
     def get(self, name=None, id=None, die=True, create_new=True, childclass_name=None, **kwargs):
-        import ipdb
-
-        ipdb.set_trace()
         return self.getClient(name=name, id=id, die=die, create_new=create_new, **kwargs)
 
     def getClient(self, name=None, id=None, die=True, create_new=True, **kwargs):
