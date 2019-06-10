@@ -12,16 +12,12 @@ class BuilderSonic(j.builders.system._BaseClass):
         pass
 
     @builder_method()
-    def reset(self):
-        self._execute("cargo uninstall sonic-server")
-
-    @builder_method()
     def build(self, reset=False):
         j.builders.runtimes.rust.build(reset=reset)
         self.system.package.install("clang")
         self.profile.env_set_part("PATH", j.builders.runtimes.rust.DIR_BUILD)
         self._execute("rustup update")
-        self._execute("cargo install sonic-server")
+        self._execute("cargo install sonic-server --force")
 
     @builder_method()
     def install(self, reset=False):
