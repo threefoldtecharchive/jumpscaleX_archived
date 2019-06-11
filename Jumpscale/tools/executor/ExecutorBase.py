@@ -19,21 +19,18 @@ class ExecutorBase(j.application.JSBaseClass):
         self.readonly = False
         self.CURDIR = ""
 
-        self._config = None
         self._state = None
-
-        self._config_hash = ""
-        self._config_path = "/sandbox/cfg/jumpscale_config.toml"
 
         JSBASE.__init__(self)
 
-        self.installers = ExecutorInstallers(self)
+        self.installer = ExecutorInstallers(executor=self)
 
         self._env_on_system = None
 
         self._init3()
 
     def reset(self):
+        raise RuntimeError()
         self.state_reset()
         self.env_on_system_toml = ""
         self.config_toml = ""
@@ -57,14 +54,10 @@ class ExecutorBase(j.application.JSBaseClass):
         only relevant for ssh
         :return:
         """
-        pass
+        raise RuntimeError()
 
-    def config_save(self, onsystem=True):
-        data = j.data.serializers.toml.dumps(self.config)
-        if j.data.hash.md5_string(self.config_toml) != j.data.hash.md5_string(data):
-            # now we know the configuration has been changed
-            self._log_debug("config save on: %s" % self)
-            self.config_toml = data
+    def save_config(self):
+        raise RuntimeError()
 
     def delete(self, path):
         path = self._replace(path)

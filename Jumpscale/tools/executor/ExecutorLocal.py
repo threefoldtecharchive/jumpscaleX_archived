@@ -35,6 +35,15 @@ class ExecutorLocal(ExecutorBase):
         path = self._config_toml_path
         j.sal.fs.writeFile(path, value)
 
+    def config_save(self, onsystem=True):
+        data = j.data.serializers.toml.dumps(self.config)
+        if j.data.hash.md5_string(self.config_toml) != j.data.hash.md5_string(data):
+            # now we know the configuration has been changed
+            self._log_debug("config save on: %s" % self)
+            self.config_toml = data
+            self.save()
+            j.shell()
+
     @property
     def env_on_system_toml(self):
         path = self._env_on_system_toml_path

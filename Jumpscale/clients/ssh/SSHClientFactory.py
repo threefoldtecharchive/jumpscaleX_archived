@@ -44,6 +44,9 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         cl = j.clients.ssh.get(name="remote1", addr=addr, port=port, client_type="pssh")
         ex = cl.executor
 
+        # cl.reset()
+        ex.installer.jumpscale()
+
         cl.reset()
         assert ex.state == {}
         assert cl._connected == None

@@ -9,7 +9,6 @@ class ExecutorSSH(ExecutorBase):
         self.sshclient = sshclient
 
         self._id = self.sshclient.uid
-        self.type = "ssh"
 
         self.kosmos = self.sshclient.kosmos
         self.shell = self.sshclient.shell
@@ -17,10 +16,9 @@ class ExecutorSSH(ExecutorBase):
         self.upload = self.sshclient.upload
         self.download = self.sshclient.download
 
-        self.config_toml = self.sshclient.config_toml
-        self.env_on_system_toml = self.sshclient.env_on_system_toml
-
         ExecutorBase.__init__(self)
+
+        self.type = "ssh"
 
         # self.__check_base = None
 
@@ -31,8 +29,28 @@ class ExecutorSSH(ExecutorBase):
     #     rc, out, err = self.sshclient.execute(cmds, die=die, showout=showout, timeout=timeout)
     #     return rc, out, err
 
+    @property
+    def config_toml(self):
+        return self.sshclient.config_toml
+
+    @config_toml.setter
+    def config_toml(self, value):
+        self.sshclient.config_toml = value
+
+    @property
+    def env_on_system_toml(self):
+        return self.sshclient.env_on_system_toml
+
+    @env_on_system_toml.setter
+    def env_on_system_toml(self, value):
+        self.sshclient.env_on_system_toml = value
+
+    def config_save(self, **kwargs):
+        self.sshclient.config_save(**kwargs)
+
     def save(self):
         self.sshclient.save()
+        j.shell()
 
     def __repr__(self):
         return "Executor ssh: %s (%s)" % (self.sshclient.addr, self.sshclient.port)

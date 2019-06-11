@@ -34,7 +34,9 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     def _init(self):
         self._client_ = None
         self._env_on_system = None
+        self._uid = None
         self.executor = j.tools.executor.ssh_get(self)
+
         self._init3()
 
     def reset(self):
@@ -59,9 +61,13 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
     @property
     def uid(self):
-        if self._id is None:
-            self._id = "%s-%s-%s" % (self.addr, self.port, self.id)
-        return self._id
+        if self._uid is None:
+            if self._id in [0, None, ""]:
+                self.save()
+            if self._id in [0, None, ""]:
+                raise RuntimeError("id cannot be empty")
+            self._uid = "%s-%s-%s" % (self.addr, self.port, self._id)
+        return self._uid
 
     def sftp_stat(self, path):
         return self.sftp.stat(path)
@@ -397,6 +403,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         # j.sal.fs.remove(path)
         # self.sftp.unlink(path2)
         return rc, out, err
+
+    def config_save(self, onsystem=False):
+        self.save()
+        if onsystem:
+            self.config_save_on_system()
 
     def config_save_on_system(self):
         self.file_write("/root/.jsxssh.toml", self.executor.config_toml)

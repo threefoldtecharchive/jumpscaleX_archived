@@ -1,35 +1,105 @@
 from Jumpscale import j
 
+from functools import wraps
 
-class ExecutorInstallers:
-    def __init__(self, executor):
+
+class executor_method(object):
+    """A Decorator to be used in all installer methods
+    this will provide:
+    1- State check to make sure not to do one action multiple times
+    """
+
+    def __init__(self, *args, **kwargs_):
+
+        if "log" in kwargs_:
+            self.log = j.data.types.bool.clean(kwargs_["log"])
+        else:
+            self.log = True
+        if "done_check" in kwargs_:
+            self.done_check = j.data.types.bool.clean(kwargs_["done_check"])
+        else:
+            self.done_check = True
+
+    def already_done(self, func, installer, key, reset):
+        """ Check if this method was already done or not
+
+        *Note* if you pass reset=True to any method it will be executed again
+        :param func: the function called
+        :param installer: the installer used
+        :return: True means it was already done and you don't need to redo, False means not done before or reset=True
+        """
+        if not self.done_check:
+            # if this is given will not do a done check
+            return False
+
+        if reset or not installer.executor.state_exists("installer_%s" % key):
+            return False
+        return True
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper_action(installer, *args, **kwargs):
+            """The main wrapper method for the decorator, it will do:
+            1- check if the method is going to be executed or it's already done before
+            2- make sure that the previous method were executed in the correct order
+            3- choose the correct env file for the action
+            4- prepare any needed parameters AKA zerohub client in case of creating a flist
+            :param installer: the installer self
+            :param args: args passed to the method
+            :param kwargs: kwargs passed to the method
+            :return: if the method was already done it will return BuilderBase.ALREADY_DONE_VALUE
+            """
+            if len(args) > 0:
+                raise RuntimeError("only use kwargs")
+            name = func.__name__
+            kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
+            done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
+            reset = kwargs.get("reset", False)
+
+            if self.already_done(func, installer, done_key, reset):
+                return installer.executore.state_get("installer_%s" % done_key)
+
+            if name is not "base":
+                installer.base()
+
+            if self.log:
+                installer._log_debug("execute:%s with args:%s" % (name, kwargs_without_reset))
+
+            res = func(installer, **kwargs_without_reset)
+
+            installer.executor.state_set("installer_%s" % done_key, res)
+
+            return res
+
+        return wrapper_action
+
+
+class ExecutorInstallers(j.application.JSBaseClass):
+    def _init2(self, executor=None):
+
         self.executor = executor
 
+    @executor_method()
     def kosmos(self):
         self.jumpscale()
         j.shell()
 
+    @executor_method()
     def base(self):
-        if not self.executor.state_exists("install_base"):
-            self.executor.execute("apt update")
-            self.executor.execute("apt upgrade -y", interactive=True)
-        self.executor.state_set("install_base")
+        self.executor.execute("apt update")
+        self.executor.execute("apt upgrade -y", interactive=True)
 
+    @executor_method()
     def mosh(self):
-        if not self.executor.state_exists("install_mosh"):
-            self.executor.execute("apt install mosh -y")
-        self.executor.state_set("install_mosh")
+        self.executor.execute("apt install mosh -y")
 
+    @executor_method()
     def jumpscale(self):
-        if not self.executor.state_exists("install_jumpscale"):
-            self.base()
-
-            self.executor.execute(
-                "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py\?$RANDOM > /tmp/jsx"
-            )
-            self.executor.execute("chmod 777 /tmp/jsx")
-            self.executor.execute("/tmp/jsx install", interactive=True)
-        self.executor.state_set("install_jumpscale")
+        self.executor.execute(
+            "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py\?$RANDOM > /tmp/jsx"
+        )
+        self.executor.execute("chmod 777 /tmp/jsx")
+        self.executor.execute("/tmp/jsx install", interactive=True)
 
     def _check_base(self):
         if not self.__check_base:
