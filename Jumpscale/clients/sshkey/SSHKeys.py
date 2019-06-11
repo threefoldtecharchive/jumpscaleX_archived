@@ -9,7 +9,6 @@ class SSHKeys(j.application.JSBaseConfigsClass):
     _CHILDCLASS = SSHKey
 
     def _init(self):
-        # self._sshagent = None
         self.SSHKey = SSHKey  # is the child class, can have more than 1
 
     @property
@@ -32,6 +31,9 @@ class SSHKeys(j.application.JSBaseConfigsClass):
 
     def test(self):
         """
+
+        kosmos 'j.clients.sshkey.test()'
+
         -Generates key manually first
         -j.clients.sshkey.get(name="test",path="~/.ssh/test_key")
         -checks self.pubkey, self.privkey

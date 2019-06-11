@@ -11,8 +11,8 @@ class SSHClient(SSHClientBase):
 
     def _init2(self, **kwargs):
         if self.passwd == "" and self.sshkey_name == "":
-            if j.clients.sshagent.key_default_or_none:
-                self.sshkey_name = j.clients.sshagent.key_default_or_none.name
+            if j.clients.sshagent.key_default_name:
+                self.sshkey_name = j.clients.sshagent.key_default_name
                 self.save()
 
     @property

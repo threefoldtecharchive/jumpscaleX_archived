@@ -3,23 +3,26 @@ import os
 import sys
 import click
 
+
 @click.group()
 def cli():
     pass
 
+
 try:
     from Jumpscale import j
 except:
-    for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscaleX/Jumpscale",
-                 "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale"]:
-        item = item.replace("$HOME",os.environ["HOME"])
+    for item in [
+        "{DIR_HOME}/code/github/threefoldtech/jumpscaleX/Jumpscale",
+        "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale",
+    ]:
+        item = item.replace("$HOME", os.environ["HOME"])
         if os.path.exists(item) and item not in sys.path:
             sys.path.append(item)
     from Jumpscale import j
 
 
-
-get_help = 'find issues with code and potentially even fix.'
+get_help = "find issues with code and potentially even fix."
 
 
 # @click.command()
@@ -33,6 +36,7 @@ get_help = 'find issues with code and potentially even fix.'
 
 
 # @click.option('--path', '-p', help='path to scan', default=None)
+
 
 @click.command()
 def fix(path=None):
@@ -51,7 +55,8 @@ def generate():
     j.sal.fs.remove("/sandbox/var/codegen")
     j.sal.fs.remove("/sandbox/var/cmds")
     from Jumpscale.core.generator.JSGenerator import JSGenerator
-    g=JSGenerator(j)
+
+    g = JSGenerator(j)
     g.generate(methods_find=True)
     g.report()
 
@@ -60,5 +65,5 @@ def generate():
 cli.add_command(fix)
 cli.add_command(generate)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

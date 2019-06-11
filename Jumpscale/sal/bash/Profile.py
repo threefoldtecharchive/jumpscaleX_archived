@@ -246,7 +246,7 @@ class Profile(j.application.JSBaseClass):
         """
         return true of locale is properly set
         """
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             a = self.bash.env.get("LC_ALL") == "en_US.UTF-8"
             b = self.bash.env.get("LANG") == "en_US.UTF-8"
         else:

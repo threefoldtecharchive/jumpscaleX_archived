@@ -1,24 +1,44 @@
 from Jumpscale import j
 
 
-class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
+class BuilderBlockchainFactory(j.builders.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.blockchain"
+    __jslocation__ = "j.builders.blockchain"
 
     def _init(self):
+        self._tfchain = None
+        self._ethereum = None
+        self._bitcoin = None
+        self._ripple = None
 
-        from .BuilderTFChain import BuilderTFChain
+    @property
+    def tfchain(self):
+        if self._tfchain is None:
+            from .BuilderTFChain import BuilderTFChain
 
-        self.tfchain = BuilderTFChain()
+            self._tfchain = BuilderTFChain()
+        return self._tfchain
 
-        from .BuilderEthereum import BuilderEthereum
+    @property
+    def ethereum(self):
+        if self._ethereum is None:
+            from .BuilderEthereum import BuilderEthereum
 
-        self.ethereum = BuilderEthereum()
+            self._ethereum = BuilderEthereum()
+        return self._ethereum
 
-        from .BuilderBitcoin import BuilderBitcoin
+    @property
+    def bitcoin(self):
+        if self._bitcoin is None:
+            from .BuilderBitcoin import BuilderBitcoin
 
-        self.bitcoin = BuilderBitcoin()
+            self._bitcoin = BuilderBitcoin()
+        return self._bitcoin
 
-        from .BuilderRipple import BuilderRipple
+    @property
+    def ripple(self):
+        if self._ripple is None:
+            from .BuilderRipple import BuilderRipple
 
-        self.ripple = BuilderRipple()
+            self._ripple = BuilderRipple()
+        return self._ripple

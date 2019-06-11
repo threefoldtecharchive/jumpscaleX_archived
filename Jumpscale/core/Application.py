@@ -38,7 +38,7 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = False
+        self.interactive = self._j.core.myenv.interactive
 
         self.schemas = None
 
@@ -48,6 +48,8 @@ class Application(object):
         self._JSGroup = JSGroup
 
         self.appname = "unknown"
+
+        self._in_autocomplete = False
 
         self.JSBaseDataObjClass = JSBaseDataObj
 
@@ -284,7 +286,7 @@ class Application(object):
     #         pid = os.getpid()
     #         if self._j.core.platformtype.myplatform.isWindows:
     #             return 0
-    #         if self._j.core.platformtype.myplatform.isLinux:
+    #         if self._j.core.platformtype.myplatform.platform_is_linux:
     #             command = "ps -o pcpu %d | grep -E --regex=\"[0.9]\"" % pid
     #             self._log_debug("getCPUusage on linux with: %s" % command)
     #             exitcode, output, err = self._j.sal.process.execute(

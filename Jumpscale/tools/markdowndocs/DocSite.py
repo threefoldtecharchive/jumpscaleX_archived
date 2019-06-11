@@ -610,6 +610,11 @@ class DocSite(j.application.JSBaseClass):
         # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=True)
 
+        # Create file with extra content to be loaded in docsites
+        if self.account and self.repo:
+            repo_info = "https://github.com/%s/%s" % (self.account, self.repo)
+            j.sal.fs.writeFile(filename=dest + "/.data", contents=repo_info, append=False)
+
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:

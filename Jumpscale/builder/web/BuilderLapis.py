@@ -4,7 +4,7 @@ import textwrap
 from time import sleep
 
 
-class BuilderLapis(j.builder.system._BaseClass):
+class BuilderLapis(j.builders.system._BaseClass):
     NAME = "lapis"
 
     def _init(self):
@@ -47,7 +47,7 @@ class BuilderLapis(j.builder.system._BaseClass):
         }
 
     def build(self, reset=False):
-        j.builder.runtimes.lua.build(reset)
+        j.builders.runtimes.lua.build(reset)
 
     def install(self, reset=False):
-        j.builder.runtimes.lua.install(reset)
+        j.builders.runtimes.lua.install(reset)

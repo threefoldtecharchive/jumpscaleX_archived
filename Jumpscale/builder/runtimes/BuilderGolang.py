@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderGolangTools(j.builder.system._BaseClass):
+class BuilderGolangTools(j.builders.system._BaseClass):
     NAME = "golangtools"
 
     def _init(self):
@@ -190,15 +190,15 @@ class BuilderGolang(BuilderGolangTools):
     def install(self):
         """install goq
 
-        kosmos 'j.builder.runtimes.golang.install(reset=True)'
+        kosmos 'j.builders.runtimes.golang.install(reset=True)'
 
         """
         # only check for linux for now
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="linux", arch=self.current_arch
             )
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="darwin", arch=self.current_arch
             )
@@ -223,13 +223,13 @@ class BuilderGolang(BuilderGolangTools):
         """test go installation
 
         to run:
-        kosmos 'j.builder.runtimes.golang.test()'
+        kosmos 'j.builders.runtimes.golang.test()'
         """
         self.install()
 
-        assert j.builder.runtimes.golang.is_installed
+        assert j.builders.runtimes.golang.is_installed
 
         # test go get
-        j.builder.runtimes.golang.get("github.com/containous/go-bindata")
-        package_path = j.builder.runtimes.golang.package_path_get("containous/go-bindata")
-        j.builder.runtimes.golang.execute("cd %s && go install" % package_path)
+        j.builders.runtimes.golang.get("github.com/containous/go-bindata")
+        package_path = j.builders.runtimes.golang.package_path_get("containous/go-bindata")
+        j.builders.runtimes.golang.execute("cd %s && go install" % package_path)

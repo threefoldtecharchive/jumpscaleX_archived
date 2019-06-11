@@ -8,12 +8,12 @@ ZEROTIER_FIREWALL_ZONE_REGEX = re.compile(r"^firewall\.@zone\[(\d+)\]\.name='zer
 FORWARDING_FIREWALL_REGEX = re.compile(r"^firewall\.@forwarding\[(\d+)\].*?('\w+')?$")
 
 
-class BuilderZeroBoot(j.builder.system._BaseClass):
+class BuilderZeroBoot(j.builders.system._BaseClass):
     def install(self, network_id, token, zos_version="v.1.4.1", zos_args="", reset=False):
         if not reset and self._done_check("install"):
             return
         # update zerotier config
-        j.builder.network.zerotier.build(install=True, reset=reset)
+        j.builders.network.zerotier.build(install=True, reset=reset)
 
         # Remove sample_config
         rc, _, _ = j.sal.process.execute("uci show zerotier.sample_config", die=False)
@@ -44,7 +44,7 @@ class BuilderZeroBoot(j.builder.system._BaseClass):
 
         # Join Network
         zerotier_client = j.clients.zerotier.get(data={"token_": token})
-        j.builder.network.zerotier.network_join(network_id, zerotier_client=zerotier_client)
+        j.builders.network.zerotier.network_join(network_id, zerotier_client=zerotier_client)
 
         # update TFTP and DHCP
         j.sal.process.execute("uci set dhcp.@dnsmasq[0].enable_tftp='1'")
@@ -66,7 +66,7 @@ class BuilderZeroBoot(j.builder.system._BaseClass):
         # this is needed to make sure that network name is ready
         for _ in range(12):
             try:
-                network_device_name = j.builder.network.zerotier.get_network_interface_name(network_id)
+                network_device_name = j.builders.network.zerotier.get_network_interface_name(network_id)
                 break
             except KeyError:
                 time.sleep(5)

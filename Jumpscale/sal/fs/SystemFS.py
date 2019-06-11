@@ -624,7 +624,7 @@ class SystemFS(j.application.JSBaseClass):
         while path[-1] == "/" or path[-1] == "\\":
             path = path[:-1]
         self._log_debug("Read link with path: %s" % path, _levelup=3)
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.platform_is_osx:
             res = os.readlink(path)
         elif j.core.platformtype.myplatform.isWindows:
             raise j.exceptions.RuntimeError("Cannot readLink on windows")
@@ -999,7 +999,7 @@ class SystemFS(j.application.JSBaseClass):
         if not self.exists(dir):
             self.createDir(dir)
 
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.platform_is_osx:
             self._log_debug("Creating link from %s to %s" % (path, target))
             os.symlink(path, target)
         elif j.core.platformtype.myplatform.isWindows:
@@ -1036,7 +1036,7 @@ class SystemFS(j.application.JSBaseClass):
         with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
         """
         self._log_debug("Create a hard link pointing to %s named %s" % (source, destin), _levelup=3)
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.platform_is_osx:
             return os.link(source, destin)
         else:
             raise j.exceptions.RuntimeError("Cannot create a hard link on windows")
@@ -1554,7 +1554,7 @@ class SystemFS(j.application.JSBaseClass):
         for item in array:
             path = path + os.sep + item
         path = path + os.sep
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.platform_is_osx:
             path = path.replace("//", "/")
             path = path.replace("//", "/")
         return path

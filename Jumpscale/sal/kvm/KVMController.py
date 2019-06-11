@@ -29,7 +29,7 @@ class KVMController(j.application.JSBaseClass):
         uri = None
         self.authorized = False
         # TODO: *1 is this right?, should this be local? (despiegk)
-        j.builder.system.ssh.keygen(name="libvirt")
+        j.builders.system.ssh.keygen(name="libvirt")
         self.pubkey = j.core.tools.file_text_read("/root/.ssh/libvirt.pub")
         if self._host != "localhost":
             self.authorized = not self.executor.prefab.system.ssh.authorize(self.user, self.pubkey)

@@ -69,13 +69,14 @@ def help():
 
     ## code related
 
-    --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
     --pull = pull code from git, if not specified will only pull if code directory does not exist yet
     --branch = jumpscale branch: normally 'master' or 'development'
 
 
     """
-    print(IT.Tools.text_replace(T))
+    T = IT.Tools.text_replace(T)
+    T += IT.MyEnv.configure_help()
+    print(T)
     sys.exit(0)
 
 
@@ -100,7 +101,8 @@ def ui():
     else:
         readonly = False
 
-    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
+    IT.MyEnv.configure(basedir=None, config={}, readonly=True, codepath=args["codepath"])
+    IT.MyEnv.init()
 
     if "incontainer" not in args:
 
@@ -144,21 +146,20 @@ def ui():
 
     # means interactive
 
-    if not args["incontainer"]:
-        if not IT.MyEnv.sshagent_active_check():
-            T = """
-            Did not find an SSH key in ssh-agent, is it ok to continue without?
-            It's recommended to have a SSH key as used on github loaded in your ssh-agent
-            If the SSH key is not found, repositories will be cloned using https
-            """
-            print("Could not continue, load ssh key in ssh-agent and try again.")
-            if "3" in args:
+    if not IT.MyEnv.sshagent_active_check():
+        T = """
+        Did not find an SSH key in ssh-agent, is it ok to continue without?
+        It's recommended to have a SSH key as used on github loaded in your ssh-agent
+        If the SSH key is not found, repositories will be cloned using https
+        """
+        print("Could not continue, load ssh key in ssh-agent and try again.")
+        if "3" in args:
+            sys.exit(1)
+        if "y" not in args:
+            if not IT.Tools.ask_yes_no("OK to continue?"):
                 sys.exit(1)
-            if "y" not in args:
-                if not IT.Tools.ask_yes_no("OK to continue?"):
-                    sys.exit(1)
-        else:
-            args["sshkey"] = IT.MyEnv.sshagent_key_get()
+    else:
+        args["sshkey"] = IT.MyEnv.sshagent_sshkey_pub_get()
 
     if "y" not in args and "r" not in args:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
@@ -168,7 +169,7 @@ def ui():
         if "name" not in args:
             args["name"] = "default"
 
-        container_exists = args["name"] in IT.Docker.docker_names()
+        container_exists = args["name"] in IT.Docker.containers_names()
         args["container_exists"] = container_exists
 
         if "name" not in args:
@@ -343,7 +344,7 @@ if "1" in args or "2" in args:
     #     if "1" in args:
 
     #         #in system need to install the lua env
-    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
+    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
     #     IT.Tools.execute("source %s/env.sh;js_shell 'j.tools.markdowndocs.test()'"%SANDBOX, showout=False)
     #     print("Jumpscale X installed successfully")
 

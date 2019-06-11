@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderPyFTPServer(j.builder.system._BaseClass):
+class BuilderPyFTPServer(j.builders.system._BaseClass):
     def install(self, root="/storage/ftpserver", config="", port=2121, reset=False):
         """
         example config
@@ -42,7 +42,7 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         if not reset and self._done_get("install"):
             return
 
-        j.builder.system.python_pip.install("pyftpdlib")
+        j.builders.system.python_pip.install("pyftpdlib")
         self.configure(root=root, config=config, port=port)
 
         self._done_set("install")
@@ -53,13 +53,13 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         """
         see install docstring for config example
         """
-        if j.builder.platformtype.isLinux:
-            j.builder.system.package.ensure("btrfs-tools")
-        elif j.builder.platformtype.isOSX():
+        if j.builders.platformtype.isLinux:
+            j.builders.system.package.ensure("btrfs-tools")
+        elif j.builders.platformtype.isOSX():
             # TODO install btrfs for mac
             pass
 
-        j.builder.storage.btrfs.subvolumeCreate(root)
+        j.builders.storage.btrfs.subvolumeCreate(root)
 
         if config == "":
             authorizer = "    from pyftpdlib.authorizers import UnixAuthorizer"
@@ -67,7 +67,7 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
             authorizer = ""
             configmodel = j.data.serializers.yaml.loads(config)
             for key, obj in configmodel.items():
-                j.builder.storage.btrfs.subvolumeCreate(j.sal.fs.joinPaths(root, key))
+                j.builders.storage.btrfs.subvolumeCreate(j.sal.fs.joinPaths(root, key))
                 for user, obj2 in obj.items():
                     if user.lower() == "anonymous":
                         authorizer += "    authorizer.add_anonymous('%s')\n" % j.sal.fs.joinPaths(root, key)
@@ -135,9 +135,9 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         j.sal.fs.writeFile("$CFGDIR/ftpserver/start.py", C)
 
     def start(self):
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.ensure("pyftpserver", "python3 $CFGDIR/ftpserver/start.py")
 
     def stop(self):
-        pm = j.builder.system.processmanager.get()
+        pm = j.builders.system.processmanager.get()
         pm.stop("pyftpserver")

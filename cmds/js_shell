@@ -10,15 +10,15 @@ from Jumpscale import *
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-q', '--quiet', default=False,
-                    action='store_true', help="Turn down logging")
+parser.add_argument("-q", "--quiet", default=False, action="store_true", help="Turn down logging")
 options, args = parser.parse_known_args()
 
 
 if len(args) == 1:
     if j.sal.fs.exists(args[0]):
         from importlib.machinery import SourceFileLoader
-        mymodule = SourceFileLoader('main', args[0]).load_module()
+
+        mymodule = SourceFileLoader("main", args[0]).load_module()
     else:
         toexec = args[0]
         toexec = toexec.strip("'\" ").strip("'\" ")
@@ -26,5 +26,4 @@ if len(args) == 1:
 else:
     # from IPython.terminal.embed import embed
     # embed()
-    j.shelli(loc=False,stack_depth=2)
-
+    j.shelli(loc=False, stack_depth=2)

@@ -2,7 +2,7 @@ import re
 from Jumpscale import j
 
 
-class BuilderNet(j.builder.system._BaseClass):
+class BuilderNet(j.builders.system._BaseClass):
     def tcpport_check(self, port, prefix=""):
         res = []
         for item in self.info_get(prefix):

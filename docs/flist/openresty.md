@@ -4,7 +4,7 @@ The openresty builder exposes a funcationality to create an openresty flist that
 To build the flist and upload it to the hub, simply run the following command where hub is the name of the zhub client instance on your system.
 
 ```python
-j.builder.web.openresty.flist_create(hub)
+j.builders.web.openresty.flist_create(hub)
 ```
 
 Alternatively, you can use the [openresty flist](https://hub.grid.tf/tf-official-apps/openresty.flist) from our official apps, to create a container that will autostart openresty.

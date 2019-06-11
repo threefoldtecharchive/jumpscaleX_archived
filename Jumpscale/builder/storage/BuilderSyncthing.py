@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 import xml.etree.ElementTree as etree
 
 
@@ -24,7 +24,7 @@ class BuilderSyncthing(BuilderGolangTools):
         build and setup syncthing to run on :8384 , this can be changed from the config file in /optvar/cfg/syncthing
         version e.g. 'v0.14.5'
         """
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
         self.get("github.com/syncthing/syncthing/...", install=False, update=True)
 
         if version is not None:
@@ -46,10 +46,33 @@ class BuilderSyncthing(BuilderGolangTools):
         self._execute(cmd)
 
     @builder_method()
-    def sandbox(self):
-        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
-        self.tools.dir_ensure(bin_dest)
-        self._copy("{DIR_BIN}/bin/syncthing", bin_dest)
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and reate flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type flist_create:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        """
+        dest_path = self.DIR_SANDBOX
+        dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, "syncthing")
+        dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+        self.tools.dir_ensure(dir_dest)
+        self._copy(dir_src, dir_dest)
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
+        self.tools.dir_ensure(lib_dest)
+        j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
     @builder_method()
     def clean(self):

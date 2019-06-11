@@ -3,7 +3,7 @@ import os
 import textwrap
 
 
-class BuilderMicroEditor(j.builder.system._BaseClass):
+class BuilderMicroEditor(j.builders.system._BaseClass):
     NAME = "micro"
 
     def install(self, reset=False):
@@ -15,16 +15,16 @@ class BuilderMicroEditor(j.builder.system._BaseClass):
 
         print("INSTALL MICROEDITOR")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             url = "https://github.com/zyedidia/micro/releases/download/v1.3.3/micro-1.3.3-osx.tar.gz"
-        elif j.core.platformtype.myplatform.isUbuntu:
+        elif j.core.platformtype.myplatform.platform_is_ubuntu:
             url = "https://github.com/zyedidia/micro/releases/download/v1.3.3/micro-1.3.3-linux64.tar.gz"
         else:
             raise RuntimeError("not implemented for other platforms")
 
-        dest = j.builder.network.tools.download(
+        dest = j.builders.network.tools.download(
             url=url, to="{DIR_TEMP}/micro/", overwrite=False, retry=3, expand=True, removeTopDir=True
         )
-        j.builder.tools.file_move("{DIR_TEMP}/micro/micro", "/usr/local/bin/micro", recursive=False)
+        j.builders.tools.file_move("{DIR_TEMP}/micro/micro", "/usr/local/bin/micro", recursive=False)
 
         self._done_set("install")

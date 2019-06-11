@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
 class BuilderEthereum(BuilderGolangTools):
@@ -18,7 +18,7 @@ class BuilderEthereum(BuilderGolangTools):
         Keyword Arguments:
             reset {bool} -- reset the build process (default: {False})
         """
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
 
         self.get(self.geth_repo)
 
@@ -40,25 +40,34 @@ class BuilderEthereum(BuilderGolangTools):
         return [cmd]
 
     @builder_method()
-    def sandbox(self, zhub_client=None, flist_create=True):
-        """
-        sandbox go-ethereum
-        Copy built bins and config files to sandbox specific directory and create flist and upload it to the hub if flist_create is True
-            :param zhub_client: hub instance to upload flist to
-            :type zhub_client:str
-            :param flist_create: create flist after copying files
-            :type flist_create:bool
-        """
-        dir_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
-        bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
-        bin_dest = self.tools.joinpaths(dir_dest, "bin", self.NAME)
-        self.tools.dir_ensure(bin_dest)
-        self.tools.file_copy(bin_path, bin_dest)
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and reate flist if create_flist = True
 
-        bootnode_bin_path = self.tools.joinpaths(self.package_path, "bootnode")
-        bootnode_bin_dest = self.tools.joinpaths(dir_dest, "bin", self.NAME)
-        self.tools.dir_ensure(bootnode_bin_dest)
-        self.tools.file_copy(bootnode_bin_path, bootnode_bin_dest)
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type flist_create:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        """
+        dest_path = self.DIR_SANDBOX
+        self.profile_sandbox_select()
+        dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, "geth")
+        dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+        self.tools.dir_ensure(dir_dest)
+        self._copy(dir_src, dir_dest)
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
+        self.tools.dir_ensure(lib_dest)
+        j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
     def test(self):
         """Tests the builder by performing the following:

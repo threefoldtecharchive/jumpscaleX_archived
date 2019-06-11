@@ -389,7 +389,7 @@ class SchemaTest(BaseTest):
         self.log("Create schema with iprange parameter[P1], should succeed.")
         scm = """
         @url = test.schema
-        iprange = (iprange)
+        iprange = '127.0.0.1/24'(iprange)
         init_iprange = '127.0.0.1/16' (iprange)
         """
         schema = self.schema(scm)
@@ -644,7 +644,7 @@ class SchemaTest(BaseTest):
         self.log("Create schema with url parameter[P1], should succeed.")
         scm = """
         @url = test.schema
-        site = (u)
+        site = "test2.example.com" (u)
         init_url = 'test.example.com/home' (u)
         """
         schema = self.schema(scm)
@@ -948,7 +948,7 @@ class SchemaTest(BaseTest):
         self.log("Create schema with yaml parameter[P1], should succeed.")
         scm = """
         @url = test.schema
-        data = (yaml)
+        data = "example2:     test1"(yaml)
         init_yaml = "example:     test1" (yaml)
         """
         schema = self.schema(scm)
@@ -1039,7 +1039,6 @@ class SchemaTest(BaseTest):
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
-
         self.log("Try to set parameter[P1] with non binary type, should fail.")
 
         with self.assertRaises(Exception):
@@ -1059,4 +1058,5 @@ class SchemaTest(BaseTest):
         schema_obj.binary = binary
         schema_obj.init_bin ='this is binary'
         self.assertEqual(schema_obj.binary, binary)
+        schema_obj.init_bin = "this is binary"
         self.assertEqual(schema_obj.init_bin, b"\xb6\x18\xac\x8a\xc6\xe2\x9d\xaa\xf2")

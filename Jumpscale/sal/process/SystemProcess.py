@@ -516,20 +516,7 @@ class SystemProcess(j.application.JSBaseClass):
         return found
 
     def getPidsByFilter(self, filterstr):
-        cmd = "ps ax | grep '%s'" % filterstr
-        rcode, out, err = j.sal.process.execute(cmd)
-        # print out
-        found = []
-        for line in out.split("\n"):
-            if line.find("grep") != -1 or line.strip() == "":
-                continue
-            if line.strip() != "":
-                if line.find(filterstr) != -1:
-                    line = line.strip()
-                    # print "found pidline:%s"%line
-
-                    found.append(int(line.split(" ")[0]))
-        return found
+        return j.tools.process_pids_get_by_filter(filterstr)
 
     def checkstart(self, cmd, filterstr, nrtimes=1, retry=1):
         """
@@ -695,7 +682,7 @@ class SystemProcess(j.application.JSBaseClass):
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             i = 0
             for line in output.splitlines():
-                if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
+                if j.core.platformtype.myplatform.platform_is_linux or j.core.platformtype.myplatform.isESX():
                     match = re.match(".{23}.*(\s|\/)%s(\s|$).*" % process, line)
                 elif j.core.platformtype.myplatform.isSolaris():
                     match = re.match(".{22}.*(\s|\/)%s(\s|$).*" % process, line)
@@ -767,7 +754,7 @@ class SystemProcess(j.application.JSBaseClass):
         """
         if port == 0:
             return None
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             command = "netstat -ntulp | grep ':%s '" % port
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
 

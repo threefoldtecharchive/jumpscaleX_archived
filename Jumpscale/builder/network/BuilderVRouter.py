@@ -5,7 +5,7 @@ import time
 import socket
 
 
-class BuilderVRouter(j.builder.system._BaseClass):
+class BuilderVRouter(j.builders.system._BaseClass):
     """
     """
 
@@ -16,14 +16,14 @@ class BuilderVRouter(j.builder.system._BaseClass):
 
     def check(self):
         if self._check is False:
-            if not j.builder.platformtype.myplatform.startswith("ubuntu"):
+            if not j.builders.platformtype.myplatform.startswith("ubuntu"):
                 raise j.exceptions.Input(message="only support ubuntu for now")
         self._check = "OK"
 
     @property
     def defgwInterface(self):
         if self._defgwInterface is None:
-            self._defgwInterface = j.builder.system.net.defaultgwInterface
+            self._defgwInterface = j.builders.system.net.defaultgwInterface
         return self._defgwInterface
 
     def runSolution(self):
@@ -37,18 +37,18 @@ class BuilderVRouter(j.builder.system._BaseClass):
         self.proxy()
 
     def prepare(self):
-        j.builder.system.package.ensure("inetutils-ping")
-        j.builder.system.package.ensure("nftables")
+        j.builders.system.package.ensure("inetutils-ping")
+        j.builders.system.package.ensure("nftables")
         self.check()
-        j.builder.systemservices.fw.flush(permanent=True)
+        j.builders.systemservices.fw.flush(permanent=True)
 
         # will make sure jumpscale has been installed (&base)
-        j.builder.development.js8.install()
+        j.builders.development.js8.install()
 
         dest = self._replace("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
         j.clients.git.pullGitRepo("git@github.com:despiegk/smartproxy.git", dest=dest)
 
-        j.builder.tools.upload("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
+        j.builders.tools.upload("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
         C = """
         rm -rf /opt/dnsmasq-alt
         ln -s {DIR_CODE}/github/threefoldtech/jumpscale_smartproxy /opt/dnsmasq-alt
@@ -71,7 +71,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         ipaddr = "%s.254" % self.freeNetworkRangeDMZ
 
         try:
-            if ipaddr in j.builder.system.net.getInfo("br0")["ip"]:
+            if ipaddr in j.builders.system.net.getInfo("br0")["ip"]:
                 return
         except BaseException:
             pass
@@ -103,19 +103,19 @@ class BuilderVRouter(j.builder.system._BaseClass):
                 continue
             OUT += "%s\n" % l
         OUT += C
-        j.builder.system.net.setInterfaceFile(OUT)
+        j.builders.system.net.setInterfaceFile(OUT)
 
-        if ipaddr not in j.builder.system.net.getInfo("br0")["ip"]:
+        if ipaddr not in j.builders.system.net.getInfo("br0")["ip"]:
             raise j.exceptions.RuntimeError(
                 "could not set bridge, something went wrong, could not find ip addr:%s" % ipaddr
             )
 
     def dnsServer(self):
         self.check()
-        j.builder.system.tmux.createSession("ovsrouter", ["dns"], returnifexists=True, killifexists=False)
-        j.builder.system.process.kill("dns-server")
+        j.builders.system.tmux.createSession("ovsrouter", ["dns"], returnifexists=True, killifexists=False)
+        j.builders.system.process.kill("dns-server")
         cmd = "jspython /opt/dnsmasq-alt/dns-server.py"
-        j.builder.system.tmux.executeInScreen("ovsrouter", "dns", cmd)
+        j.builders.system.tmux.executeInScreen("ovsrouter", "dns", cmd)
 
     @property
     def wirelessInterfaceNonDefGW(self):
@@ -123,7 +123,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         find wireless interface which is not the def gw
         needs to be 1
         """
-        interfaces = [item for item in j.builder.system.net.wirelessLanInterfaces if item != self.defgwInterface]
+        interfaces = [item for item in j.builders.system.net.wirelessLanInterfaces if item != self.defgwInterface]
         if len(interfaces) != 1:
             raise j.exceptions.Input(
                 message="Can only create access point if 1 wireless interface found which is not the default gw.",
@@ -144,7 +144,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         return "192.168.86"
         # for i in range(100, 150):
         #     iprange = "192.168.%s" % i
-        #     for item in j.builder.system.net.ips:
+        #     for item in j.builders.system.net.ips:
         #         if not item.startswith(iprange):
         #             return iprange
         # raise j.exceptions.Input(message="Cannot find free dmz iprange")
@@ -155,7 +155,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         if not specified then will look for wireless interface which is used in accesspoint and use that one
         """
         self.check()
-        j.builder.system.package.ensure("isc-dhcp-server")
+        j.builders.system.package.ensure("isc-dhcp-server")
         if interfaces == []:
             interfaces = [self.wirelessInterfaceNonDefGW]
         r = self.freeNetworkRangeDMZ
@@ -181,7 +181,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         j.sal.process.execute(C)
 
         cmd = "dhcpd -f"
-        j.builder.system.tmux.executeInScreen("ovsrouter", "dhcpd", cmd)
+        j.builders.system.tmux.executeInScreen("ovsrouter", "dhcpd", cmd)
 
     def hostap(self):
         self.check()
@@ -250,7 +250,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         j.sal.fs.writeFile(configdest, C)
 
         cmd = "/opt/netpoc/hostapd-2.5/hostapd/hostapd %s" % configdest
-        j.builder.system.tmux.executeInScreen("ovsrouter", "ap", cmd)
+        j.builders.system.tmux.executeInScreen("ovsrouter", "ap", cmd)
 
     def firewall(self):
         path = "{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy/nftables.conf"
@@ -258,7 +258,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         C = j.sal.fs.readFile(j.dirs.replace_txt_dir_vars(path))
         C = C.replace("$waniface", self.defgwInterface)
         C = C.replace("$range", self.freeNetworkRangeDMZ)
-        j.builder.systemservices.fw.setRuleset(C)
+        j.builders.systemservices.fw.setRuleset(C)
 
     def proxy(self):
         C = """
@@ -267,7 +267,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         """
 
         cmd = "python3 mitmproxy_start.py -T -d -d -p 8443 -s /opt/dnsmasq-alt/http-filter.py"
-        j.builder.system.tmux.executeInScreen("ovsrouter", "proxy", cmd)
+        j.builders.system.tmux.executeInScreen("ovsrouter", "proxy", cmd)
 
     #
     # def accesspointAllInOne(self, passphrase, name="", dns="8.8.8.8", interface="wlan0"):
@@ -289,7 +289,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
     #     cmd2 = '%s %s eth0 gig_%s %s -d' % (cpath, interface, hostname, passphrase)
     #
     #     giturl = "https://github.com/oblique/create_ap"
-    #     j.builder.pullGitRepo(url=giturl, dest=None, login=None, passwd=None, depth=1,
+    #     j.builders.pullGitRepo(url=giturl, dest=None, login=None, passwd=None, depth=1,
     #                               ignorelocalchanges=True, reset=True, branch=None, revision=None, ssh=False)
     #
     #     j.sal.process.execute("cp /sandbox/code/create_ap/create_ap /usr/local/bin/")
@@ -310,7 +310,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
     #     [Install]
     #     WantedBy = multi - user.target
     #     """
-    #     pm = j.builder.system.processmanager.get("systemd")
+    #     pm = j.builders.system.processmanager.get("systemd")
     #     pm.ensure("ap", cmd2, descr="accesspoint for local admin", systemdunit=START1)
 
     def __str__(self):

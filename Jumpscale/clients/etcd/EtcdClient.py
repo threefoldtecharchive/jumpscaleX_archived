@@ -74,7 +74,7 @@ class EtcdClient(JSConfigClient):
         self.api.snapshot(f_obj)
 
         if remote:
-            rc, _, _ = j.builder.tools.run("which restic")
+            rc, _, _ = j.builders.tools.run("which restic")
             if rc != 0:
                 print("please make sure that restic is installed")
                 return
@@ -82,11 +82,11 @@ class EtcdClient(JSConfigClient):
             env = {"AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID, "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY}
 
             try:
-                j.builder.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
+                j.builders.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
             except:
                 warnings.warn("this backet already exist", category=DeprecationWarning)
 
-            j.builder.tools.run(
+            j.builders.tools.run(
                 "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env
             )
 

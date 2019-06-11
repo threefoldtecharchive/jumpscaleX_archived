@@ -19,15 +19,15 @@ The factory name will be in this format `Builder{category_name}Factory`, so in o
 from .BuilderEthereum import BuilderEthereum
 self.ethereum = BuilderEthereum()
 ```
-and now the builder will be accessible from `j.builder.blockchain.ethereum`
+and now the builder will be accessible from `j.builders.blockchain.ethereum`
 
 ## Start the Builder class
- All builders should inherit from `j.builder.system.BaseClass` and it should have the Property `Name` set, we will use 
+ All builders should inherit from `j.builders.system.BaseClass` and it should have the Property `Name` set, we will use 
  this property later in the builder, and Now our builder class should look like this
  ```python
 from Jumpscale import j
 
-class BuilderEthereum(j.builder.system._BaseClass):
+class BuilderEthereum(j.builders.system._BaseClass):
     NAME = "geth"
 ``` 
 
@@ -48,7 +48,7 @@ This method should be resposible for building whatever I want to build and all t
 types of dependencies:  
 1- apt packages: for this we can use `self.tools.package install`  
 2- runtimes: like GoLang for example, we have  already implemented builders for the most common languages we are using, 
-so for GoLang we can use `j.builder.runtimes.go`
+so for GoLang we can use `j.builders.runtimes.go`
 
 in our case we will use golang builder to insure that we have golang installed and if not we install it,
 we can also use GoLang Builder tools to install a go package like from `go get` and that will be the build and _init 
@@ -60,7 +60,7 @@ called in the end of `__init__` method in the superclass**
 ```python
 def _init(self):
     self.geth_repo = "github.com/ethereum/go-ethereum"
-    self.package_path = j.builder.runtimes.golang.package_path_get("ethereum/go-ethereum")
+    self.package_path = j.builders.runtimes.golang.package_path_get("ethereum/go-ethereum")
 
 
 def build(self, reset=False):
@@ -72,12 +72,12 @@ def build(self, reset=False):
     if self._done_get('build') and reset is False:
         return
 
-    if not j.builder.runtimes.golang.is_installed:
-        j.builder.runtimes.golang.install()
+    if not j.builders.runtimes.golang.is_installed:
+        j.builders.runtimes.golang.install()
 
-    j.builder.runtimes.golang.get(self.geth_repo)
+    j.builders.runtimes.golang.get(self.geth_repo)
 
-    j.builder.runtimes.golang.execute("cd {} && make geth".format(self.package_path))
+    j.builders.runtimes.golang.execute("cd {} && make geth".format(self.package_path))
     self._done_set('build')
 
 ```

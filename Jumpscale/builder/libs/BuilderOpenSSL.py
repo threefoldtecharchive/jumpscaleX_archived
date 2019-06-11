@@ -1,19 +1,19 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderOpenSSL(j.builder.system._BaseClass):
+class BuilderOpenSSL(j.builders.system._BaseClass):
 
     NAME = "openssl"
 
     def __init__(self):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.TARGET = "darwin64-x86_64-cc"
         else:
             self.TARGET = "linux-generic64"
 
-        j.builder.system._BaseClass.__init__(self)
+        j.builders.system._BaseClass.__init__(self)
 
     @builder_method()
     def reset(self):
@@ -22,7 +22,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builder.libs..openssl.build()'
+        kosmos 'j.builders.libs..openssl.build()'
         """
         if not self.tools.exists(self.DIR_BUILD):
             C = """
@@ -42,13 +42,13 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
-        self.tools.dir_ensure("{DIR_BUILD}")
+        self.tools.dir_ensure(self._replace("{DIR_BUILD}"))
         self._write("{DIR_BUILD}/mycompile_all.sh", C)
         self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 
     def test(self, build=False):
         """
-        kosmos 'j.builder.buildenv(build=True)'
+        kosmos 'j.builders.buildenv(build=True)'
         """
         if build:
             self.build()

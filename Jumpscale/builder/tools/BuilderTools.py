@@ -8,9 +8,9 @@ from .BuilderToolsLib import *
 # from pygments.formatters import get_formatter_by_name
 
 
-class BuilderTools(j.builder.system._BaseClass):
+class BuilderTools(j.builders.system._BaseClass):
 
-    __jslocation__ = "j.builder.tools"
+    __jslocation__ = "j.builders.tools"
 
     def _init(self):
 
@@ -150,6 +150,7 @@ class BuilderTools(j.builder.system._BaseClass):
         minsizekb=40,
         removeTopDir=False,
         deletedest=False,
+        keepsymlinks=False,
     ):
         """
         download from url
@@ -236,11 +237,11 @@ class BuilderTools(j.builder.system._BaseClass):
                 raise j.exceptions.RuntimeError("not implemented yet")
 
         if expand:
-            return self.file_expand(to, destination, removeTopDir=removeTopDir)
+            return self.file_expand(to, destination, removeTopDir=removeTopDir, keepsymlinks=keepsymlinks)
 
         return to
 
-    def file_expand(self, path, destination="", removeTopDir=False):
+    def file_expand(self, path, destination="", removeTopDir=False, keepsymlinks=False):
         self._log_info("file_expand:%s" % path)
         path = self._replace(path)
         base = j.sal.fs.getBaseName(path)
@@ -271,9 +272,9 @@ class BuilderTools(j.builder.system._BaseClass):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
             if self.isMac:
-                j.builder.system.package.ensure("xz")
+                j.builders.system.package.ensure("xz")
             else:
-                j.builder.system.package.ensure("xz-utils")
+                j.builders.system.package.ensure("xz-utils")
             cmd = "tar -C %s -xf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
@@ -292,7 +293,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if removeTopDir:
             res = self.find(destination, recursive=False, type="d")
             if len(res) == 1:
-                self.copyTree(res[0], destination)
+                self.copyTree(res[0], destination, keepsymlinks=keepsymlinks)
                 self.dir_remove(res[0])
 
         if self.dir_exists(self.joinpaths(destination, base)):
@@ -530,6 +531,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if self.file_exists(destination) and (not self.file_is_link(destination)):
             raise Exception("Destination already exists and is not a link: %s" % (destination))
         self.file_attribs(destination, mode, owner, group)
+        j.sal.fs.symlink(source, destination)
 
     def replace(self, text, args={}):
         text = self._replace(text, args=args)
@@ -752,7 +754,7 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("cmd cannot be empty")
 
         if profile:
-            cmd = "%s\n%s" % (j.builder.system.bash.profile, cmd)
+            cmd = "%s\n%s" % (j.builders.system.bash.profile, cmd)
 
         rc, out, err = j.sal.process.execute(
             cmd,
@@ -815,7 +817,7 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
-    # USE:j.builder.system.package.ensure
+    # USE:j.builders.system.package.ensure
 
     # def command_ensure(self, command, package=None):
     #     """Ensures that the given command is present, if not installs the
@@ -835,7 +837,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #     if package is None:
     #         package = command
     #     if not self.command_check(command):
-    #         j.builder.system.package.ensure(package)
+    #         j.builders.system.package.ensure(package)
     #     assert self.command_check(command), \
     #         "Command was not installed, check for errors: %s" % (command)
 
@@ -862,3 +864,6 @@ class BuilderTools(j.builder.system._BaseClass):
     @property
     def isCygwin(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1
+
+    def group_exists(self, groupname):
+        return groupname in self._read("/etc/group")

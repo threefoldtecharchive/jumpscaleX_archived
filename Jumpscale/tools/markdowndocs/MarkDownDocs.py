@@ -142,15 +142,16 @@ class MarkDownDocs(j.application.JSBaseClass):
     #         self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
     #         self._initOK = True
 
-    def macros_load(
-        self, pathOrUrl="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"
-    ):
+    def macros_load(self, path_or_url=None):
         """
-        @param pathOrUrl can be existing path or url
+        @param path_or_url can be existing path or url
         """
-        self._log_info("load macros:%s" % pathOrUrl)
+        self._log_info("load macros:%s" % path_or_url)
 
-        path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
+        if not path_or_url:
+            path_or_url = "https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"
+
+        path = j.clients.git.getContentPathFromURLorPath(path_or_url)
 
         if path not in self._macros_modules:
 
@@ -266,7 +267,14 @@ class MarkDownDocs(j.application.JSBaseClass):
             return None
 
     def webserver(self, watch=True, branch="master", sonic_server=None):
-        url = "https://github.com/threefoldfoundation/lapis-wiki"
+        """
+
+        :param watch: to reload the changed data immediately
+        :param branch: branch to download
+        :param sonic_server: NOT USED YET #TODO:*1
+        :return:
+        """
+        url = "https://github.com/threefoldtech/OpenPublish"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url)

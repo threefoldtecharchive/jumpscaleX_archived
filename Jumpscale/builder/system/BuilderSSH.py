@@ -3,7 +3,7 @@ from Jumpscale import j
 import netaddr
 
 
-class BuilderSSH(j.builder.system._BaseClass):
+class BuilderSSH(j.builders.system._BaseClass):
 
     # def test_login(self, passwd, port=22, ip_range=None, onlyplatform='arch'):
     #     login = 'root'
@@ -54,7 +54,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         :rtype: dict
         """
         if not ip_range:
-            res = j.builder.system.net.get_info()
+            res = j.builders.system.net.get_info()
             for item in res:
                 cidr = item["cidr"]
 
@@ -72,7 +72,7 @@ class BuilderSSH(j.builder.system._BaseClass):
                 _, out, _ = j.sal.process.execute("nmap %s -p %s --open -oX {DIR_TEMP}/nmap" % (ip_range, port))
             except Exception as e:
                 if str(e).find("command not found") != -1:
-                    j.builder.system.package.ensure("nmap")
+                    j.builders.system.package.ensure("nmap")
                     # out=j.sal.process.execute('nmap -p 22 %s | grep for'%range)
                     _, out, _ = j.sal.process.execute("nmap %s -p %s --open -oX {DIR_TEMP}/nmap" % (ip_range, port))
             out = j.core.tools.file_text_read("{DIR_TEMP}/nmap")
@@ -137,16 +137,16 @@ class BuilderSSH(j.builder.system._BaseClass):
         :rtype: str
         """
         user = user.strip()
-        d = j.builder.system.user.check(user)
+        d = j.builders.system.user.check(user)
         assert d, "User does not exist: %s" % (user)
         home = d["home"]
         path = "%s/.ssh/%s" % (home, name)
-        if not j.builder.tools.file_exists(path + ".pub"):
+        if not j.builders.tools.file_exists(path + ".pub"):
             j.core.tools.dir_ensure(home + "/.ssh", mode="0700", owner=user, group=user)
 
             j.sal.process.execute("ssh-keygen -q -t %s -f %s -N ''" % (keytype, path))
-            j.builder.tools.file_attribs(path, mode="0600", owner=user, group=user)
-            j.builder.tools.file_attribs("%s.pub" % path, mode="0600", owner=user, group=user)
+            j.builders.tools.file_attribs(path, mode="0600", owner=user, group=user)
+            j.builders.tools.file_attribs("%s.pub" % path, mode="0600", owner=user, group=user)
             return "%s.pub" % path
         else:
             return "%s.pub" % path
@@ -178,7 +178,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         if key is None or key.strip() == "":
             raise j.exceptions.Input("key cannot be empty")
         user = user.strip()
-        d = j.builder.system.user.check(user, need_passwd=False)
+        d = j.builders.system.user.check(user, need_passwd=False)
         if d is None:
             raise j.exceptions.RuntimeError("did not find user:%s" % user)
         # group = getgrgid(d['gid']).gr_name #GAVE THE WRONG ANSWER, THINK WE CAN PUT ON ROOT BY DEFAULT
@@ -198,7 +198,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         else:
             line = key
 
-        if j.builder.tools.file_exists(keyf):
+        if j.builders.tools.file_exists(keyf):
             content = j.core.tools.file_text_read(keyf)
             if content.find(key[:-1]) == -1:
                 content = add_newline(content)
@@ -228,10 +228,10 @@ class BuilderSSH(j.builder.system._BaseClass):
         :rtype: bool
         """
         key = key.strip()
-        d = j.builder.system.user.check(user, need_passwd=False)
+        d = j.builders.system.user.check(user, need_passwd=False)
         group = d["gid"]
         keyf = d["home"] + "/.ssh/authorized_keys"
-        if j.builder.tools.file_exists(keyf):
+        if j.builders.tools.file_exists(keyf):
             j.sal.fs.writeFile(
                 keyf,
                 "\n".join(_ for _ in j.core.tools.file_text_read(keyf).split("\n") if _.strip() != key),
@@ -249,8 +249,8 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         self._log_info("clean known hosts/autorized keys")
         j.core.tools.dir_ensure("/root/.ssh")
-        j.builder.tools.dir_remove("/root/.ssh/known_hosts")
-        j.builder.tools.dir_remove("/root/.ssh/authorized_keys")
+        j.builders.tools.dir_remove("/root/.ssh/known_hosts")
+        j.builders.tools.dir_remove("/root/.ssh/authorized_keys")
 
     def enableAccess(self, keys, backdoorpasswd, backdoorlogin="backdoor", user="root"):
         """Enable access for a list of keys
@@ -267,7 +267,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         # leave here is to make sure we have a backdoor for when something goes wrong further
         self._log_info("create backdoor")
-        j.builder.system.user.ensure(
+        j.builders.system.user.ensure(
             backdoorlogin,
             passwd=backdoorpasswd,
             home=None,
@@ -279,7 +279,7 @@ class BuilderSSH(j.builder.system._BaseClass):
             group="root",
         )
         j.sal.process.execute("rm -fr /home/%s/.ssh/" % backdoorlogin)
-        j.builder.system.group.user_add("sudo", "$(system.backdoor.login)")
+        j.builders.system.group.user_add("sudo", "$(system.backdoor.login)")
 
         self._log_info("test backdoor")
         j.tools.executor.getSSHBased(
@@ -296,8 +296,8 @@ class BuilderSSH(j.builder.system._BaseClass):
         self._log_info("backdoor is working (with passwd)")
 
         self._log_info("make sure some required packages are installed")
-        j.builder.system.package.ensure("openssl")
-        j.builder.system.package.ensure("rsync")
+        j.builders.system.package.ensure("openssl")
+        j.builders.system.package.ensure("rsync")
 
         self.unauthorizeAll()
 

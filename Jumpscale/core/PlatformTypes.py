@@ -248,15 +248,15 @@ class PlatformType(object):
             )
 
     @property
-    def isUbuntu(self):
+    def platform_is_ubuntu(self):
         return self.has_parent("ubuntu")
 
     @property
-    def isMac(self):
+    def platform_is_osx(self):
         return self.has_parent("darwin")
 
     @property
-    def isAlpine(self):
+    def platform_is_alpine(self):
         return self.has_parent("alpine")
 
     @property
@@ -270,7 +270,7 @@ class PlatformType(object):
         return self.has_parent("win")
 
     @property
-    def isLinux(self):
+    def platform_is_linux(self):
         """Checks whether the platform is Linux-based"""
         return self.has_parent("linux")
 

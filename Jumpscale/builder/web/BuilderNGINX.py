@@ -3,10 +3,10 @@ import os
 import textwrap
 from time import sleep
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderNGINX(j.builder.system._BaseClass):
+class BuilderNGINX(j.builders.system._BaseClass):
     NAME = "nginx"
 
     def get_basic_nginx_conf(self):
@@ -148,7 +148,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         """
         j.tools.bash.get().profile.locale_check()
 
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             self.system.package.mdupdate()
             self.system.package.install(
                 ["build-essential", "libpcre3-dev", "libssl-dev", "zlibc", "zlib1g", "zlib1g-dev"]

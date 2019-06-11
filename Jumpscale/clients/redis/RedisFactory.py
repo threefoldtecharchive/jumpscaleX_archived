@@ -269,7 +269,7 @@ class RedisFactory(j.application.JSBaseClass):
                 return self.core_get()
 
         if not j.core.isSandbox:
-            if j.core.platformtype.myplatform.isMac:
+            if j.core.platformtype.myplatform.platform_is_osx:
                 if not j.sal.process.checkInstalled("redis-server"):
                     # prefab.system.package.install('redis')
                     j.sal.process.execute("brew unlink redis", die=False)
@@ -278,15 +278,15 @@ class RedisFactory(j.application.JSBaseClass):
                         raise RuntimeError("Cannot find redis-server even after install")
                 j.sal.process.execute("redis-cli -s %s/redis.sock shutdown" % j.dirs.TMPDIR, die=False, showout=False)
                 j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
-            elif j.core.platformtype.myplatform.isLinux:
-                if j.core.platformtype.myplatform.isAlpine:
+            elif j.core.platformtype.myplatform.platform_is_linux:
+                if j.core.platformtype.myplatform.platform_is_alpine:
                     os.system("apk add redis")
-                elif j.core.platformtype.myplatform.isUbuntu:
+                elif j.core.platformtype.myplatform.platform_is_ubuntu:
                     os.system("apt install redis-server -y")
             else:
                 raise RuntimeError("platform not supported for start redis")
 
-        if not j.core.platformtype.myplatform.isMac:
+        if not j.core.platformtype.myplatform.platform_is_osx:
             # cmd = "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
             # os.system(cmd)
             cmd = "sysctl vm.overcommit_memory=1"

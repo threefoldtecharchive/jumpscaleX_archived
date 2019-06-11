@@ -36,6 +36,7 @@ class Types(j.application.JSBaseClass):
             Email,
             Date,
             DateTime,
+            Duration,
             Numeric,
             Percent,
             Hash,

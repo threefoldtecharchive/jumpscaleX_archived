@@ -129,7 +129,7 @@ def main(self):
                         "type": 1,
                         "data": {
                             "publickey": "ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa",
-                            "signature": "5d628e0ac977bff00e6163b9df86ce60d376bc91f08fd917372a5a6c35dfba4c8663acc88f1c618791e05a179aec9b65077e988b650a23d5c2a343cca3c7d50f",
+                            "signature": "4b9ad9b6937a4818141bee70c6785af0eea12f0dbe8e3e784bb5cc36d5c6acd00270e9963f5547ec4c36509a728941d32cb5d15fa1131476ea31d6ca21149b03",
                         },
                     },
                 }
@@ -140,7 +140,7 @@ def main(self):
                     "condition": {
                         "type": 3,
                         "data": {
-                            "locktime": 1607348100,
+                            "locktime": 1607351700,
                             "condition": {
                                 "type": 1,
                                 "data": {

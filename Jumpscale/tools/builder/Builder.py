@@ -25,7 +25,7 @@ class Builder(j.application.JSBaseClass):
         else:
             download = "https://bootstrap.grid.tf/iso/development/0/development%20debug"
             dest = "/tmp/zos.iso"
-        j.builder.tools.file_download(download, to=dest, overwrite=overwrite)
+        j.builders.tools.file_download(download, to=dest, overwrite=overwrite)
         self._log_info("iso downloaded ok.")
         return dest
 

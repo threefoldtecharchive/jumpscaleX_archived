@@ -11,7 +11,7 @@ class StatsCollector:
         self.db = db
         self.retention = retention
         self.jwt = jwt
-        self.job_id = "stats_collector.{}".format(self.container.node.name)
+        self.job_id = "stats_collector.{}".format(self.container.node.node_id)
 
     def get_command(self):
         cmd = ["0-statscollector"]

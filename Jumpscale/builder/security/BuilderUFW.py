@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderUFW(j.builder.system._BaseClass):
+class BuilderUFW(j.builders.system._BaseClass):
     def _init(self):
         self._ufw_allow = {}
         self._ufw_deny = {}
@@ -9,22 +9,22 @@ class BuilderUFW(j.builder.system._BaseClass):
 
     @property
     def ufw_enabled(self):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return False
         if not self._ufw_enabled:
-            if not j.core.platformtype.myplatform.isMac:
+            if not j.core.platformtype.myplatform.platform_is_osx:
                 if self.tools.command_check("nft") is not False:
                     self._ufw_enabled = False
                     self._log_info("cannot use ufw, nft installed")
                 if self.tools.command_check("ufw") is False:
-                    j.builder.system.package.ensure("ufw")
+                    j.builders.system.package.ensure("ufw")
                     self.tools.command_check("ufw")
                 self._ufw_enabled = "inactive" not in j.sal.process.execute("ufw status")[1]
         return self._ufw_enabled
 
     def ufw_enable(self):
         if not self.ufw_enabled:
-            if not j.core.platformtype.myplatform.isMac:
+            if not j.core.platformtype.myplatform.platform_is_osx:
                 if self.tools.command_check("nft", die=False) is not False:
                     self._fw_enabled = False
                     raise j.exceptions.RuntimeError("Cannot use ufw, nft installed")

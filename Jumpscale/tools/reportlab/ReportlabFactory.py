@@ -19,7 +19,7 @@ class ReportlabFactory(j.application.JSBaseClass):
 
     def install(self):
         p = j.tools.prefab.local
-        # if p.platformtype.isMac:
+        # if p.platformtype.platform_is_osx:
         #     self._log_info("will install mactex, is huge, will have to wait long")
         #     cmd="brew cask install mactex"
         #     p.core.run(cmd)

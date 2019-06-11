@@ -3,6 +3,7 @@
 import os
 import sys
 from Jumpscale import j
+
 # from gevent import monkey
 # monkey.patch_all()
 
@@ -14,20 +15,22 @@ import pudb
 import traceback
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-q', '--quiet', default=False,
-                    action='store_true', help="Turn off debug mode and logging")
-parser.add_argument('-r', '--reset', default=False,
-                    action='store_true', help="Reset system BCDB and all encryption keys (DANGEROUS)")
-parser.add_argument('--init', default=False,
-                    action='store_true', help="Initialize a jumpscale system")
+parser.add_argument("-q", "--quiet", default=False, action="store_true", help="Turn off debug mode and logging")
+parser.add_argument(
+    "-r", "--reset", default=False, action="store_true", help="Reset system BCDB and all encryption keys (DANGEROUS)"
+)
+parser.add_argument("--init", default=False, action="store_true", help="Initialize a jumpscale system")
 
-parser.add_argument('--instruct', default=None,
-                help="if you want to instruct kosmos to execute instructions see documentation kosmos_instruct.md .")
-parser.add_argument('--ignore_error', default = False,action='store_true',
-                help="will continue instructions even if error")
+parser.add_argument(
+    "--instruct",
+    default=None,
+    help="if you want to instruct kosmos to execute instructions see documentation kosmos_instruct.md .",
+)
+parser.add_argument(
+    "--ignore_error", default=False, action="store_true", help="will continue instructions even if error"
+)
 
-parser.add_argument('--debug', default=False,
-                    action='store_true', help="will go in debug session when error")
+parser.add_argument("--debug", default=False, action="store_true", help="will go in debug session when error")
 
 
 options, args = parser.parse_known_args()
@@ -41,7 +44,7 @@ if options.reset:
 if options.debug:
     j.application.debug = True
     j.core.myenv.debug = True
-    j.core.myenv.config["LOGGER_INCLUDE"]=["*"]
+    j.core.myenv.config["LOGGER_INCLUDE"] = ["*"]
     j.tools.logger.reload()
 
 
@@ -49,20 +52,20 @@ def instruction_process(ddict):
 
     res = {}
 
-    res["method"]=ddict.pop('instruction_method')
-    res["name"]=ddict.pop('instruction_name',"")
-    res["description"]=ddict.pop('instruction_description',"")
-    res["kwargs"]=ddict
+    res["method"] = ddict.pop("instruction_method")
+    res["name"] = ddict.pop("instruction_name", "")
+    res["description"] = ddict.pop("instruction_description", "")
+    res["kwargs"] = ddict
 
     res["error"] = False
 
-    j.core.tools.log("instruction run:",level=20,data=res)
+    j.core.tools.log("instruction run:", level=20, data=res)
 
     try:
         method = eval(res["method"])
     except Exception as e:
         extype, value, tb = sys.exc_info()
-        j.core.tools.log(e,tb=tb,level=40)
+        j.core.tools.log(e, tb=tb, level=40)
         # traceback.print_exc()
         if options.debug:
             pudb.post_mortem(tb)
@@ -70,13 +73,13 @@ def instruction_process(ddict):
         res["error"] = True
         res["error_msg"] = str(e)
         res["error_cat"] = "could not load method"
-        return 1,res
+        return 1, res
 
     try:
         result = method(**ddict)
     except Exception as e:
         extype, value, tb = sys.exc_info()
-        j.core.tools.log(e,tb=tb,level=40)
+        j.core.tools.log(e, tb=tb, level=40)
         # traceback.print_exc()
         if options.debug:
             pudb.post_mortem(tb)
@@ -84,49 +87,51 @@ def instruction_process(ddict):
         res["error"] = True
         res["error_msg"] = str(e)
         res["error_cat"] = "could not execute method"
-        return 1,res
+        return 1, res
 
     try:
         res["result"] = j.data.serializers.json.dumps(result)
     except Exception as e:
         res["result"] = "COULDNOTSERIALIZE"
 
-    return 0,res
-
+    return 0, res
 
 
 def instructions_result_print(res):
     print("\n\n####TOMLRESULT####\n\n")
     print(j.data.serializers.toml.dumps(res))
 
+
 if options.instruct:
     config = j.data.serializers.toml.load(options.instruct)
     res = {}
-    for key,vals in config.items():
+    for key, vals in config.items():
         if key.startswith("j."):
-            #shortcutway
+            # shortcutway
             for val in vals:
                 val["instruction_method"] = key
-                rc,resultone = instruction_process(val)
+                rc, resultone = instruction_process(val)
                 if key not in res:
-                    res[key]=[]
+                    res[key] = []
                 res[key].append(resultone)
-                if rc>0 and not options.ignore-error:
+                if rc > 0 and not options.ignore - error:
                     print("ERROR, could not execute all instructions")
                     instructions_result_print(res)
                     sys.exit(1)
-        elif key.lower()=="instruction":
+        elif key.lower() == "instruction":
             for val in vals:
-                rc,resultone = instruction_process(val)
+                rc, resultone = instruction_process(val)
                 if key not in res:
-                    res[key]=[]
+                    res[key] = []
                 res[key].append(resultone)
-                if rc>0 and not options.ignore_error:
+                if rc > 0 and not options.ignore_error:
                     print("ERROR, could not execute all instructions")
                     instructions_result_print(res)
                     sys.exit(1)
         else:
-            raise RuntimeError("cannot parse the instructionfile, see: /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/kosmos_instruct.md")
+            raise RuntimeError(
+                "cannot parse the instructionfile, see: /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/kosmos_instruct.md"
+            )
     print(instructions_result_print(res))
     sys.exit(0)
 
@@ -138,18 +143,18 @@ if len(args) == 1:
     j.application.interactive = True
     if "(" not in args[0] and j.sal.fs.exists(args[0]):
         from importlib.machinery import SourceFileLoader
-        mymodule = SourceFileLoader('main', args[0]).load_module()
+
+        mymodule = SourceFileLoader("main", args[0]).load_module()
     else:
         toexec = args[0]
         toexec = toexec.strip("'\" ").strip("'\" ")
-        exec(toexec,globals(),j._locals_get({}))
+        exec(toexec, globals(), j._locals_get({}))
 else:
     j.application.interactive = True
-    n = j.data.nacl.get(load=False) #important to make sure private key is loaded
+    n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
     if n.load(die=False) is False:
-        n.configure(interactive=True, generate=False)
+        n.configure()
 
-    j.application.bcdb_system #needed to make sure we have bcdb running, needed for code completion
+    j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
 
-    j.shell(loc=False,locals_=locals(),globals_=globals())
-
+    j.shell(loc=False, locals_=locals(), globals_=globals())

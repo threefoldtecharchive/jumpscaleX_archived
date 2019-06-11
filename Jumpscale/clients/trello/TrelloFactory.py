@@ -9,7 +9,7 @@ class Trello(JSConfigs):
     _CHILDCLASS = TrelloClient
 
     def install(self, reset=False):
-        j.builder.runtimes.pip.install("py-trello", reset=reset)
+        j.builders.runtimes.pip.install("py-trello", reset=reset)
 
     def test(self):
         """
