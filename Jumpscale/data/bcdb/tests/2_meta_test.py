@@ -112,18 +112,18 @@ def main(self):
     @url = jumpscale.schema.test.a
     category*= ""
     txt = ""
-    i = 0 (F)
+    i = 0
     """
     # lets upgrade schema to float
     s2 = j.data.schema.get_from_text(schema_text)
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta.data._ddict["schemas"]) == 9  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta.data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
 
     s2_sid = s2.sid + 0
 
-    assert s2_sid > s0_sid  # means a new sid was created
+    assert s2_sid == s0_sid  # means a new sid was created
 
     a3 = model2.new()
     a3.category = "acat3"
