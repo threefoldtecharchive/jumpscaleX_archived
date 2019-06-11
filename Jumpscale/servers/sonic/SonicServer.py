@@ -18,15 +18,30 @@ class SonicServer(JSConfigClient):
         self._default_client = None
 
     def start(self):
+        """Starts sonic server in tmux
+
+        :param host: ip to listen on (default: "0.0.0.0")
+        :param port: port to listen on (default: 1491)
+        :param secret: server secret (default: 123456)
+        :param timeout: tcp connection timeout (default: 300)
+        :return:
         """
-        start sonic in tmux
-        kosmos 'j.servers.sonic.start()'
-        """
-        if not j.sal.fs.exists(self.config_path):
-            config_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
-            j.sal.fs.symlink(config_template, self.config_path)
+        self.config_path = self._write_config(self.name, self.host, self.port, self.secret, self.timeout)
+
         self.startupcmd.start()
-        return self
+
+    def _write_config(self, name, host, port, secret, timeout):
+        def do():
+            config_file = j.sal.fs.joinPaths(j.core.dirs.CFGDIR, "sonic_config_{}.cfg".format(name))
+            cfg_template_text = j.sal.fs.readFile(
+                j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
+            )
+            cfg_txt = j.core.tools.text_replace(
+                cfg_template_text, {"host": host, "port": port, "secret": secret, "timeout": timeout}
+            )
+            j.sal.fs.writeFile(config_file, cfg_txt)
+            return config_file
+        return self._cache.get("sonic_config_{}_{}_{}".format(name, host, port), method=do, timeout=3600)
 
     @property
     def default_client(self):
@@ -43,7 +58,6 @@ class SonicServer(JSConfigClient):
     @property
     def startupcmd(self):
         cmd = "sonic -c {}".format(self.config_path)
-        env = {"address": "{}:{}".format(self.host, self.port), "password": self.password}
         return j.tools.startupcmd.get(name="Sonic", cmd=cmd, env=env)
 
     def build(self, reset=True):
