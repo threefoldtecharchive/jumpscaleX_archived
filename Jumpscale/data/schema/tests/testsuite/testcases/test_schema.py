@@ -325,7 +325,7 @@ class SchemaTest(BaseTest):
         port = random.randint(1, 10000)
         schema_obj.port = port
         self.assertEqual(schema_obj.port, port)
-        self.assertEqual(schema_obj.init_port, "12315")
+        self.assertEqual(schema_obj.init_port, 12315)
 
     def test008_validate_ipaddr_type(self):
         """
@@ -932,7 +932,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with multiline type, should succeed.")
         schema_obj.lines = "example \n example2 \n example3"
         self.assertEqual(schema_obj.lines, "example \n example2 \n example3")
-        self.assertEqual(schema_obj.init_mline, "example \n example2 \n example3")
+        self.assertEqual(schema_obj.init_mline, "\nexample \n example2 \n example3\n")
 
     def test019_validate_yaml_type(self):
         """
@@ -1011,7 +1011,7 @@ class SchemaTest(BaseTest):
             schema_obj.colors = {"colors": ["RED", "GREEN", "BLUE", "BLACK"]}
 
         self.log("Try to set parameter[P1] with enum type, should succeed.")
-        colors = ["BLACK", "BLUE", "GREEN", "RED"]
+        colors = ["RED", "GREEN", "BLUE", "BLACK"]
         color = random.choice(colors)
         schema_obj.colors = color
         self.assertEqual(schema_obj.colors, color)
@@ -1041,8 +1041,6 @@ class SchemaTest(BaseTest):
         schema_obj = schema.new()
 
         self.log("Try to set parameter[P1] with non binary type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.binary = self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.binary = random.randint(1, 1000)
@@ -1059,5 +1057,6 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with binary type, should succeed.")
         binary = self.random_string().encode()
         schema_obj.binary = binary
+        schema_obj.init_bin ='this is binary'
         self.assertEqual(schema_obj.binary, binary)
         self.assertEqual(schema_obj.init_bin, b"\xb6\x18\xac\x8a\xc6\xe2\x9d\xaa\xf2")
