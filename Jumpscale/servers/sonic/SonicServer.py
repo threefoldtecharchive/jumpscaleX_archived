@@ -7,10 +7,11 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SonicServer(JSConfigClient):
     _SCHEMATEXT = """
            @url =  jumpscale.sonic.server.1
-           name* = "" (S)
+           name* = "default" (S)
            host = "127.0.0.1" (S)
            port = 1491 (I)
-           password = "" (S)
+           password = "123456" (S)
+           timeout = 300
            """
 
     def _init(self):
@@ -18,30 +19,19 @@ class SonicServer(JSConfigClient):
         self._default_client = None
 
     def start(self):
-        """Starts sonic server in tmux
-
-        :param host: ip to listen on (default: "0.0.0.0")
-        :param port: port to listen on (default: 1491)
-        :param secret: server secret (default: 123456)
-        :param timeout: tcp connection timeout (default: 300)
-        :return:
         """
-        self.config_path = self._write_config(self.name, self.host, self.port, self.secret, self.timeout)
-
+        Starts sonic server in tmux
+        """
+        self._write_config()
         self.startupcmd.start()
 
-    def _write_config(self, name, host, port, secret, timeout):
+    def _write_config(self):
         def do():
-            config_file = j.sal.fs.joinPaths(j.core.dirs.CFGDIR, "sonic_config_{}.cfg".format(name))
-            cfg_template_text = j.sal.fs.readFile(
-                j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
-            )
-            cfg_txt = j.core.tools.text_replace(
-                cfg_template_text, {"host": host, "port": port, "secret": secret, "timeout": timeout}
-            )
-            j.sal.fs.writeFile(config_file, cfg_txt)
-            return config_file
-        return self._cache.get("sonic_config_{}_{}_{}".format(name, host, port), method=do, timeout=3600)
+            cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
+            args = {'host': self.host, "port": self.port, "password": self.password, "timeout": self.timeout}
+            j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
+            return self.config_path
+        return self._cache.get("sonic_{}_{}_{}".format(self.name, self.host, self.port), method=do, expire=3600)
 
     @property
     def default_client(self):
@@ -58,7 +48,7 @@ class SonicServer(JSConfigClient):
     @property
     def startupcmd(self):
         cmd = "sonic -c {}".format(self.config_path)
-        return j.tools.startupcmd.get(name="Sonic", cmd=cmd, env=env)
+        return j.tools.startupcmd.get(name="Sonic", cmd=cmd)
 
     def build(self, reset=True):
         """
