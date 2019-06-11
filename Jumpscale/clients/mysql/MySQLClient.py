@@ -48,19 +48,23 @@ class MySQLClient(JSConfigClient):
         self.connect()
         cursor = self.client.cursor()
         cursor.execute(Q)
+        self.client.commit()
 
-    def select1(self, tablename, fieldname, whereclause):
+    def select1(self, tablename, fieldname, whereclause=""):
         """ Select rows from the given table given the conditions in the whereclause, showing the fields corresponding to the fieldname given
         :param tablename: name of the specified table in database
         :type tablename: str
         :param fieldname: field name to filter output rows
         :type fieldname: str
-        :param whereclause: condition where selection of rows is based on
+        :param whereclause: (optional) condition where selection of rows is based on
         :type whereclause: str
         :return: rows selected
         :rtype:
         """
-        Q = "SELECT %s FROM %s WHERE %s;" % (fieldname, tablename, whereclause)
+        if whereclause:
+            Q = "SELECT %s FROM %s WHERE %s;" % (fieldname, tablename, whereclause)
+        else:
+            Q = "SELECT %s FROM %s" % (fieldname, tablename)
         self.connect()
         cursor = self.client.cursor()
         cursor.execute(Q)
@@ -69,3 +73,21 @@ class MySQLClient(JSConfigClient):
             return None
         else:
             return result
+
+    def insert(self, tablename, values, colomns=""):
+        """ Insert a row to the given table with the values specified in values clause. If corresponding colomns want to be mapped with the values they can be given
+        :param tablename: name of the specified table in database
+        :type tablename: str
+        :param values: the values to be inserted in the new row (Seperated by comma)
+        :type values: str
+        :param colomns: (optional) colomns to be filled with the given values in the same relative order (Seperated by comma)
+        :type colomns: str
+        """
+        if colomns:
+            Q = "INSERT INTO %s (%s) VALUES (%s);" % (tablename, colomns, values)
+        else:
+            Q = "INSERT INTO %s VALUES (%s);" % (tablename, values)
+        self.connect()
+        cursor = self.client.cursor()
+        cursor.execute(Q)
+        self.client.commit()
