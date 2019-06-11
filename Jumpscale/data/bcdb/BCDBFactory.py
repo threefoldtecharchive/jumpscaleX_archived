@@ -161,7 +161,7 @@ class BCDBFactory(j.application.JSBaseClass):
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
             zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
-            bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient)
+            bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=reset)
 
         schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
