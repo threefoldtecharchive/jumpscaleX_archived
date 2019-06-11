@@ -14,7 +14,7 @@
 ## properties available on all base classes
 
 
-- _location  : e.g. j.clients.ssh, is always the location name of the highest parent 
+- _location  : e.g. j.clients.ssh, is always the location name of the highest parent
 - _name : name of the class itself in lowercase
 - _key: is a unique key per object based on _location,_name and if relevant "name" of model inside, is used in the logger
 
