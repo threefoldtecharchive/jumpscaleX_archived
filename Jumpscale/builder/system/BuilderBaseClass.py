@@ -322,8 +322,17 @@ class BuilderBaseClass(BaseClass):
             showout=showout,
         )
 
-    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False, keepsymlink=True,
-              overwrite=True):
+    def _copy(
+        self,
+        src,
+        dst,
+        deletefirst=False,
+        ignoredir=None,
+        ignorefiles=None,
+        deleteafter=False,
+        keepsymlink=True,
+        overwrite=True,
+    ):
         """
 
         :param src:
