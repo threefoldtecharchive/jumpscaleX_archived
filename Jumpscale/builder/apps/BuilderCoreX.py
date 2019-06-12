@@ -19,10 +19,10 @@ class BuilderCoreX(j.builder.system._BaseClass):
         self.tools.dir_ensure(self.DIR_BUILD)
         C = """
         apt-get update
-        apt-get install -y cmake g++ pkg-config git libjson-c-dev libssl-dev vim-runtime libz-dev
+        apt-get install -y cmake g++ pkg-config git libjson-c-dev libssl-dev vim-runtime libz-dev libcap-dev
 
         cd {DIR_BUILD}
-        rm -rf libwebsocket
+        rm -rf libwebsockets
         git clone -b v2.4.2 %s
         cd {DIR_BUILD}/libwebsockets && mkdir build && cd build
         cmake .. -DLWS_UNIX_SOCK=ON -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITH_STATIC=OFF
