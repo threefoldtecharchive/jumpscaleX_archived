@@ -73,12 +73,12 @@ class TFChainCapacity:
         :type threebot_id: string
         :param size: size of the archive to reserve, defaults to 1
                     possible value:
-                    - 1 => 50GiB of storage
-                    - 2 => 100GiB of storage
+                    - 1 => 500 GiB of storage
+                    - 2 => 1000 GiB of storage
         :type size: int, optional
-        :param location: node id or farm name where to deploy the virtual 0-OS
-                        if location is a node id, the node is used
-                        if location is a farm id, a node is automatically chosen in the farm and used.
+        :param location: farm name where to deploy the archive
+                         based on the size requests, a certain number of different node will be use to provide the required
+                         0-db namespaces
         :type location: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional

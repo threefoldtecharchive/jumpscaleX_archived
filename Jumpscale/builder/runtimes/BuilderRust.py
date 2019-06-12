@@ -17,13 +17,12 @@ class BuilderRust(j.builders.system._BaseClass):
         # Will download and run the correct version of rustup-init executable for your platform
         self._execute("curl {} -sSf | sh -s -- -y".format(self.DOWNLOAD_URL))
 
-        self._execute("source $HOME/.cargo/env")
-        self._execute("echo  'export PATH='/root/.cargo/bin:$PATH'' >> ~/.bashrc ")
+        self.profile.env_set_part("PATH", self.DIR_BUILD)
 
     @builder_method()
     def install(self):
         self.profile_sandbox_select()
-        self.build()
+        self.profile.env_set_part("PATH", self.DIR_BUILD)
         self._copy(self.DIR_BUILD, "{DIR_BIN}")
 
     @builder_method()
@@ -52,7 +51,7 @@ class BuilderRust(j.builders.system._BaseClass):
             "rustup",
         ]
         for bin_name in bins:
-            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_src = self.tools.joinpaths(self.DIR_BUILD, bin_name)
             self._copy(dir_src, dir_dest)
 
     @builder_method()
