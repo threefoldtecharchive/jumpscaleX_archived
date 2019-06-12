@@ -56,10 +56,7 @@ class BuilderGitea(BuilderGolangTools):
         j.builders.runtimes.golang.install()
         j.builders.db.postgres.install()
 
-    @builder_method()
-    def configure(self, org_client_id, org_client_secret):
-        """Configure gitea, db, iyo"""
-
+    def write_ini_config(self, path):
         # Configure Database
         config = """
         RUN_MODE = prod
@@ -79,7 +76,12 @@ class BuilderGitea(BuilderGolangTools):
         """
 
         config = textwrap.dedent(config)
-        self._write(self.INIPATH, config)
+        self._write(path, config)
+
+    @builder_method()
+    def configure(self, org_client_id, org_client_secret):
+        """Configure gitea, db, iyo"""
+        self.write_ini_config(self.INIPATH)
 
         try:
             j.sal.process.killProcessByName("postgres")
@@ -137,3 +139,17 @@ class BuilderGitea(BuilderGolangTools):
         # gitea bin
         self.tools.dir_ensure("{DIR_SANDBOX}/sandbox/bin")
         self._copy("{DIR_GO_PATH}/bin/gitea", "{DIR_SANDBOX}/sandbox/bin/gitea")
+
+        # startup files
+        templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
+        postgres_init_script = self._replace("{DIR_SANDBOX}/sandbox/bin/gitea_postgres_init.sh")
+        gitea_init_script = self._replace("{DIR_SANDBOX}/sandbox/bin/gitea_init.sh")
+        gitea_startup = self._replace("{DIR_SANDBOX}/.startup.toml")
+        self._copy(self.tools.joinpaths(templates_dir, "gitea_postgres_init.sh"), postgres_init_script)
+        self._copy(self.tools.joinpaths(templates_dir, "gitea_init.sh"), gitea_init_script)
+        self._copy(self.tools.joinpaths(templates_dir, "gitea_startup.toml"), gitea_startup)
+
+        # init config
+        custom_dir = self._replace("{DIR_SANDBOX}/sandbox/bin/custom/conf")
+        self.tools.dir_ensure(custom_dir)
+        self.write_ini_config("%s/app.ini" % custom_dir)
