@@ -4,7 +4,7 @@ from .SonicServer import SonicServer
 JSConfigs = j.application.JSBaseConfigsClass
 
 
-class OpenPublishFactory(JSConfigs):
+class SonicFactory(JSConfigs):
     """
     Open Publish factory
     """
