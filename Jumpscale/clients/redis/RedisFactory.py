@@ -177,7 +177,6 @@ class RedisFactory(j.application.JSBaseClass):
         :return: redis instance
         :rtype: Redis
         """
-
         j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
         return j.core.myenv.db
 

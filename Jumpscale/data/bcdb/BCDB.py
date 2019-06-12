@@ -142,19 +142,26 @@ class BCDB(j.application.JSBaseClass):
             if i in data:
                 md5, json = data[i]
                 model = models[md5]
-                if self.zdbclient.get(key=i) is None:
-                    # does not exist yet
-                    try:
-                        obj = model.new(data=json)
-                    except:
+                if self.zdbclient:
+                    if self.zdbclient.get(key=i) is None:
+                        # does not exist yet
+                        try:
+                            obj = model.new(data=json)
+                        except:
+                            j.shell()
+                            w
+                        if self.zdbclient:
+                            obj.id = None
+                    else:
+                        obj = model.get(obj.id)
+                        # means it exists, need to update, need to check if data is different only save if y
                         j.shell()
-                        w
-                    if self.zdbclient:
-                        obj.id = None
                 else:
-                    obj = model.get(obj.id)
-                    # means it exists, need to update, need to check if data is different only save if y
-                    j.shell()
+                    obj = model.get(i, die=False)
+                    if obj:
+                        j.shell()
+                    else:
+                        obj = model.new(data=json)
                 obj.save()
                 assert obj.id == i
 
@@ -208,16 +215,18 @@ class BCDB(j.application.JSBaseClass):
         self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
         try:
-            res = j.clients.credis_core.keys("bcdb")
+            res = j.clients.credis_core.get("bcdb_init")
         except j.clients.credis_core._ConnectionError:
             j.clients.credis_core._init()
-            res = j.clients.credis_core.keys("bcdb")
+            res = j.clients.credis_core.get("bcdb_init")
         except Exception as e:
             raise e
 
-        if res == []:
+        if not res:
             # means there is no index yet in the redis, need to rebuild all
             j.data.bcdb.index_rebuild()
+
+        j.clients.credis_core.set("bcdb_init", b"1")
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 

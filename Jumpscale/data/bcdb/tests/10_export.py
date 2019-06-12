@@ -17,7 +17,7 @@ def main(self):
     username = "" (S)           # User name
     
     """
-    bcdb = j.data.bcdb.get("test")
+    bcdb = j.data.bcdb.get("test_export")
     m = bcdb.model_get_from_schema(SCHEMA)
     m.reset()
 

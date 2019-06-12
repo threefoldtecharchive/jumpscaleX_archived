@@ -178,6 +178,8 @@ class RedisTools:
         if reset:
             RedisTools.core_stop()
 
+        MyEnv.init()
+
         if MyEnv.db and MyEnv.db.ping() and MyEnv.db.fake is False:
             return MyEnv.db
 

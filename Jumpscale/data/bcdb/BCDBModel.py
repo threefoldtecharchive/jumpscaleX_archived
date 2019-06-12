@@ -177,7 +177,7 @@ class BCDBModel(j.application.JSBaseClass):
             # is already stopped
             return True
         event = Event()
-        j.data.bcdb.latest.queue.put((None, ["STOP"], {}, event, None))
+        self.bcdb.queue.put((None, ["STOP"], {}, event, None))
 
         event.wait(1000.0)  # will wait for processing
         if self.bcdb._sqlclient is not None:

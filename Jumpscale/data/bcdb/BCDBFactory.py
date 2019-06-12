@@ -84,15 +84,19 @@ class BCDBFactory(j.application.JSBaseClass):
             if name in self._config:
                 self._config.pop(name)
 
+        data = {}
         if name in self.bcdb_instances:
             return self.bcdb_instances[name]
         elif name in self._config:
             data = self._config[name]
-            if "admin" in data:
-                if data["admin"]:
-                    raise RuntimeError("can only use ZDB connection which is not admin")
-                data.pop("admin")
-            zdbclient = j.clients.zdb.client_get(**data)
+            if data["type"] == "zdb":
+                if "admin" in data:
+                    if data["admin"]:
+                        raise RuntimeError("can only use ZDB connection which is not admin")
+                    data.pop("admin")
+                zdbclient = j.clients.zdb.client_get(**data)
+            else:
+                zdbclient = None
         elif if_not_exist_die:
             raise RuntimeError("did not find bcdb with name:%s" % name)
 
@@ -100,23 +104,23 @@ class BCDBFactory(j.application.JSBaseClass):
         if zdbclient != None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
 
-        if zdbclient:
-            data = {}
-            data["nsname"] = zdbclient.nsname
-            data["admin"] = zdbclient.admin
-            data["addr"] = zdbclient.addr
-            data["port"] = zdbclient.port
-            data["mode"] = zdbclient.mode
-            data["secret"] = zdbclient.secret
-            data["type"] = "zdb"
-        else:
-            data["nsname"] = zdbclient.nsname
-            data["type"] = "sqlite"
+        if not name in self._config:
+            if zdbclient:
+                data["nsname"] = zdbclient.nsname
+                data["admin"] = zdbclient.admin
+                data["addr"] = zdbclient.addr
+                data["port"] = zdbclient.port
+                data["mode"] = zdbclient.mode
+                data["secret"] = zdbclient.secret
+                data["type"] = "zdb"
+            else:
+                data["nsname"] = name
+                data["type"] = "sqlite"
 
-        self._config[zdbclient.nsname] = data
-        data = j.data.serializers.msgpack.dumps(self._config)
-        data_encrypted = j.data.nacl.default.encryptSymmetric(data)
-        j.sal.fs.writeFile(self._config_data_path, data_encrypted)
+            self._config[name] = data
+            data = j.data.serializers.msgpack.dumps(self._config)
+            data_encrypted = j.data.nacl.default.encryptSymmetric(data)
+            j.sal.fs.writeFile(self._config_data_path, data_encrypted)
 
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient, name=name, reset=reset)
         return self.bcdb_instances[name]
