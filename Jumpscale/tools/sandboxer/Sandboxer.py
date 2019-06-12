@@ -76,8 +76,8 @@ class Sandboxer(j.application.JSBaseClass):
 
             parts = [part.strip() for part in line.split()]
             if len(parts) == 2:
-                name = ""
                 path, _ = parts
+                name = j.sal.fs.getBaseName(path)
                 if not j.sal.fs.exists(path):
                     continue
             elif len(parts) == 4:
@@ -230,13 +230,8 @@ class Sandboxer(j.application.JSBaseClass):
         self._log_info("lib clone to:%s" % dest)
 
         def callback(dep):
-            dep_path = dep.path
-            if dep_path.startswith("/"):
-                dep_path = dep_path[1:]
-            dest_path = j.sal.fs.joinPaths(dest, dep_path)
-            j.sal.fs.createDir(j.sal.fs.getDirName(dest_path))
-            if not j.sal.fs.exists(dest_path):
-                j.sal.fs.copyFile(dep.path, dest_path)
+            dest_path = j.sal.fs.joinPaths(dest, dep.path.lstrip("/"))
+            dep.copyTo(dest_path)
 
         self.libs_walk(path, dest, callback, recursive, exclude_sys_libs=False)
 
