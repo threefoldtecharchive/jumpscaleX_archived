@@ -61,9 +61,19 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                     data = r[0].decode()
                     data = j.data.serializers.json.loads(data)["quotes"]
 
-                    data["USDETH"] = 1 / cc.get_price("ETH", "USD")["ETH"]["USD"]
-                    data["USDXRP"] = cc.get_price("USD", "XRP")["USD"]["XRP"]
-                    data["USDBTC"] = 1 / cc.get_price("BTC", "USD")["BTC"]["USD"]
+                    def get_crypto_to_usd(name):
+                        # Currency layer is not very reliable sometimes it timeout we can just skip this for now
+                        # TODO: decrease the timeout to prevent blocking the user for long time if currency layer
+                        #  is not available
+                        try:
+                            return 1 / cc.get_price(name, "USD")[name]["USD"]
+                        except:
+                            self._log_error("can't get price for {}".format(name))
+                            return None
+
+                    data["USDETH"] = get_crypto_to_usd("ETH")
+                    data["USDXRP"] = get_crypto_to_usd("XRP")
+                    data["USDBTC"] = get_crypto_to_usd("BTC")
 
                     self._log_error("fetch currency from internet")
                     return data
