@@ -97,6 +97,33 @@ class BuilderCoreX(j.builder.system._BaseClass):
         self._remove("{DIR_BUILD}/corex")
         self._remove(self.DIR_SANDBOX)
 
+    @property
+    def startup_cmds(self):
+        port = 7681
+        cmd = "/sandbox/bin/corex --port {}".format(port)
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
+
+
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
+
+        self.start()
+        cc = j.clients.corex.get("localhost", 7681)
+        assert cc.process_list() == []
+
+        cc.process_start("/bin/true")
+
+        cc = j.clients.corex.get("localhost", 7681)
+        assert len(cc.process_list()) == 1
+
+        self.stop()
+
+        print("TEST OK")
+
+
     @builder_method()
     def uninstall(self):
         bin_path = self.tools.joinpaths("{DIR_BIN}", "corex")
