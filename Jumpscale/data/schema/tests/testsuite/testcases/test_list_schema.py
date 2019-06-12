@@ -400,7 +400,8 @@ class SchemaTest(BaseTest):
         date_list.append(value)
         self.assertEqual(schema_obj.date_list, date_list)
         self.log("schema list %s" % schema_obj.list_dates)
-        self.assertEqual(schema_obj.list_dates, [762864780, 1546377000])
+
+        self.assertEqual(schema_obj.list_dates, ["1994/03/05 10:53:00", "2019/01/01 21:10:00"])
 
     def test011_validate_list_of_percents(self):
         """

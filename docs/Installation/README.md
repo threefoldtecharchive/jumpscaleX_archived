@@ -3,7 +3,7 @@
 
 ```bash
 #get the installer
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx
 chmod 777 /tmp/jsx
 #install
 /tmp/jsx container-install
@@ -22,7 +22,7 @@ before you can do this you need to make sure that docker has been installed on y
 python3 /tmp/jsx.py container-kosmos
 #to get shell of the ubuntu base os underneath in the container
 python3 /tmp/jsx.py container-shell
-``` 
+```
 
 ## OSX requirements
 
@@ -64,7 +64,7 @@ cd /sandbox/code/github/threefoldtech;
 #if you have a permission denied add sudo at the beginning of the command
 # then do a sudo chown -R $USER:$USER /sandbox
 git clone git@github.com:threefoldtech/jumpscaleX.git; cd jumpscaleX;
-git checkout development_installer
+git checkout development
 git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial

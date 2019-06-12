@@ -10,6 +10,7 @@
     * installation [guide](https://docs.docker.com/v17.12/install/#server)
     * verify installation with `$docker --version`
 * Python3
+
     * installation [guide](https://www.python.org/downloads/)
     * verify installation with `$python3 --version`
 * pip3  
@@ -23,7 +24,7 @@ JumpscaleX aka JSX was created at the beginning so that junior system administra
 It will evolve even further to be your digital representation that will always be available. Right now this tool works on your machine but soon it will be automatically deployed on the TF grid.
 This 3bot, as we call it, will make sure your applications are properly running by creating, monitoring and maintaining your ressources at any time on your behalf.
 It will even be able to engage in trade with others and this network of 3bots will act as a decentalized exchange.
-  
+
 Don't worry nobody except you can take control over your 3bot as all your config files are encrypted (securely stored) and your keys never leaves your device.
 
 # Installation
@@ -264,7 +265,7 @@ For mode detail about the 3Bot registration and updates, [go to the full documen
 
 ![](../images/zos_components.png)
 
-First we should look for a farm that provide what we look for. We have a convenient [website for capacity](https://capacity.threefoldtoken.com) selection. 
+First we should look for a farm that provide what we look for. We have a convenient [website for capacity](https://capacity.threefoldtoken.com) selection.
 
 Let's say that we need at least 2 CPU 4GiB RAM and we need it to be located in austria. We just have to move a few sliders around and we got the [results](https://capacity.threefoldtoken.com/?cru=2&mru=4&country=Austria&farmer=).
 
@@ -281,7 +282,7 @@ JSX> result = w.capacity.reserve_zos_vm(
 )
 ```
 
-**Be sure to enter a valid email as we will receive the IP of our reserved virtual machine by mail.**  
+**Be sure to enter a valid email as we will receive the IP of our reserved virtual machine by mail.**
 
 As soon as it is ready, usually within a few minutes, you will receive an email with the connection information.
 
@@ -410,7 +411,7 @@ You have builtin types schema and database.
 
 ## Play around with schema
 
-for instance you can define schema (data structure) like this 
+for instance you can define schema (data structure) like this
 ```python
 JSX>my_schema_text = """
 @url = my.first.schema.1
@@ -425,8 +426,8 @@ mydictionary = {"number": 468} (dict)
 """
 JSX> my_schema_object = j.data.schema.get_from_text(my_schema_text)
 JSX> my_schema_instance = my_schema_object.new()
-#you can then do 
-JSX> my_schema_instance.mynumber 
+#you can then do
+JSX> my_schema_instance.mynumber
 42
 JSX> my_schema_instance.mybool = True
 JSX> my_schema_instance.mybool = true
