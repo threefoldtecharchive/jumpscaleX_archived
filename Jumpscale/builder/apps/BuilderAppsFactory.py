@@ -53,6 +53,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
             self._odoo = BuilderOdoo()
         return self._odoo
 
+    @property
     def corex(self):
         if self._corex is None:
             from .BuilderCoreX import BuilderCoreX

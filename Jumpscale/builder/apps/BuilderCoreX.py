@@ -1,9 +1,9 @@
 from Jumpscale import j
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 
-class BuilderCoreX(j.builder.system._BaseClass):
+class BuilderCoreX(j.builders.system._BaseClass):
     NAME = "corex"
 
     def _init(self):
@@ -18,6 +18,7 @@ class BuilderCoreX(j.builder.system._BaseClass):
         """
         self.tools.dir_ensure(self.DIR_BUILD)
         C = """
+        #there are primitives for this TODO:*1
         apt-get update
         apt-get install -y cmake g++ pkg-config git libjson-c-dev libssl-dev vim-runtime libz-dev libcap-dev
 

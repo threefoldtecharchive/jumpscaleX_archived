@@ -54,7 +54,7 @@ class ExecutorBase(j.application.JSBaseClass):
         only relevant for ssh
         :return:
         """
-        raise RuntimeError()
+        pass
 
     def save_config(self):
         raise RuntimeError()
