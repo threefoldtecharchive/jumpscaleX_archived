@@ -26,7 +26,7 @@ class OVHClient(JSConfigBase):
 
         self.client.get("/me")
 
-        if self.consumerkey == "":
+        if self.consumerkey_ == "":
             self.consumer_key_get()
             self._connect()
 
