@@ -77,4 +77,3 @@ class OVHFactory(JSConfigBaseFactory):
         )
         client._connect()
         self._log_debug(client.servers_list())
-

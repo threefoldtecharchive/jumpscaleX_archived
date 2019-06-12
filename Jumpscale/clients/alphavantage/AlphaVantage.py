@@ -25,14 +25,14 @@ class AlphaVantageClient(j.application.JSBaseConfigClass):
         return self._client
 
 
-class AlphaVantageSingleton(j.application.JSBaseConfigsClass):
+class AlphaVantageFactory(j.application.JSBaseConfigsClass):
     """
     get key https://www.alphavantage.co
     """
 
     __jslocation__ = "j.clients.alphavantage"
 
-    _CHILDCLASS = AlphaVantageClient
+    _CHILDCLASS = AlphaVantageSingleton
 
     def _init(self):
         pass
@@ -47,9 +47,3 @@ class AlphaVantageSingleton(j.application.JSBaseConfigsClass):
         # self.new("main", api_key_="....")
         cl = self.main.client
         j.shell()
-
-
-#
-# class AlphaVantageFactory(j.application.JSBaseConfigsClass):
-#
-#     _CHILDCLASS = AlphaVantageSingleton
