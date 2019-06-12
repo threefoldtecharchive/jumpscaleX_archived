@@ -823,10 +823,14 @@ class Tools:
                     # raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
             if not ignore_error:
                 if "{" in content:
-                    content = content.format_map(replace_args)  # this to deal with nested {
-                    if "{" in content:
+                    try:
+                        content = content.format_map(replace_args)  # this to deal with nested {
+                    except ValueError as e:
                         sorted = [i for i in args.keys()]
-                        # raise RuntimeError("could not replace \n%s \nin \n%s, remaining {" % (sorted, content))
+                        raise RuntimeError(
+                            "could not replace \n%s \nin \n%s\n, remaining {, if you want to ignore the error use ignore_error=True"
+                            % (sorted, content)
+                        )
 
         if text_strip:
             content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
@@ -889,7 +893,7 @@ class Tools:
 
         p = print
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict)
+        msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
         p(msg)
 

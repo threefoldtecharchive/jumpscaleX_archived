@@ -137,8 +137,8 @@ class group_clients(JSGroup):
     @property
     def alphavantage(self):
         if self._alphavantage is None:
-            from Jumpscale.clients.alphavantage.AlphaVantage import AlphaVantageFactory
-            self._alphavantage =  AlphaVantageFactory()
+            from Jumpscale.clients.alphavantage.AlphaVantage import AlphaVantageClient
+            self._alphavantage =  AlphaVantageClient()
         return self._alphavantage
     @property
     def portal(self):
@@ -191,8 +191,8 @@ class group_clients(JSGroup):
     @property
     def currencylayer(self):
         if self._currencylayer is None:
-            from Jumpscale.clients.currencylayer.CurrencyLayer import CurrencyLayerSingleton
-            self._currencylayer =  CurrencyLayerSingleton()
+            from Jumpscale.clients.currencylayer.CurrencyLayer import CurrencyLayerFactory
+            self._currencylayer =  CurrencyLayerFactory()
         return self._currencylayer
     @property
     def tarantool(self):

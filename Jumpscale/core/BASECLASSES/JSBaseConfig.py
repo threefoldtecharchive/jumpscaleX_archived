@@ -18,9 +18,13 @@ class JSBaseConfig(JSBaseDataObj):
 
         self._isnew = False
 
-        assert parent not in [None, ""]
+        if parent not in [None, ""]:
+            self._model = self._parent._model
+        else:
+            self._model = j.application.bcdb_system.model_get_from_schema(self.__class__._SCHEMATEXT)
+            self._init2(**kwargs)
+            self._init()
 
-        self._model = self._parent._model
         self._model._kosmosinstance = self
 
         if "name" not in self.data._ddict:
