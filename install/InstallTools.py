@@ -3245,8 +3245,10 @@ class DockerContainer:
         install succesfull:
 
         # if you use a container do:  
-        jsx container_kosmos
-        or 
+        /tmp/jsx container-kosmos
+        or
+        /tmp/jsx container-shell
+        source /sandbox/env.sh
         kosmos
 
         """
