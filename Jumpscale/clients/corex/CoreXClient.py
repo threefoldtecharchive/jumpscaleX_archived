@@ -5,7 +5,7 @@ import time
 JSConfigBase = j.application.JSBaseClass
 
 
-class TFMuxClient(JSConfigBase):
+class CoreXClient(JSConfigBase):
     _SCHEMATEXT = ""
 
     def __init__(self, host="localhost", port=7681):

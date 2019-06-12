@@ -11,6 +11,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._digitalme = None
         self._userbot = None
         self._odoo = None
+        self._corex = None
 
     @property
     def gitea(self):
@@ -45,9 +46,18 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         return self._userbot
 
     @property
+<<<<<<< HEAD
     def odoo(self):
         if self._odoo is None:
             from .BuilderOdoo import BuilderOdoo
 
             self._odoo = BuilderOdoo()
         return self._odoo
+=======
+    def corex(self):
+        if self._corex is None:
+            from .BuilderCoreX import BuilderCoreX
+
+            self._corex = BuilderCoreX()
+        return self._corex
+>>>>>>> dbb55742833c7d13b8ea12c1434a66b6a9b9eac2
