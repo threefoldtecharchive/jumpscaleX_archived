@@ -13,7 +13,7 @@ import sys
 from importlib import util
 from urllib.request import urlopen
 
-DEFAULT_BRANCH = "development"
+DEFAULT_BRANCH = "development_installer"
 
 
 def load_install_tools():
@@ -37,7 +37,9 @@ def load_install_tools():
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
-    check_branch(IT)
+    IT.MyEnv.init()
+    if path.find("/code/") != -1:  # means we are getting the installtools from code dir
+        check_branch(IT)
     return IT
 
 
@@ -49,8 +51,9 @@ def check_branch(IT):
             cmd = "cd %s; git branch | grep \* | cut -d ' ' -f2" % path
             rc, out, err = IT.Tools.execute(cmd)
             if out.strip() != DEFAULT_BRANCH:
-                print("cannot install, the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
-                sys.exit(1)
+                print("WARNING the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
+                if not IT.Tools.ask_yes_no("OK to work with branch above?"):
+                    sys.exit(1)
 
 
 def jumpscale_get(die=True):
@@ -493,8 +496,7 @@ def bcdb_indexrebuild(name=None, configdir=None):
     """
     from Jumpscale import j
 
-    j.shell()
-    bcdb.index_rebuild()
+    j.data.bcdb.index_rebuild()
 
 
 @click.command()
@@ -534,8 +536,6 @@ if __name__ == "__main__":
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     IT = load_install_tools()
-
-    IT.MyEnv.init()  # will take into consideration the --configdir
 
     if not IT.DockerFactory.indocker():
         cli.add_command(container_kosmos)

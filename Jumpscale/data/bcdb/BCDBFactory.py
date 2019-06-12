@@ -37,6 +37,10 @@ class BCDBFactory(j.application.JSBaseClass):
         return BCDBModel
 
     def index_rebuild(self):
+        """
+        kosmos 'j.data.bcdb.index_rebuild()'
+        :return:
+        """
         for name, data in self._config.items():
             if data["type"] == "zdb":
                 zdbclient = j.clients.zdb.client_get(**data)
