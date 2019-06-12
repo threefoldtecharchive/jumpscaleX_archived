@@ -30,6 +30,9 @@ def main(self):
         o.save()
 
     # we now have some data
+    assert len(m.get_all()) == 10
+    r = m.get_by_name("myuser_8")
+    assert r[0].addr == "something:8"
 
     assert "test" in j.data.bcdb._config
 
@@ -41,9 +44,16 @@ def main(self):
 
     db = j.core.redistools.core_get()
     assert j.core.redistools.core_running()
-    j.core.db
 
-    j.shell()
+    # check the redis is really empty
+    assert j.core.db.keys() == []
+
+    bcdb = j.data.bcdb.get("test")
+    m = bcdb.model_get_from_schema(SCHEMA)
+
+    assert len(m.get_all()) == 10
+    r = m.get_by_name("myuser_8")
+    assert r[0].addr == "something:8"
 
     self._log_info("TEST DONE")
     return "OK"

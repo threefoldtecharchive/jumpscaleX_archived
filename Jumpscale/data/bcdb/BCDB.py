@@ -207,6 +207,18 @@ class BCDB(j.application.JSBaseClass):
         self.circle = self.model_add(CIRCLE(bcdb=self))
         self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
+        try:
+            res = j.clients.credis_core.keys("bcdb")
+        except j.clients.credis_core._ConnectionError:
+            j.clients.credis_core._init()
+            res = j.clients.credis_core.keys("bcdb")
+        except Exception as e:
+            raise e
+
+        if res == []:
+            # means there is no index yet in the redis, need to rebuild all
+            j.data.bcdb.index_rebuild()
+
         self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):

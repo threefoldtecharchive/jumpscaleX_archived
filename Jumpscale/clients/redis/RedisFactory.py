@@ -6,6 +6,7 @@ from redis._compat import nativestr
 from Jumpscale import j
 
 from core.InstallTools import Redis
+from core.InstallTools import RedisTools
 
 
 class RedisFactory(j.application.JSBaseClass):
@@ -177,17 +178,8 @@ class RedisFactory(j.application.JSBaseClass):
         :rtype: Redis
         """
 
-        if reset:
-            self.core_stop()
-
-        if j.core.db and j.core.db.ping() and j.core._db_fakeredis is False:
-            return j.core.db
-
-        if not self.core_running(tcp=tcp):
-            j.core._db = None
-            self._core_start(tcp=tcp)
-
-        return j.core._db
+        j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
+        return j.core.myenv.db
 
     def core_stop(self):
         """
@@ -197,18 +189,9 @@ class RedisFactory(j.application.JSBaseClass):
         :return: True if redis is not running
         :rtype: bool
         """
-        j.core._db = None
-        j.sal.process.execute("redis-cli -s %s shutdown" % self._unix_socket_core, die=False, showout=False)
-        j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
-        nr = 0
-        while True:
-            if not self.core_running():
-                return True
-            if nr > 200:
-                raise RuntimeError("could not stop redis")
-            time.sleep(0.05)
+        return RedisTools.core_stop()
 
-    def core_running(self, tcp=True):
+    def core_running(self, unixsocket=True, tcp=True):
 
         """
         Get status of redis whether it is currently running or not
@@ -217,90 +200,7 @@ class RedisFactory(j.application.JSBaseClass):
         :return: True if redis is running, False if redis is not running
         :rtype: bool
         """
-
-        try:
-            r = self.get(unixsocket=self._unix_socket_core)
-            return r.ping()
-        except Exception as e:
-            pass
-
-        if tcp and j.sal.nettools.tcpPortConnectionTest("localhost", 6379):
-            r = self.get(ipaddr="localhost", port=6379)
-            return r.ping()
-
-        return False
-
-    def _core_start(self, tcp=True, timeout=20, reset=False):
-
-        """
-        kosmos "j.clients.redis.core_get(reset=True)"
-
-        installs and starts a redis instance in separate ProcessLookupError
-        when not in sandbox:
-                standard on {DIR_TEMP}/redis.sock
-        in sandbox will run in:
-            /sandbox/var/redis.sock
-
-        :param timeout:  defaults to 20
-        :type timeout: int, optional
-        :param reset: reset redis, defaults to False
-        :type reset: bool, optional
-        :raises RuntimeError: redis server not found after install
-        :raises RuntimeError: platform not supported for start redis
-        :raises j.exceptions.Timeout: Couldn't start redis server
-        :return: redis instance
-        :rtype: Redis
-        """
-
-        if reset == False:
-            if self.core_running(tcp=tcp):
-                return self.core_get()
-
-        if not j.core.isSandbox:
-            if j.core.platformtype.myplatform.platform_is_osx:
-                if not j.sal.process.checkInstalled("redis-server"):
-                    # prefab.system.package.install('redis')
-                    j.sal.process.execute("brew unlink redis", die=False)
-                    j.sal.process.execute("brew install redis;brew link redis")
-                    if not j.sal.process.checkInstalled("redis-server"):
-                        raise RuntimeError("Cannot find redis-server even after install")
-                j.sal.process.execute("redis-cli -s %s/redis.sock shutdown" % j.dirs.TMPDIR, die=False, showout=False)
-                j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
-            elif j.core.platformtype.myplatform.platform_is_linux:
-                if j.core.platformtype.myplatform.platform_is_alpine:
-                    os.system("apk add redis")
-                elif j.core.platformtype.myplatform.platform_is_ubuntu:
-                    os.system("apt install redis-server -y")
-            else:
-                raise RuntimeError("platform not supported for start redis")
-
-        if not j.core.platformtype.myplatform.platform_is_osx:
-            # cmd = "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
-            # os.system(cmd)
-            cmd = "sysctl vm.overcommit_memory=1"
-            os.system(cmd)
-
-        if reset:
-            self.core_stop()
-
-        cmd = (
-            "mkdir -p /sandbox/var;redis-server --unixsocket $UNIXSOCKET "
-            "--port 6379 "
-            "--maxmemory 100000000 --daemonize yes"
-        )
-        cmd = cmd.replace("$UNIXSOCKET", self._unix_socket_core)
-
-        self._log_info(cmd)
-        j.sal.process.execute(cmd)
-        limit_timeout = time.time() + timeout
-        while time.time() < limit_timeout:
-            if self.core_running():
-                break
-            time.sleep(0.1)
-        else:
-            raise j.exceptions.Timeout("Couldn't start redis server")
-
-        j.core._db = None
+        return RedisTools.core_running(unixsocket=unixsocket, tcp=tcp)
 
     def test(self, name=""):
         """

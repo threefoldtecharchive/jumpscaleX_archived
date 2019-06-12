@@ -36,6 +36,16 @@ class BCDBFactory(j.application.JSBaseClass):
     def _BCDBModelClass(self):
         return BCDBModel
 
+    def index_rebuild(self):
+        for name, data in self._config.items():
+            if data["type"] == "zdb":
+                zdbclient = j.clients.zdb.client_get(**data)
+                bcdb = self.get(name, zdbclient)
+                bcdb.index_rebuild()
+            else:
+                bcdb = self.get(name)
+                bcdb.index_rebuild()
+
     def reset(self):
         """
         will remove all remembered connections
@@ -94,10 +104,15 @@ class BCDBFactory(j.application.JSBaseClass):
             data["port"] = zdbclient.port
             data["mode"] = zdbclient.mode
             data["secret"] = zdbclient.secret
-            self._config[zdbclient.nsname] = data
-            data = j.data.serializers.msgpack.dumps(self._config)
-            data_encrypted = j.data.nacl.default.encryptSymmetric(data)
-            j.sal.fs.writeFile(self._config_data_path, data_encrypted)
+            data["type"] = "zdb"
+        else:
+            data["nsname"] = zdbclient.nsname
+            data["type"] = "sqlite"
+
+        self._config[zdbclient.nsname] = data
+        data = j.data.serializers.msgpack.dumps(self._config)
+        data_encrypted = j.data.nacl.default.encryptSymmetric(data)
+        j.sal.fs.writeFile(self._config_data_path, data_encrypted)
 
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient, name=name, reset=reset)
         return self.bcdb_instances[name]

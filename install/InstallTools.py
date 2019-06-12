@@ -152,8 +152,6 @@ class RedisTools:
                 raise e
             cl = None
 
-        MyEnv.db = cl
-
         return cl
 
     @staticmethod
@@ -182,19 +180,18 @@ class RedisTools:
 
         if MyEnv.db and MyEnv.db.ping() and MyEnv.db.fake is False:
             return MyEnv.db
-        from pudb import set_trace
 
-        set_trace()
         if not RedisTools.core_running(tcp=tcp):
-            MyEnv.db = None
             RedisTools._core_start(tcp=tcp)
 
-        RedisTools.client_core_get()
+        MyEnv.db = RedisTools.client_core_get()
 
-        Tools.shell()
+        try:
+            from Jumpscale import j
 
-        if MyEnv.db is None:
-            raise RuntimeError("cannot start and/or get redis core connection.")
+            j.core.db = MyEnv.db
+        except:
+            pass
 
         return MyEnv.db
 

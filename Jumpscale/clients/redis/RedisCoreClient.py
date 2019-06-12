@@ -20,6 +20,9 @@ class RedisCoreClient(j.application.JSBaseClass):
         except Exception as e:
             self._credis = False
             self._client = j.clients.redis.core_get()
+            from redis import ConnectionError
+
+            self._ConnectionError = ConnectionError
 
         if self._credis:
             assert self.execute("PING") == b"PONG"

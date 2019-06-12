@@ -73,24 +73,18 @@ sys.excepthook = my_excepthook
 
 class Core:
     def __init__(self, j):
-        self._db = MyEnv.db
         self._dir_home = None
         self._dir_jumpscaleX = None
         self._isSandbox = None
-        self._db_fakeredis = False
 
     @property
     def db(self):
-        if not self._db:
-            # check db is already there, if not try to do again
-            MyEnv.db = RedisTools.client_core_get(die=False)
-            self._db = MyEnv.db
-        return self._db
+        return MyEnv.db
 
     def db_reset(self):
         if hasattr(j.data, "cache"):
             j.data.cache._cache = {}
-        self._db = None
+        self.db = None
 
     @property
     def dir_jumpscaleX(self):
