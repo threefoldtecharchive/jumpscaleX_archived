@@ -134,7 +134,7 @@ def main(self):
     a = j.servers.zdb.client_admin_get()
     zdbclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.new("test2", zdbclient2, reset=True)
+    bcdb2 = j.data.bcdb.get("test2", zdbclient2, reset=True)
     assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1

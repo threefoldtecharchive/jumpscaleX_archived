@@ -55,6 +55,7 @@ MyEnv.init()
 from .core.InstallTools import BaseInstaller
 from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
+from .core.InstallTools import RedisTools
 
 import pudb
 
@@ -79,24 +80,11 @@ class Core:
         self._db_fakeredis = False
 
     @property
-    def _db_fake(self):
-        # print("CORE_MEMREDIS")
-        import fakeredis
-
-        self._db = fakeredis.FakeStrictRedis()
-        self._db_fakeredis = True
-        return self._db
-
-    @property
     def db(self):
         if not self._db:
             # check db is already there, if not try to do again
-            MyEnv.db = Tools.redis_client_get(die=False)
+            MyEnv.db = RedisTools.client_core_get(die=False)
             self._db = MyEnv.db
-
-            if not self._db:
-                self._db = self._db_fake
-
         return self._db
 
     def db_reset(self):
@@ -215,7 +203,7 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 
 
 j.core.myenv = MyEnv
-
+j.core.redistools = RedisTools
 
 j.core.installer_base = BaseInstaller
 j.core.installer_jumpscale = JumpscaleInstaller()

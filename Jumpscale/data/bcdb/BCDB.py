@@ -81,6 +81,8 @@ class BCDB(j.application.JSBaseClass):
             self.reset()
             if self.zdbclient:
                 assert self.zdbclient.list() == [0]
+        self._log_info("Load bcdb:%s from %s" % (self.name, path))
+        assert j.sal.fs.exists(path)
 
         data = {}
         models = {}
@@ -142,7 +144,11 @@ class BCDB(j.application.JSBaseClass):
                 model = models[md5]
                 if self.zdbclient.get(key=i) is None:
                     # does not exist yet
-                    obj = model.new(data=json)
+                    try:
+                        obj = model.new(data=json)
+                    except:
+                        j.shell()
+                        w
                     if self.zdbclient:
                         obj.id = None
                 else:

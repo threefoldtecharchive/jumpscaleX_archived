@@ -24,31 +24,95 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
 
+        self._config_data_path = j.core.tools.text_replace("{DIR_CFG}/bcdb_config")
+        if j.sal.fs.exists(self._config_data_path):
+            data_encrypted = j.sal.fs.readFile(self._config_data_path, binary=True)
+            data = j.data.nacl.default.decryptSymmetric(data_encrypted)
+            self._config = j.data.serializers.msgpack.loads(data)
+        else:
+            self._config = {}
+
     @property
     def _BCDBModelClass(self):
         return BCDBModel
 
-    def new(self, name, zdbclient=None, reset=False):
+    def reset(self):
+        """
+        will remove all remembered connections
+        :return:
+        """
+        j.sal.fs.remove(self._config_data_path)
+        self._config = {}
+        self.bcdb_instances = {}
 
-        if reset == False and name in self.bcdb_instances:
+    def destroy_all(self):
+        """
+        destroy all remembered BCDB's
+        SUPER DANGEROUS
+        all data will be lost
+        :return:
+        """
+        # TODO: implement
+        raise RuntimeError("not implemented")
+
+    def get(self, name, zdbclient=None, reset=False, if_not_exist_die=False):
+        """
+        will create a new one or an existing one if it exists
+        :param name:
+        :param zdbclient:
+        :param reset: means do not use an existing one
+        :param if_not_exist_die, if True then will die if the instance does not exist yet
+        :return:
+        """
+        if reset:
+            if name in self.bcdb_instances:
+                self.bcdb_instances.pop(name)
+            if name in self._config:
+                self._config.pop(name)
+
+        if name in self.bcdb_instances:
             return self.bcdb_instances[name]
+        elif name in self._config:
+            data = self._config[name]
+            if "admin" in data:
+                if data["admin"]:
+                    raise RuntimeError("can only use ZDB connection which is not admin")
+                data.pop("admin")
+            zdbclient = j.clients.zdb.client_get(**data)
+        elif if_not_exist_die:
+            raise RuntimeError("did not find bcdb with name:%s" % name)
 
         self._log_debug("new bcdb:%s" % name)
         if zdbclient != None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
 
+        if zdbclient:
+            data = {}
+            data["nsname"] = zdbclient.nsname
+            data["admin"] = zdbclient.admin
+            data["addr"] = zdbclient.addr
+            data["port"] = zdbclient.port
+            data["mode"] = zdbclient.mode
+            data["secret"] = zdbclient.secret
+            self._config[zdbclient.nsname] = data
+            data = j.data.serializers.msgpack.dumps(self._config)
+            data_encrypted = j.data.nacl.default.encryptSymmetric(data)
+            j.sal.fs.writeFile(self._config_data_path, data_encrypted)
+
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient, name=name, reset=reset)
         return self.bcdb_instances[name]
 
-    def get(self, name, die=True):
-        if name not in self.bcdb_instances:
-            if die:
-                raise RuntimeError("did not find bcdb with name:%s" % name)
-            return None
-        return self.bcdb_instances[name]
+    def new(self, name, zdbclient=None):
+        """
+        create a new instance (can also do this using self.new(...))
+        :param name:
+        :param zdbclient: optional
+        :return:
+        """
+        return self.get(name=name, zdbclient=zdbclient)
 
     def bcdb_test_get(self, reset=True):
-        bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=reset)
+        bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
         assert j.data.bcdb.latest.zdbclient == None
         return bcdb
 
@@ -154,14 +218,14 @@ class BCDBFactory(j.application.JSBaseClass):
         if self.latest != None:
             self.latest.stop()
         if sqlitestor:
-            bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=reset)
+            bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
             assert j.data.bcdb.latest.zdbclient == None
             if reset:
                 bcdb.reset()  # empty
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
             zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
-            bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=reset)
+            bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
 
         schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
@@ -180,6 +244,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
 
         """
+
         cla = j.servers.zdb.start_test_instance(destroydata=True, namespaces=["test"])
         cl = cla.namespace_get("test", "1234")
         assert cla.ping()

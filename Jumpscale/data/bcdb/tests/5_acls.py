@@ -90,12 +90,12 @@ def main(self):
     zdbclient_admin = j.servers.zdb.client_admin_get()
     zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
     zdbclient.flush()  # empty
-    bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=True)
+    bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=True)
 
     do(bcdb)
     bcdb.reset()
 
-    bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=True)
+    bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=True)
     do(bcdb)
 
     self._log_info("ACL TESTS ALL DONE")

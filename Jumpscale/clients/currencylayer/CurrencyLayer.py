@@ -50,6 +50,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
 
         def get():
             if not self.fake and j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
+                self._log_info("get info from currencylayer.com")
                 key = self.api_key_
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key

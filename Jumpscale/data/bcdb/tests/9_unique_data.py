@@ -37,7 +37,7 @@ def main(self):
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique")
     self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
-    self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
+    self.bcdb = j.data.bcdb.get("test", zdbclient=self.zdb)
     schema = j.data.schema.get_from_text(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
     schema_obj = self.model.new()

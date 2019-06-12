@@ -45,8 +45,10 @@ def main(self):
         o.name = "myuser_%s" % i
         o.save()
 
-    def export_import(encr=False, export=True):
-        p = "/tmp/bcdb_export"
+    p = "/tmp/bcdb_export"
+
+    def export_import(encr=False, export=True, remove=False):
+
         if export:
             j.sal.fs.remove(p)
             bcdb.export(path=p, encrypt=encr)
@@ -71,16 +73,18 @@ def main(self):
 
         assert obj._schema == obj2._schema
 
-    export_import()
-    return "OK"
+        if remove:
+            j.sal.fs.remove(p)
 
-    # test we can update data, so we overwrite
-    export_import(False, export=False)
+    export_import(encr=False, export=True, remove=False)
+    # will now test if we can import
+    export_import(False, export=False, remove=True)
+    # now do other test because there will be stuff changed
+    export_import(encr=False, export=True, remove=True)
 
     # now test with encryption
-    export_import(True)
-
-    # now get other BCDB with sqlite & import & do checks #TODO:*1
+    export_import(encr=True, export=True, remove=False)
+    export_import(encr=True, export=False, remove=True)
 
     self._log_info("TEST DONE")
     return "OK"

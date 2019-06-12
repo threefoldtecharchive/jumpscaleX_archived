@@ -17,6 +17,7 @@ class RedisFactory(j.application.JSBaseClass):
 
     def _init(self):
         self._cache_clear()
+        self._unix_socket_core = "/sandbox/var/redis.sock"
 
         #
 
@@ -186,19 +187,6 @@ class RedisFactory(j.application.JSBaseClass):
             j.core._db = None
             self._core_start(tcp=tcp)
 
-        # nr = 0
-        # while True:
-        #     if j.core.db and j.core.db.ping() and j.core._db_fakeredis is False:
-        #         return j.core.db
-        #
-        #     self._log_info("try to connect to redis on unixsocket or tcp port 6379")
-        #
-        #     nr+=1
-        #
-        #     if nr > 20:
-        #         raise RuntimeError("could not start redis")
-        #     time.sleep(0.1)
-
         return j.core._db
 
     def core_stop(self):
@@ -210,7 +198,7 @@ class RedisFactory(j.application.JSBaseClass):
         :rtype: bool
         """
         j.core._db = None
-        j.sal.process.execute("redis-cli -s %s shutdown" % self.unix_socket_path, die=False, showout=False)
+        j.sal.process.execute("redis-cli -s %s shutdown" % self._unix_socket_core, die=False, showout=False)
         j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
         nr = 0
         while True:
@@ -231,7 +219,7 @@ class RedisFactory(j.application.JSBaseClass):
         """
 
         try:
-            r = self.get(unixsocket=self.unix_socket_path)
+            r = self.get(unixsocket=self._unix_socket_core)
             return r.ping()
         except Exception as e:
             pass
@@ -296,10 +284,11 @@ class RedisFactory(j.application.JSBaseClass):
             self.core_stop()
 
         cmd = (
-            "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock "
+            "mkdir -p /sandbox/var;redis-server --unixsocket $UNIXSOCKET "
             "--port 6379 "
             "--maxmemory 100000000 --daemonize yes"
         )
+        cmd = cmd.replace("$UNIXSOCKET", self._unix_socket_core)
 
         self._log_info(cmd)
         j.sal.process.execute(cmd)

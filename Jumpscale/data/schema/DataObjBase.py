@@ -27,7 +27,13 @@ class DataObjBase:
         if self._model is not None:
             data = self._model._dict_process_in(data)
         for key, val in data.items():
-            setattr(self, key, val)
+            try:
+                setattr(self, key, val)
+            except Exception as e:
+                if isinstance(e, ValueError):
+                    msg = "cannot update data for: %s  set prop %s with '%s'" % (self._schema.url, key, val)
+                    e.args = (msg,)
+                raise e
 
     def _load_from_data(self, data=None):
         """
@@ -178,8 +184,7 @@ class DataObjBase:
 
     @property
     def _json(self):
-        # TODO: fix when use self._ddict
-        return j.data.serializers.json.dumps(self._ddict_hr)
+        return j.data.serializers.json.dumps(self._ddict)  # DO NOT USE THE HR ONE
 
     @property
     def _toml(self):

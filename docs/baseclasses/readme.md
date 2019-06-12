@@ -62,6 +62,3 @@ class MyClass(JSBase):
 do not implement your own __init__() !!!
 
 
-## special cases
-
-- [singletons](config_singleton.md)

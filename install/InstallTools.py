@@ -93,6 +93,220 @@ except:
             return str(data)
 
 
+class RedisTools:
+    @staticmethod
+    def client_core_get(
+        addr="localhost", port=6379, unix_socket_path="/sandbox/var/redis.sock", die=True, fake_ok=True
+    ):
+        """
+
+        :param addr:
+        :param port:
+        :param unix_socket_path:
+        :param die: if cannot find fake or real die
+        :param fake_ok: can return a fake redis connection which will go to memory only
+        :return:
+        """
+
+        RedisTools.unix_socket_path = unix_socket_path
+
+        try:
+            import redis
+        except ImportError:
+            if fake_ok:
+                try:
+                    import fakeredis
+
+                    res = fakeredis.FakeStrictRedis()
+                    res.fake = True
+                    return res
+                except ImportError:
+                    # dit not find fakeredis so can only return None
+                    if die:
+                        raise RuntimeError(
+                            "cannot connect to fakeredis, could not import the library, please install fakeredis"
+                        )
+                    return None
+            else:
+                if die:
+                    raise RuntimeError("redis python lib not installed, do pip3 install redis")
+                return None
+
+        try:
+            cl = Redis(unix_socket_path=unix_socket_path, db=0)
+            cl.fake = False
+            assert cl.ping()
+        except Exception as e:
+            cl = None
+            if addr == "" and die:
+                raise e
+        else:
+            return cl
+
+        try:
+            cl = Redis(host=addr, port=port, db=0)
+            cl.fake = False
+            assert cl.ping()
+        except Exception as e:
+            if die:
+                raise e
+            cl = None
+
+        MyEnv.db = cl
+
+        return cl
+
+    @staticmethod
+    def core_get(reset=False, tcp=True):
+        """
+
+        kosmos 'j.clients.redis.core_get(reset=False)'
+
+        will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
+        if that doesn't work then will look for std redis port
+        if that does not work then will return None
+
+
+        :param tcp, if True then will also start tcp port on localhost on 6379
+
+
+        :param reset: stop redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis couldn't be started
+        :return: redis instance
+        :rtype: Redis
+        """
+
+        if reset:
+            RedisTools.core_stop()
+
+        if MyEnv.db and MyEnv.db.ping() and MyEnv.db.fake is False:
+            return MyEnv.db
+        from pudb import set_trace
+
+        set_trace()
+        if not RedisTools.core_running(tcp=tcp):
+            MyEnv.db = None
+            RedisTools._core_start(tcp=tcp)
+
+        RedisTools.client_core_get()
+
+        Tools.shell()
+
+        if MyEnv.db is None:
+            raise RuntimeError("cannot start and/or get redis core connection.")
+
+        return MyEnv.db
+
+    @staticmethod
+    def core_stop():
+        """
+        kill core redis
+
+        :raises RuntimeError: redis wouldn't be stopped
+        :return: True if redis is not running
+        :rtype: bool
+        """
+        MyEnv.db = None
+        Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+        Tools.execute("redis-cli shutdown", die=False, showout=False)
+        nr = 0
+        while True:
+            if not RedisTools.core_running():
+                return True
+            if nr > 200:
+                raise RuntimeError("could not stop redis")
+            time.sleep(0.05)
+
+    def core_running(unixsocket=True, tcp=True):
+
+        """
+        Get status of redis whether it is currently running or not
+
+        :raises e: did not answer
+        :return: True if redis is running, False if redis is not running
+        :rtype: bool
+        """
+        if unixsocket:
+            r = RedisTools.client_core_get(fake_ok=False, die=False)
+            if r:
+                return True
+
+        if tcp and Tools.tcp_port_connection_test("localhost", 6379):
+            r = RedisTools.client_core_get(ipaddr="localhost", port=6379, fake_ok=False, die=False)
+            if r:
+                return True
+
+        return False
+
+    def _core_start(tcp=True, timeout=20, reset=False):
+
+        """
+        kosmos "j.clients.redis.core_get(reset=True)"
+
+        installs and starts a redis instance in separate ProcessLookupError
+        when not in sandbox:
+                standard on {DIR_TEMP}/redis.sock
+        in sandbox will run in:
+            /sandbox/var/redis.sock
+
+        :param timeout:  defaults to 20
+        :type timeout: int, optional
+        :param reset: reset redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis server not found after install
+        :raises RuntimeError: platform not supported for start redis
+        :raises j.exceptions.Timeout: Couldn't start redis server
+        :return: redis instance
+        :rtype: Redis
+        """
+
+        if reset == False:
+            if RedisTools.core_running(tcp=tcp):
+                return RedisTools.core_get()
+
+            if MyEnv.platform_is_osx:
+                if not Tools.cmd_installed("redis-server"):
+                    # prefab.system.package.install('redis')
+                    Tools.execute("brew unlink redis", die=False)
+                    Tools.execute("brew install redis")
+                    Tools.execute("brew link redis")
+                    if not Tools.cmd_installed("redis-server"):
+                        raise RuntimeError("Cannot find redis-server even after install")
+                Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
+                Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+                Tools.execute("redis-cli shutdown", die=False, showout=False)
+            elif MyEnv.platform_is_linux:
+                Tools.execute("apt install redis-server -y")
+            else:
+                raise RuntimeError("platform not supported for start redis")
+
+        if not MyEnv.platform_is_osx:
+            cmd = "sysctl vm.overcommit_memory=1"
+            os.system(cmd)
+
+        if reset:
+            RedisTools.core_stop()
+
+        cmd = (
+            "mkdir -p /sandbox/var;redis-server --unixsocket $UNIXSOCKET "
+            "--port 6379 "
+            "--maxmemory 100000000 --daemonize yes"
+        )
+        cmd = cmd.replace("$UNIXSOCKET", RedisTools.unix_socket_path)
+
+        Tools.log(cmd)
+        Tools.execute(cmd)
+        limit_timeout = time.time() + timeout
+        while time.time() < limit_timeout:
+            if RedisTools.core_running():
+                break
+            print(1)
+            time.sleep(0.1)
+        else:
+            raise RuntimeError("Couldn't start redis server")
+
+
 try:
     import redis
 except:
@@ -415,38 +629,6 @@ class Tools:
 
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
-
-    @staticmethod
-    def redis_client_get(addr="localhost", port=6379, unix_socket_path="/sandbox/var/redis.sock", die=True):
-
-        if not redis:
-            if die:
-                raise RuntimeError("redis python lib not installed, do pip3 install redis")
-            else:
-                return None
-        try:
-            cl = Redis(unix_socket_path=unix_socket_path, db=0)
-            cl.ping()
-        except Exception as e:
-            cl = None
-            if addr == "" and die:
-                raise e
-        else:
-            return cl
-
-        try:
-            cl = Redis(host=addr, port=port, db=0)
-            cl.ping()
-        except Exception as e:
-            if die:
-                raise e
-            cl = None
-
-        return cl
-
-    @staticmethod
-    def _platform_is_unix():
-        return "posix" in sys.builtin_module_names
 
     # @staticmethod
     # def error_raise(msg, pythonerror=None):
@@ -1089,7 +1271,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._platform_is_unix(),
+                    close_fds=MyEnv.platform_is_unix,
                     shell=True,
                     universal_newlines=False,
                     cwd=cwd,
@@ -1103,7 +1285,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._platform_is_unix(),
+                    close_fds=MyEnv.platform_is_unix,
                     shell=False,
                     env=env,
                     universal_newlines=False,
@@ -1124,7 +1306,7 @@ class Tools:
                 return p
 
             def readout(stream):
-                if MyEnv._platform_is_unix():
+                if MyEnv.platform_is_unix:
                     # Store all intermediate data
                     data = list()
                     while True:
@@ -1165,6 +1347,8 @@ class Tools:
                 # if command already finished then read stdout, stderr
                 out = readout(p.stdout)
                 err = readout(p.stderr)
+                if (out is None or err is None) and p.poll() is None:
+                    raise RuntimeError("prob bug, needs to think this through, seen the while loop")
                 while p.poll() is None:
                     # means process is still running
 
@@ -1173,7 +1357,7 @@ class Tools:
                     # print("wait")
 
                     if timeout != 0 and now > end:
-                        if Tools._platform_is_unix():
+                        if MyEnv.platform_is_unix:
                             # Soft and hard kill on Unix
                             try:
                                 p.terminate()
@@ -1765,7 +1949,7 @@ class MyEnv:
         "CRITICAL": "{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
     }
 
-    db = Tools.redis_client_get(die=False)
+    db = RedisTools.client_core_get(die=False)
 
     @staticmethod
     def platform():
@@ -1776,9 +1960,9 @@ class MyEnv:
         """
         return sys.platform
 
-    @staticmethod
-    def _platform_is_unix():
-        return "posix" in sys.builtin_module_names
+    # @staticmethod
+    # def platform_is_linux():
+    #     return "posix" in sys.builtin_module_names
 
     @staticmethod
     def check_platform():
@@ -2086,6 +2270,17 @@ class MyEnv:
             return
 
         args = Tools.cmd_args_get()
+
+        if MyEnv.platform() == "linux":
+            MyEnv.platform_is_linux = True
+            MyEnv.platform_is_unix = True
+            MyEnv.platform_is_osx = False
+        elif "darwin" in MyEnv.platform():
+            MyEnv.platform_is_linux = False
+            MyEnv.platform_is_unix = True
+            MyEnv.platform_is_osx = True
+        else:
+            raise RuntimeError("platform not supported, only linux or osx for now.")
 
         if not configdir:
             if "JSX_DIR_CFG" in os.environ:
