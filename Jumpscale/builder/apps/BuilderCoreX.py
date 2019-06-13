@@ -47,6 +47,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
         cd {DIR_BUILD}/corex
         mkdir build && cd build
         cmake .. && make
+        ldconfig
         """
         self._execute(C % self.git_url)
 
@@ -98,12 +99,9 @@ class BuilderCoreX(j.builders.system._BaseClass):
         self._remove("{DIR_BUILD}/corex")
         self._remove(self.DIR_SANDBOX)
 
-    @property
-    def startup_cmds(self):
-        port = 7681
+    def start(self, port=7681):
         cmd = "/sandbox/bin/corex --port {}".format(port)
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
-        return cmds
+        j.tools.startupcmd.get(name=self.NAME, cmd=cmd).start()
 
     @builder_method()
     def test(self):
