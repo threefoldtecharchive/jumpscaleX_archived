@@ -498,8 +498,8 @@ def modules_install(url=None, configdir=None):
 
 # @click.command()
 # # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-# @click.option("-n", "--name", default="3bot", help="name of container")
-# def bcdb_indexrebuild(name=None, configdir=None):
+# # @click.option("-n", "--name", default="3bot", help="name of container")
+# def bcdb_indexrebuild(configdir=None):
 #     """
 #     rebuilds the index for all BCDB or a chosen one (with name),
 #     use this to fix corruption issues with index
@@ -507,6 +507,13 @@ def modules_install(url=None, configdir=None):
 #     :return:
 #     """
 #     from Jumpscale import j
+#
+#     j.data.bcdb.index_rebuild()
+
+
+@click.command()
+def generate():
+    _generate()
 
 
 @click.command()
@@ -556,7 +563,7 @@ if __name__ == "__main__":
     cli.add_command(check)
     cli.add_command(install)
     cli.add_command(kosmos)
-    # cli.add_command(generate)
+    cli.add_command(generate)
     cli.add_command(wireguard)
     cli.add_command(modules_install)
     # cli.add_command(bcdb_indexrebuild)
