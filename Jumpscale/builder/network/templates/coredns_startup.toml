@@ -13,6 +13,15 @@ echo '''. {
         debug
     }
     loadbalance
+    redis {
+        address ADDR
+        password PWD
+        prefix PREFIX
+        suffix SUFFIX
+        connect_timeout TIMEOUT
+        read_timeout TIMEOUT
+        ttl TTL
+    }
     reload 5s
 }''' > coredns.conf
 
