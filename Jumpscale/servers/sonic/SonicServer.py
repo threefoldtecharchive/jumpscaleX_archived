@@ -28,16 +28,18 @@ class SonicServer(JSConfigClient):
     def _write_config(self):
         def do():
             cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
-            args = {'host': self.host, "port": self.port, "password": self.password, "timeout": self.timeout}
+            args = {"host": self.host, "port": self.port, "password": self.password, "timeout": self.timeout}
             j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
             return self.config_path
+
         return self._cache.get("sonic_{}_{}_{}".format(self.name, self.host, self.port), method=do, expire=3600)
 
     @property
     def default_client(self):
         if not self._default_client:
-            self._default_client = j.clients.sonic.get(name="default", host=self.host, port=self.port,
-                                                       password=self.password)
+            self._default_client = j.clients.sonic.get(
+                name="default", host=self.host, port=self.port, password=self.password
+            )
             self._default_client.save()
         return self._default_client
 

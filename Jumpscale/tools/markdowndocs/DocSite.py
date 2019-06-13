@@ -593,13 +593,10 @@ class DocSite(j.application.JSBaseClass):
 
     def write_metadata(self, dest):
         # Create file with extra content to be loaded in docsites
-        data = {
-            'name': self.name,
-            'repo': ''
-        }
+        data = {"name": self.name, "repo": ""}
 
         if self.git:
-            data['repo'] = "https://github.com/%s/%s" % (self.account, self.repo)
+            data["repo"] = "https://github.com/%s/%s" % (self.account, self.repo)
 
         data_json = j.data.serializers.json.dumps(data)
         j.sal.fs.writeFile(filename=dest + "/.data", contents=data_json, append=False)
@@ -622,7 +619,6 @@ class DocSite(j.application.JSBaseClass):
         # NO NEED (also the ignore does not work well)
         # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=True)
-
 
         self.write_metadata(dest)
 

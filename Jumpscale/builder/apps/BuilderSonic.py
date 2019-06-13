@@ -34,4 +34,4 @@ class BuilderSonic(j.builders.system._BaseClass):
         :param reset:
         :return:
         """
-        j.shell()
+        self._execute("cp %s/sonic /sandbox/bin/" % j.builders.runtimes.rust.DIR_CARGOBIN)
