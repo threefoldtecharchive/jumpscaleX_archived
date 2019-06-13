@@ -2714,7 +2714,7 @@ class UbuntuInstaller:
 
         UbuntuInstaller.ensure_version()
         UbuntuInstaller.base()
-        UbuntuInstaller.ubuntu_base_install()
+        # UbuntuInstaller.ubuntu_base_install()
         UbuntuInstaller.python_redis_install()
         UbuntuInstaller.apts_install()
         BaseInstaller.pips_install()
