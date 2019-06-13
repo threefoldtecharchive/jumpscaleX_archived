@@ -123,3 +123,17 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         self._log_debug("ssh key: %s is not loaded", self.name)
         return False
+
+    @property
+    def pubkey_only(self):
+        """
+        return the key only with no type e.g.ssh-rsa or email/username
+        :return:
+        """
+        r = self.pubkey.split(" ")
+        if len(r) == 2:
+            return r[1]
+        elif len(r) == 3:
+            return r[1]
+        else:
+            raise RuntimeError("format of pubkey not ok:%s" % self.pubkey)

@@ -47,10 +47,24 @@ class SSHAgent(j.application.JSBaseClass):
             name = j.clients.sshagent.key_default_name
             if j.clients.sshkey.exists(name):
                 self._default_key = j.clients.sshkey.get(name)
+                if self._default_key.path and j.sal.fs.exists(self._default_key.path):
+                    return self._default_key
+                elif self._default_key.pubkey:
+                    return self._default_key
+                else:
+                    self._default_key = None
+                    j.clients.sshkey.delete(name)
+
+            path = "%s/.ssh/%s.pub" % (j.core.myenv.config["DIR_HOME"], name)
+            k = j.clients.sshkey.new(name)
+            if j.sal.fs.exists(path):
+                k.path = "%s/.ssh/%s" % (j.core.myenv.config["DIR_HOME"], name)
             else:
-                k = j.clients.sshkey.new(name, path="%s/.ssh/%s" % (j.core.myenv.config["DIR_HOME"], name))
-                k.save()
-                self._default_key = k
+                pubkey = self.key_pub_get(name)
+                k.pubkey = pubkey
+            k.save()
+            self._default_key = k
+
         return self._default_key
 
     def key_path_get(self, keyname="", die=True):
@@ -71,6 +85,21 @@ class SSHAgent(j.application.JSBaseClass):
                 return item
         if die:
             raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
+
+    def keys_pub_get(self):
+        """
+
+        :return: [(pre,key,user)] pre e.g. ssh-rsa , user e.g. info@kkk.com
+        """
+        rc, out, err = j.core.tools.execute("ssh-add -L")
+        res = []
+        for line in out.split("\n"):
+            if line.strip() == "":
+                continue
+            line = line.strip()
+            pre, key, user = line.split(" ")
+            res.append((pre, key, user))
+        return res
 
     def key_pub_get(self, keyname=None):
         """

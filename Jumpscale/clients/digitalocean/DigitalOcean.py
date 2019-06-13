@@ -1,6 +1,11 @@
 from Jumpscale import j
 
-import digitalocean
+
+try:
+    import digitalocean
+except:
+    j.builders.runtimes.python.pip_package_install("python-digitalocean")
+    import digitalocean
 from .DigitalOceanVM import DigitalOceanVM
 
 
@@ -75,8 +80,9 @@ class DigitalOcean(j.application.JSBaseConfigClass):
 
     def _sshkey_get_default(self):
         sshkey_ = j.clients.sshkey.default
+        pubkeyonly = sshkey_.pubkey_only
         for item in self.sshkeys:
-            if sshkey_.pubkey.strip() == item.public_key.strip():
+            if item.public_key.find(pubkeyonly) != -1:
                 return item
         return None
 
@@ -131,8 +137,11 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         if not sshkey:
             sshkey_do = self._sshkey_get_default()
             if not sshkey_do:
+                sshkey_ = j.clients.sshkey.default
                 # means we did not find the sshkey on digital ocean yet, need to create
-                j.shell()
+                key = digitalocean.SSHKey(token=self.token_, name=sshkey_.name, public_key=sshkey_.pubkey)
+                key.create()
+            sshkey_do = self._sshkey_get_default()
             sshkey = sshkey_do.name
 
         if self.droplet_exists(name):
