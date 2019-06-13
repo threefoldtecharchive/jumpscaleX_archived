@@ -817,24 +817,24 @@ class Tools:
         if "darwin" in MyEnv.platform():
 
             script = """
-            pip3 install ipython
+            pip3 install ipython==6.5.0
             """
             Tools.execute(script, interactive=True)
 
         else:
 
             script = """
-                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                    echo >> /etc/apt/sources.list
-                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                fi
-                apt-get update
-                apt-get install -y python3-pip
-                apt-get install -y locales
-                apt-get install -y curl rsync
-                apt-get install -y unzip
-                pip3 install ipython
+                #if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                #    echo >> /etc/apt/sources.list
+                #    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                #    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                #fi
+                #apt-get update
+                #apt-get install -y python3-pip
+                #apt-get install -y locales
+                #apt-get install -y curl rsync
+                #apt-get install -y unzip
+                pip3 install ipython==6.5.0
                 pip3 install pudb
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
@@ -2589,7 +2589,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython",
+                "ipython==6.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -3459,7 +3459,7 @@ class DockerContainer:
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
-        self.sshexec("apt install python3-click -y")
+        self.sshexec("sudo apt install python3-click -y")
         self.sshexec(cmd)
 
         cmd = """
