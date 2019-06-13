@@ -64,7 +64,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
         self._log_info("packages mdupdate")
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.sal.process.execute("apt-get update")
-        elif j.builders.tools.isAlpine:
+        elif j.builders.tools.platform_is_alpine:
             j.builders.tools.execute("apk update")
         elif j.core.platformtype.myplatform.platform_is_osx:
             location = j.builders.tools.command_location("brew")
@@ -113,10 +113,10 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
             if j.core.platformtype.myplatform.platform_is_ubuntu:
                 cmd = "%s install %s -y" % (CMD_APT_GET, package)
 
-            elif j.builders.tools.isAlpine:
+            elif j.builders.tools.platform_is_alpine:
                 cmd = "apk add %s" % package
 
-            elif j.builders.tools.isArch:
+            elif j.builders.tools.platform_is_arch:
                 if package.startswith("python3"):
                     package = "extra/python"
 

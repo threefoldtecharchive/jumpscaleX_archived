@@ -12,6 +12,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._userbot = None
         self._odoo = None
         self._corex = None
+        self._sonic = None
 
     @property
     def gitea(self):
@@ -60,3 +61,11 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
             self._corex = BuilderCoreX()
         return self._corex
+
+    @property
+    def sonic(self):
+        if self._sonic is None:
+            from .BuilderSonic import BuilderSonic
+
+            self._sonic = BuilderSonic()
+        return self._sonic
