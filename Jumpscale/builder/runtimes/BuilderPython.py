@@ -21,6 +21,8 @@ class BuilderPython(j.builders.system._BaseClass):
         self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_python/")
         j.sal.fs.createDir(self.DIR_SANDBOX)
 
+        self._tag = "v3.6.8"
+
     @builder_method()
     def clean(self):
         self._remove("{DIR_BUILD}")
@@ -39,7 +41,7 @@ class BuilderPython(j.builders.system._BaseClass):
         self.clean()
 
     @builder_method()
-    def build(self, tag="v3.6.7"):  # default "v3.6.7" else may cause locals problem
+    def build(self, tag="v3.6.8"):  # default "v3.6.8" else may cause locals problem
         """
         kosmos 'j.builders.runtimes.python.build()'
             kosmos 'j.builders.runtimes.python.build(reset=True)'
@@ -48,10 +50,11 @@ class BuilderPython(j.builders.system._BaseClass):
 
         :param reset: choose to reset the build process even if it was done before
         :type reset: bool
-        :param tag: the python version tag (possible tags: 3.7.1, 3.6.7)
+        :param tag: the python version tag (possible tags: 3.7.1, 3.6.8)
         :type tag: str
         :return:
         """
+        self._tag = tag
         self.profile_home_select()
 
         if self.tools.dir_exists(self._replace("{DIR_CODE_L}/cpython")):
@@ -176,20 +179,22 @@ class BuilderPython(j.builders.system._BaseClass):
         self.profile.env_set("PYTHONHTTPSVERIFY", 0)
 
         self.profile.env_set_part("PYTHONPATH", self._replace("{DIR_BUILD}/lib"))
-        self.profile.env_set_part("PYTHONPATH", self._replace("{DIR_BUILD}/lib/python3.7"))
-        self.profile.env_set_part("PYTHONPATH", self._replace("{DIR_BUILD}/lib/python3.7/site-packages"))
+        self.profile.env_set_part("PYTHONPATH", self._replace("{DIR_BUILD}/lib/python%s" % self._tag[1:4]))
+        self.profile.env_set_part(
+            "PYTHONPATH", self._replace("{DIR_BUILD}/lib/python%s/site-packages" % self._tag[1:4])
+        )
 
         self.profile.env_set_part("LIBRARY_PATH", self._replace("{PATH_OPENSSL}/lib"))
 
-        self.profile.env_set_part("CPPPATH", self._replace("{DIR_BUILD}/include/python3.7m"))
+        self.profile.env_set_part("CPPPATH", self._replace("{DIR_BUILD}/include/python%sm" % self._tag[1:4]))
         self.profile.env_set_part("CPPPATH", self._replace("{PATH_OPENSSL}/include"))
 
     def profile_sandbox_set(self):
 
         self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python.zip")
-        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python3.7")
-        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python3.7/site-packages")
-        self.profile.env_set_part("PYTHONPATH", "sandbox/lib/python3.7/lib-dynload")
+        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python%s" % self._tag[1:4])
+        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python%s/site-packages" % self._tag[1:4])
+        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/python%s/lib-dynload" % self._tag[1:4])
 
         self.profile.env_set_part("PYTHONPATH", "/sandbox/bin")
 
@@ -292,8 +297,8 @@ class BuilderPython(j.builders.system._BaseClass):
         else:
             j.builders.system.package.install("redis-server")
 
-        if not j.sal.fs.exists("%s/bin/python3.7" % path):
-            raise RuntimeError("am not in compiled python dir, need to find %s/bin/python3.7" % path)
+        if not j.sal.fs.exists("%s/bin/python%s" % path, self._tag[1:4]):
+            raise RuntimeError("am not in compiled python dir, need to find %s/bin/python%s" % path, self._tag[1:4])
 
         dest = self.DIR_SANDBOX
 
@@ -303,22 +308,22 @@ class BuilderPython(j.builders.system._BaseClass):
         for item in ["bin", "root", "lib"]:
             j.sal.fs.createDir("%s/%s" % (dest, item))
 
-        for item in ["pip3", "python3.7", "ipython", "bpython", "electrum", "pudb3", "zrobot"]:
+        for item in ["pip3", "python%s" % self._tag[1:4], "ipython", "bpython", "electrum", "pudb3", "zrobot"]:
             src0 = "%s/bin/%s" % (path, item)
             dest0 = "%s/bin/%s" % (dest, item)
             if j.sal.fs.exists(src0):
                 j.sal.fs.copyFile(src0, dest0)
 
         # for OSX
-        for item in ["libpython3.7m.a"]:
+        for item in ["libpython%sm.a" % self._tag[1:4]]:
             src0 = "%s/lib/%s" % (path, item)
             dest0 = "%s/bin/%s" % (dest, item)
             if j.sal.fs.exists(src0):
                 j.sal.fs.copyFile(src0, dest0)
 
         # LINK THE PYTHON BINARIES
-        j.sal.fs.symlink("%s/bin/python3.7" % dest, "%s/bin/python" % dest, overwriteTarget=True)
-        j.sal.fs.symlink("%s/bin/python3.7" % dest, "%s/bin/python3" % dest, overwriteTarget=True)
+        j.sal.fs.symlink("%s/bin/python%s" % dest, self._tag[1:4], "%s/bin/python" % dest, overwriteTarget=True)
+        j.sal.fs.symlink("%s/bin/python%s" % dest, self._tag[1:4], "%s/bin/python3" % dest, overwriteTarget=True)
 
         # NOW DEAL WITH THE PYTHON LIBS
 
@@ -349,7 +354,7 @@ class BuilderPython(j.builders.system._BaseClass):
         ignoredir = [".egg-info", ".dist-info", "__pycache__", "audio", "tkinter", "audio", "test", "electrum_"]
         ignorefiles = [".egg-info", ".pyc"]
 
-        todo = ["%s/lib/python3.7/site-packages" % path, "%s/lib/python3.7" % path]
+        todo = ["%s/lib/python%s/site-packages" % path, self._tag[1:4], "%s/lib/python%s" % path, self._tag[1:4]]
         for src in todo:
             for ddir in j.sal.fs.listDirsInDir(
                 src, recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True
@@ -401,15 +406,20 @@ class BuilderPython(j.builders.system._BaseClass):
         if j.core.platformtype.myplatform.platform_is_osx:
             C = """
             mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
-            rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-darwin
+            rm -rf {DIR_SANDBOX}/lib/python/config-%sm-darwin
 
             """
+                % self._tag[1:4]
+            )
         else:
-            C = """
+            C = (
+                """
             mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
-            rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-x86_64-linux-gnu
+            rm -rf {DIR_SANDBOX}/lib/python/config-%sm-x86_64-linux-gnu
 
             """
+                % self._tag[1:4]
+            )
 
         C = j.core.tools.text_replace(C, args=self.__dict__)
         j.sal.process.execute(C)
