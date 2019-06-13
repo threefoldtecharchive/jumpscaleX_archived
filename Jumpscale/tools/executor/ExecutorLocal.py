@@ -20,9 +20,9 @@ class ExecutorLocal(ExecutorBase):
     def config_msgpack(self):
         path = self._config_msgpack_path
         if not j.sal.fs.exists(path):
-            return ""
+            return b""
         else:
-            return j.sal.fs.readFile(path)
+            return j.sal.fs.readFile(path, binary=True)
 
     @config_msgpack.setter
     def config_msgpack(self, value):
@@ -36,7 +36,6 @@ class ExecutorLocal(ExecutorBase):
             self._log_debug("config save on: %s" % self)
             self.config_msgpack = data
             self.save()
-            j.shell()
 
     @property
     def env_on_system_msgpack(self):
@@ -44,7 +43,7 @@ class ExecutorLocal(ExecutorBase):
         if not j.sal.fs.exists(path):
             return ""
         else:
-            return j.sal.fs.readFile(path)
+            return j.sal.fs.readFile(path, binary=True)
 
     @env_on_system_msgpack.setter
     def env_on_system_msgpack(self, value):

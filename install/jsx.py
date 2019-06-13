@@ -109,11 +109,11 @@ def _configure(
         j.data.nacl.configure(privkey_words=privatekey_words)
 
 
-if not IT.MyEnv.state:
-    # this is needed to make sure we can
-    _configure()
-
-IT.BaseInstaller.base()
+# if not IT.MyEnv.state:
+#     # this is needed to make sure we can
+#     _configure()
+#
+# IT.BaseInstaller.base()
 
 import click
 

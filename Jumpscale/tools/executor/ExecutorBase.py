@@ -38,10 +38,13 @@ class ExecutorBase(j.application.JSBaseClass):
 
         self._env_on_system = None
 
-        if self.config_msgpack != b"":
+        if self.config_msgpack:
             self.config = j.data.serializers.msgpack.loads(self.config_msgpack)
         else:
             self.config = {}
+
+        if not isinstance(self.config, dict):
+            j.shell()
 
         if "state" not in self.config:
             self.config["state"] = {}
@@ -350,7 +353,7 @@ class ExecutorBase(j.application.JSBaseClass):
     @property
     def env_on_system(self):
         if not self._env_on_system:
-            if self.env_on_system_msgpack == b"":
+            if not self.env_on_system_msgpack:
                 self.systemenv_load()
             self._env_on_system = j.data.serializers.msgpack.loads(self.env_on_system_msgpack)
         return self._env_on_system
