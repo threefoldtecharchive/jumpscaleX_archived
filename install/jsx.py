@@ -58,10 +58,6 @@ def check_branch(IT):
 
 IT = load_install_tools()
 
-IT.BaseInstaller.base()
-
-import click
-
 
 def jumpscale_get(die=True):
     # jumpscale need to be available otherwise cannot do
@@ -73,6 +69,53 @@ def jumpscale_get(die=True):
             sys.exit(1)
         return None
     return j
+
+
+# have to do like this, did not manage to call the click enabled function (don't know why)
+def _configure(
+    basedir=None,
+    codedir=None,
+    debug=False,
+    sshkey=None,
+    no_sshagent=False,
+    no_interactive=False,
+    privatekey_words=None,
+    secret=None,
+    configdir=None,
+):
+    interactive = not no_interactive
+    sshagent_use = not no_sshagent
+    IT.MyEnv.configure(
+        basedir=basedir,
+        readonly=None,
+        codedir=codedir,
+        sshkey=sshkey,
+        sshagent_use=sshagent_use,
+        debug_configure=debug,
+        interactive=interactive,
+        secret=secret,
+        configdir=configdir,
+    )
+    j = jumpscale_get(die=False)
+
+    if not j and privatekey_words:
+        print(
+            "cannot load jumpscale, \
+            can only configure private key when jumpscale is installed locally use jsx install..."
+        )
+        sys.exit(1)
+
+    if j and privatekey_words:
+        j.data.nacl.configure(privkey_words=privatekey_words)
+
+
+if not IT.MyEnv.state:
+    # this is needed to make sure we can
+    _configure()
+
+IT.BaseInstaller.base()
+
+import click
 
 
 @click.group()
@@ -128,44 +171,6 @@ def configure(
         privatekey_words=privatekey,
         secret=secret,
     )
-
-
-# have to do like this, did not manage to call the click enabled function (don't know why)
-def _configure(
-    basedir=None,
-    codedir=None,
-    debug=False,
-    sshkey=None,
-    no_sshagent=False,
-    no_interactive=False,
-    privatekey_words=None,
-    secret=None,
-    configdir=None,
-):
-    interactive = not no_interactive
-    sshagent_use = not no_sshagent
-    IT.MyEnv.configure(
-        basedir=basedir,
-        readonly=None,
-        codedir=codedir,
-        sshkey=sshkey,
-        sshagent_use=sshagent_use,
-        debug_configure=debug,
-        interactive=interactive,
-        secret=secret,
-        configdir=configdir,
-    )
-    j = jumpscale_get(die=False)
-
-    if not j and privatekey_words:
-        print(
-            "cannot load jumpscale, \
-            can only configure private key when jumpscale is installed locally use jsx install..."
-        )
-        sys.exit(1)
-
-    if j and privatekey_words:
-        j.data.nacl.configure(privkey_words=privatekey_words)
 
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT

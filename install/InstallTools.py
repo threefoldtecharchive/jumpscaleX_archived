@@ -2242,14 +2242,7 @@ class MyEnv:
                 else:
                     secret = MyEnv.config["SECRET"]
             if secret:
-                secret = secret.encode()
-
-                import hashlib
-
-                m = hashlib.sha256()
-                m.update(secret)
-
-                MyEnv.config["SECRET"] = m.hexdigest()
+                MyEnv.secret_set(secret)
                 # is same as what is used to read from ssh-agent in SSHAgent client
             else:
                 print("SECRET IS NEEDED")
@@ -2259,14 +2252,35 @@ class MyEnv:
         MyEnv.init(configdir=configdir)
 
     @staticmethod
-    def init(configdir=None):
+    def secret_set(secret=None):
+        while not secret:  # keep asking till the secret is not empty
+            secret = Tools.ask_password("provide secret to use for encrypting private key")
+        secret = secret.encode()
+
+        import hashlib
+
+        m = hashlib.sha256()
+        m.update(secret)
+
+        secret2 = m.hexdigest()
+
+        if MyEnv.config["SECRET"] != secret2:
+
+            MyEnv.config["SECRET"] = secret2
+
+            MyEnv.config_save()
+
+    @staticmethod
+    def init(configdir=None, reset=False):
         """
 
         :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
         :return:
         """
-        if MyEnv.__init:
+        if reset == False and MyEnv.__init:
             return
+
+        print("MYENV INIT")
 
         args = Tools.cmd_args_get()
 
@@ -2516,6 +2530,7 @@ class BaseInstaller:
 
     @staticmethod
     def base():
+
         if MyEnv.state_get("generic_base"):
             return
 
@@ -3448,9 +3463,9 @@ class DockerContainer:
         self.sshexec(cmd)
 
         cmd = """
-        apt-get autoclean
-        apt-get clean
-        apt-get autoremove
+        apt-get autoclean -y
+        apt-get clean -y
+        apt-get autoremove -y
         # rm -rf /tmp/*
         # rm -rf /var/log/*
         find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
@@ -3462,9 +3477,10 @@ class DockerContainer:
         install succesfull:
 
         # if you use a container do:
-        jsx container_kosmos
+        jsx container-kosmos
+        
         or
-         development_jumpscale
+        
         kosmos
 
         """

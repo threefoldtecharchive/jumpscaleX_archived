@@ -19,7 +19,7 @@ parser.add_argument("-q", "--quiet", default=False, action="store_true", help="T
 parser.add_argument(
     "-r", "--reset", default=False, action="store_true", help="Reset system BCDB and all encryption keys (DANGEROUS)"
 )
-parser.add_argument("--init", default=False, action="store_true", help="Initialize a jumpscale system")
+# parser.add_argument("--init", default=False, action="store_true", help="Initialize a jumpscale system")
 
 parser.add_argument(
     "--instruct",
@@ -135,8 +135,8 @@ if options.instruct:
     print(instructions_result_print(res))
     sys.exit(0)
 
-if options.init:
-    j.data.nacl.configure(name="default", interactive=True, generate=False)
+# if options.init:
+#     j.data.nacl.configure(name="default", interactive=True, generate=False)
 
 
 if len(args) == 1:
@@ -153,7 +153,11 @@ else:
     j.application.interactive = True
     n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
     if n.load(die=False) is False:
-        n.configure()
+        print("ERROR: CANNOT LOAD THE PRIVATE KEY FROM THE FILESYSTEM")
+        j.core.myenv.secret_set()
+        if n.load(die=False) is False:
+            print("there is prob something wrong with private key, OH MY GOD, I HOPE YOU STILL HAVE THE WORDS.")
+            n.configure()
 
     j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
 
