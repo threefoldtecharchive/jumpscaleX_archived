@@ -2,7 +2,7 @@
 import os
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
-import click
+
 
 import argparse
 import inspect
@@ -54,6 +54,13 @@ def check_branch(IT):
                 print("WARNING the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
                 if not IT.Tools.ask_yes_no("OK to work with branch above?"):
                     sys.exit(1)
+
+
+IT = load_install_tools()
+
+IT.BaseInstaller.base()
+
+import click
 
 
 def jumpscale_get(die=True):
@@ -535,7 +542,6 @@ if __name__ == "__main__":
     cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
-    IT = load_install_tools()
 
     if not IT.DockerFactory.indocker():
         cli.add_command(container_kosmos)

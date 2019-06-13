@@ -10,6 +10,9 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
     def _init(self):
         pass
 
+    def corex_server_install(self):
+        j.builders.apps.corex.install()
+
     def test(self):
         """
         kosmos 'j.clients.corex.test()'

@@ -2529,6 +2529,15 @@ class BaseInstaller:
 
         """
         Tools.execute(script, interactive=True)
+
+        if MyEnv.platform_is_osx:
+            OSXInstaller.base()
+        elif MyEnv.platform_is_linux:
+            UbuntuInstaller.base()
+        else:
+            print("Only ubuntu & osx supported")
+            os.exit(1)
+
         MyEnv.state_set("generic_base")
 
     @staticmethod
@@ -2646,11 +2655,12 @@ class BaseInstaller:
         return res
 
     @staticmethod
-    def pips_install():
-        for pip in BaseInstaller.pips_list(3):
-
+    def pips_install(items=None):
+        if not items:
+            items = BaseInstaller.pips_list(3)
+        for pip in items:
             if not MyEnv.state_get("pip_%s" % pip):
-                C = "pip3 install --user '%s'" % pip
+                C = "pip3 install '%s'" % pip  # --user
                 Tools.execute(C, die=True)
                 MyEnv.state_set("pip_%s" % pip)
 
@@ -2661,22 +2671,29 @@ class OSXInstaller:
         MyEnv._init()
         Tools.log("installing OSX version")
         OSXInstaller.base()
-        pass
+        BaseInstaller.pips_install()
 
     @staticmethod
     def base():
         MyEnv._init()
+        OSXInstaller.brew_install()
         if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
             script = """
             brew install curl unzip rsync
             """
             Tools.execute(script, replace=True)
-        BaseInstaller.pips_install()
+        BaseInstaller.pips_install(["click"])  # TODO: *1
+
+    @staticmethod
+    def brew_install():
+        if not Tools.cmd_installed("brew"):
+            cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+            Tools.execute(cmd, interactive=True)
 
     @staticmethod
     def brew_uninstall():
         MyEnv._init()
-        cmd = 'sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd, interactive=True)
         toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
@@ -2716,35 +2733,37 @@ class UbuntuInstaller:
         if MyEnv.state_get("base"):
             return
 
-        script = """
-        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-            echo >> /etc/apt/sources.list
-            echo "# Jumpscale Setup" >> /etc/apt/sources.list
-            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-        fi
-        apt-get update
+        rc, out, err = Tools.execute("lsb_release -a")
+        if out.find("Ubuntu 18.04") != -1:
+            bionic = True
+        else:
+            bionic = False
 
+        if bionic:
+            script = """
+            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                echo >> /etc/apt/sources.list
+                echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+            fi
+            """
+            Tools.execute(script, interactive=True)
+
+        script = """
+        apt-get update
         apt-get install -y curl rsync unzip
         locale-gen --purge en_US.UTF-8
-
-        """
-        Tools.execute(script, interactive=True)
-        MyEnv.state_set("base")
-
-    @staticmethod
-    def ubuntu_base_install():
-        if MyEnv.state_get("ubuntu_base_install"):
-            return
-
-        Tools.log("installing base system")
-
-        script = """
+        
         apt-get install python3-pip -y
-        apt-get install locales -y
-        pip3 install ipython
+        apt-get install locales -y        
+
         """
         Tools.execute(script, interactive=True)
-        MyEnv.state_set("ubuntu_base_install")
+
+        if bionic and not DockerFactory.indocker():
+            UbuntuInstaller.docker_install()
+
+        MyEnv.state_set("base")
 
     @staticmethod
     def docker_install():
