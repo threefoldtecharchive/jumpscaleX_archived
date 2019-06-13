@@ -1415,6 +1415,7 @@ class group_servers(JSGroup):
         self._etcd = None
         self._mail_forwarder = None
         self._capacity = None
+        self._sonic = None
         self._zdb = None
         self._jsrun = None
         self._gedis = None
@@ -1460,6 +1461,12 @@ class group_servers(JSGroup):
             from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
             self._capacity =  CapacityFactory()
         return self._capacity
+    @property
+    def sonic(self):
+        if self._sonic is None:
+            from Jumpscale.servers.sonic.SonicFactory import SonicFactory
+            self._sonic =  SonicFactory()
+        return self._sonic
     @property
     def zdb(self):
         if self._zdb is None:
