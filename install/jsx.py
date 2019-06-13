@@ -518,43 +518,14 @@ def generate():
 
 @click.command()
 def check():
-    _generate()
-
     from Jumpscale import j
 
-    def decrypt():
-        try:
-            j.data.nacl.default.signingkey
-        except Exception as e:
-            if str(e).find("jsx check") != -1:
-                print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
-                j.core.myenv.secret_set()
-                return False
-            raise e
-            return False
-        return True
-
-    while not decrypt():
-        pass
-
-    j.data.bcdb.index_rebuild()
+    j.application.check()
 
 
 def _generate(path=None):
     j = jumpscale_get(die=True)
-    j.sal.fs.remove("{DIR_VAR}/codegen")
-    j.sal.fs.remove("{DIR_VAR}/cmds")
-    from Jumpscale.core.generator.JSGenerator import JSGenerator
-    from Jumpscale import j
-
-    g = JSGenerator(j)
-
-    if path:
-        # means we need to link
-        g.lib_link(path)
-    g.generate(methods_find=True)
-    g.report()
-    print("OK ALL DONE, GOOD LUCK (-:")
+    j.application.generate()
 
 
 if __name__ == "__main__":

@@ -14,6 +14,11 @@ class SonicFactory(JSConfigs):
     _CHILDCLASS = SonicClient
 
     def test(self):
+        """
+        kosmos 'j.clients.sonic.test()'
+        :return:
+        """
+        j.servers.sonic.default.start()
         data = {
             "post:1": "this is some test text hello",
             "post:2": "this is a hello world post",

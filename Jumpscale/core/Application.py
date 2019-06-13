@@ -425,3 +425,53 @@ class Application(object):
     #
     #     self._j.shell()
     #
+
+    def check(self, generate=True):
+        j = self._j
+
+        if generate:
+            self.generate()
+
+        def decrypt():
+            try:
+                j.data.nacl.default.signingkey
+                j.data.nacl.default.privkey.public_key.encode()
+                return True
+            except Exception as e:
+                if str(e).find("jsx check") != -1:
+                    print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                    j.core.myenv.secret_set()
+                    return False
+                raise e
+            return False
+
+        while not decrypt():
+            pass
+
+        try:
+            j.application.bcdb_system
+        except Exception as e:
+            if str(e).find("Ciphertext failed") != -1:
+                print("COULD NOT GET DATA FROM BCDB, PROB ENCRYPTED WITH OTHER PRIVATE KEY AS WHAT IS NOW ON SYSTEM")
+                sys.exit(1)
+            if str(e).find("cannot be decrypted") != -1:
+                print("COULD NOT DECRYPT THE METADATA FOR BCDB, DIFFERENT ENCRYPTION KEY USED")
+                if j.tools.console.askYesNo("Ok to delete this metadata, will prob be rebuild"):
+                    j.sal.fs.remove(j.core.tools.text_replace("{DIR_CFG}/bcdb_config"))
+                    j.application.bcdb_system
+        j.data.bcdb.index_rebuild()
+
+    def generate(self, path=None):
+        j = self._j
+        j.sal.fs.remove("{DIR_VAR}/codegen")
+        j.sal.fs.remove("{DIR_VAR}/cmds")
+        from Jumpscale.core.generator.JSGenerator import JSGenerator
+        from Jumpscale import j
+
+        g = JSGenerator(j)
+
+        if path:
+            # means we need to link
+            g.lib_link(path)
+        g.generate(methods_find=True)
+        g.report()
