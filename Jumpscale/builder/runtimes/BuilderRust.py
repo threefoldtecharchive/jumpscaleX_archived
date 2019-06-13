@@ -8,22 +8,18 @@ class BuilderRust(j.builders.system._BaseClass):
     DOWNLOAD_URL = "https://sh.rustup.rs"
 
     def _init(self):
-        self.DIR_BUILD = "/root/.cargo/bin"
-
-    @builder_method()
-    def build(self):
-        self.profile_sandbox_select()
-
-        # Will download and run the correct version of rustup-init executable for your platform
-        self._execute("curl {} -sSf | sh -s -- -y".format(self.DOWNLOAD_URL))
-
-        self.profile.env_set_part("PATH", self.DIR_BUILD)
+        self.DIR_CARGOBIN = self._replace("{DIR_HOME}/.cargo/bin")
 
     @builder_method()
     def install(self):
+        """
+
+        kosmos 'j.builders.runtimes.rust.install()'
+        :return:
+        """
+        self._execute("curl https://sh.rustup.rs -sSf | sh -s -- -y")
         self.profile_sandbox_select()
-        self.profile.env_set_part("PATH", self.DIR_BUILD)
-        self._copy(self.DIR_BUILD, "{DIR_BIN}")
+        self.profile.env_set_part("PATH", self.DIR_CARGOBIN)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
@@ -51,7 +47,7 @@ class BuilderRust(j.builders.system._BaseClass):
             "rustup",
         ]
         for bin_name in bins:
-            dir_src = self.tools.joinpaths(self.DIR_BUILD, bin_name)
+            dir_src = self.tools.joinpaths(self.DIR_CARGOBIN, bin_name)
             self._copy(dir_src, dir_dest)
 
     @builder_method()

@@ -496,27 +496,41 @@ def modules_install(url=None, configdir=None):
     _generate(path=path)
 
 
+# @click.command()
+# # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("-n", "--name", default="3bot", help="name of container")
+# def bcdb_indexrebuild(name=None, configdir=None):
+#     """
+#     rebuilds the index for all BCDB or a chosen one (with name),
+#     use this to fix corruption issues with index
+#     if name is not given then will walk over all known BCDB's and rebuild index
+#     :return:
+#     """
+#     from Jumpscale import j
+
+
 @click.command()
-# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option("-n", "--name", default="3bot", help="name of container")
-def bcdb_indexrebuild(name=None, configdir=None):
-    """
-    rebuilds the index for all BCDB or a chosen one (with name),
-    use this to fix corruption issues with index
-    if name is not given then will walk over all known BCDB's and rebuild index
-    :return:
-    """
+def check():
+    _generate()
+
     from Jumpscale import j
 
+    def decrypt():
+        try:
+            j.data.nacl.default.signingkey
+        except Exception as e:
+            if str(e).find("jsx check") != -1:
+                print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                j.core.myenv.secret_set()
+                return False
+            raise e
+            return False
+        return True
+
+    while not decrypt():
+        pass
+
     j.data.bcdb.index_rebuild()
-
-
-@click.command()
-def generate():
-    """
-    generate the loader file, important to do when new modules added
-    """
-    _generate()
 
 
 def _generate(path=None):
@@ -539,12 +553,13 @@ def _generate(path=None):
 if __name__ == "__main__":
 
     cli.add_command(configure)
+    cli.add_command(check)
     cli.add_command(install)
     cli.add_command(kosmos)
-    cli.add_command(generate)
+    # cli.add_command(generate)
     cli.add_command(wireguard)
     cli.add_command(modules_install)
-    cli.add_command(bcdb_indexrebuild)
+    # cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
 

@@ -49,6 +49,10 @@ class PacketNetFactory(JSConfigBaseFactory):
             self.main.save()
         c = self.get(name="main")
 
+        self._log_info(c.digitalocean_sizes)
+        j.shell()
+        w
+
         client = c.client
         droplet, sshclient = c.droplet_create(delete=True)
 
@@ -60,6 +64,5 @@ class PacketNetFactory(JSConfigBaseFactory):
 
         self._log_info(c.droplets)
         self._log_info(c.digitalocean_images)
-        self._log_info(c.digitalocean_sizes)
         self._log_info(c.digitalocean_regions)
         self._log_info(droplet.ip_address)

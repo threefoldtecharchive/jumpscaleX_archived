@@ -829,11 +829,11 @@ class Tools:
                 #    echo "# Jumpscale Setup" >> /etc/apt/sources.list
                 #    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
                 #fi
-                #apt-get update
-                #apt-get install -y python3-pip
-                #apt-get install -y locales
-                #apt-get install -y curl rsync
-                #apt-get install -y unzip
+                sudo apt-get update
+                sudo apt-get install -y python3-pip
+                sudo apt-get install -y locales
+                sudo apt-get install -y curl rsync
+                sudo apt-get install -y unzip
                 pip3 install ipython==6.5.0
                 pip3 install pudb
                 pip3 install pygments
