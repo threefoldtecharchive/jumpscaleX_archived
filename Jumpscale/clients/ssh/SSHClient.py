@@ -51,7 +51,7 @@ class SSHClient(SSHClientBase):
                     password=passwd,
                     port=self.port_variable,
                     pkey=pkey,
-                    num_retries=3,
+                    num_retries=10,
                     allow_agent=self.allow_agent,
                     timeout=self.timeout,
                     retry_delay=1,
