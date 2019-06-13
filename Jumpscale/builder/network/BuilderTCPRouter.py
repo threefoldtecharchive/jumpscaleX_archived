@@ -1,5 +1,3 @@
-import textwrap
-
 from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
