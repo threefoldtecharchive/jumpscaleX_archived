@@ -18,7 +18,6 @@ class BCDBFactory(j.application.JSBaseClass):
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
 
         self._code_generation_dir = None
-        self.latest = None
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
@@ -31,6 +30,18 @@ class BCDBFactory(j.application.JSBaseClass):
             self._config = j.data.serializers.msgpack.loads(data)
         else:
             self._config = {}
+
+        self._system = None
+
+    @property
+    def system(self):
+        """
+        sqlite based BCDB, don't need ZDB for this
+        :return:
+        """
+        if not self._system:
+            self._system = self.get("system")
+        return self._system
 
     @property
     def _BCDBModelClass(self):
@@ -136,7 +147,8 @@ class BCDBFactory(j.application.JSBaseClass):
 
     def bcdb_test_get(self, reset=True):
         bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
-        assert j.data.bcdb.latest.zdbclient == None
+        bcdb2 = j.data.bcdb.bcdb_instances["test"]
+        assert bcdb2.zdbclient == None
         return bcdb
 
     def redis_server_start(
@@ -242,7 +254,8 @@ class BCDBFactory(j.application.JSBaseClass):
             self.latest.stop()
         if sqlitestor:
             bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
-            assert j.data.bcdb.latest.zdbclient == None
+            bcdb2 = j.data.bcdb.bcdb_instances["test"]
+            assert bcdb2.zdbclient == None
             if reset:
                 bcdb.reset()  # empty
         else:

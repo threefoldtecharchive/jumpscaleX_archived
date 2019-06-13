@@ -19,12 +19,12 @@ rights = ""
 
 import types
 
-MODEL_CLASS = j.data.bcdb.latest.model_class_get_from_schema(SCHEMA)
+bcdb = j.data.bcdb.bcdb_instances["legal"]
+MODEL_CLASS = bcdb.model_class_get_from_schema(SCHEMA)
 
 
 class UserModel(MODEL_CLASS):
     def __init__(self, bcdb):
-
         MODEL_CLASS.__init__(self, bcdb=bcdb)
 
     # def rights_check(self,acl,userid,rights):

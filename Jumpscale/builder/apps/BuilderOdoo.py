@@ -21,12 +21,14 @@ class BuilderOdoo(j.builders.system._BaseClass):
 
     @builder_method()
     def configure(self):
-        """Configure gitea, db, iyo"""
         pass
 
     @builder_method()
     def install(self):
-        """install odoo"""
+        """
+        kosmos 'j.builders.apps.odoo.install()'
+        install odoo
+        """
         j.builders.db.postgres.install()
         j.builders.runtimes.nodejs.install()
 
@@ -67,6 +69,7 @@ class BuilderOdoo(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         pg_ctl = self._replace("sudo -u odoouser {DIR_BIN}/pg_ctl %s -D {APP_DIR}/data")
+        # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
         postgres_cmd = j.tools.startupcmd.get("postgres-custom", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")

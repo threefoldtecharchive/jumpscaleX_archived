@@ -82,25 +82,35 @@ class SSHAgent(j.application.JSBaseClass):
         :return: Content of public key
         :rtype: str
         """
-        key = self._paramiko_key_get(keyname)
-        j.shell()
-
-    def _paramiko_keys_get(self):
-        import paramiko.agent
-
-        a = paramiko.agent.Agent()
-        return [key for key in a.get_keys()]
-
-    def _paramiko_key_get(self, keyname=None):
         if not keyname:
-            keyname = j.core.myenv.sshagent.key_default
-        for key in self._paramiko_keys_get():
-            # ISSUE, is always the same name, there is no way how to figure out which sshkey to use?
-            if key.name == keyname:
-                # maybe we can get this to work using comparing of the public keys?
-                return key
+            keyname = j.core.myenv.config["SSH_KEY_DEFAULT"].strip()
+        rc, out, err = j.core.tools.execute("ssh-add -L")
+        for line in out.split("\n"):
+            if line.strip() == "":
+                continue
+            if keyname:
+                if line.endswith(keyname):
+                    return line
 
-        raise RuntimeError("could not find key:%s" % keyname)
+        raise RuntimeError("did not find public key")
+
+    #
+    # def _paramiko_keys_get(self):
+    #     import paramiko.agent
+    #
+    #     a = paramiko.agent.Agent()
+    #     return [key for key in a.get_keys()]
+    #
+    # def _paramiko_key_get(self, keyname=None):
+    #     if not keyname:
+    #         keyname = j.core.myenv.sshagent.key_default
+    #     for key in self._paramiko_keys_get():
+    #         # ISSUE, is always the same name, there is no way how to figure out which sshkey to use?
+    #         if key.name == keyname:
+    #             # maybe we can get this to work using comparing of the public keys?
+    #             return key
+    #
+    #     raise RuntimeError("could not find key:%s" % keyname)
 
     def sign(self, data, keyname=None, hash=True):
         """

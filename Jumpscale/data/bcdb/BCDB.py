@@ -41,7 +41,6 @@ class BCDB(j.application.JSBaseClass):
 
         self._need_to_reset = reset
         j.data.bcdb.bcdb_instances[self.name] = self
-        j.data.bcdb.latest = self
 
         if not j.data.types.string.check(self.name):
             raise RuntimeError("name needs to be string")

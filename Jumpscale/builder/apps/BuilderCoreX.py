@@ -55,7 +55,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
         """
         Installs the corex binary to the correct location
         """
-        bin_path = j.builder.tools.joinpaths(self.DIR_BUILD, "corex/build/corex")
+        bin_path = j.builders.tools.joinpaths(self.DIR_BUILD, "corex/build/corex")
         self._copy(bin_path, "{DIR_BIN}")
 
     @builder_method()
@@ -78,7 +78,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox(reset=reset)
 
         bins = ["corex"]
         for bin_name in bins:

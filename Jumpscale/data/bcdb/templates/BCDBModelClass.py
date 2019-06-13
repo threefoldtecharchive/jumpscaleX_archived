@@ -5,7 +5,7 @@ SCHEMA="""
 {{schema_text}}
 """
 
-bcdb = j.data.bcdb.latest
+bcdb = j.data.bcdb.bcdb_instances["{{bcdb.name}}"]
 schema = j.data.schema.get_from_text(SCHEMA)
 
 Index_CLASS = bcdb._BCDBModelIndexClass_generate(schema,__file__)

@@ -27,6 +27,16 @@ class BuilderPostgresql(j.builders.system._BaseClass):
 
     @builder_method()
     def install(self, port=5432):
+        """
+        kosmos 'j.builders.db.postgres.install()'
+
+        :param port:
+        :return:
+        """
+        """
+        :param port: 
+        :return: 
+        """
         cmd = self._replace(
             """
             cd {DOWNLOAD_DIR}/postgresql-9.6.13
