@@ -11,12 +11,13 @@ class EtcdFactory(JSConfigs):
     _CHILDCLASS = EtcdClient
 
     def test(self):
-        """
 
-        :return:
-        """
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
+            j.builders.db.etcd.start()
 
-        # check is ubuntu 1804
-        # build etcd
-        # start etcd
-        # make client connection to it
+            cl = j.clients.etcd.test_client
+            cl.save()
+            cl.put("test_key", "test_value")
+            assert cl.get("test_key") == "test_value"
+            j.builders.db.etcd.stop()
+            print("TEST OK")
