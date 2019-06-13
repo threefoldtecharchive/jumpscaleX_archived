@@ -57,7 +57,7 @@ class executor_method(object):
             reset = kwargs.get("reset", False)
 
             if self.already_done(func, installer, done_key, reset):
-                return installer.executore.state_get("installer_%s" % done_key)
+                return installer.executor.state_get("installer_%s" % done_key)
 
             if name is not "base":
                 installer.base()

@@ -107,6 +107,7 @@ class Types(j.application.JSBaseClass):
         type is one of following
 
         - s, str, string
+        - bytes
         - i, int, integer
         - f, float
         - b, bool,boolean

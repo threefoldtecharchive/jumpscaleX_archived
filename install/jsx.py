@@ -164,7 +164,7 @@ def _configure(
         )
         sys.exit(1)
 
-    if j:
+    if j and privatekey_words:
         j.data.nacl.configure(privkey_words=privatekey_words)
 
 

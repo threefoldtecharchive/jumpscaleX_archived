@@ -37,21 +37,21 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
         # TODO: then connect to the just created docker and do some more tests
 
-        addr = "104.248.87.200"
-        port = 22
+        # addr = "104.248.87.200"
+        # port = 22
+        #
+        # # make sure we enforce pssh
+        # cl = j.clients.ssh.get(name="remote1", addr=addr, port=port, client_type="pssh")
 
-        # make sure we enforce pssh
-        cl = j.clients.ssh.get(name="remote1", addr=addr, port=port, client_type="pssh")
+        cl = j.clients.digitalocean.get_testvm_sshclient(delete=False)
+
         ex = cl.executor
-
-        # cl.reset()
-        ex.installer.jumpscale()
 
         cl.reset()
         assert ex.state == {}
         assert cl._connected == None
-        assert ex.env_on_system_toml == ""
-        assert ex.config_toml == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         rc, out, err = ex.execute("ls /")
         assert rc == 0
@@ -121,7 +121,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         cl.reset()
         assert ex.state == {}
         assert cl._connected == None
-        assert ex.env_on_system_toml == ""
-        assert ex.config_toml == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         self._log_info("TEST FOR SSHCLIENT IS OK")

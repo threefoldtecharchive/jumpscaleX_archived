@@ -1,8 +1,6 @@
 from Jumpscale import j
-import pytoml
 
 import base64
-import os
 from .ExecutorInstallers import ExecutorInstallers
 
 JSBASE = j.application.JSBaseClass
@@ -19,7 +17,7 @@ class ExecutorBase(j.application.JSBaseClass):
         self.readonly = False
         self.CURDIR = ""
 
-        self._state = None
+        # self._state = None
 
         JSBASE.__init__(self)
 
@@ -30,10 +28,9 @@ class ExecutorBase(j.application.JSBaseClass):
         self._init3()
 
     def reset(self):
-        raise RuntimeError()
         self.state_reset()
-        self.env_on_system_toml = ""
-        self.config_toml = ""
+        self.env_on_system_msgpack = ""
+        self.config_msgpack = ""
         self.save()
         self._init3()
 
@@ -41,8 +38,8 @@ class ExecutorBase(j.application.JSBaseClass):
 
         self._env_on_system = None
 
-        if self.config_toml != "":
-            self.config = j.data.serializers.toml.loads(self.config_toml)
+        if self.config_msgpack != b"":
+            self.config = j.data.serializers.msgpack.loads(self.config_msgpack)
         else:
             self.config = {}
 
@@ -56,8 +53,9 @@ class ExecutorBase(j.application.JSBaseClass):
         """
         pass
 
-    def save_config(self):
-        raise RuntimeError()
+    @property
+    def data(self):
+        return self.sshclient.data
 
     def delete(self, path):
         path = self._replace(path)
@@ -275,47 +273,47 @@ class ExecutorBase(j.application.JSBaseClass):
                 self._isSandbox = False
         return self._isSandbox
 
-    def enableDebug(self):
+    def debug_enable(self):
         self.state.configSetInDictBool("system", "debug", True)
         self.state.configSave()
         self._cache.reset()
 
-    def _initEnv(self):
-        """
-        init the environment of an executor
-        """
-
-        self._env = self.env_on_system["env"]
-
-        self.env_on_system
-
-        print("INITENV")  # TMP
-        self.reset()
-        j.shell()
-        w
-
-        self.config["system"]["container"] = self.env_on_system["iscontainer"]
-
-        if self.isBuildEnv:
-            # ONLY RELEVANT FOR BUILDING PYTHON, needs to check what needs to be done (kristof) #TODO:
-            j.shell()
-
-        else:
-            out = ""
-            for key, val in self.dir_paths.items():
-                out += "mkdir -p %s\n" % val
-            self.execute(out, sudo=True, showout=False)
-
-        self._cache.reset()
-
-        self.config["system"]["executor"] = True
-        self.config["DIRS"]["HOMEDIR"] = self.env_on_system["HOME"]
-        self.state.configSave()
-
-        if "cfg_state" in self.env_on_system:
-            self.state._state = self.env_on_system["cfg_state"]
-
-        self._log_debug("initenv done on executor base")
+    # def _initEnv(self):
+    #     """
+    #     init the environment of an executor
+    #     """
+    #
+    #     self._env = self.env_on_system["env"]
+    #
+    #     self.env_on_system
+    #
+    #     print("INITENV")  # TMP
+    #     self.reset()
+    #     j.shell()
+    #     w
+    #
+    #     self.config["system"]["container"] = self.env_on_system["iscontainer"]
+    #
+    #     if self.isBuildEnv:
+    #         # ONLY RELEVANT FOR BUILDING PYTHON, needs to check what needs to be done (kristof) #TODO:
+    #         j.shell()
+    #
+    #     else:
+    #         out = ""
+    #         for key, val in self.dir_paths.items():
+    #             out += "mkdir -p %s\n" % val
+    #         self.execute(out, sudo=True, showout=False)
+    #
+    #     self._cache.reset()
+    #
+    #     self.config["system"]["executor"] = True
+    #     self.config["DIRS"]["HOMEDIR"] = self.env_on_system["HOME"]
+    #     self.state.configSave()
+    #
+    #     if "cfg_state" in self.env_on_system:
+    #         self.state._state = self.env_on_system["cfg_state"]
+    #
+    #     self._log_debug("initenv done on executor base")
 
     @property
     def cache(self):
@@ -352,9 +350,9 @@ class ExecutorBase(j.application.JSBaseClass):
     @property
     def env_on_system(self):
         if not self._env_on_system:
-            if self.env_on_system_toml == "":
+            if self.env_on_system_msgpack == b"":
                 self.systemenv_load()
-            self._env_on_system = j.data.serializers.toml.loads(self.env_on_system_toml)
+            self._env_on_system = j.data.serializers.msgpack.loads(self.env_on_system_msgpack)
         return self._env_on_system
 
     @property
@@ -375,7 +373,7 @@ class ExecutorBase(j.application.JSBaseClass):
         key = j.core.text.strip_to_ascii_dense(key)
         if key not in self.state or self.state[key] != val:
             self.state[key] = val
-            self.config_save(onsystem=False)
+            self.save()
 
     def state_get(self, key, default_val=None):
         key = j.core.text.strip_to_ascii_dense(key)
@@ -428,7 +426,7 @@ class ExecutorBase(j.application.JSBaseClass):
         # 
 
         echo "CFG_JUMPSCALE = --TEXT--"
-        cat /sandbox/cfg/jumpscale_config.toml 2>/dev/null || echo ""
+        cat /sandbox/cfg/jumpscale_config.msgpack 2>/dev/null || echo ""
         echo --TEXT--
 
         echo "BASHPROFILE = --TEXT--"
@@ -508,7 +506,7 @@ class ExecutorBase(j.application.JSBaseClass):
         get_cfg("DIR_CODE", "/sandbox/code")
         get_cfg("DIR_BIN", "/usr/local/bin")
 
-        self.env_on_system_toml = j.data.serializers.toml.dumps(res)
+        self.env_on_system_msgpack = j.data.serializers.msgpack.dumps(res)
         self.save()
 
     #
@@ -664,8 +662,8 @@ class ExecutorBase(j.application.JSBaseClass):
         ex.reset()
 
         assert ex.state == {}
-        assert ex.env_on_system_toml == ""
-        assert ex.config_toml == ""
+        assert ex.env_on_system_msgpack == ""
+        assert ex.config_msgpack == ""
 
         rc, out, err = ex.execute("ls /")
         assert rc == 0
@@ -733,8 +731,8 @@ class ExecutorBase(j.application.JSBaseClass):
 
         ex.reset()
         assert ex.state == {}
-        assert ex.env_on_system_toml == ""
-        assert ex.config_toml == ""
+        assert ex.env_on_system_msgpack == ""
+        assert ex.config_msgpack == ""
 
         # test that it does not do repeating thing & cache works
         for i in range(1000):

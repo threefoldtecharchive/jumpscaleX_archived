@@ -4,12 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 from .ExecutorBase import ExecutorBase
 
-import subprocess
-import os
-import pytoml
-import socket
-import sys
-
 
 class ExecutorLocal(ExecutorBase):
 
@@ -19,42 +13,42 @@ class ExecutorLocal(ExecutorBase):
         self._cache_expiration = 3600
         self.type = "local"
         self._id = "localhost"
-        self._config_toml_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_config.toml")
-        self._env_on_system_toml_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_system.toml")
+        self._config_msgpack_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_config.msgpack")
+        self._env_on_system_msgpack_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_system.msgpack")
 
     @property
-    def config_toml(self):
-        path = self._config_toml_path
+    def config_msgpack(self):
+        path = self._config_msgpack_path
         if not j.sal.fs.exists(path):
             return ""
         else:
             return j.sal.fs.readFile(path)
 
-    @config_toml.setter
-    def config_toml(self, value):
-        path = self._config_toml_path
+    @config_msgpack.setter
+    def config_msgpack(self, value):
+        path = self._config_msgpack_path
         j.sal.fs.writeFile(path, value)
 
     def config_save(self, onsystem=True):
-        data = j.data.serializers.toml.dumps(self.config)
-        if j.data.hash.md5_string(self.config_toml) != j.data.hash.md5_string(data):
+        data = j.data.serializers.msgpack.dumps(self.config)
+        if j.data.hash.md5_string(self.config_msgpack) != j.data.hash.md5_string(data):
             # now we know the configuration has been changed
             self._log_debug("config save on: %s" % self)
-            self.config_toml = data
+            self.config_msgpack = data
             self.save()
             j.shell()
 
     @property
-    def env_on_system_toml(self):
-        path = self._env_on_system_toml_path
+    def env_on_system_msgpack(self):
+        path = self._env_on_system_msgpack_path
         if not j.sal.fs.exists(path):
             return ""
         else:
             return j.sal.fs.readFile(path)
 
-    @env_on_system_toml.setter
-    def env_on_system_toml(self, value):
-        path = self._env_on_system_toml_path
+    @env_on_system_msgpack.setter
+    def env_on_system_msgpack(self, value):
+        path = self._env_on_system_msgpack_path
         j.sal.fs.writeFile(path, value)
 
     def exists(self, path):
@@ -207,5 +201,5 @@ class ExecutorLocal(ExecutorBase):
     #
     #     res["HOME"] = j.core.myenv.config["DIR_HOME"]
     #
-    #     self.env_on_system_toml = j.data.serializers.toml.dumps(res)
+    #     self.env_on_system_msgpack = j.data.serializers.msgpack.dumps(res)
     #     self.save()

@@ -27,8 +27,8 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         allow_agent = True (B)
         client_type = "paramiko,pssh" (E)
         timeout = 30
-        config_toml = ""        #is the configuration file in /root/.jsxssh.toml and here, stores e.g. the state
-        env_on_system_toml = ""    #is state on the system in toml format
+        config_msgpack = "" (bytes)       #is the configuration file in /root/.jsxssh.toml and here, stores e.g. the state
+        env_on_system_msgpack = "" (bytes)   #is state on the system in toml format
         """
 
     def _init(self):
@@ -40,8 +40,18 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self._init3()
 
     def reset(self):
+
         if self._client_:
-            self._client_.disconnect()
+            # disconnect 2 possible ways on sshclient
+            try:
+                self._client_.disconnect()
+            except:
+                pass
+            try:
+                self._client.close()
+            except:
+                pass
+
         self.executor.reset()
         self.save()
         self._init3()
@@ -403,14 +413,6 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         # j.sal.fs.remove(path)
         # self.sftp.unlink(path2)
         return rc, out, err
-
-    def config_save(self, onsystem=False):
-        self.save()
-        if onsystem:
-            self.config_save_on_system()
-
-    def config_save_on_system(self):
-        self.file_write("/root/.jsxssh.toml", self.executor.config_toml)
 
     def __repr__(self):
         return "SSHCLIENT ssh: %s (%s)" % (self.addr, self.port)

@@ -19,6 +19,25 @@ class PacketNetFactory(JSConfigBaseFactory):
     #         j.builders.runtimes.python.pip_package_install("python-digitalocean")
     #         import digitalocean
 
+    def get_testvm_sshclient(self, delete=False):
+        """
+        do:
+        kosmos 'j.clients.digitalocean.get_testvm_sshclient()'
+        """
+        if not self.main.token_:
+            token = j.tools.console.askString("digital ocean token")
+            self.main.token_ = token
+            self.main.save()
+        c = self.get(name="main")
+        if j.clients.ssh.exists("do_test"):
+            sshclient = j.clients.ssh.get("do_test")
+            rc, out, err = sshclient.execute("ls /", showout=False, die=False)
+            if rc > 0:
+                droplet, sshclient = c.droplet_create(delete=delete)
+        else:
+            droplet, sshclient = c.droplet_create(delete=delete)
+        return sshclient
+
     def test(self):
         """
         do:

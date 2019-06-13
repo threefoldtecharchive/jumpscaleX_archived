@@ -30,27 +30,46 @@ class ExecutorSSH(ExecutorBase):
     #     return rc, out, err
 
     @property
-    def config_toml(self):
-        return self.sshclient.config_toml
+    def config_msgpack(self):
+        return self.sshclient.config_msgpack
 
-    @config_toml.setter
-    def config_toml(self, value):
-        self.sshclient.config_toml = value
+    @config_msgpack.setter
+    def config_msgpack(self, value):
+        if value != self.sshclient.config_msgpack:
+            self.sshclient.config_msgpack = value
+            self._log_info("save config msgpack for:%s" % self)
+            self.sshclient.save()
 
     @property
-    def env_on_system_toml(self):
-        return self.sshclient.env_on_system_toml
+    def env_on_system_msgpack(self):
+        return self.sshclient.env_on_system_msgpack
 
-    @env_on_system_toml.setter
-    def env_on_system_toml(self, value):
-        self.sshclient.env_on_system_toml = value
-
-    def config_save(self, **kwargs):
-        self.sshclient.config_save(**kwargs)
+    @env_on_system_msgpack.setter
+    def env_on_system_msgpack(self, value):
+        if value != self.sshclient.env_on_system_msgpack:
+            self.sshclient.env_on_system_msgpack = value
+            self._log_info("save system msgpack for:%s" % self)
+            self.sshclient.save()
 
     def save(self):
-        self.sshclient.save()
-        j.shell()
+        """
+        only relevant for ssh
+        :return:
+        """
+        # fill save automatically
+        self.config_msgpack = j.data.serializers.msgpack.dumps(self.config)
+
+    # def config_save(self, **kwargs):
+    #     self.sshclient.config_save(**kwargs)
+
+    # def save(self, onsystem=False):
+    #     self.sshclient.save()
+    # if onsystem:
+    #     self.config_save_on_system()
+
+    # def config_save_on_system(self):
+    #     self.sshclientfile_write("/root/.jsxssh.msgpack", self.executor.config_msgpack)
+    #     self.sshclient.save()
 
     def __repr__(self):
         return "Executor ssh: %s (%s)" % (self.sshclient.addr, self.sshclient.port)
