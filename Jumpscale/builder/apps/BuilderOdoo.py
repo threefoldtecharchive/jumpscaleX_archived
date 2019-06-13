@@ -37,8 +37,8 @@ class BuilderOdoo(j.builders.system._BaseClass):
             """
             id -u odoouser &>/dev/null || (useradd odoouser --home {APP_DIR} --no-create-home --shell /bin/bash
             sudo su - postgres -c "/sandbox/bin/createuser -s odoouser") || true
-            chown -R odoouser:odoouser {APP_DIR}
             mkdir -p {APP_DIR}/data
+            chown -R odoouser:odoouser {APP_DIR}
             sudo -H -u odoouser /sandbox/bin/initdb -D {APP_DIR}/data || true
         """
         )
