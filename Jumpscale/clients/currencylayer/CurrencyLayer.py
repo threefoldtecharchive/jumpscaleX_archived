@@ -5,7 +5,11 @@ from Jumpscale import j
 
 class CurrencyLayerFactory(j.application.JSBaseConfigClass):
     """
+    Currencylayer provides a JSON-based REST API, 
+    delivering currency exchange rates for 168 world currencies and precious metals.
     get key from https://currencylayer.com/quickstart
+    The exchange rate are used when we change currencies inside a schema for instance
+    default exchange rate are stored in the data.toml file and is used in fake mode
     """
 
     __jslocation__ = "j.clients.currencylayer"
