@@ -60,7 +60,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
 
         return {"X-KEY": self.key_, "X-SIGN": sign, "X-NONCE": str(int(time() * 1000))}
 
-    def _process_list(self):
+    def process_list(self):
         res = self._query("processes")
         return res["processes"]
 
@@ -98,8 +98,9 @@ class CoreXClient(j.application.JSBaseConfigClass):
         """
         try and find the process in local DB, if not found then will create one based on what it can find on server
         :param name: is required
-        :param id: if of process in corex
+        :param id: if of process in the data list
         :param pid: process id
+        :param corex_id: if of process in corex
         :param die, if False then will create an object if not found
         :param refresh, if refresh then will get the state from the corex server
         :return: CoreXProcess JSX object

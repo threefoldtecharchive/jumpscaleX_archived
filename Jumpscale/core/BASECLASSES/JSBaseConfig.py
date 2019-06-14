@@ -37,7 +37,8 @@ class JSBaseConfig(JSBaseDataObj):
     def delete(self):
         self._model.delete(self.data)
         if self._parent:
-            self._parent._children.pop(self.data.name)
+            if self.data.name in self._parent._children:
+                del self._parent._children[self.data.name]
 
     def save(self):
         self.data.save()
