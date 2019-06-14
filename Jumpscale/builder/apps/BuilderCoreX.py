@@ -25,7 +25,9 @@ class BuilderCoreX(j.builders.system._BaseClass):
         cd {DIR_BUILD}
         rm -rf libwebsockets
         git clone -b v2.4.2 %s
-        cd {DIR_BUILD}/libwebsockets && mkdir build && cd build
+        cd {DIR_BUILD}/libwebsockets
+        mkdir build
+        cd build
         cmake .. -DLWS_UNIX_SOCK=ON -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITH_STATIC=OFF
         make -j 4 && make install
         """
@@ -45,8 +47,10 @@ class BuilderCoreX(j.builders.system._BaseClass):
         rm -rf corex/
         git clone %s --branch staging
         cd {DIR_BUILD}/corex
-        mkdir build && cd build
-        cmake .. && make
+        mkdir build
+        cd build
+        cmake ..
+        make
         ldconfig
         """
         self._execute(C % self.git_url)
