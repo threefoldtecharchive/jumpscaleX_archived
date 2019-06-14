@@ -130,6 +130,8 @@ class SSHKey(j.application.JSBaseConfigClass):
         return the key only with no type e.g.ssh-rsa or email/username
         :return:
         """
+        if not self.pubkey:
+            raise RuntimeError("pubkey is None")
         r = self.pubkey.split(" ")
         if len(r) == 2:
             return r[1]

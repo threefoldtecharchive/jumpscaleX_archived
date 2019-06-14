@@ -129,7 +129,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         :param sshkey:
         :param region:
         :param image:
-        :param size_slug: s-1vcpu-2gb,
+        :param size_slug: s-1vcpu-2gb,s-6vcpu-16gb,gd-8vcpu-32gb
         :param delete:
         :param mosh: when mosh will be used to improve ssh experience
         :return: droplet,sshclient

@@ -27,8 +27,8 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         allow_agent = True (B)
         client_type = "paramiko,pssh" (E)
         timeout = 30
-        config_msgpack = "" (bytes)       #is the configuration file in /root/.jsxssh.toml and here, stores e.g. the state
-        env_on_system_msgpack = "" (bytes)   #is state on the system in toml format
+        config_msgpack = "" (bytes)     
+        env_on_system_msgpack = "" (bytes)
         """
 
     def _init(self):

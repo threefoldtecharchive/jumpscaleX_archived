@@ -84,12 +84,12 @@ class JSBaseConfigs(JSBase):
                 else:
                     if not die:
                         return
-                    return self._error_input_raise(
+                    raise RuntimeError(
                         "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name)
                     )
 
             elif len(res) > 1:
-                return self._error_input_raise(
+                raise RuntimeError(
                     "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name)
                 )
             else:
@@ -101,12 +101,12 @@ class JSBaseConfigs(JSBase):
                 raise RuntimeError("kwargs need to be specified is name is not.")
             res = self.findData(**kwargs)
             if len(res) < 1:
-                return self._error_input_raise(
+                raise RuntimeError(
                     "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
                 )
 
             elif len(res) > 1:
-                return self._error_input_raise(
+                raise RuntimeError(
                     "Found more than 1 service for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
                 )
             else:

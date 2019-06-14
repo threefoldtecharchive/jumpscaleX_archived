@@ -50,11 +50,12 @@ class PacketNetFactory(JSConfigBaseFactory):
         c = self.get(name="main")
 
         self._log_info(c.digitalocean_sizes)
-        j.shell()
-        w
+
+        size = "s-6vcpu-16gb"
+        # size="s-1vcpu-2gb"
 
         client = c.client
-        droplet, sshclient = c.droplet_create(delete=True)
+        droplet, sshclient = c.droplet_create(delete=True, size_slug=size)
 
         e = sshclient.executor
 

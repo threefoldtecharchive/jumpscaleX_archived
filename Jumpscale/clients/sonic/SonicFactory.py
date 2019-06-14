@@ -31,6 +31,8 @@ class SonicFactory(JSConfigs):
         for articleid, content in data.items():
             client.push("forum", "posts", articleid, content)
         assert client.query("forum", "posts", "love") == ["post:5", "post:4"]
+
+        # that doesnt seem to work, no idea what it is supposed to do
         # assert client.suggest("forum", "posts", "lo") == ["lorde", "love"]
 
         print("TEST OK")
