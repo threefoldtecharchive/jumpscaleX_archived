@@ -130,6 +130,7 @@ class JSBaseConfigs(JSBase):
         self._log_debug("reset all data")
         for item in self.find():
             item.delete()
+        self._children = {}
 
     def find(self, **kwargs):
         """

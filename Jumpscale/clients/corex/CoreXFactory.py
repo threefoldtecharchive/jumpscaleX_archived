@@ -21,6 +21,8 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
 
         def test(passw=False):
 
+            j.clients.corex.reset()
+
             if passw:
                 port = 8002
                 cmd = "/sandbox/bin/corex --port {} -c user:pass".format(port)
@@ -70,6 +72,8 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             r3.refresh()
             assert r3.state == "stopped"
 
-            j.shell()
+            cmd0.stop()
+            j.clients.corex.reset()
 
+        test(False)
         test(False)

@@ -581,7 +581,7 @@ class BCDB(j.application.JSBaseClass):
         if return_as_capnp:
             return bdata
         else:
-            obj = model.schebma.get(data=bdata)
+            obj = model.schema.get(data=bdata)
             obj.id = id
             obj.acl_id = acl_id
             obj._model = model

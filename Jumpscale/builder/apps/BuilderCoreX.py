@@ -130,8 +130,3 @@ class BuilderCoreX(j.builders.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", "corex")
         self._remove(bin_path)
         self.clean()
-
-    @builder_method()
-    def reset(self):
-        super().reset()
-        self.clean()
