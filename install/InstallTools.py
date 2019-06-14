@@ -3058,7 +3058,10 @@ class DockerContainer:
             self.dexec("rm -f /etc/service/sshd/down")
             if baseinstall:
                 print(" - Upgrade ubuntu")
-                self.dexec("apt update; apt upgrade -y; apt install mc git -y")
+                self.dexec("apt update")
+                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
+                print(" - Upgrade ubuntu ended") 
+                self.dexec("apt install mc git -y")
 
             Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
 
