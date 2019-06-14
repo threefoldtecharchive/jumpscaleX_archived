@@ -29,6 +29,12 @@ class CoreXProcess(j.application.JSBaseConfigClass):
             r = self.client._query("/process/stop", params={"id": self.corex_id})
         self.refresh()
 
+    def kill(self, signal=9):
+        self.refresh()
+        if not self.state in ["init", "stopped", "stopping"]:
+            r = self.client._query("/process/kill", params={"id": self.corex_id, "signal": signal})
+        self.refresh()
+
     @property
     def logs(self):
         r = self.client._query("/process/logs", params={"id": self.corex_id}, json=False)

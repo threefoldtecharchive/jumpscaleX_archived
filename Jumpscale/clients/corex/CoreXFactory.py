@@ -22,10 +22,10 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
         def test(passw=False):
 
             if passw:
-                port = 7681
+                port = 8002
                 cmd = "/sandbox/bin/corex --port {} -c user:pass".format(port)
             else:
-                port = 7682
+                port = 8002
                 cmd = "/sandbox/bin/corex --port {}".format(port)
 
             cmd0 = j.tools.startupcmd.get(name="corex_%s" % port, cmd=cmd, ports=[port])
@@ -60,22 +60,15 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             r.ui()
 
             # lets do the stop test
-            r2.stop()
-
-            assert r2.state == "stopping"  # IS ISSUE THERE SHOULD BE A HARDKILL !!!
+            r.kill()
+            r.refresh()
+            assert r.state == "stopped"
 
             r3 = cl.process_start("ls", "ls /")
             print(r3.logs)
             assert r3.state == "ok"
             r3.refresh()
             assert r3.state == "stopped"
-
-            r4 = cl.process_start("bash", "bash")
-            r4.refresh()
-            assert r4.state == "ok"
-            r4.stop()
-            r4.refresh()
-            assert r4.state == "stopping"
 
             j.shell()
 
