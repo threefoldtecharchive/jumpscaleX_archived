@@ -61,6 +61,10 @@ class BCDBFactory(j.application.JSBaseClass):
                 zdbclient = j.clients.zdb.client_get(**data)
                 bcdb = self.get(name, zdbclient)
                 bcdb.index_rebuild()
+            if data["type"] == "rdb":
+                zdbclient = j.clients.rdb.client_get(**data)
+                bcdb = self.get(name, zdbclient)
+                bcdb.index_rebuild()
             else:
                 bcdb = self.get(name)
                 bcdb.index_rebuild()
@@ -110,6 +114,8 @@ class BCDBFactory(j.application.JSBaseClass):
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
                 zdbclient = j.clients.zdb.client_get(**data)
+            if data["type"] == "rdb":
+                zdbclient = j.clients.rdb.client_get(**data)
             else:
                 zdbclient = None
         elif if_not_exist_die:
@@ -121,13 +127,18 @@ class BCDBFactory(j.application.JSBaseClass):
 
         if not name in self._config:
             if zdbclient:
-                data["nsname"] = zdbclient.nsname
-                data["admin"] = zdbclient.admin
-                data["addr"] = zdbclient.addr
-                data["port"] = zdbclient.port
-                data["mode"] = zdbclient.mode
-                data["secret"] = zdbclient.secret
-                data["type"] = "zdb"
+                if zdbclient.type == "RDB":
+                    data["nsname"] = zdbclient.nsname
+                    data["type"] = "rdb"
+                    data["redisconfig_name"] = zdbclient._redis.redisconfig_name
+                else:
+                    data["nsname"] = zdbclient.nsname
+                    data["admin"] = zdbclient.admin
+                    data["addr"] = zdbclient.addr
+                    data["port"] = zdbclient.port
+                    data["mode"] = zdbclient.mode
+                    data["secret"] = zdbclient.secret
+                    data["type"] = "zdb"
             else:
                 data["nsname"] = name
                 data["type"] = "sqlite"
@@ -235,28 +246,30 @@ class BCDBFactory(j.application.JSBaseClass):
             self._code_generation_dir = path
         return self._code_generation_dir
 
-    def _load_test_model(self, reset=True, sqlitestor=False):
+    def _load_test_model(self, reset=True, sqlitestor=False, rdbstor=False, schema=None):
 
-        schema = """
-        @url = despiegk.test
-        llist2 = "" (LS)
-        name** = ""
-        email** = ""
-        nr** = 0
-        date_start** = 0 (D)
-        description = ""
-        token_price** = "10 USD" (N)
-        hw_cost = 0.0 #this is a comment
-        llist = []
-        llist3 = "1,2,3" (LF)
-        llist4 = "1,2,3" (L)
-        llist5 = "1,2,3" (LI)
-        U = 0.0
-        pool_type = "managed,unmanaged" (E)
-        """
-        if self.latest != None:
-            self.latest.stop()
-        if sqlitestor:
+        if not schema:
+            schema = """
+            @url = despiegk.test
+            llist2 = "" (LS)
+            name** = ""
+            email** = ""
+            nr** = 0
+            date_start** = 0 (D)
+            description = ""
+            token_price** = "10 USD" (N)
+            hw_cost = 0.0 #this is a comment
+            llist = []
+            llist3 = "1,2,3" (LF)
+            llist4 = "1,2,3" (L)
+            llist5 = "1,2,3" (LI)
+            U = 0.0
+            pool_type = "managed,unmanaged" (E)
+            """
+        if rdbstor:
+            zdbclient = j.clients.rdb.client_get()  # will be to core redis
+            bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
+        elif sqlitestor:
             bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
             bcdb2 = j.data.bcdb.bcdb_instances["test"]
             assert bcdb2.zdbclient == None
@@ -264,7 +277,11 @@ class BCDBFactory(j.application.JSBaseClass):
                 bcdb.reset()  # empty
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
-            zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
+            assert zdbclient_admin.ping()
+            secret = "1234"
+            zdbclient = zdbclient_admin.namespace_new("test", secret=secret)
+            assert zdbclient.nsinfo["public"] == "no"
+            assert zdbclient.ping()
             bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
 
         schemaobj = j.data.schema.get_from_text(schema)
@@ -284,15 +301,6 @@ class BCDBFactory(j.application.JSBaseClass):
 
 
         """
-
-        cla = j.servers.zdb.start_test_instance(destroydata=True, namespaces=["test"])
-        cl = cla.namespace_get("test", "1234")
-        assert cla.ping()
-        assert cl.ping()
-
-        bcdb = j.data.bcdb.new("test", zdbclient=cl)
-
-        bcdb.reset()
 
         self._test_run(name=name)
 

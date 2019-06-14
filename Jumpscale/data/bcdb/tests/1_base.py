@@ -9,119 +9,181 @@ def main(self):
 
     """
 
-    def load():
+    def test(name):
+        if name == "RDB":
+            sqlitestor = False
+            rdbstor = True
+        elif name == "ZDB":
+            sqlitestor = False
+            rdbstor = False
+        elif name == "SQLITE":
+            sqlitestor = True
+            rdbstor = False
+        else:
+            raise RuntimeError("not supported type")
 
-        # don't forget the record 0 is always a systems record
+        def load():
 
-        db, model = self._load_test_model()
+            # don't forget the record 0 is always a systems record
 
-        assert model.zdbclient.nsinfo["entries"] == 1
+            if not rdbstor:
+                schema = """
+                @url = despiegk.test
+                llist2 = "" (LS)
+                name** = ""
+                email** = ""
+                nr** = 0
+                date_start** = 0 (D)
+                description = ""
+                token_price** = "10 USD" (N)
+                hw_cost = 0.0 #this is a comment
+                llist = []
+                llist3 = "1,2,3" (LF)
+                llist4 = "1,2,3" (L)
+                llist5 = "1,2,3" (LI)
+                U = 0.0
+                pool_type = "managed,unmanaged" (E)
+                """
+            else:
+                schema = """
+                @url = despiegk.test
+                llist2 = "" (LS)
+                name* = ""
+                email* = ""
+                nr* = 0
+                date_start* = 0 (D)
+                description = ""
+                token_price* = "10 USD" (N)
+                hw_cost = 0.0 #this is a comment
+                llist = []
+                llist3 = "1,2,3" (LF)
+                llist4 = "1,2,3" (L)
+                llist5 = "1,2,3" (LI)
+                U = 0.0
+                pool_type = "managed,unmanaged" (E)
+                """
 
-        for i in range(10):
-            model_obj = model.new()
-            model_obj.llist.append(1)
-            model_obj.llist2.append("yes")
-            model_obj.llist2.append("no")
-            model_obj.llist3.append(1.2)
-            model_obj.date_start = j.data.time.epoch
-            model_obj.U = 1.1
-            model_obj.nr = i
-            model_obj.token_price = "10 EUR"
-            model_obj.description = "something"
-            model_obj.name = "name%s" % i
-            model_obj.email = "info%s@something.com" % i
-            model_obj2 = model._set(model_obj)
+            db, model = self._load_test_model(sqlitestor=sqlitestor, rdbstor=rdbstor, reset=True, schema=schema)
 
-        model_obj3 = model.get(model_obj2.id)
+            if not sqlitestor and not rdbstor:
+                print(model.zdbclient.nsinfo["entries"])
+                assert model.zdbclient.nsinfo["entries"] == 1
+            else:
+                assert len(model.get_all()) == 0
 
-        assert model_obj3.id == model_obj2.id
+            for i in range(10):
+                model_obj = model.new()
+                model_obj.llist.append(1)
+                model_obj.llist2.append("yes")
+                model_obj.llist2.append("no")
+                model_obj.llist3.append(1.2)
+                model_obj.date_start = j.data.time.epoch
+                model_obj.U = 1.1
+                model_obj.nr = i
+                model_obj.token_price = "10 EUR"
+                model_obj.description = "something"
+                model_obj.name = "name%s" % i
+                model_obj.email = "info%s@something.com" % i
+                model_obj2 = model._set(model_obj)
 
-        assert model_obj3._ddict == model_obj2._ddict
-        assert model_obj3._ddict == model_obj._ddict
+            assert len(model.get_all()) == 10
 
-        return db
+            model_obj3 = model.get(model_obj2.id)
 
-    db = load()
-    db_model = db.model_get_from_url(url="despiegk.test")
-    query = db_model.index.select()
-    qres = [(item.name, item.nr) for item in query]
+            assert model_obj3.id == model_obj2.id
 
-    assert qres == [
-        ("name0", 0),
-        ("name1", 1),
-        ("name2", 2),
-        ("name3", 3),
-        ("name4", 4),
-        ("name5", 5),
-        ("name6", 6),
-        ("name7", 7),
-        ("name8", 8),
-        ("name9", 9),
-    ]
+            assert model_obj3._ddict == model_obj2._ddict
+            assert model_obj3._ddict == model_obj._ddict
 
-    assert db_model.index.select().where(db_model.index.nr == 5)[0].name == "name5"
+            return db
 
-    query = db_model.index.select().where(db_model.index.nr > 5)  # should return 4 records
-    qres = [(item.name, item.nr) for item in query]
+        db = load()
+        db_model = db.model_get_from_url(url="despiegk.test")
 
-    assert len(qres) == 4
+        if not rdbstor:
+            query = db_model.index.select()
+            qres = [(item.name, item.nr) for item in query]
 
-    res = db_model.index.select().where(db_model.index.name == "name2")
-    assert len(res) == 1
-    assert res.first().name == "name2"
+            assert qres == [
+                ("name0", 0),
+                ("name1", 1),
+                ("name2", 2),
+                ("name3", 3),
+                ("name4", 4),
+                ("name5", 5),
+                ("name6", 6),
+                ("name7", 7),
+                ("name8", 8),
+                ("name9", 9),
+            ]
 
-    res = db_model.index.select().where(db_model.index.email == "info2@something.com")
-    assert len(res) == 1
-    assert res.first().name == "name2"
+            assert db_model.index.select().where(db_model.index.nr == 5)[0].name == "name5"
 
-    model_obj = db_model.get(res.first().id)
+            query = db_model.index.select().where(db_model.index.nr > 5)  # should return 4 records
+            qres = [(item.name, item.nr) for item in query]
 
-    model_obj.name = "name2"
+            assert len(qres) == 4
 
-    # because data did not change, was already that data
+            res = db_model.index.select().where(db_model.index.name == "name2")
+            assert len(res) == 1
+            assert res.first().name == "name2"
 
-    assert model_obj._changed_items == {}
-    model_obj.name = "name3"
-    assert model_obj._changed_items == {"name": "name3"}  # now it really changed
+            res = db_model.index.select().where(db_model.index.email == "info2@something.com")
+            assert len(res) == 1
+            assert res.first().name == "name2"
 
-    assert model_obj._ddict["name"] == "name3"
+            first_id = res.first().id
 
-    model_obj.token_price = "10 USD"
-    assert model_obj.token_price_usd == 10
-    db_model._set(model_obj)
-    model_obj2 = db_model.get(model_obj.id)
-    assert model_obj2.token_price_usd == 10
+        model_obj = db_model.get(3)
+        n2 = model_obj.name + ""
+        model_obj.name = n2
 
-    assert db_model.index.select().where(db_model.index.id == model_obj.id).first().token_price == 10
+        # because data did not change, was already that data
 
-    def do(id, obj, result):
-        result[obj.nr] = obj.name
-        return result
+        assert model_obj._changed_items == {}
+        model_obj.name = "name3"
+        assert model_obj._changed_items == {"name": "name3"}  # now it really changed
 
-    result = {}
-    for obj in db_model.iterate():
-        result[obj.nr] = obj.name
+        assert model_obj._ddict["name"] == "name3"
 
-    print(result)
-    assert result == {
-        0: "name0",
-        1: "name1",
-        2: "name3",
-        3: "name3",
-        4: "name4",
-        5: "name5",
-        6: "name6",
-        7: "name7",
-        8: "name8",
-        9: "name9",
-    }
+        model_obj.token_price = "10 USD"
+        assert model_obj.token_price_usd == 10
+        db_model._set(model_obj)
+        model_obj2 = db_model.get(model_obj.id)
+        assert model_obj2.token_price_usd == 10
 
-    result = {}
-    # for obj in db_model.find(key='nr', key_start=7, reverse=False):
-    #     result[obj.nr] = obj.name
+        if not rdbstor:
+            assert db_model.index.select().where(db_model.index.id == model_obj.id).first().token_price == 10
+        else:
+            o = db_model.get_by_name("name1")[0]
+            o.name == "name1"
 
-    # assert result == {7: 'name7', 8: 'name8', 9: 'name9'} # TODO illogical test case
+        def do(id, obj, result):
+            result[obj.nr] = obj.name
+            return result
 
-    self._log_info("TEST DONE")
+        result = {}
+        for obj in db_model.iterate():
+            result[obj.nr] = obj.name
+
+        print(result)
+        assert result == {
+            0: "name0",
+            1: "name1",
+            2: "name3",
+            3: "name3",
+            4: "name4",
+            5: "name5",
+            6: "name6",
+            7: "name7",
+            8: "name8",
+            9: "name9",
+        }
+
+        self._log_info("TEST DONE: %s" % name)
+
+    test("RDB")
+    test("ZDB")
+    test("SQLITE")
 
     return "OK"

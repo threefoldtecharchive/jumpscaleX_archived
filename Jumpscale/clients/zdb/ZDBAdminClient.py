@@ -34,7 +34,7 @@ class ZDBAdminClient(ZDBClientBase):
         res = self.redis.execute_command("NSLIST")
         return [i.decode() for i in res]
 
-    def namespace_new(self, name, secret="", maxsize=0, die=False):
+    def namespace_new(self, name, secret=None, maxsize=0, die=False):
         """
         check namespace exists & will return zdb client to that namespace
 
@@ -45,15 +45,14 @@ class ZDBAdminClient(ZDBClientBase):
         :return:
         """
         self._log_debug("namespace_new:%s" % name)
-        if self.namespace_exists(name):
-            self._log_debug("namespace exists")
+        if not self.namespace_exists(name):
+            self._log_debug("namespace does not exists")
+            self.redis.execute_command("NSNEW", name)
+        else:
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
-            # now return std client
-            return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
-        self.redis.execute_command("NSNEW", name)
-        if secret is not "":
+        if secret:
             self._log_debug("set secret")
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
@@ -67,6 +66,7 @@ class ZDBAdminClient(ZDBClientBase):
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         assert ns.ping()
+        assert ns.nsinfo["public"] == "no"
 
         return ns
 

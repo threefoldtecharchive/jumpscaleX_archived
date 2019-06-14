@@ -6,20 +6,20 @@ def main(self):
     """
     to run:
     
-    kosmos 'j.clients.zdb.test(name="base",start=True)'
+    kosmos 'j.clients.rdb.test()'
 
     """
 
-    cl = self.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
+    cl = self.client_get()
     cl.flush()
-    nr = cl.nsinfo["entries"]
-    assert nr == 0
+    assert cl.count == 0
+    assert len(cl.list()) == 0
 
     id = cl.set(b"INIT")
     assert id == 0
     assert cl.get(0) == b"INIT"
 
-    nr = cl.nsinfo["entries"]
+    nr = cl.count
     assert nr == 1
     # do test to see that we can compare
     id = cl.set(b"r")
@@ -32,7 +32,7 @@ def main(self):
     assert cl.set(b"r", key=id) is None
     assert cl.set(b"rss", key=id) == 1  # changed the data, returns id 1
 
-    nr = cl.nsinfo["entries"]
+    nr = cl.count
     assert nr == 3  # nr of real data inside
 
     # test the list function
@@ -74,35 +74,14 @@ def main(self):
     self._log_debug("count:%s" % cl.count)
 
     nsname = "newnamespace"
-
-    c = self.client_admin_get(port=9901)
-    c.namespace_new(nsname, secret="1234", maxsize=1000)
-    ns = self.client_get(nsname, secret="1234", port=9901)
+    ns = self.client_get(nsname)
     ns.flush()
-
-    assert ns.nsinfo["data_limits_bytes"] == 1000
-    assert ns.nsinfo["data_size_bytes"] == 0
-    assert ns.nsinfo["data_size_mb"] == 0.0
-    assert int(ns.nsinfo["entries"]) == 0
-    assert ns.nsinfo["index_size_bytes"] == 0
-    assert ns.nsinfo["index_size_kb"] == 0.0
-    assert ns.nsinfo["name"] == nsname
-    assert ns.nsinfo["password"] == "yes"
-    assert ns.nsinfo["public"] == "no"
-
-    assert ns.nsname == nsname
+    assert ns.nsinfo["entries"] == 0
 
     # both should be same
     id = ns.set(b"a")
     assert ns.get(id) == b"a"
     assert ns.nsinfo["entries"] == 1
-
-    try:
-        dumpdata(ns)
-    except Exception as e:
-        assert "No space left" in str(e)
-
-    c.namespace_new(nsname + "2", secret="1234")
 
     nritems = 1000
     j.tools.timer.start("zdb")
@@ -116,4 +95,8 @@ def main(self):
     assert res > 3000
 
     self._log_info("PERF TEST SEQ OK")
+
+    cl.flush()
+    ns.flush()
+
     return "OK"

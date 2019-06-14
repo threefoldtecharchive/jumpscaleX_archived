@@ -15,7 +15,14 @@ class RDBClient(j.application.JSBaseClass):
         self.nsname = nsname.lower().strip()
         self._logger_enable()
         self._hsetkey = "rdb:%s" % self.nsname
+        self._incrkey = "rdbmeta:incr:%s" % self.nsname
+        self._keysbinkey = "rdbmeta:keys:%s" % self.nsname
+        self._schemaskey = "rdbmeta:schemas:%s" % self.nsname
+
         assert self.ping()
+
+    def _incr(self):
+        return self._redis.incr(self._incrkey)
 
     def _key_encode(self, key):
         return key
@@ -23,17 +30,36 @@ class RDBClient(j.application.JSBaseClass):
     def _key_decode(self, key):
         return key
 
+    def _value_encode(self, val):
+        assert isinstance(val, bytes)
+        return j.data.time.epoch.to_bytes(4, "little", signed=False) + val
+
+    def _value_decode(self, val):
+        assert isinstance(val, bytes)
+        return val[4:]
+
     def set(self, data, key=None):
-        if not key:
+        data2 = self._value_encode(data)
+        if key in ["", None]:
             # need to increment
-            j.shell()
-            key = ""
-        return self._redis.execute_command("HSET", self._hsetkey, key, data)
+            key = self._incr()
+        else:
+            dataexisting = self.get(key)
+            # if data is same then need to return None
+            if dataexisting:
+                if dataexisting == data:
+                    return
+        self._redis.execute_command("HSET", self._hsetkey, key, data2)
+        return key
 
     def get(self, key):
         if not key or not isinstance(key, int):
-            raise ValueError("key must be provided, and must be an int")
-        return self._redis.execute_command("HGET", self._hsetkey, key)
+            key = j.data.types.int.clean(key)
+        data = self._redis.execute_command("HGET", self._hsetkey, key)
+        if not data:
+            return None
+        data = self._value_decode(data)
+        return data
 
     def exists(self, key):
         if not key or not isinstance(key, int):
@@ -46,28 +72,20 @@ class RDBClient(j.application.JSBaseClass):
         self._redis.execute_command("HDEL", self._hsetkey, key)
 
     def _flush(self):
-        j.shell()
+        self._redis.delete(self._hsetkey)
+        self._redis.delete(self._incrkey)
+        self._redis.delete(self._keysbinkey)
 
     def flush(self, meta=None):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
         """
-        if meta:
-            data = meta._data
-            self._flush()
-            # recreate the metadata table
-            meta.reset()
-            # copy the old data back
-            meta._data = data
-            # now make sure its back in the db
-            meta._save()
-        else:
-            self._flush()
+        self._flush()
 
     @property
     def nsinfo(self):
-        return {}
+        return {"entries": self.count}
 
     def list(self, key_start=None, reverse=False):
         """
@@ -84,7 +102,7 @@ class RDBClient(j.application.JSBaseClass):
         :rtype: [str]
         """
         result = []
-        for key, data in self.iterate(key_start=key_start, reverse=reverse, keyonly=True):
+        for key, data in self.iterate(key_start=key_start, reverse=reverse, keyonly=False):
             result.append(key)
         return result
 
@@ -104,38 +122,34 @@ class RDBClient(j.application.JSBaseClass):
         :raises e: [description]
         """
 
-        next = None
-        data = None
+        if key_start is None:
+            key_start = 0
+        else:
+            assert isinstance(key_start, int)
 
-        if key_start is not None:
-            next = self._redis.execute_command("KEYCUR", self._key_encode(key_start))
-            if not keyonly:
-                data = self.get(key_start)
-            yield (key_start, data)
+        stop = self._redis.get(self._incrkey)
+        if not stop:
+            stop = 0
+        else:
+            stop = int(stop)
 
-        CMD = "SCANX" if not reverse else "RSCAN"
-
-        while True:
-            try:
-                if not next:
-                    response = self._redis.execute_command(CMD)
-                else:
-                    response = self._redis.execute_command(CMD, next)
-                # format of the response
-                # see https://github.com/threefoldtech/0-db/tree/development#scan
-            except redis.ResponseError as e:
-                if e.args[0] == "No more data":
-                    return
-                raise e
-
-            (next, results) = response
-            for item in results:
-                keyb, size, epoch = item
-                key_new = self._key_decode(keyb)
-                data = None
-                if not keyonly:
-                    data = self._redis.execute_command("GET", keyb)
-                yield (key_new, data)
+        if reverse:
+            j.shell()
+            for i in range(key_start, stop):
+                data = self.get(i)
+                if data:
+                    if keyonly:
+                        yield i
+                    else:
+                        yield (i, data)
+        else:
+            for i in range(key_start, stop):
+                data = self.get(i)
+                if data:
+                    if keyonly:
+                        yield i
+                    else:
+                        yield (i, data)
 
     @property
     def count(self):
@@ -143,8 +157,7 @@ class RDBClient(j.application.JSBaseClass):
         :return: return the number of entries in the namespace
         :rtype: int
         """
-        j.shell()
-        return self.nsinfo["entries"]
+        return self._redis.hlen(self._hsetkey)
 
     def ping(self):
         """

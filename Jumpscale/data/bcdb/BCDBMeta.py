@@ -15,7 +15,10 @@ class BCDBMeta(j.application.JSBaseClass):
     def data(self):
         if self._data is None:
             if self._bcdb.zdbclient is not None:
-                data = self._bcdb.zdbclient.get(0)
+                if self._bcdb.zdbclient.type == "RDB":
+                    data = self._bcdb.zdbclient._redis.get(self._bcdb.zdbclient._schemaskey)
+                else:
+                    data = self._bcdb.zdbclient.get(0)
             else:
                 # no ZDB used, is a file in local filesystem
                 if not j.sal.fs.exists(self._meta_local_path):
@@ -60,13 +63,16 @@ class BCDBMeta(j.application.JSBaseClass):
             self.data
         self._log_debug("save:\n%s" % self.data)
         if self._bcdb.zdbclient is not None:
-            # if self._bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
-            if self._bcdb.zdbclient.get(0) == None:
-                # self._bcdb.zdbclient.execute_command("SET","", self._data._data)
-                self._bcdb.zdbclient.set(self._data._data)
+            if self._bcdb.zdbclient.type == "RDB":
+                self._bcdb.zdbclient._redis.set(self._bcdb.zdbclient._schemaskey, self._data._data)
             else:
-                self._bcdb.zdbclient.set(self._data._data, 0)
-                # self._bcdb.zdbclient.execute_command("SET",b'\x00\x00\x00\x00', self._data._data)
+                # if self._bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
+                if self._bcdb.zdbclient.get(0) == None:
+                    # self._bcdb.zdbclient.execute_command("SET","", self._data._data)
+                    self._bcdb.zdbclient.set(self._data._data)
+                else:
+                    self._bcdb.zdbclient.set(self._data._data, 0)
+                    # self._bcdb.zdbclient.execute_command("SET",b'\x00\x00\x00\x00', self._data._data)
         else:
             j.sal.fs.writeFile(self._meta_local_path, self._data._data)
 

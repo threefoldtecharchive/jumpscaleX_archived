@@ -70,6 +70,8 @@ class BCDBModel(j.application.JSBaseClass):
         we keep track of id's per namespace and per model, this to allow easy enumeration
         :return:
         """
+        if self.zdbclient and self.zdbclient.type == "RDB":
+            self._ids_last = 0
 
         # next one always happens
         self._ids_file_path = "%s/ids.data" % (self._data_dir)
@@ -123,7 +125,9 @@ class BCDBModel(j.application.JSBaseClass):
         #     self.obj_cache = None
 
         self._init_idfile()
-        self._init_index()  # goal is to be overruled by users
+        if not (self.zdbclient and self.zdbclient.type == "RDB"):
+            # should onnly be done for ZDB or SQLITE
+            self._init_index()  # goal is to be overruled by users
 
         # DO NOT REBUILD THE INDEX HERE, if the redis is e.g. lost then we need to rebuild all
 
@@ -452,13 +456,22 @@ class BCDBModel(j.application.JSBaseClass):
         if index:
             self.index_set(obj)
             self.index_keys_set(obj)
-
+            bin_id = struct.pack("<I", obj.id)
             if obj.id > self._ids_last:
-                # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
-                bin_id = struct.pack("<I", obj.id)
-                j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
-                if self.namespaceid:
-                    j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
+                if self.zdbclient and self.zdbclient.type == "RDB":
+                    r = self.zdbclient._redis
+                    key = self.zdbclient._keysbinkey
+                    r.append(key, bin_id)
+                    # l = r.strlen(key)
+                    # if l == 0:
+                    #     r.set(key, bin_id)
+                    # else:
+                    #     r.append(key, bin_id)
+                else:
+                    # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
+                    j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
+                    if self.namespaceid:
+                        j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
 
                 self._ids_last = obj.id
 
@@ -475,21 +488,40 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
-        if self.namespaceid:
-            path = self._ids_file_path_ns
-        else:
-            path = self._ids_file_path
-        # print("idspath:%s"%self._ids_file_path)
-        with open(path, "rb") as f:
-            while True:
-                chunk = f.read(4)
-                if chunk:
+        if self.zdbclient and self.zdbclient.type == "RDB":
+            r = self.zdbclient._redis
+            key = self.zdbclient._keysbinkey
+            l = r.strlen(key)
+            if l > 0:
+                l2 = l / 4
+                assert l2 == int(l2)
+                for i in range(0, int(l2)):
+                    chunk = r.getrange(key, i * 4, (i * 4) + 3)
                     obj_id = struct.unpack("<I", chunk)[0]
+                    # print(obj_id)
                     yield obj_id
-                else:
-                    break
+            # getrange
+            # setrange
+            # strlen
+            # append
+        else:
+            if self.namespaceid:
+                path = self._ids_file_path_ns
+            else:
+                path = self._ids_file_path
+            # print("idspath:%s"%self._ids_file_path)
+            with open(path, "rb") as f:
+                while True:
+                    chunk = f.read(4)
+                    if chunk:
+                        obj_id = struct.unpack("<I", chunk)[0]
+                        yield obj_id
+                    else:
+                        break
 
     def id_delete(self, id):
+        j.shell()
+        w
         out = b""
         for id_ in self.id_iterator:
             if id_ != id:
@@ -591,10 +623,14 @@ class BCDBModel(j.application.JSBaseClass):
     def reset(self):
         self._log_warning("reset:%s" % self.key)
         if self.zdbclient:
-            self.delete_all()  # only for zdb relevant
+            if self.zdbclient.type == "RDB":
+                self.zdbclient.flush()
+            else:
+                self.delete_all()  # only for zdb relevant
 
         # now need to remove tables from index
-        self.index_destroy()
+        if not (self.zdbclient and self.zdbclient.type == "RDB"):
+            self.index_destroy()
 
         self.stop()
         j.sal.fs.remove(self._data_dir)
@@ -606,7 +642,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._init_()
 
-    def iterate(self, die=True):
+    def iterate(self):
         """
         walk over objects which are of type of this model
         """
