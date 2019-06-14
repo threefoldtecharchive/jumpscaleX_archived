@@ -169,6 +169,10 @@ class Schema(j.application.JSBaseClass):
 
             if name in ["id"]:
                 self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
+            elif name in ["name"]:
+                p.unique = True
+                # everything which is unique also needs to be indexed
+                p.index_key = True
 
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()  # in between the ()
