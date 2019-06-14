@@ -3,6 +3,9 @@ import redis
 
 JSBASE = j.application.JSBaseClass
 
+# TODO: implementation below is not ok, there can be raceconditions if multiple clients connect to redis at the same time
+# because we are independently updating the IDVALUE and the hset, this needs to be done by means of a lua stored procedure
+
 
 class RDBClient(j.application.JSBaseClass):
     def __init__(self, nsname, redisclient):
