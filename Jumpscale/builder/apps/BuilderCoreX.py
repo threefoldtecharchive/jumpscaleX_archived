@@ -107,6 +107,20 @@ class BuilderCoreX(j.builders.system._BaseClass):
         cmd = "/sandbox/bin/corex --port {}".format(port)
         j.tools.startupcmd.get(name=self.NAME, cmd=cmd).start()
 
+    def running(self):
+        if len(j.sal.process.getProcessPid(self.NAME)) > 0:
+            return True
+        return False
+
+    def stop(self):
+        # killing the daemon
+        pane = j.tools.tmux.pane_get(self.NAME)
+        processes = pane.process_obj.children(True)
+        for process in processes:
+            process.kill()
+        pane.kill()
+        """ j.sal.process.killProcessByName(self.NAME) """
+
     @builder_method()
     def test(self):
         if self.running():

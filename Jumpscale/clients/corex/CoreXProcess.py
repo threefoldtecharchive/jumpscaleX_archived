@@ -112,7 +112,7 @@ class CoreXProcess(j.application.JSBaseConfigClass):
             self.state = "stopped"
 
     def _get_process_info(self):
-        res = self.client._process_list()
+        res = self.client.process_list()
         if res == []:
             # means there is no process
             self._reset()

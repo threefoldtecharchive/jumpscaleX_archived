@@ -35,7 +35,7 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
 
             cl = self.get(name="test", addr="localhost", port=port)
 
-            assert cl._process_list() == []
+            assert cl.process_list() == []
 
             r = cl.process_start("mc", "mc")
 
@@ -54,6 +54,7 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             assert r.corex_id == r2.corex_id
 
             r2 = cl.process_get(pid=r.pid)
+
             assert r.data.id == r2.data.id
             assert r.corex_id == r2.corex_id
 
@@ -73,7 +74,9 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             assert r3.state == "stopped"
 
             cmd0.stop()
+            j.data.corex_process.reset()
             j.clients.corex.reset()
+            # j.shell()
 
         test(False)
-        test(False)
+        # test(True)
