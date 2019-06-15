@@ -3,6 +3,7 @@ import requests
 import time
 import hmac
 from urllib.parse import urlencode
+from requests.auth import HTTPBasicAuth
 
 
 class CoreXClient(j.application.JSBaseConfigClass):
@@ -31,11 +32,14 @@ class CoreXClient(j.application.JSBaseConfigClass):
         # if data:
         #     request_conf["data"] = data
 
-        if self.login != "":
-            request_conf["headers"] = self._get_headers(data or {})
-
         try:
-            response = requests.get("%s/%s" % (self._service_url, base_url), params=params)
+            url = "%s/%s" % (self._service_url, base_url)
+            print("***********************login:%s pass:%s" % (self.login, self.passwd_))
+            if self.login != "":
+                response = requests.get(url, auth=(self.login, self.passwd_), params=params)
+                print("res:%s" % response)
+            else:
+                response = requests.get(url, params=params)
             # response = requests.request(**request_conf)
         except Exception as e:
             if str(e).find("Connection refused") != -1:
@@ -52,13 +56,6 @@ class CoreXClient(j.application.JSBaseConfigClass):
                 return response.text
         else:
             raise ValueError("Http state {} - {}".format(response.status_code, response.content))
-
-    def _get_headers(self, data):
-        msg = self.key_ + urlencode(sorted(data.items(), key=lambda val: val[0]))
-
-        sign = hmac.new(self.secret_.encode(), msg.encode(), digestmod="sha256").hexdigest()
-
-        return {"X-KEY": self.key_, "X-SIGN": sign, "X-NONCE": str(int(time() * 1000))}
 
     def process_list(self):
         res = self._query("processes")

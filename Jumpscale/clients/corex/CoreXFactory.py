@@ -26,14 +26,14 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             if passw:
                 port = 8002
                 cmd = "/sandbox/bin/corex --port {} -c user:pass".format(port)
+                cl = self.get(name="test", addr="localhost", port=port, login="user", passwd_="pass")
             else:
                 port = 8002
                 cmd = "/sandbox/bin/corex --port {}".format(port)
+                cl = self.get(name="test", addr="localhost", port=port)
 
             cmd0 = j.tools.startupcmd.get(name="corex_%s" % port, cmd=cmd, ports=[port])
             cmd0.start(reset=True)
-
-            cl = self.get(name="test", addr="localhost", port=port)
 
             assert cl.process_list() == []
 
@@ -78,5 +78,8 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
             j.clients.corex.reset()
             # j.shell()
 
+        print("TEST NO AUTH")
         test(False)
-        # test(True)
+        print("TEST WITH AUTH")
+        test(True)
+        print("ALL TEST OK")
