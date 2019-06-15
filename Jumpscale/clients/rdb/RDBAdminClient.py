@@ -1,17 +1,17 @@
 from Jumpscale import j
 
-from .ZDBClientBase import ZDBClientBase
+from .RDBClientBase import RDBClient
 
 
-class ZDBAdminClient(ZDBClientBase):
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="123456"):
+class RDBAdminClient(ZDBClientBase):
+    def __init__(self, addr="localhost", port=9900, **kwargs):
         """ is connection to ZDB
 
         port {[int} -- (default: 9900)
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret, admin=True)
+        RDBClient.__init__(self, addr=addr, port=port, mode=mode, secret=secret, admin=True)
         self._system = None
         # self._logger_enable()
         if self.secret:
@@ -34,7 +34,7 @@ class ZDBAdminClient(ZDBClientBase):
         res = self.redis.execute_command("NSLIST")
         return [i.decode() for i in res]
 
-    def namespace_new(self, name, secret=None, maxsize=0, die=False):
+    def namespace_new(self, name, secret="", maxsize=0, die=False):
         """
         check namespace exists & will return zdb client to that namespace
 
@@ -45,14 +45,15 @@ class ZDBAdminClient(ZDBClientBase):
         :return:
         """
         self._log_debug("namespace_new:%s" % name)
-        if not self.namespace_exists(name):
-            self._log_debug("namespace does not exists")
-            self.redis.execute_command("NSNEW", name)
-        else:
+        if self.namespace_exists(name):
+            self._log_debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
+            # now return std client
+            return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
-        if secret:
+        self.redis.execute_command("NSNEW", name)
+        if secret is not "":
             self._log_debug("set secret")
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
@@ -66,7 +67,6 @@ class ZDBAdminClient(ZDBClientBase):
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         assert ns.ping()
-        assert ns.nsinfo["public"] == "no"
 
         return ns
 

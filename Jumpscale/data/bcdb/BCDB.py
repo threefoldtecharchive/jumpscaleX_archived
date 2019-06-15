@@ -2,6 +2,7 @@
 
 import gevent
 from Jumpscale.clients.zdb.ZDBClientBase import ZDBClientBase
+from Jumpscale.clients.rdb.RDBClient import RDBClient
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -27,8 +28,8 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("name needs to be specified")
 
         if zdbclient is not None:
-            if not isinstance(zdbclient, ZDBClientBase):
-                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase")
+            if not isinstance(zdbclient, ZDBClientBase) and not isinstance(zdbclient, RDBClient):
+                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
 
         self._schema_md5_to_model = {}
         self._schema_sid_to_md5 = {}
