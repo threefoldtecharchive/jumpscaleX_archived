@@ -34,10 +34,8 @@ class CoreXClient(j.application.JSBaseConfigClass):
 
         try:
             url = "%s/%s" % (self._service_url, base_url)
-            print("***********************login:%s pass:%s" % (self.login, self.passwd_))
             if self.login != "":
                 response = requests.get(url, auth=(self.login, self.passwd_), params=params)
-                print("res:%s" % response)
             else:
                 response = requests.get(url, params=params)
             # response = requests.request(**request_conf)
