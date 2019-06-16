@@ -31,12 +31,14 @@ class BCDBModelIndex(j.application.JSBaseClass):
         self.schema = bcdbmodel.schema
 
         self._ids_redis_use = True  # let only use redis for now for the id's
-        self._ids_redis = j.clients.redis.core
+        self._ids_redis = self.bcdb._redis_index
         self._ids_last = {}  # need to keep last id per namespace
 
         self.zdbclient = self.bcdb.zdbclient
 
         self.readonly = self.bcdbmodel.readonly
+
+        self._init_index()
 
         if reset:
             self.destroy()
@@ -109,7 +111,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         data = j.data.serializers.msgpack.dumps(ids)
         hash = self._key_index_redis_get(key)  # this to have a smaller key to store in mem
         self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-        j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid) + b":" + hash[0:2], hash[2:], data)
+        j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:], data)
 
     def _key_index_delete_(self, property_name, val, obj_id, nid=1):
         assert nid
@@ -121,12 +123,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
             ids.pop(ids.index(obj_id))
         hash = self._key_index_redis_get(key)
         if ids == []:
-            j.clients.credis_core.hdel(self._key_index_hsetkey_get(nid=nid) + b":" + hash[0:2], hash[2:])
+            j.clients.credis_core.hdel(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:])
         else:
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._key_index_redis_get(key)
             self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid) + b":" + hash[0:2], hash[2:], data)
+            j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:], data)
 
     def _key_index_destroy(self, nid=1):
         assert nid
@@ -143,7 +145,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         assert nid
         hash = self._key_index_redis_get(key)
 
-        r = j.clients.credis_core.hget(self._key_index_hsetkey_get(nid=nid) + b":" + hash[0:2], hash[2:])
+        r = j.clients.credis_core.hget(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:])
         if r is not None:
             # means there is already one
             self._log_debug("get key(exists):%s" % key)
@@ -255,7 +257,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
     def _id_set(self, id, nid=1):
         self._ids_init(nid=nid)
         bin_id = struct.pack("<I", id)
-        if obj.id > self._ids_last[nid]:
+        if id > self._ids_last[nid]:
             if self._ids_redis_use:
                 r = self._ids_redis
                 redis_list_key = self._id_redis_key_get(nid)
@@ -351,7 +353,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     return True
                 elif potentialid is None or potentialid > id:
                     # walk back
-                    for i in range(trypos, 0, step=-1):
+                    for i in range(trypos, 0, -1):
                         potentialid = get(r, i)
                         if potentialid == id:
                             return True

@@ -29,6 +29,7 @@ class {{BASENAME}}(BCDBModelIndex):
 
         self._sql_index_db = Index_{{schema.key}}
         self._sql_index_db.create_table(safe=True)
+        self.sql=self._sql_index_db
 
 
     def _sql_index_set(self,obj):
@@ -59,7 +60,7 @@ class {{BASENAME}}(BCDBModelIndex):
         :return:
         """
         if nid:
-            self._sql_index_db.delete().where(self.index.nid == nid).execute()
+            self._sql_index_db.delete().where(self._sql_index_db.nid == nid).execute()
         else:
             self._sql_index_db.drop_table()
             self._sql_index_db.create_table()

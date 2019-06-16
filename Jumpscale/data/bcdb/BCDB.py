@@ -24,6 +24,8 @@ class BCDB(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
 
+        self._redis_index = j.clients.redis.core
+
         if name is None:
             raise RuntimeError("name needs to be specified")
 
@@ -176,6 +178,9 @@ class BCDB(j.application.JSBaseClass):
         if stop:
             self.stop()
 
+        if reset:
+            j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
+
         self._sqlclient = None
 
         self.dataprocessor_start()
@@ -316,16 +321,19 @@ class BCDB(j.application.JSBaseClass):
         for key, m in self.models.items():
             m.reset()
 
+        self._redis_reset()
+
         if self._sqlclient is not None:
             self.sqlclient.close()
             self._sqlclient = None
 
-        # need to clean redis
-        # self._hset_index_key_delete()
-
         j.sal.fs.remove(self._data_dir)
 
         self.meta.reset()
+
+    def _redis_reset(self):
+        for key in self._redis_index.keys("bcdb:%s*" % self.name):
+            self._redis_index.delete(key)
 
     def stop(self):
         self._log_info("STOP BCDB")
@@ -350,20 +358,20 @@ class BCDB(j.application.JSBaseClass):
     #             model.obj_cache = None
     #         model._init()
 
-    def _schema_get_sid(self, sid):
-        for s in self.meta.data.schemas:
-            if s.sid == sid:
-                s2 = j.data.schema.get_from_text(schema_text=s.text)
-                assert s2.url == s.url
-                assert s2._md5 == s.md5
-                return s2
-
-    def _schema_get_md5(self, md5):
-        for s in self.meta.data.schemas:
-            if s.md5 == md5:
-                s2 = j.data.schema.get_from_text(schema_text=s.text)
-                assert s2._md5 == s.md5
-                return s2
+    # def _schema_get_sid(self, sid):
+    #     for s in self.meta.data.schemas:
+    #         if s.sid == sid:
+    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
+    #             assert s2.url == s.url
+    #             assert s2._md5 == s.md5
+    #             return s2
+    #
+    # def _schema_get_md5(self, md5):
+    #     for s in self.meta.data.schemas:
+    #         if s.md5 == md5:
+    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
+    #             assert s2._md5 == s.md5
+    #             return s2
 
     def model_get_from_sid(self, sid):
         md5 = None
@@ -371,26 +379,24 @@ class BCDB(j.application.JSBaseClass):
             md5 = self._schema_sid_to_md5[sid]
             if md5 in self._schema_md5_to_model:
                 return self._schema_md5_to_model[md5]
-
-        # we did not find it in memory, lets lookup in metadata
-        if md5:
-            s = self._schema_get_md5(md5)
         else:
-            s = self._schema_get_sid(sid)
+            raise RuntimeError("did not find schema with sid:'%s' in mem, was metadata loaded?" % sid)
 
-        if not s:
-            raise RuntimeError("did not find schema with sid:%s" % sid)
+        if md5 in j.data.schema.md5_to_schema:
+            s = j.data.schema.md5_to_schema[md5]
+        else:
+            raise RuntimeError("could not find schema:%s in schema factory" % md5)
 
         return self.model_get_from_schema(s)
 
-    # def model_get_from_url(self, url):
-    #     """
-    #     will return the latest model found based on url
-    #     :param url:
-    #     :return:
-    #     """
-    #     s = j.data.schema.get_from_url_latest(url=url)
-    #     return self.model_get_from_schema(s)
+    def model_get_from_url(self, url):
+        """
+        will return the latest model found based on url
+        :param url:
+        :return:
+        """
+        s = j.data.schema.get_from_url_latest(url=url)
+        return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -457,20 +463,7 @@ class BCDB(j.application.JSBaseClass):
 
         self._log_info("load model:%s" % schema.url)
 
-        tpath = "%s/templates/BCDBModelClass.py" % j.data.bcdb._path
-        objForHash = schema_text
-        myclass = j.tools.jinja2.code_python_render(
-            path=tpath,
-            reload=False,
-            dest=dest,
-            objForHash=objForHash,
-            schema_text=schema_text,
-            bcdb=self,
-            schema=schema,
-            overwrite=False,
-        )
-
-        model = myclass(reset=self._need_to_reset, bcdb=self, schema=schema, namespaceid=namespaceid)
+        model = BCDBModel(bcdb=self, schema=schema)
 
         return self.model_add(model)
 
@@ -573,6 +566,10 @@ class BCDB(j.application.JSBaseClass):
 
         if len(res) == 3:
             schema_id, acl_id, bdata_encrypted = res
+            nid = 1
+            model = self.model_get_from_sid(schema_id)
+        elif len(res) == 4:
+            nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)
         else:
             raise RuntimeError("not supported format")
@@ -585,6 +582,7 @@ class BCDB(j.application.JSBaseClass):
             return bdata
         else:
             obj = model.schema.get(data=bdata)
+            obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
             obj._model = model
@@ -636,3 +634,9 @@ class BCDB(j.application.JSBaseClass):
 
     def get_all(self):
         return [obj for obj in self.iterate()]
+
+    def __str__(self):
+        out = "bcdb:%s\n" % self.name
+        return out
+
+    __repr__ = __str__

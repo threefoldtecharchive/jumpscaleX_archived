@@ -41,12 +41,9 @@ class BCDBModel(j.application.JSBaseClass):
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
-        if self.zdbclient:
-            if self.zdbclient.type == "ZDB":
-                # is unique id for a bcdbmodel (unique per zdbclient !)
-                self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
-            else:
-                self.key = "%s_%s" % (self.zdbclient.name, self.schema.url)
+        if self.zdbclient and self.zdbclient.type == "ZDB":
+            # is unique id for a bcdbmodel (unique per zdbclient !)
+            self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
         else:
             self.key = self.schema.url
         self.key = self.key.replace(".", "_")
@@ -54,7 +51,7 @@ class BCDBModel(j.application.JSBaseClass):
         self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
         j.sal.fs.createDir(self._data_dir)
 
-        # self._kosmosinstance = None
+        self._kosmosinstance = None
 
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
         self.index = indexklass(self, reset=reset)
@@ -164,6 +161,7 @@ class BCDBModel(j.application.JSBaseClass):
     def check(self, obj):
         if not isinstance(obj, j.data.schema.DataObjBase):
             raise RuntimeError("argument needs to be a jsx data obj")
+        assert obj.nid
 
     @queue_method
     def set_dynamic(self, data, obj_id=None, nid=None):
@@ -216,6 +214,10 @@ class BCDBModel(j.application.JSBaseClass):
             obj.id = obj_id  # do not forget
         return self.set(obj)
 
+    def get_by_name(self, name, nid=1):
+        args = {"name": name}
+        return self.find(nid=nid, **args)
+
     def find(self, nid=1, **args):
         """
         is a the retrieval part of a very fast indexing system
@@ -258,7 +260,7 @@ class BCDBModel(j.application.JSBaseClass):
         return res
 
     @queue_method_results
-    def set(self, obj, nid=1, index=True, store=True):
+    def set(self, obj, index=True, store=True):
         """
         :param obj
         :return: obj
@@ -300,7 +302,7 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
 
-            l = [nid, self.schema.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, self.schema.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self.triggers_call(obj, action="set_pre")
@@ -329,7 +331,7 @@ class BCDBModel(j.application.JSBaseClass):
         if index:
             self.index.set(obj)
 
-        obj = self.triggers_call(obj=obj, action="set_post", nid=nid)
+        obj = self.triggers_call(obj=obj, action="set_post")
 
         return obj
 
@@ -427,14 +429,17 @@ class BCDBModel(j.application.JSBaseClass):
         walk over objects which are of type of this model
         """
         for obj_id in self.index._id_iterator(nid=nid):
-            try:
-                o = self.get(obj_id)
-            except Exception as e:
-                if str(e).find("could not find obj") != -1:
-                    self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
-                    continue
-                else:
-                    raise e
+            self._log_debug("iterate:%s" % obj_id)
+            assert obj_id > 0
+            o = self.get(obj_id)
+            # try:
+            #     o = self.get(obj_id)
+            # except Exception as e:
+            #     if str(e).find("could not find obj") != -1:
+            #         self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
+            #         continue
+            #     else:
+            #         raise e
             yield o
 
     def __str__(self):
