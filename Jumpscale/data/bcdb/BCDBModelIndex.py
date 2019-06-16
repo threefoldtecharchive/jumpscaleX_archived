@@ -1,17 +1,14 @@
 from pyblake2 import blake2b
 from Jumpscale import j
 
-
 import struct
 from .BCDBDecorator import *
-
+from .
 JSBASE = j.application.JSBaseClass
-INT_BIN_EMPTY = b"\xff\xff\xff\xff"  # is the empty value for in our key containers
-
-from .BCDBModelIndex import BCDBModelIndex
+# INT_BIN_EMPTY = b"\xff\xff\xff\xff"  # is the empty value for in our key containers
 
 
-class BCDBModel(j.application.JSBaseClass):
+class BCDBModelIndex(j.application.JSBaseClass):
     def __init__(self, bcdb, schema=None, reset=False):
         """
 
@@ -42,7 +39,7 @@ class BCDBModel(j.application.JSBaseClass):
         # self._kosmosinstance = None
 
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
-        self.index = indexklass(BCDBModelIndex)
+        self.index = indexklass()
 
         self._ids_redis_use = True  # let only use redis for now for the indexes
         self._ids_redis = j.clients.redis.core
@@ -79,18 +76,6 @@ class BCDBModel(j.application.JSBaseClass):
 
     def _init_load(self, bcdb, schema, reset):
         return bcdb, schema, reset
-
-    def _init4(self):
-
-        # if self.cache_expiration > 0:
-        #     self.obj_cache = {}
-        # else:
-        #     self.obj_cache = None
-
-        self._ids_init()
-        if not (self.zdbclient and self.zdbclient.type == "RDB"):
-            # should onnly be done for ZDB or SQLITE
-            self._init_index()  # goal is to be overruled by users
 
     def trigger_add(self, method):
         """

@@ -474,7 +474,7 @@ class BCDB(j.application.JSBaseClass):
 
         return self.model_add(model)
 
-    def _BCDBModelIndexClass_generate(self, schema, path_parent=None):
+    def _BCDBModelIndexClass_generate(self, schema):
         """
 
         :param schema: is schema object j.data.schema... or text
@@ -482,10 +482,6 @@ class BCDB(j.application.JSBaseClass):
 
         """
         self._log_debug("generate schema:%s" % schema.url)
-        if path_parent:
-            name = j.sal.fs.getBaseName(path_parent)[:-3]
-            dir_path = j.sal.fs.getDirName(path_parent)
-            dest = "%s/%s_index.py" % (dir_path, name)
 
         if j.data.types.string.check(schema):
             schema = j.data.schema.get_from_text(schema)
@@ -500,7 +496,7 @@ class BCDB(j.application.JSBaseClass):
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath, objForHash=schema._md5, reload=True, dest=dest, schema=schema, bcdb=self, index=imodel
+                path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass

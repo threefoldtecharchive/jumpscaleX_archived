@@ -1,6 +1,4 @@
 from Jumpscale import j
-#GENERATED CODE, can now change
-
 
 class {{BASENAME}}:
 
@@ -21,6 +19,7 @@ class {{BASENAME}}:
 
         class Index_{{schema.key}}(BaseModel):
             id = p.IntegerField(unique=True)
+            nid = p.IntegerField(index=True) #need to store the namespace id
             {%- for field in index.fields %}
             {{field.name}} = p.{{field.type}}(index=True)
             {%- endfor %}
@@ -40,17 +39,28 @@ class {{BASENAME}}:
         idict["{{field.name}}"] = obj.{{field.name}}
         {%- endif %}
         {%- endfor %}
+        assert obj.id
+        assert obj.nid
         idict["id"] = obj.id
+        idict["nid"] = obj.nid
         if not self.index.select().where(self.index.id == obj.id).count()==0:
             #need to delete previous record from index
             self.index.delete().where(self.index.id == obj.id).execute()
         self.index.insert(**idict).execute()
 
 
-    def index_destroy(self):
-        self.index.drop_table()
-        self.index.create_table()
-        self._index_keys_destroy()
+    def index_destroy(self,nid=None):
+        """
+        will remove all namespaces indexes
+        :param nid:
+        :return:
+        """
+        if nid:
+            self.index.delete().where(self.index.nid == nid).execute()
+        else:
+            self.index.drop_table()
+            self.index.create_table()
+        self._index_keys_destroy(nid=nid)
 
     {% endif %}
 
@@ -62,7 +72,7 @@ class {{BASENAME}}:
         if val not in ["",None]:
             val=str(val)
             # self._log_debug("key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._index_key_set("{{property_name}}",val,obj.id)
+            self._index_key_set("{{property_name}}",val,obj.id,nid=obj.nid)
         {%- endfor %}
 
     def index_keys_delete(self,obj):
@@ -71,13 +81,13 @@ class {{BASENAME}}:
         if val not in ["",None]:
             val=str(val)
             self._log_debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._index_key_delete("{{property_name}}",val,obj.id)
+            self._index_key_delete("{{property_name}}",val,obj.id,nid=obj.nid)
         {%- endfor %}
 
 
     {%- for property_name in index.fields_key %}
-    def get_by_{{property_name}}(self,{{property_name}}):
-        return self.get_from_keys({{property_name}}=str({{property_name}}))
+    def get_by_{{property_name}}(self,{{property_name}},nid=1):
+        return self.get_from_keys({{property_name}}=str({{property_name}}),nid=nid)
     {%- endfor %}
 
     {%- endif %}

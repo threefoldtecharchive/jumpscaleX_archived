@@ -12,7 +12,7 @@ Index_CLASS = bcdb._BCDBModelIndexClass_generate(schema,__file__)
 MODEL_CLASS = j.data.bcdb._BCDBModelClass
 
 
-class {{BASENAME}}(Index_CLASS,MODEL_CLASS):
+class {{BASENAME}}(MODEL_CLASS):
     def __init__(self,bcdb,schema,reset=False):
         MODEL_CLASS.__init__(self, bcdb=bcdb,schema=schema,reset=reset)
         self.readonly = False
