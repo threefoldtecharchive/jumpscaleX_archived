@@ -289,9 +289,8 @@ class BCDBModelIndex(j.application.JSBaseClass):
             l = r.llen(redis_list_key)
             if l > 0:
                 for i in range(0, l):
-                    chunk = r.lindex(redis_list_key, i)
-                    obj_id = struct.unpack("<I", chunk)[0]
-                    print(obj_id)
+                    obj_id = self._id_get_objid_redis(i, nid=nid)
+                    # print(obj_id)
                     yield obj_id
 
         else:
@@ -305,6 +304,16 @@ class BCDBModelIndex(j.application.JSBaseClass):
                         yield obj_id
                     else:
                         break
+
+    def _id_get_objid_redis(self, pos, nid=1, die=True):
+        r = self._ids_redis
+        chunk = r.lindex(self._id_redis_key_get(nid=nid), pos)
+        if not chunk:
+            if die:
+                j.shell()
+                raise RuntimeError("should always get something back?")
+            return None
+        return struct.unpack("<I", chunk)[0]
 
     def _id_delete(self, id, nid=1):
         self._ids_init(nid=nid)
@@ -325,27 +334,18 @@ class BCDBModelIndex(j.application.JSBaseClass):
     def _id_exists(self, id, nid=1):
         self._ids_init(nid=nid)
 
-        def get(r, pos, die=True):
-            b = r.lindex(redis_list_key, pos)
-            if not b:
-                if die:
-                    j.shell()
-                    raise RuntimeError("should always get something back?")
-                return None
-            return struct.unpack("<I", b)[0]
-
         if self._ids_redis_use:
             id = int(id)
             r = self._ids_redis
             redis_list_key = self._id_redis_key_get(nid)
             l = r.llen(redis_list_key)
             if l > 0:
-                chunk = r.lindex(redis_list_key, -1)  # last one
-                last = struct.unpack("<I", chunk)[0]
-                trypos = int(l / last * id)
-                if trypos == last:
+                last_id = self._id_get_objid_redis(-1, nid=nid)
+                # this gives me an estimate where to look for the info in the list
+                trypos = int(l / last_id * id)
+                if trypos == last_id:
                     j.shell()
-                potentialid = get(r, trypos, die=False)
+                potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
                 if not potentialid:
                     j.shell()
                 elif potentialid == id:
@@ -354,7 +354,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 elif potentialid is None or potentialid > id:
                     # walk back
                     for i in range(trypos, 0, -1):
-                        potentialid = get(r, i)
+                        potentialid = self._id_get_objid_redis(i, nid=nid)
                         if potentialid == id:
                             return True
                         if potentialid < id:
@@ -362,7 +362,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 elif potentialid < id:
                     # walk forward
                     for i in range(0, trypos):
-                        potentialid = get(r, i)
+                        potentialid = self._id_get_objid_redis(i, nid=nid)
                         if potentialid == id:
                             return True
                         if potentialid > id:
