@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, schema=None, namespaceid=None, reset=False):
+    def __init__(self, bcdb, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -28,26 +28,38 @@ class BCDBModel(j.application.JSBaseClass):
 
         bcdb, schema, namespaceid, reset = self._init_load(bcdb, schema, namespaceid, reset)
 
-        self._kosmosinstance = None
+        assert schema
+        assert schema.sid > 0
+        assert namespaceid
+        self.schema = schema
         self.namespaceid = namespaceid
+
+        self._kosmosinstance = None
+
+        self._ids_empty_bin = b"\xff\xff\xff\xff"  # is the empty value for in our key containers
+        self._ids_redis_use = True
+        self._ids_redis = j.clients.redis.core
+
+        # if self.zdbclient and self.zdbclient.type == "RDB":
+        #     self._ids_redis_use = True
 
         if bcdb is None:
             raise RuntimeError("bcdb should be set")
 
         self.bcdb = bcdb
-        self.__redis_prefix = None
         # self.cache_expiration = 3600
-
-        self.schema = schema
 
         self.zdbclient = bcdb.zdbclient
 
-        if self.zdbclient:
-            # is unique id for a bcdbmodel (unique per zdbclient !)
-            self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
-        else:
-            self.key = self.schema.url
-        self.key = self.key.replace(".", "_")
+        # self._ids_key = "bcdb:%s:%s:ids" % (bcdb.name, self.namespaceid)
+        # self._indexkeys_redis_prefix = "bcdb:%s:%s:%s:index" % (bcdb.name, self.namespaceid, self.schema.sid)
+
+        # if self.zdbclient:
+        #     # is unique id for a bcdbmodel (unique per zdbclient !)
+        #     self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
+        # else:
+        #     self.key = self.schema.url
+        # self.key = self.key.replace(".", "_")
 
         self.readonly = False
 
@@ -64,43 +76,6 @@ class BCDBModel(j.application.JSBaseClass):
 
     def _init_load(self, bcdb, schema, namespaceid, reset):
         return bcdb, schema, namespaceid, reset
-
-    def _init_idfile(self):
-        """
-        we keep track of id's per namespace and per model, this to allow easy enumeration
-        :return:
-        """
-        if self.zdbclient and self.zdbclient.type == "RDB":
-            self._ids_last = 0
-
-        # next one always happens
-        self._ids_file_path = "%s/ids.data" % (self._data_dir)
-        if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
-            j.sal.fs.touch(self._ids_file_path)
-            self._ids_last = 0
-        else:
-            llen = j.sal.fs.fileSize(self._ids_file_path)
-            # make sure the len is multiplication of 4 bytes
-            assert float(llen / 4) == llen / 4
-            f = open(self._ids_file_path, "rb")
-            f.seek(llen - 4, 0)
-            bindata = f.read(4)
-            self._ids_last = struct.unpack(b"<I", bindata)[0]
-            f.close()
-
-        if self.namespaceid:
-            self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir, self.namespace_name)
-            if not j.sal.fs.exists(self._ids_file_path_ns) or j.sal.fs.fileSize(self._ids_file_path_ns) == 0:
-                j.sal.fs.touch(self._ids_file_path_ns)
-            else:
-                llen = j.sal.fs.fileSize(self._ids_file_path_ns)
-                # make sure the len is multiplication of 4 bytes
-                assert float(llen / 4) == llen / 4
-                f = open(self._ids_file_path_ns, "rb")
-                f.seek(llen - 4, 0)
-                bindata = f.read(4)
-                f.close()
-                assert self._ids_last == struct.unpack(b"<I", bindata)[0]  # needs to be same
 
     @property
     def namespace_name(self):
@@ -124,7 +99,7 @@ class BCDBModel(j.application.JSBaseClass):
         # else:
         #     self.obj_cache = None
 
-        self._init_idfile()
+        self.ids_init()
         if not (self.zdbclient and self.zdbclient.type == "RDB"):
             # should onnly be done for ZDB or SQLITE
             self._init_index()  # goal is to be overruled by users
@@ -201,7 +176,7 @@ class BCDBModel(j.application.JSBaseClass):
         self.stop()
         self.index_destroy()
         self._log_warning("will rebuild index for:%s" % self)
-        for obj in self.iterate(die=False):
+        for obj in self.iterate():
             self._set(obj, store=False)
 
     @queue_method
@@ -258,6 +233,8 @@ class BCDBModel(j.application.JSBaseClass):
         obj.id = obj_id  # do not forget
         return self._set(obj)
 
+    ###### INDEXER ON KEYS:
+
     def _index_key_set(self, property_name, val, obj_id):
         """
 
@@ -276,7 +253,7 @@ class BCDBModel(j.application.JSBaseClass):
         data = j.data.serializers.msgpack.dumps(ids)
         hash = self._index_key_redis_get(key)  # this to have a smaller key to store in mem
         self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-        j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
+        j.clients.credis_core.hset(self._indexkeys_redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_key_delete(self, property_name, val, obj_id):
 
@@ -288,21 +265,26 @@ class BCDBModel(j.application.JSBaseClass):
             ids.pop(ids.index(obj_id))
         hash = self._index_key_redis_get(key)
         if ids == []:
-            j.clients.credis_core.hdel(self._redis_prefix + b":" + hash[0:2], hash[2:])
+            j.clients.credis_core.hdel(self._indexkeys_redis_prefix + b":" + hash[0:2], hash[2:])
         else:
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._index_key_redis_get(key)
             self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
+            j.clients.credis_core.hset(self._indexkeys_redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_keys_destroy(self):
-        for key in j.clients.credis_core.keys(self._redis_prefix + b"*"):
+        for key in j.clients.credis_core.keys(self._indexkeys_redis_prefix + b"*"):
             j.clients.credis_core.delete(key)
 
     def _index_key_getids(self, key):
+        """
+        return all the id's which are already in redis
+        :param key:
+        :return: [] if not or the id's which are relevant for this namespace
+        """
         hash = self._index_key_redis_get(key)
 
-        r = j.clients.credis_core.hget(self._redis_prefix + b":" + hash[0:2], hash[2:])
+        r = j.clients.credis_core.hget(self._indexkeys_redis_prefix + b":" + hash[0:2], hash[2:])
         if r is not None:
             # means there is already one
             self._log_debug("get key(exists):%s" % key)
@@ -312,6 +294,20 @@ class BCDBModel(j.application.JSBaseClass):
             self._log_debug("get key(new):%s" % key)
             ids = []
         return ids
+
+    def _index_key_redis_get(self, key):
+        """
+        returns 10 bytes as key (non HR readable)
+        :param key:
+        :return:
+        """
+        # schema id needs to be in to make sure its different key per schema
+        key2 = key + str(self.schema._md5)
+        # can do 900k per second
+        hash = blake2b(str(key2).encode(), digest_size=10).digest()
+        return hash
+
+    #### RETRIEVAL FROM INDEXING SYSTEM IN REDIS
 
     def get_from_keys(self, delete_if_not_found=False, **args):
         """
@@ -354,35 +350,19 @@ class BCDBModel(j.application.JSBaseClass):
 
         return res
 
-    def get_id_from_key(self, key):
-        """
-
-        :param sid: schema id
-        :param key: key used to store
-        :return:
-        """
-        ids = self._index_key_getids(key)
-        if len(ids) == 1:
-            return ids[0]
-        elif len(ids) > 1:
-            # need to fetch obj to see what is alike
-            j.shell()
-
-    def _index_key_redis_get(self, key):
-        """
-        returns 10 bytes as key (non HR readable)
-        :param key:
-        :return:
-        """
-        # schema id needs to be in to make sure its different key per schema
-        # key2 = j.core.text.strip_to_ascii_dense(key) + str(self.schema._md5)
-        key2 = key + str(self.schema._md5)
-        # can do 900k per second
-        hash = blake2b(str(key2).encode(), digest_size=10).digest()
-        # if hash in self._md5_check_debug and self._md5_check_debug[hash] != key2:
-        #     # hash collission
-        #     j.shell()
-        return hash
+    # def get_id_from_key(self, key):
+    #     """
+    #
+    #     :param sid: schema id
+    #     :param key: key used to store
+    #     :return:
+    #     """
+    #     ids = self._index_key_getids(key)
+    #     if len(ids) == 1:
+    #         return ids[0]
+    #     elif len(ids) > 1:
+    #         # need to fetch obj to see what is alike
+    #         j.shell()
 
     @queue_method_results
     def _set(self, obj, index=True, store=True):
@@ -456,28 +436,70 @@ class BCDBModel(j.application.JSBaseClass):
         if index:
             self.index_set(obj)
             self.index_keys_set(obj)
-            bin_id = struct.pack("<I", obj.id)
-            if obj.id > self._ids_last:
-                if self.zdbclient and self.zdbclient.type == "RDB":
-                    r = self.zdbclient._redis
-                    key = self.zdbclient._keysbinkey
-                    r.append(key, bin_id)
-                    # l = r.strlen(key)
-                    # if l == 0:
-                    #     r.set(key, bin_id)
-                    # else:
-                    #     r.append(key, bin_id)
-                else:
-                    # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
-                    j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
-                    if self.namespaceid:
-                        j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
-
-                self._ids_last = obj.id
+            self.id_set(obj)
 
         self.triggers_call(obj=obj, action="set_post")
 
         return obj
+
+    ##### ID METHODS, this allows us to see which id's are in which namespace
+
+    def ids_init(self):
+        """
+        we keep track of id's per namespace and per model, this to allow easy enumeration
+        :return:
+        """
+        if self._ids_redis_use:
+            r = self._ids_redis
+            self._ids_last = 0
+            llen = r.llen(self._ids_key)
+            if llen == 0:
+                # means we don't have the list yet
+                self._ids_last = 0
+            else:
+                self._ids_last = llen  # need to know the last one
+        else:
+            # next one always happens
+            self._ids_file_path = "%s/ids.data" % (self._data_dir)
+            if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
+                j.sal.fs.touch(self._ids_file_path)
+                self._ids_last = 0
+            else:
+                llen = j.sal.fs.fileSize(self._ids_file_path)
+                # make sure the len is multiplication of 4 bytes
+                assert float(llen / 4) == llen / 4
+                f = open(self._ids_file_path, "rb")
+                f.seek(llen - 4, 0)
+                bindata = f.read(4)
+                self._ids_last = struct.unpack(b"<I", bindata)[0]
+                f.close()
+
+            if self.namespaceid:
+                self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir, self.namespace_name)
+                if not j.sal.fs.exists(self._ids_file_path_ns) or j.sal.fs.fileSize(self._ids_file_path_ns) == 0:
+                    j.sal.fs.touch(self._ids_file_path_ns)
+                else:
+                    llen = j.sal.fs.fileSize(self._ids_file_path_ns)
+                    # make sure the len is multiplication of 4 bytes
+                    assert float(llen / 4) == llen / 4
+                    f = open(self._ids_file_path_ns, "rb")
+                    f.seek(llen - 4, 0)
+                    bindata = f.read(4)
+                    f.close()
+                    assert self._ids_last == struct.unpack(b"<I", bindata)[0]  # needs to be same
+
+    def id_set(self, obj):
+        bin_id = struct.pack("<I", obj.id)
+        if obj.id > self._ids_last:
+            if self._ids_redis_use:
+                r = self._ids_redis
+                r.lpush(self._ids_key, bin_id)
+            else:
+                # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
+                j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
+                if self.namespaceid:
+                    j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
+            self._ids_last = obj.id
 
     @property
     def id_iterator(self):
@@ -488,22 +510,16 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
-        if self.zdbclient and self.zdbclient.type == "RDB":
-            r = self.zdbclient._redis
-            key = self.zdbclient._keysbinkey
-            l = r.strlen(key)
+        if self._ids_redis_use:
+            r = self._ids_redis
+            l = r.llen(self._ids_key)
             if l > 0:
-                l2 = l / 4
-                assert l2 == int(l2)
-                for i in range(0, int(l2)):
-                    chunk = r.getrange(key, i * 4, (i * 4) + 3)
+                for i in range(0, l):
+                    chunk = r.lindex(self._ids_key, i)
                     obj_id = struct.unpack("<I", chunk)[0]
-                    # print(obj_id)
+                    print(obj_id)
                     yield obj_id
-            # getrange
-            # setrange
-            # strlen
-            # append
+
         else:
             if self.namespaceid:
                 path = self._ids_file_path_ns
@@ -520,13 +536,94 @@ class BCDBModel(j.application.JSBaseClass):
                         break
 
     def id_delete(self, id):
-        j.shell()
-        w
-        out = b""
-        for id_ in self.id_iterator:
-            if id_ != id:
-                out += struct.pack("<I", id_)
-        j.sal.fs.writeFile(self._ids_file_path, out)
+        if self._ids_redis_use:
+            id = int(id)
+            r = self._ids_redis
+            l = r.llen(self._ids_key)
+            if l > 0:
+                for i in range(0, l):
+                    chunk = r.lindex(self._ids_key, i)
+                    obj_id = struct.unpack("<I", chunk)[0]
+                    if obj_id == id:
+                        # need to set the part of the keys block on empty
+                        # r.lset(self._ids_key, i, self._ids_empty_bin)
+                        j.shell()
+                        w
+
+                    # print(obj_id)
+
+            j.shell()
+            w
+        else:
+            if self.namespaceid:
+                path = self._ids_file_path_ns
+            else:
+                path = self._ids_file_path
+            # print("idspath:%s"%self._ids_file_path)
+            with open(path, "rb") as f:
+                while True:
+                    chunk = f.read(4)
+                    if chunk:
+                        obj_id = struct.unpack("<I", chunk)[0]
+                        yield obj_id
+                    else:
+                        break
+            out = b""
+            for id_ in self.id_iterator:
+                if id_ != id:
+                    out += struct.pack("<I", id_)
+            j.sal.fs.writeFile(self._ids_file_path, out)
+
+    def id_exists(self, id):
+        # there are faster ways how to do this, this is just to get us going
+
+        def get(r, pos, die=True):
+            b = r.lindex(self._ids_key, pos)
+            if not b:
+                if die:
+                    j.shell()
+                    raise RuntimeError("should always get something back?")
+                return None
+            return struct.unpack("<I", b)[0]
+
+        if self._ids_redis_use:
+            id = int(id)
+            r = self._ids_redis
+            l = r.llen(self._ids_key)
+            if l > 0:
+                chunk = r.lindex(self._ids_key, -1)  # last one
+                last = struct.unpack("<I", chunk)[0]
+                trypos = int(l / last * id)
+                if trypos == last:
+                    j.shell()
+                potentialid = get(r, trypos, die=False)
+                if not potentialid:
+                    j.shell()
+                elif potentialid == id:
+                    # lucky
+                    return True
+                elif potentialid is None or potentialid > id:
+                    # walk back
+                    for i in range(trypos, 0, step=-1):
+                        potentialid = get(r, i)
+                        if potentialid == id:
+                            return True
+                        if potentialid < id:
+                            return False  # we're already too low
+                elif potentialid < id:
+                    # walk forward
+                    for i in range(0, trypos):
+                        potentialid = get(r, i)
+                        if potentialid == id:
+                            return True
+                        if potentialid > id:
+                            return False  # we're already too high
+                else:
+                    raise RuntimeError("did not find, should not get here")
+
+                return False
+        else:
+            raise RuntimeError("not implemented yet")
 
     def _dict_process_out(self, ddict):
         """

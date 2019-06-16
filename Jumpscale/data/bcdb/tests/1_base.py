@@ -180,10 +180,15 @@ def main(self):
             9: "name9",
         }
 
+        assert db_model.id_exists(1)
+        assert db_model.id_exists(10) == False
+
+        j.shell()
+
         self._log_info("TEST DONE: %s" % name)
 
     test("RDB")
-    test("ZDB")
-    test("SQLITE")
+    # test("ZDB")
+    # test("SQLITE")
 
     return "OK"

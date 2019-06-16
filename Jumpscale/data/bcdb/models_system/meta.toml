@@ -23,6 +23,7 @@ users = (LO) !jumpscale.bcdb.acl.user.1
 hash* = ""
 
 @url = jumpscale.bcdb.acl.circle.1
+@sub = true
 uid= 2147483647 (I)
 rights = ""
 
@@ -31,20 +32,24 @@ rights = ""
 uid= 2147483647 (I)
 rights = ""
 
-@url = jumpscale.bcdb.namespace.1
-@sub = true
-name* = ""                              #chosen name needs to be unique
-write_once = False (B)  #means in this namespace records can only be written once, no modification possible
 
 #acl's and users are std property the records being inserted in the BCDB
 
 
-@url = jumpscale.schemas.meta.1
-schemas = (LO) !jumpscale.schemas.meta.schema.1
+@url = jumpscale.bcdb.meta.1
+schemas = (LO) !jumpscale.bcdb.meta.schema.1
+namespaces = (LO) !jumpscale.bcdb.meta.namespace.1
+nid = 0  #namespace id
 name = "" (S)
 
-@url = jumpscale.schemas.meta.schema.1
+@url = jumpscale.bcdb.meta.schema.1
+@sub = true
 url = ""
 sid = 0  #schema id
 text = ""
 md5 = ""
+
+@url = jumpscale.bcdb.namespace.1
+name* = ""                              #chosen name needs to be unique
+acls = (LO) !jumpscale.bcdb.acl.1
+write_once = False (B)  #means in this namespace records can only be written once, no modification possible

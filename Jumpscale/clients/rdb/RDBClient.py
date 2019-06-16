@@ -20,7 +20,6 @@ class RDBClient(j.application.JSBaseClass):
         self._hsetkey = "rdb:%s" % self.nsname
         self._incrkey = "rdbmeta:incr:%s" % self.nsname
         self._keysbinkey = "rdbmeta:keys:%s" % self.nsname
-        self._schemaskey = "rdbmeta:schemas:%s" % self.nsname
 
         assert self.ping()
 

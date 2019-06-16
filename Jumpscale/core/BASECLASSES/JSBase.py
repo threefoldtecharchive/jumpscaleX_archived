@@ -200,6 +200,10 @@ class JSBase:
     def _dirpath(self):
         if self.__class__._dirpath_ == "":
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
+
+            if not self.__class__._dirpath_:
+                self.__class__._dirpath_ = j.sal.fs.getcwd()
+
         return self.__class__._dirpath_
 
     @property

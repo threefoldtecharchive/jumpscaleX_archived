@@ -6,6 +6,7 @@ import types
 class ACL(j.data.bcdb._BCDBModelClass):
     def _init_load(self, bcdb, schema, namespaceid, reset):
         schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.1")
+        schema = bcdb._schema_add(schema)
         return bcdb, schema, namespaceid, reset
 
     @property

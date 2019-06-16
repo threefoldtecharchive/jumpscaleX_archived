@@ -23,6 +23,11 @@ from subprocess import Popen, check_output
 import inspect
 
 try:
+    import json
+except:
+    pass
+
+try:
     import traceback
 except:
     traceback = None
@@ -407,7 +412,7 @@ if redis:
              - sha: ...
              - nrkeys: ...
 
-            there is also storedprocedures_sha -> sha without having to decode json
+            there is also storedprocedures:sha -> sha without having to decode json
 
             tips on lua in redis:
             https://redis.io/commands/eval
@@ -432,19 +437,16 @@ if redis:
 
             data = json.dumps(dd)
 
-            self.hset("storedprocedures", name, data)
-            self.hset("storedprocedures_sha", name, script.sha)
+            self.hset("storedprocedures:data", name, data)
+            self.hset("storedprocedures:sha", name, script.sha)
 
             self._storedprocedures_to_sha = {}
-
-            # sha = self._sp_data(name)["sha"]
-            # assert self.script_exists(sha)[0]
 
             return script
 
         def storedprocedure_delete(self, name):
-            self.hdel("storedprocedures", name)
-            self.hdel("storedprocedures_sha", name)
+            self.hdel("storedprocedures:data", name)
+            self.hdel("storedprocedures:sha", name)
             self._storedprocedures_to_sha = {}
 
         @property
@@ -481,7 +483,9 @@ if redis:
 
         def _sp_data(self, name):
             if name not in self._storedprocedures_to_sha:
-                data = self.hget("storedprocedures", name)
+                data = self.hget("storedprocedures:data", name)
+                if not data:
+                    raise RuntimeError("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
@@ -3292,7 +3296,7 @@ class DockerContainer:
                 print(" - Upgrade ubuntu")
                 self.dexec("apt update")
                 self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
-                print(" - Upgrade ubuntu ended") 
+                print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
             Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack

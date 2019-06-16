@@ -4,6 +4,7 @@ from Jumpscale import j
 class CIRCLE(j.data.bcdb._BCDBModelClass):
     def _init_load(self, bcdb, schema, namespaceid, reset):
         schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.circle.1")
+        schema = bcdb._schema_add(schema)
         return bcdb, schema, namespaceid, reset
 
     def userids_get(self):

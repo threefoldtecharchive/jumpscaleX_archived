@@ -7,24 +7,31 @@ class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self._bcdb = bcdb
-        self._meta_local_path = j.sal.fs.joinPaths(self._bcdb._data_dir, "meta.db")
-        self._schema = j.data.schema.get_from_url_latest("jumpscale.schemas.meta.1")
+
+        self._schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.meta.1")
+        self._redis_key_data = "bcdb:%s:meta:data" % bcdb.name
+        self._redis_key_lookup_sid2hash = "bcdb:%s:schemas:sid2hash" % bcdb.name
+        self._redis_key_lookup_hash2sid = "bcdb:%s:schemas:hash2sid" % bcdb.name
+        self._redis_key_lookup_sid2schema = "bcdb:%s:schemas:sid2schema" % bcdb.name
+        self._redis_key_lookup_url2sid = "bcdb:%s:schemas:url2sid " % bcdb.name
+        self._redis_key_lookup_sid2url = "bcdb:%s:schemas:sid2url" % bcdb.name
+        self._redis_key_lookup_nid2meta = "bcdb:%s:schemas:nid2meta" % bcdb.name
+        self._redis_key_inited = "bcdb:%s:init" % bcdb.name  # if its there it means we have working redis
         self.reset()
 
     @property
     def data(self):
+
         if self._data is None:
-            if self._bcdb.zdbclient is not None:
-                if self._bcdb.zdbclient.type == "RDB":
-                    data = self._bcdb.zdbclient._redis.get(self._bcdb.zdbclient._schemaskey)
-                else:
-                    data = self._bcdb.zdbclient.get(0)
+            if self._bcdb.zdbclient is None:
+                r = j.core.db
+                data = j.core.db.get(self._redis_key)
+            elif self._bcdb.zdbclient.type == "ZDB":
+                r = self._bcdb.zdbclient._redis
+                data = r.get(self._redis_key)
             else:
-                # no ZDB used, is a file in local filesystem
-                if not j.sal.fs.exists(self._meta_local_path):
-                    data = None
-                else:
-                    data = j.sal.fs.readFile(self._meta_local_path, binary=True)
+                data = self._bcdb.zdbclient.get(0)
+                r = j.core.db
             if data is None:
                 self._log_debug("save, empty schema")
                 self._data = self._schema.new()
@@ -41,6 +48,16 @@ class BCDBMeta(j.application.JSBaseClass):
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
 
+                # its only for reference purposes & maybe 3e party usage
+                r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
+                r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
+                j.shell()
+                d0 = {"url": s.url, "text": s.schema, "sid": s.sid, "md5": s.md5}
+                d = j.data.serialisers.json.dumps(d0)
+                r.hset(self._redis_key_lookup_sid2schema, s.md5, s._json)
+                r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
+                r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
+
                 if s.sid in self._bcdb._schema_sid_to_md5:
                     if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
                         raise RuntimeError("bug: should never happen")
@@ -51,30 +68,39 @@ class BCDBMeta(j.application.JSBaseClass):
                 if not j.data.schema.exists(md5=s.md5):
                     j.data.schema.add_from_text(schema_text=s.text)
 
+            for n in self._data.namespaces:
+                if n.nid > self._namespace_last_id:
+                    self._namespace_last_id = n.nid
+
+                r.hset(self._redis_key_lookup_nid2meta, n._json)
+
         return self._data
 
     def reset(self):
         self._data = None
         self._schema_last_id = 0
+        self._namespace_last_id = 0
         self.data
 
     def _save(self):
         if self._data is None:
             self.data
         self._log_debug("save:\n%s" % self.data)
-        if self._bcdb.zdbclient is not None:
-            if self._bcdb.zdbclient.type == "RDB":
-                self._bcdb.zdbclient._redis.set(self._bcdb.zdbclient._schemaskey, self._data._data)
-            else:
-                # if self._bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
-                if self._bcdb.zdbclient.get(0) == None:
-                    # self._bcdb.zdbclient.execute_command("SET","", self._data._data)
-                    self._bcdb.zdbclient.set(self._data._data)
-                else:
-                    self._bcdb.zdbclient.set(self._data._data, 0)
-                    # self._bcdb.zdbclient.execute_command("SET",b'\x00\x00\x00\x00', self._data._data)
+
+        if self._bcdb.zdbclient is None:
+            r = j.core.db
+            j.core.db.set(self._redis_key, self._data._data)
+        elif self._bcdb.zdbclient.type == "ZDB":
+            r = self._bcdb.zdbclient._redis
+            j.core.db.set(self._redis_key, self._data._data)
         else:
-            j.sal.fs.writeFile(self._meta_local_path, self._data._data)
+            # if self._bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
+            if self._bcdb.zdbclient.get(0) == None:
+                # self._bcdb.zdbclient.execute_command("SET","", self._data._data)
+                self._bcdb.zdbclient.set(self._data._data)
+            else:
+                self._bcdb.zdbclient.set(self._data._data, 0)
+                # self._bcdb.zdbclient.execute_command("SET",b'\x00\x00\x00\x00', self._data._data)
 
     def _schema_set(self, schema):
         """

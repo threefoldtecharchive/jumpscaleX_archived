@@ -9,8 +9,6 @@ class RedisCoreClient(j.application.JSBaseClass):
 
     def _init(self):
 
-        self._client_fallback = j.clients.redis.core_get()
-
         try:
             self._credis = True
             from credis import Connection
@@ -61,3 +59,14 @@ class RedisCoreClient(j.application.JSBaseClass):
 
     def incr(self, *args):
         return self.execute("INCR", *args)
+
+    def lpush(self, *args):
+        return self.execute("LPUSH", *args)
+
+    @property
+    def client(self):
+        if not self._client:
+            import redis
+
+            self._client = redis.Redis(unix_socket_path=j.core.db.connection_pool.connection_kwargs["path"], db=1)
+        return self._client

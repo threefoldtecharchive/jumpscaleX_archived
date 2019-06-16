@@ -185,8 +185,6 @@ class BCDB(j.application.JSBaseClass):
         self.circle = None
 
         self.models = {}
-        self._schema_md5_to_model = {}
-        self._schema_sid_to_md5 = {}
         self._index_schema_class_cache = {}  # cache for the index classes
 
         if reset:
@@ -214,11 +212,12 @@ class BCDB(j.application.JSBaseClass):
         self.circle = self.model_add(CIRCLE(bcdb=self))
         self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
+        # check if we need to rebuild the BCDB indexes
         try:
-            res = j.clients.credis_core.get("bcdb_init")
+            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
         except j.clients.credis_core._ConnectionError:
             j.clients.credis_core._init()
-            res = j.clients.credis_core.get("bcdb_init")
+            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
         except Exception as e:
             raise e
 
@@ -226,7 +225,7 @@ class BCDB(j.application.JSBaseClass):
             # means there is no index yet in the redis, need to rebuild all
             j.data.bcdb.index_rebuild()
 
-        j.clients.credis_core.set("bcdb_init", b"1")
+        j.clients.credis_core.set(self.meta._redis_key_lookup_sid2url, b"1")
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 
@@ -273,41 +272,41 @@ class BCDB(j.application.JSBaseClass):
         """
         self._init_(stop=True, reset=True)
 
-    def _hset_index_key_get(self, schema, returndata=False):
-        if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
-
-        key = [self.name, schema.url]
-        r = j.clients.credis_core.get("bcdb.schema.instances")
-        if r is None:
-            data = {}
-            data["lastid"] = 0
-        else:
-            data = j.data.serializers.json.loads(r)
-        if self.name not in data:
-            data[self.name] = {}
-        if schema.url not in data[self.name]:
-            data["lastid"] = data["lastid"] + 1
-            data[self.name][schema.url] = data["lastid"]
-
-            bindata = j.data.serializers.json.dumps(data)
-            j.clients.credis_core.set("bcdb.schema.instances", bindata)
-        if returndata:
-            return data
-        else:
-            return b"O:" + str(data[self.name][schema.url]).encode()
-
-    def _hset_index_key_delete(self):
-        r = j.clients.credis_core.get("bcdb.schema.instances")
-        if r is None:
-            return
-        data = j.data.serializers.json.loads(r)
-        if self.name in data:
-            for url, key_id in data[self.name].items():
-                tofind = b"O:" + str(key_id).encode() + b":*"
-                for key in j.clients.credis_core.keys(tofind):
-                    print("HKEY DELETE:%s" % key)
-                    j.clients.credis_core.delete(key)
+    # def _hset_index_key_get(self, schema, returndata=False):
+    #     if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
+    #         raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
+    #
+    #     key = [self.name, schema.url]
+    #     r = j.clients.credis_core.get("bcdb:schema:instances")
+    #     if r is None:
+    #         data = {}
+    #         data["lastid"] = 0
+    #     else:
+    #         data = j.data.serializers.json.loads(r)
+    #     if self.name not in data:
+    #         data[self.name] = {}
+    #     if schema.url not in data[self.name]:
+    #         data["lastid"] = data["lastid"] + 1
+    #         data[self.name][schema.url] = data["lastid"]
+    #
+    #         bindata = j.data.serializers.json.dumps(data)
+    #         j.clients.credis_core.set("bcdb:schema:instances", bindata)
+    #     if returndata:
+    #         return data
+    #     else:
+    #         return b"bcdb:%s:index:%s" % (self.name, str(data[self.name][schema.url]).encode())
+    #
+    # def _hset_index_key_delete(self):
+    #     r = j.clients.credis_core.get("bcdb:schema:instances")
+    #     if r is None:
+    #         return
+    #     data = j.data.serializers.json.loads(r)
+    #     if self.name in data:
+    #         for url, key_id in data[self.name].items():
+    #             tofind = b"bcdb:index:" + str(key_id).encode() + b":*"
+    #             for key in j.clients.credis_core.keys(tofind):
+    #                 print("HKEY DELETE:%s" % key)
+    #                 j.clients.credis_core.delete(key)
 
     def _reset(self):
 
@@ -322,7 +321,7 @@ class BCDB(j.application.JSBaseClass):
             self._sqlclient = None
 
         # need to clean redis
-        self._hset_index_key_delete()
+        # self._hset_index_key_delete()
 
         j.sal.fs.remove(self._data_dir)
 
@@ -384,14 +383,14 @@ class BCDB(j.application.JSBaseClass):
 
         return self.model_get_from_schema(s)
 
-    def model_get_from_url(self, url):
-        """
-        will return the latest model found based on url
-        :param url:
-        :return:
-        """
-        s = j.data.schema.get_from_url_latest(url=url)
-        return self.model_get_from_schema(s)
+    # def model_get_from_url(self, url):
+    #     """
+    #     will return the latest model found based on url
+    #     :param url:
+    #     :return:
+    #     """
+    #     s = j.data.schema.get_from_url_latest(url=url)
+    #     return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -403,17 +402,20 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
 
         self._schema_property_add_if_needed(model.schema)
-
-        model.schema = self.meta._schema_set(model.schema)  # make sure we remember schema
         self._schema_md5_to_model[model.schema._md5] = model
-        assert model.schema.sid != None
-        assert model.schema.sid > 0
-        self.models[model.schema.url] = model
+
         return model
+
+    def _schema_add(self, schema):
+        self.meta._schema_set(schema)  # make sure we remember schema
+        assert schema.sid != None
+        assert schema.sid > 0
+        return schema
 
     def _schema_property_add_if_needed(self, schema):
         """
-        recursive walks over schema sub properties, to make sure we remember them all in bcdb
+        recursive walks over schema properties (multiple levels)
+        if a sub property is a complex type by itself, then we need to make sure we remember the schema's also in BCDB
         :param schema:
         :return:
         """
@@ -430,11 +432,12 @@ class BCDB(j.application.JSBaseClass):
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
 
-    def model_get_from_schema(self, schema, dest=""):
+    def model_get_from_schema(self, schema, dest="", namespaceid=1):
         """
         :param schema: is schema as text or as schema obj
         :param reload: will reload template
         :param overwrite: will overwrite the resulting file even if it already exists
+        :param namespaceid is the namespace id
         :return:
         """
         if j.data.types.string.check(schema):
@@ -449,6 +452,8 @@ class BCDB(j.application.JSBaseClass):
 
         if schema._md5 in self._schema_md5_to_model:
             return self._schema_md5_to_model[schema._md5]
+
+        schema = self._schema_add(schema)
 
         self._log_info("load model:%s" % schema.url)
 
@@ -465,7 +470,7 @@ class BCDB(j.application.JSBaseClass):
             overwrite=False,
         )
 
-        model = myclass(reset=self._need_to_reset, bcdb=self, schema=schema)
+        model = myclass(reset=self._need_to_reset, bcdb=self, schema=schema, namespaceid=namespaceid)
 
         return self.model_add(model)
 
@@ -502,7 +507,7 @@ class BCDB(j.application.JSBaseClass):
 
         return self._index_schema_class_cache[schema.key]
 
-    def model_get_from_file(self, path):
+    def model_get_from_file(self, path, namespaceid=1):
         """
         add model to BCDB
         is path to python file which represents the model
@@ -511,7 +516,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
-        model = cl()
+        model = cl(namespaceid=namespaceid)
         return self.model_add(model)
 
     def models_add(self, path, overwrite=True):
@@ -541,6 +546,7 @@ class BCDB(j.application.JSBaseClass):
 
             schema_text = j.sal.fs.readFile(schemapath)
             schema = j.data.schema.get_from_text(schema_text)
+            schema = self._schema_add(schema)
             toml_path = "%s.toml" % (schema.key)
             if j.sal.fs.getBaseName(schemapath) != toml_path:
                 toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)

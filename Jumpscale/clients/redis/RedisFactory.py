@@ -19,8 +19,19 @@ class RedisFactory(j.application.JSBaseClass):
     def _init(self):
         self._cache_clear()
         self._unix_socket_core = "/sandbox/var/redis.sock"
+        self._core = None
 
         #
+
+    @property
+    def core(self):
+        """
+        returns the non C optimized version !
+        :return:
+        """
+        if not self._core:
+            self._core = j.clients.redis.get()
+        return self._core
 
     def _cache_clear(self):
         """
@@ -60,7 +71,7 @@ class RedisFactory(j.application.JSBaseClass):
         :type password: str, optional
         :param fromcache: if False, will create a new one instead of checking cache, defaults to True
         :type fromcache: bool, optional
-        :param unixsocket: path of unixsocket to be used while creating Redis, defaults to None
+        :param unixsocket: path of unixsocket to be used while creating Redis, defaults to socket of the core redis
         :type unixsocket: [type], optional
 
         :param ssl_certfile: [description], defaults to None
@@ -83,7 +94,7 @@ class RedisFactory(j.application.JSBaseClass):
         if ipaddr and port:
             key = "%s_%s" % (ipaddr, port)
         else:
-            assert unixsocket is not None
+            unixsocket = j.core.db.connection_pool.connection_kwargs["path"]
             key = unixsocket
 
         if key not in self._redis or not fromcache:
