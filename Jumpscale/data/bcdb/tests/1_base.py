@@ -69,7 +69,7 @@ def main(self):
                 print(model.zdbclient.nsinfo["entries"])
                 assert model.zdbclient.nsinfo["entries"] == 1
             else:
-                assert len(model.get_all()) == 0
+                assert len(model.find()) == 0
 
             for i in range(10):
                 model_obj = model.new()
@@ -86,7 +86,7 @@ def main(self):
                 model_obj.email = "info%s@something.com" % i
                 model_obj2 = model._set(model_obj)
 
-            assert len(model.get_all()) == 10
+            assert len(model.find()) == 10
 
             model_obj3 = model.get(model_obj2.id)
 

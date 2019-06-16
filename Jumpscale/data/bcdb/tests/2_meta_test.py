@@ -18,7 +18,7 @@ def main(self):
 
     bcdb, _ = self._load_test_model()
 
-    assert len(bcdb.get_all()) == 0
+    assert len(bcdb.find()) == 0
 
     assert len(bcdb.meta.data.schemas) == 7
     s = bcdb.meta.data.schemas[-1]
@@ -75,7 +75,7 @@ def main(self):
 
     model = bcdb.model_get_from_schema(schema=s0)
 
-    assert bcdb.get_all() == []  # just to make sure its empty
+    assert bcdb.find() == []  # just to make sure its empty
 
     assert len(bcdb.meta.data._ddict["schemas"]) == 8
 
@@ -134,10 +134,10 @@ def main(self):
     assert a2.i == 2  # int
     assert a3._model.schema.sid == s2_sid  # needs to be the new sid
 
-    assert len(model2.get_all()) == 3  # needs to be 3 because model is for all of them
-    assert len(model.get_all()) == 3  # needs to be 3 because model is for all of them
+    assert len(model2.find()) == 3  # needs to be 3 because model is for all of them
+    assert len(model.find()) == 3  # needs to be 3 because model is for all of them
 
-    all = model2.get_all()
+    all = model2.find()
 
     a4 = model2.get(all[0].id)
     a4_ = model.get(all[0].id)

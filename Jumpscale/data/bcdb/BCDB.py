@@ -214,10 +214,10 @@ class BCDB(j.application.JSBaseClass):
 
         # check if we need to rebuild the BCDB indexes
         try:
-            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
+            res = j.clients.credis_core.get(self.meta._redis_key_inited)
         except j.clients.credis_core._ConnectionError:
             j.clients.credis_core._init()
-            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
+            res = j.clients.credis_core.get(self.meta._redis_key_inited)
         except Exception as e:
             raise e
 
@@ -225,7 +225,7 @@ class BCDB(j.application.JSBaseClass):
             # means there is no index yet in the redis, need to rebuild all
             j.data.bcdb.index_rebuild()
 
-        j.clients.credis_core.set(self.meta._redis_key_lookup_sid2url, b"1")
+        j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 

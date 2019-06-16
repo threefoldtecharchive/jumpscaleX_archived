@@ -21,7 +21,7 @@ def main(self):
 
     bcdb.models_add(mpath)
     model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
-    assert model.get_all() == []
+    assert model.find() == []
 
     assert model.bcdb.zdbclient is None
 

@@ -31,48 +31,37 @@ class BCDBModel(j.application.JSBaseClass):
 
         bcdb, schema, reset = self._init_load(bcdb, schema, reset)
 
+        assert bcdb
         assert schema
         assert schema.sid > 0
+
         self.schema = schema
+        self.bcdb = bcdb
+        self.zdbclient = bcdb.zdbclient
+        self.readonly = False
+        self.autosave = False  # if set it will make sure data is automatically set from object
+
+        if self.zdbclient:
+            if self.zdbclient.type == "ZDB":
+                # is unique id for a bcdbmodel (unique per zdbclient !)
+                self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
+            else:
+                self.key = "%s_%s" % (self.zdbclient.name, self.schema.url)
+        else:
+            self.key = self.schema.url
+        self.key = self.key.replace(".", "_")
 
         self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
-        j.sal.fs.createDir(self._data_dir)
         j.sal.fs.createDir(self._data_dir)
 
         # self._kosmosinstance = None
 
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
-        self.index = indexklass(BCDBModelIndex)
+        self.index = indexklass(self, reset=reset)
 
-        self._ids_redis_use = True  # let only use redis for now for the indexes
-        self._ids_redis = j.clients.redis.core
-        self._ids_last = {}  # need to keep last id per namespace
-
-        # if self.zdbclient and self.zdbclient.type == "RDB":
-        #     self._ids_redis_use = True
-
-        if bcdb is None:
-            raise RuntimeError("bcdb should be set")
-
-        self.bcdb = bcdb
         # self.cache_expiration = 3600
 
-        self.zdbclient = bcdb.zdbclient
-
-        # if self.zdbclient:
-        #     # is unique id for a bcdbmodel (unique per zdbclient !)
-        #     self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
-        # else:
-        #     self.key = self.schema.url
-        # self.key = self.key.replace(".", "_")
-
-        self.readonly = False
-
-        self.autosave = False  # if set it will make sure data is automatically set from object
-
         self._triggers = []
-
-        self._init4()
 
         if reset:
             self.reset()
@@ -80,21 +69,13 @@ class BCDBModel(j.application.JSBaseClass):
     def _init_load(self, bcdb, schema, reset):
         return bcdb, schema, reset
 
-    def _init4(self):
-
-        # if self.cache_expiration > 0:
-        #     self.obj_cache = {}
-        # else:
-        #     self.obj_cache = None
-
-        self._ids_init()
-        if not (self.zdbclient and self.zdbclient.type == "RDB"):
-            # should onnly be done for ZDB or SQLITE
-            self._init_index()  # goal is to be overruled by users
-
     def trigger_add(self, method):
         """
         see docs/baseclasses/data_mgmt_on_obj.md
+
+        triggers are called with obj,action,propertyname as kwargs
+
+        return obj or None
 
         :param method:
         :return:
@@ -111,20 +92,17 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
+            obj2 = method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
+            if isinstance(obj2, j.data.schema.DataObjBase):
+                # only replace if right one returned, otherwise ignore
+                obj = obj2
+            else:
+                if obj2 is not None:
+                    raise RuntimeError("obj return from action needs to be a JSX data obj or None")
+        return obj
 
-    def cache_reset(self):
-        self.obj_cache = {}
-
-    @property
-    def _redis_prefix(self):
-        """
-        keep a name to id mapping in the redis, that way we have a short name for the hset for the keys
-        :return:
-        """
-        if self.__redis_prefix is None:
-            self.__redis_prefix = self.bcdb._hset_index_key_get(self.schema)
-        return self.__redis_prefix
+    # def cache_reset(self):
+    #     self.obj_cache = {}
 
     @queue_method
     def index_ready(self):
@@ -158,12 +136,12 @@ class BCDBModel(j.application.JSBaseClass):
     #     self.index_ready() #will only return when dataprocessor working
 
     @queue_method
-    def index_rebuild(self):
+    def index_rebuild(self, nid=1):
         self.stop()
-        self.index_destroy()
+        self.index.destroy(nid=nid)
         self._log_warning("will rebuild index for:%s" % self)
-        for obj in self.iterate():
-            self._set(obj, store=False, index=True)
+        for obj in self.iterate(nid=nid):
+            self.set(obj, store=False, index=True)
 
     @queue_method
     def delete(self, obj):
@@ -175,19 +153,13 @@ class BCDBModel(j.application.JSBaseClass):
         assert obj.nid
         if obj.id is not None:
             self.triggers_call(obj=obj, action="delete")
-            self.index_keys_delete(obj)
-            self._delete2(obj.id)
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
-            if self.index:
-                self.index_delete(obj)
-            self._id_delete(obj)
-
-    def _delete2(self, obj_id):
-        if not self.zdbclient:
-            self.bcdb.sqlclient.delete(key=obj_id)
-        else:
-            self.zdbclient.delete(obj_id)
+            if not self.zdbclient:
+                self.bcdb.sqlclient.delete(key=obj.id)
+            else:
+                self.zdbclient.delete(obj.id)
+            self.index.delete(obj)
 
     def check(self, obj):
         if not isinstance(obj, j.data.schema.DataObjBase):
@@ -242,113 +214,25 @@ class BCDBModel(j.application.JSBaseClass):
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
         if not obj.id:
             obj.id = obj_id  # do not forget
-        return self._set(obj)
+        return self.set(obj)
 
-    ###### INDEXER ON KEYS:
-
-    def _redis_hset_key_index(self, nid=1):
-        """
-        :param namespaceid: default is 1 namespace = 1
-        :return: hset key for the storing the index in redis
-
-        use as
-
-        key = self._redis_hset_key_index(nid)
-
-        """
-        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.schema.sid)
-
-    def _index_key_set(self, property_name, val, obj_id, nid=1):
-        """
-
-        :param property_name: property name to index
-        :param val: the value of the property which we want to index
-        :param obj_id: id of the obj
-        :return:
-        """
-
-        key = "%s__%s" % (property_name, val)
-        ids = self._index_key_getids(key, nid=nid)
-        if obj_id is None:
-            raise RuntimeError("id cannot be None")
-        if obj_id not in ids:
-            ids.append(obj_id)
-        data = j.data.serializers.msgpack.dumps(ids)
-        hash = self._index_key_redis_get(key)  # this to have a smaller key to store in mem
-        self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-        j.clients.credis_core.hset(self._redis_hset_key_index(nid=nid) + b":" + hash[0:2], hash[2:], data)
-
-    def _index_key_delete(self, property_name, val, obj_id, nid=1):
-
-        key = "%s__%s" % (property_name, val)
-        ids = self._index_key_getids(key, nid=nid)
-        if obj_id is None:
-            raise RuntimeError("id cannot be None")
-        if obj_id in ids:
-            ids.pop(ids.index(obj_id))
-        hash = self._index_key_redis_get(key)
-        if ids == []:
-            j.clients.credis_core.hdel(self._redis_hset_key_index(nid=nid) + b":" + hash[0:2], hash[2:])
-        else:
-            data = j.data.serializers.msgpack.dumps(ids)
-            hash = self._index_key_redis_get(key)
-            self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hset(self._redis_hset_key_index(nid=nid) + b":" + hash[0:2], hash[2:], data)
-
-    def _index_keys_destroy(self, nid=1):
-        for key in j.clients.credis_core.keys(self._redis_hset_key_index(nid=nid) + b"*"):
-            j.clients.credis_core.delete(key)
-
-    def _index_key_getids(self, key, nid=1):
-        """
-        return all the id's which are already in redis
-        :param key:
-        :return: [] if not or the id's which are relevant for this namespace
-        """
-        hash = self._index_key_redis_get(key)
-
-        r = j.clients.credis_core.hget(self._redis_hset_key_index(nid=nid) + b":" + hash[0:2], hash[2:])
-        if r is not None:
-            # means there is already one
-            self._log_debug("get key(exists):%s" % key)
-            ids = j.data.serializers.msgpack.loads(r)
-
-        else:
-            self._log_debug("get key(new):%s" % key)
-            ids = []
-        return ids
-
-    def _index_key_redis_get(self, key):
-        """
-        returns 10 bytes as key (non HR readable)
-        :param key:
-        :return:
-        """
-        # schema id needs to be in to make sure its different key per schema
-        key2 = key + str(self.schema._md5)
-        # can do 900k per second
-        hash = blake2b(str(key2).encode(), digest_size=10).digest()
-        return hash
-
-    #### RETRIEVAL FROM INDEXING SYSTEM IN REDIS
-
-    def get_from_keys(self, delete_if_not_found=False, nid=1, **args):
+    def find(self, nid=1, **args):
         """
         is a the retrieval part of a very fast indexing system
         e.g.
         self.get_from_keys(name="myname",nid=2)
         :return:
         """
+        delete_if_not_found = False
         if len(args.keys()) == 0:
-            raise RuntimeError("get from keys need arguments")
-        ids_prev = []
-        ids = []
-        for propname, val in args.items():
-            key = "%s__%s" % (propname, val)
-            ids = self._index_key_getids(key, nid=nid)
-            if ids_prev != []:
-                ids = [x for x in ids if x in ids_prev]
-            ids_prev = ids
+            res = []
+            for obj in self.iterate(nid=nid):
+                if obj is None:
+                    raise RuntimeError("iterate should not return None, ever")
+                res.append(obj)
+            return res
+
+        ids = self.index._key_index_find(nid=nid, **args)
 
         def check2(obj, args):
             dd = obj._ddict
@@ -363,7 +247,7 @@ class BCDBModel(j.application.JSBaseClass):
             if res2 is None:
                 if delete_if_not_found:
                     for key, val in args.items():
-                        self._index_key_delete(key, val, id_, nid=nid)
+                        self._key_index_delete(key, val, id_, nid=nid)
             else:
                 # we now need to check if there was no false positive
                 if check2(res2, args):
@@ -373,22 +257,8 @@ class BCDBModel(j.application.JSBaseClass):
 
         return res
 
-    # def get_id_from_key(self, key):
-    #     """
-    #
-    #     :param sid: schema id
-    #     :param key: key used to store
-    #     :return:
-    #     """
-    #     ids = self._index_key_getids(key,nid=nid)
-    #     if len(ids) == 1:
-    #         return ids[0]
-    #     elif len(ids) > 1:
-    #         # need to fetch obj to see what is alike
-    #         j.shell()
-
     @queue_method_results
-    def _set(self, obj, nid=1, index=True, store=True):
+    def set(self, obj, nid=1, index=True, store=True):
         """
         :param obj
         :return: obj
@@ -433,7 +303,7 @@ class BCDBModel(j.application.JSBaseClass):
             l = [nid, self.schema.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
-            self.triggers_call(obj, action="set_pre")
+            obj = self.triggers_call(obj, action="set_pre")
 
             # PUT DATA IN DB
             if obj.id is None:
@@ -457,185 +327,11 @@ class BCDBModel(j.application.JSBaseClass):
                         raise
 
         if index:
-            self.index_set(obj, nid=nid)
-            self.index_keys_set(obj, nid=nid)
-            self._id_set(obj, nid=nid)
+            self.index.set(obj)
 
-        self.triggers_call(obj=obj, action="set_post", nid=nid)
+        obj = self.triggers_call(obj=obj, action="set_post", nid=nid)
 
         return obj
-
-    ##### ID METHODS, this allows us to see which id's are in which namespace
-
-    def _redis_key_id_get(self, nid=1):
-        """
-        :param namespaceid: default is 1 namespace = 1
-        :return: list key for the storing the id's in redis
-
-        use as
-
-        key = self._redis_key_id_get(nid)
-
-        """
-        return "bcdb:%s:%s:ids" % (self.bcdb.name, nid)
-
-    def _ids_init(self, nid=1):
-        """
-        we keep track of id's per namespace and per model, this to allow easy enumeration
-        :return:
-        """
-
-        if nid not in self._ids_last:
-            if self._ids_redis_use:
-                r = self._ids_redis
-                self._ids_last[nid] = 0
-                redis_list_key = self._redis_key_id_get(nid)
-                chunk = r.lindex(redis_list_key, -1)  # get the last element, works because its an ordered list
-                if not chunk:
-                    # means we don't have the list yet
-                    self._ids_last[nid] = 0
-                else:
-                    last = struct.unpack("<I", chunk)[0]
-                    self._ids_last[nid] = last  # need to know the last one
-            else:
-                raise RuntimeError("needs to be 100% checked")
-                # next one always happens
-                ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-                if not j.sal.fs.exists(ids_file_path) or j.sal.fs.fileSize(ids_file_path) == 0:
-                    j.sal.fs.touch(ids_file_path)
-                    self._ids_last[nid] = 0
-                else:
-                    llen = j.sal.fs.fileSize(ids_file_path)
-                    # make sure the len is multiplication of 4 bytes
-                    assert float(llen / 4) == llen / 4
-                    f = open(ids_file_path, "rb")
-                    f.seek(llen - 4, 0)
-                    bindata = f.read(4)
-                    self._ids_last[nid] = struct.unpack(b"<I", bindata)[0]
-                    f.close()
-
-    def _id_set(self, obj, nid=1):
-        self._ids_init(nid=nid)
-        bin_id = struct.pack("<I", obj.id)
-        if obj.id > self._ids_last[nid]:
-            if self._ids_redis_use:
-                r = self._ids_redis
-                redis_list_key = self._redis_key_id_get(nid)
-                r.rpush(redis_list_key, bin_id)
-            else:
-                # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
-                ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-                j.sal.fs.writeFile(ids_file_path, bin_id, append=True)
-            self._ids_last[nid] = obj.id
-
-    def _id_iterator(self, nid=1):
-        """
-        if nid==None then will iterate over all namespaces
-
-        ```
-        for obj_id in m.id_iterator:
-            o=m.get(obj_id)
-        ```
-        :return:
-        """
-        self._ids_init(nid=nid)
-        if self._ids_redis_use:
-            r = self._ids_redis
-            if nid is None:
-                for nid in r.keys("bcdb:%s:*" % (self.bcdb.name)):
-                    j.shell()
-                    self._id_iterator(nid=nid)
-            redis_list_key = self._redis_key_id_get(nid)
-            l = r.llen(redis_list_key)
-            if l > 0:
-                for i in range(0, l):
-                    chunk = r.lindex(redis_list_key, i)
-                    obj_id = struct.unpack("<I", chunk)[0]
-                    print(obj_id)
-                    yield obj_id
-
-        else:
-            ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-            # print("idspath:%s"%ids_file_path)
-            with open(ids_file_path, "rb") as f:
-                while True:
-                    chunk = f.read(4)
-                    if chunk:
-                        obj_id = struct.unpack("<I", chunk)[0]
-                        yield obj_id
-                    else:
-                        break
-
-    def _id_delete(self, id, nid=1):
-        self._ids_init(nid=nid)
-        if self._ids_redis_use:
-            id = int(id)
-            r = self._ids_redis
-            bin_id = struct.pack("<I", id)
-            redis_list_key = self._redis_key_id_get(nid)
-            r.lrem(redis_list_key, 0, bin_id)  # should remove all redis elements of the list with this id
-        else:
-            ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-            out = b""
-            for id_ in self._id_iterator:
-                if id_ != id:
-                    out += struct.pack("<I", id_)
-            j.sal.fs.writeFile(ids_file_path, out)
-
-    def _id_exists(self, id, nid=1):
-        self._ids_init(nid=nid)
-
-        def get(r, pos, die=True):
-            b = r.lindex(redis_list_key, pos)
-            if not b:
-                if die:
-                    j.shell()
-                    raise RuntimeError("should always get something back?")
-                return None
-            return struct.unpack("<I", b)[0]
-
-        if self._ids_redis_use:
-            id = int(id)
-            r = self._ids_redis
-            redis_list_key = self._redis_key_id_get(nid)
-            l = r.llen(redis_list_key)
-            if l > 0:
-                chunk = r.lindex(redis_list_key, -1)  # last one
-                last = struct.unpack("<I", chunk)[0]
-                trypos = int(l / last * id)
-                if trypos == last:
-                    j.shell()
-                potentialid = get(r, trypos, die=False)
-                if not potentialid:
-                    j.shell()
-                elif potentialid == id:
-                    # lucky
-                    return True
-                elif potentialid is None or potentialid > id:
-                    # walk back
-                    for i in range(trypos, 0, step=-1):
-                        potentialid = get(r, i)
-                        if potentialid == id:
-                            return True
-                        if potentialid < id:
-                            return False  # we're already too low
-                elif potentialid < id:
-                    # walk forward
-                    for i in range(0, trypos):
-                        potentialid = get(r, i)
-                        if potentialid == id:
-                            return True
-                        if potentialid > id:
-                            return False  # we're already too high
-                else:
-                    raise RuntimeError("did not find, should not get here")
-
-                return False
-        else:
-            ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-            raise RuntimeError("not implemented yet")
-
-    ######################################################
 
     def _dict_process_out(self, ddict):
         """
@@ -664,26 +360,11 @@ class BCDBModel(j.application.JSBaseClass):
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
         obj.nid = nid
-        self.triggers_call(obj=obj, action="new")
+        obj = self.triggers_call(obj=obj, action="new")
         return obj
 
     def _methods_add(self, obj):
         return obj
-
-    # def index_set(self, obj):
-    #     pass
-    #
-    # def index_keys_set(self, obj):
-    #     pass
-
-    def index_destroy(self, nid=None):
-        self.index.index_destroy(nid=nid)  # will destroy index in sqlite & redis
-
-    # def index_delete(self, obj):
-    #     if self.index:
-    #         if not j.data.types.int.check(obj):
-    #             obj = obj.id
-    #         self.index.delete_by_id(obj)
 
     @queue_method_results
     def get(self, obj_id, return_as_capnp=False, usecache=True, die=True):
@@ -722,41 +403,30 @@ class BCDBModel(j.application.JSBaseClass):
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
 
-        self.triggers_call(obj=obj, action="get")
+        obj = self.triggers_call(obj=obj, action="get")
 
         return obj
 
-    def delete_all(self):
-        for obj_id in self._id_iterator:
-            self.delete(obj_id)
-
-    def reset(self):
-        self._log_warning("reset:%s" % self.key)
+    def destroy(self, nid=1):
+        self._log_warning("destroy: %s nid:%s" % (self, nid))
         if self.zdbclient:
-            if self.zdbclient.type == "RDB":
-                self.zdbclient.flush()
-            else:
-                self.delete_all()  # only for zdb relevant
+            for obj_id in self._id_iterator(nid=nid):
+                if not self.zdbclient:
+                    self.bcdb.sqlclient.delete(key=obj_id)
+                else:
+                    self.zdbclient.delete(obj_id)
+        else:
+            j.shell()
 
-        # now need to remove tables from index
-        if not (self.zdbclient and self.zdbclient.type == "RDB"):
-            self.index_destroy()
-
+        self.index.destroy()
         self.stop()
         j.sal.fs.remove(self._data_dir)
 
-        tofind = self.bcdb._hset_index_key_get(self.schema) + b":*"
-
-        for key in j.clients.credis_core.keys(tofind):
-            j.clients.credis_core.delete(key)
-
-        self._init_()
-
-    def iterate(self):
+    def iterate(self, nid=1):
         """
         walk over objects which are of type of this model
         """
-        for obj_id in self._id_iterator:
+        for obj_id in self.index._id_iterator(nid=nid):
             try:
                 o = self.get(obj_id)
             except Exception as e:
@@ -766,20 +436,6 @@ class BCDBModel(j.application.JSBaseClass):
                 else:
                     raise e
             yield o
-
-    def get_all(self):
-        res = []
-        for obj in self.iterate():
-            if obj is None:
-                raise RuntimeError("iterate should not return None, ever")
-            res.append(obj)
-        return res
-
-    def _init_index(self):
-        pass
-
-    def notify_new(self, obj):
-        return
 
     def __str__(self):
         out = "model:%s\n" % self.schema.url

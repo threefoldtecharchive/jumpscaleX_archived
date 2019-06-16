@@ -25,10 +25,10 @@ class BCDBMeta(j.application.JSBaseClass):
         if self._data is None:
             if self._bcdb.zdbclient is None:
                 r = j.core.db
-                data = j.core.db.get(self._redis_key)
-            elif self._bcdb.zdbclient.type == "ZDB":
+                data = j.core.db.get(self._redis_key_data)
+            elif self._bcdb.zdbclient.type == "RDB":
                 r = self._bcdb.zdbclient._redis
-                data = r.get(self._redis_key)
+                data = r.get(self._redis_key_data)
             else:
                 data = self._bcdb.zdbclient.get(0)
                 r = j.core.db
@@ -51,9 +51,6 @@ class BCDBMeta(j.application.JSBaseClass):
                 # its only for reference purposes & maybe 3e party usage
                 r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
                 r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
-                j.shell()
-                d0 = {"url": s.url, "text": s.schema, "sid": s.sid, "md5": s.md5}
-                d = j.data.serialisers.json.dumps(d0)
                 r.hset(self._redis_key_lookup_sid2schema, s.md5, s._json)
                 r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
                 r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
@@ -89,10 +86,10 @@ class BCDBMeta(j.application.JSBaseClass):
 
         if self._bcdb.zdbclient is None:
             r = j.core.db
-            j.core.db.set(self._redis_key, self._data._data)
+            j.core.db.set(self._redis_key_data, self._data._data)
         elif self._bcdb.zdbclient.type == "ZDB":
             r = self._bcdb.zdbclient._redis
-            j.core.db.set(self._redis_key, self._data._data)
+            j.core.db.set(self._redis_key_data, self._data._data)
         else:
             # if self._bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
             if self._bcdb.zdbclient.get(0) == None:
