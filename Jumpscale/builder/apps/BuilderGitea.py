@@ -85,18 +85,17 @@ class BuilderGitea(BuilderGolangTools):
         self.write_ini_config(self.INIPATH)
 
         try:
-            j.sal.process.killProcessByName("postgres")
-            j.sal.process.killProcessByName("gitea")
             self.stop()
         except j.exceptions.RuntimeError:
             # not started
             pass
 
-        self.start()
+        j.builders.db.postgres.start()
 
         _, out, _ = self._execute("sudo -u postgres {DIR_BIN}/psql -l")
         if "gitea" not in out:
             self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
+        self.start()
 
         cfg = """
         {{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}
