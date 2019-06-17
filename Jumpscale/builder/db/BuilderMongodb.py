@@ -38,6 +38,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
                 "libssl-dev",
                 "libc6",
                 "libc6-dev",
+                "python3-dev",
             ]
         )
         # update gcc
