@@ -35,9 +35,10 @@ def main(self):
 
     j.servers.zdb.start_test_instance()
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
-    self.admin_zdb.namespace_new("unique")
-    self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
+    self.admin_zdb.namespace_new("unique", secret="1234")
+    self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901, secret="1234")
     self.bcdb = j.data.bcdb.get("test", zdbclient=self.zdb)
+    self.bcdb.reset()
     schema = j.data.schema.get_from_text(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
     schema_obj = self.model.new()
@@ -71,7 +72,7 @@ def main(self):
     j.core.tools.log("On the second object, try to use same number for first one, should fail", level=20)
     schema_obj2.number = number
     # check that in DB only 1 matches from the past
-    r4 = self.model.get_from_keys(number=number)
+    r4 = self.model.find(number=number)
     print(r4)
     assert r4[0].id == schema_obj.id
     assert r4[0].id != schema_obj2.id
@@ -83,7 +84,7 @@ def main(self):
     schema_obj.save()
     schema_obj2.number = number
     args_search = {"number": schema_obj2.number}
-    r = self.model.get_from_keys(**args_search)
+    r = self.model.find(**args_search)
     assert len(r) == 0
     schema_obj2.save()
 
@@ -92,18 +93,18 @@ def main(self):
     test = schema_obj2.test + ""
     number = schema_obj2.number + 0
     args_search = {"number": number}
-    r = self.model.get_from_keys(**args_search)
+    r = self.model.find(**args_search)
     assert len(r) == 1
     schema_obj2.delete()
     # lets now check that the index has been cleaned
     args_search = {"number": number}
-    r = self.model.get_from_keys(**args_search)
+    r = self.model.find(**args_search)
     assert len(r) == 0
     args_search = {"name": name}
-    r = self.model.get_from_keys(**args_search)
+    r = self.model.find(**args_search)
     assert len(r) == 0
     args_search = {"test": test}
-    r = schema_obj2._model.get_from_keys(**args_search)
+    r = schema_obj2._model.find(**args_search)
     assert len(r) == 0
 
     schema_obj2.save()

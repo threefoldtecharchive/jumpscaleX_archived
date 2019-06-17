@@ -17,8 +17,7 @@ def main(self):
     cl1.flush()
 
     bcdb, _ = self._load_test_model()
-
-    assert len(bcdb.find()) == 0
+    assert len(bcdb.get_all()) == 0
 
     assert len(bcdb.meta.data.schemas) == 7
     s = bcdb.meta.data.schemas[-1]
@@ -75,7 +74,7 @@ def main(self):
 
     model = bcdb.model_get_from_schema(schema=s0)
 
-    assert bcdb.find() == []  # just to make sure its empty
+    assert bcdb.get_all() == []  # just to make sure its empty
 
     assert len(bcdb.meta.data._ddict["schemas"]) == 8
 

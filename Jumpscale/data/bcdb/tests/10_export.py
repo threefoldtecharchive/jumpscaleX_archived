@@ -19,7 +19,7 @@ def main(self):
     """
     bcdb = j.data.bcdb.get("test_export")
     m = bcdb.model_get_from_schema(SCHEMA)
-    m.reset()
+    m.destroy()
 
     for i in range(10):
         o = m.new()
@@ -36,7 +36,7 @@ def main(self):
     """
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
-    m2.reset()
+    m2.destroy()
 
     for i in range(10):
         o = m2.new()
@@ -48,7 +48,6 @@ def main(self):
     p = "/tmp/bcdb_export"
 
     def export_import(encr=False, export=True, remove=False):
-
         if export:
             j.sal.fs.remove(p)
             bcdb.export(path=p, encrypt=encr)

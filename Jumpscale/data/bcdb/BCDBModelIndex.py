@@ -90,7 +90,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._key_index_hsetkey_get(nid)
 
         """
-        assert nid
         return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.schema.sid)
 
     def _key_index_set_(self, property_name, val, obj_id, nid=1):
@@ -101,7 +100,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param obj_id: id of the obj
         :return:
         """
-        assert nid
         key = "%s__%s" % (property_name, val)
         ids = self._key_index_getids(key, nid=nid)
         if obj_id is None:
@@ -131,7 +129,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:], data)
 
     def _key_index_destroy(self, nid=1):
-        assert nid
+
         k = self._key_index_hsetkey_get(nid=nid) + ":*"
         for key in j.clients.credis_core.keys(k):
             j.clients.credis_core.delete(key)
@@ -142,7 +140,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param key:
         :return: [] if not or the id's which are relevant for this namespace
         """
-        assert nid
+
         hash = self._key_index_redis_get(key)
 
         r = j.clients.credis_core.hget(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:])
