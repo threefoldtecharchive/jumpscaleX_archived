@@ -76,6 +76,7 @@ class BuilderGitea(BuilderGolangTools):
         """
 
         config = textwrap.dedent(config)
+        self.tools.dir_ensure(j.sal.fs.getDirName(path))
         self._write(path, config)
 
     @builder_method()
@@ -150,5 +151,4 @@ class BuilderGitea(BuilderGolangTools):
 
         # init config
         custom_dir = self._replace("{DIR_SANDBOX}/sandbox/bin/custom/conf")
-        self.tools.dir_ensure(custom_dir)
         self.write_ini_config("%s/app.ini" % custom_dir)
