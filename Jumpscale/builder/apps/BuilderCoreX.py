@@ -132,7 +132,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
         assert len(cc.process_list()) == 1
 
         self.stop()
-        assert self.running() == False
+        assert self.running() is False
         print("TEST OK")
 
     @builder_method()
