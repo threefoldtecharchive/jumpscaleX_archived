@@ -11,7 +11,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
         self.build_dir = self.tools.joinpaths(self.DIR_BUILD, "mongo_db/")
 
     @builder_method()
-    def install(self, start=True, reset=False):
+    def install(self):
         """
         install, move files to appropriate places, and create relavent configs
         """
@@ -34,14 +34,19 @@ class BuilderMongodb(j.builders.system._BaseClass):
                 "libboost-thread-dev",
                 "gcc-8",
                 "g++-8",
+                "python3-pip",
+                "libssl-dev",
             ]
         )
         # update gcc
         self._execute(
-            "update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8"
+            """
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+            """
         )
         # self.build_dir
         mongo_url = "https://github.com/mongodb/mongo/"
+        self._remove(self.build_dir)
         j.clients.git.pullGitRepo(url=mongo_url, dest=self.build_dir, branch="master", depth=1)
         build_cmd = """
         cd {build_dir}
@@ -52,8 +57,11 @@ class BuilderMongodb(j.builders.system._BaseClass):
         )
         self._execute(build_cmd, timeout=4000)
 
-        # return to default
-        # "update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7"
+        self._execute(
+            """
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+            """
+        )
 
     @builder_method()
     def clean(self):
@@ -115,7 +123,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
         for bin in bins:
             self._copy("{DIR_BIN}/" + bin, bin_dest)
 
-        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(bin_dest, bin)
