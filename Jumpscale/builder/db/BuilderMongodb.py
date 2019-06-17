@@ -36,6 +36,8 @@ class BuilderMongodb(j.builders.system._BaseClass):
                 "g++-8",
                 "python3-pip",
                 "libssl-dev",
+                "libc6",
+                "libc6-dev",
             ]
         )
         # update gcc
@@ -127,7 +129,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(bin_dest, bin)
-            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest)
+            j.tools.sandboxer.libs_clone_under(dir_src, lib_dest)
 
         # startup.toml
         templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
