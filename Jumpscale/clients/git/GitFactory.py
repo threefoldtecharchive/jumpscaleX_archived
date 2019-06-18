@@ -387,10 +387,8 @@ class GitFactory(j.application.JSBaseClass):
                             self._log_debug(
                                 "git pull rc>0, need to implement further, check what usecase is & build interactivity around"
                             )
-                            print(out)
-                            print(err)
-                            print("could not push/pull %s" % url)
-                            sys.exit(1)
+
+                            raise RuntimeError("could not push/pull: %s\n%s\n%s" % (url, out, err))
 
         else:
             self._log_info(("git clone %s -> %s" % (url, dest)))
