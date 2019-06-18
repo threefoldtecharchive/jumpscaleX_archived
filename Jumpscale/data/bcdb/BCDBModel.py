@@ -411,12 +411,6 @@ class BCDBModel(j.application.JSBaseClass):
 
     def destroy(self, nid=1):
         self._log_warning("destroy: %s nid:%s" % (self, nid))
-        # if self.zdbclient:
-        #     for obj_id in self.iterate(nid=nid):
-        #         if not self.zdbclient:
-        #             self.bcdb.sqlclient.delete(key=obj_id)
-        #         else:
-        #             self.zdbclient.delete(obj_id)
         for obj in self.find():
             obj.delete()
         self.index.destroy()
