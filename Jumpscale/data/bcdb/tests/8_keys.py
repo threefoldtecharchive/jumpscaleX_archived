@@ -19,8 +19,9 @@ def main(self):
     
     
     """
-
+    j.servers.zdb.start_test_instance()
     bcdb = j.data.bcdb.get("test")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
 
     m.destroy()

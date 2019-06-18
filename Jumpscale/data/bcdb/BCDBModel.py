@@ -424,7 +424,9 @@ class BCDBModel(j.application.JSBaseClass):
         for obj_id in self.index._id_iterator(nid=nid):
             self._log_debug("iterate:%s" % obj_id)
             assert obj_id > 0
-            o = self.get(obj_id)
+            o = self.get(obj_id, die=False)
+            if not o:
+                continue
             # try:
             #     o = self.get(obj_id)
             # except Exception as e:

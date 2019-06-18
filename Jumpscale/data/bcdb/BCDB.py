@@ -346,9 +346,12 @@ class BCDB(j.application.JSBaseClass):
         self._log_warning("REBUILD INDEX")
         self.meta.reset()
         for o in self.meta.data.schemas:
-            model = self.model_get_from_sid(o.sid)
-            model.index_rebuild()
-            self.meta._schema_set(model.schema)
+            try:
+                model = self.model_get_from_sid(o.sid)
+                model.index_rebuild()
+                self.meta._schema_set(model.schema)
+            except:
+                pass
 
     # def cache_flush(self):
     #     # put all caches on zero
@@ -528,14 +531,26 @@ class BCDB(j.application.JSBaseClass):
                 pyfiles_base.append(pyfile_base)
 
         tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
-        for schemapath in tocheck:
-
+        # Try to load all schemas from directory
+        # if one schema depends to another it will fail to load if the other one is not loaded yet
+        # that's why we keep the errored schemas and put it to the end of the queue so it waits until every thing is
+        # loaded and try again we will do that for 3 times as max for each schema
+        errored = {}
+        while tocheck:
+            schemapath = tocheck.pop()
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
                 continue
 
             schema_text = j.sal.fs.readFile(schemapath)
-            schema = j.data.schema.get_from_text(schema_text)
+            try:
+                schema = j.data.schema.get_from_text(schema_text)
+            except Jumpscale.core.errorhandler.JSExceptions.Input as e:
+                error_count = errored.get(schemapath, 0)
+                if error_count > 3:
+                    raise e
+                tocheck.insert(0, schemapath)
+                continue
             schema = self._schema_add(schema)
             toml_path = "%s.toml" % (schema.key)
             if j.sal.fs.getBaseName(schemapath) != toml_path:
