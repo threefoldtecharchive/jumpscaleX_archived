@@ -57,24 +57,25 @@ class BCDB(j.application.JSBaseClass):
     def export(self, path=None, encrypt=True):
         if not path:
             j.shell()
-        for o in self.meta.data.schemas:
+        for o in list(self.meta.data.schemas):
             m = self.model_get_from_sid(o.sid)
             dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
-            for obj in m.iterate():
-                json = obj._json
-                if encrypt:
-                    ext = ".encr"
-                    json = j.data.nacl.default.encryptSymmetric(json)
-                else:
-                    ext = ""
-                if "name" in obj._ddict:
-                    dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
-                else:
-                    dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
-                j.sal.fs.writeFile(dpath_file, json)
+            for obj in list(m.iterate()):
+                if obj._model.schema.url == o.url:
+                    json = obj._json
+                    if encrypt:
+                        ext = ".encr"
+                        json = j.data.nacl.default.encryptSymmetric(json)
+                    else:
+                        ext = ""
+                    if "name" in obj._ddict:
+                        dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
+                    else:
+                        dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
+                    j.sal.fs.writeFile(dpath_file, json)
 
     def import_(self, path=None, reset=True):
         if not path:
@@ -319,7 +320,7 @@ class BCDB(j.application.JSBaseClass):
             self.zdbclient.flush(meta=self.meta)  # new flush command
 
         for key, m in self.models.items():
-            m.reset()
+            m.destroy()
 
         self._redis_reset()
 

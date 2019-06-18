@@ -19,8 +19,8 @@ def main(self):
     
     """
     bcdb = j.data.bcdb.get("test_export")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
-
     for i in range(10):
         o = m.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test"
