@@ -38,27 +38,9 @@ Some tools available in jumpscale
   Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file , write to a file, execute bash commands and many other handy methods that you will probably need in your builder) \
   To create a builder see [documentation](docs/howto/Create\ a\ new\ Builder.md)
 
-# Getting Started
+## Install and use Jumpscale
 
-Get up to speed by following these [simple steps](/docs/Installation/get_started.md).
-
-## Installing Jumpscale
-
-[See documentation](/docs/Installation)
-
-
-
-## Usage
-
-* Kosmos in your terminal, type `kosmos`
-
-* In Python
-
-  ```bash
-  python3 -c 'from Jumpscale import j;print(j.application.getMemoryUsage())'
-  ```
-
-  the default mem usage < 23 MB and lazy loading of the modules.
+[See installation doc](/docs/Installation)
 
 ## Running Tests
 To run unittests you can execute the following command
