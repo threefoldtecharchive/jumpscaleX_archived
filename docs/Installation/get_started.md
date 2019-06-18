@@ -1,69 +1,4 @@
-# Getting Started
-
-## Installation prerequisites
-
-* Mac OS X 10.7 (Lion) or newer or a linux OS (tested on ubuntu 18.04)
-* Git installed with a github account
-* an ssh key added to github
-  * go [here](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to generate a ssh key
-  * go [here](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account) to add a ssh key to your github account
-  * to list your public ssh keys `ssh-add -L`
-* Docker
-  * installation [guide](https://docs.docker.com/v17.12/install/#server)
-    * verify installation with `$docker --version`
-* Python3
-  * installation [guide](https://www.python.org/downloads/)
-    * verify installation with `$python3 --version`
-* pip3  
-  * `$sudo apt install python3-pip`
-* click python package  
-  * `$pip3 install click`  
-
-## Install Jumpscale X using docker
-
-```bash
-# fetch JSX install script and set up inside container
-# TODO CHANGE BRANCH WITH MASTER
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
-chmod +x /tmp/jsx; \
-/tmp/jsx container-install
-```
-
-The installer will ask you to provide a secret (and a couple of yes/no questions to which you answer yes).
-If successfull, you will see something like:
-
-```bash
-install succesfull:
-# if you use a container do:
-jsx container-kosmos
-
-```
-
-The install script has built and started a docker container named `3bot` on your machine.
-
-## Start Jumpscale X
-
-To start JumpcaleX:
-
-```bash
-/tmp/jsx container-kosmos
-```
-
-Once kosmos is launched you will see this line:
-
-```bash
-JSX>
-```
-Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library !
-
-If jsx is missing from your `/tmp` folder:
-
-```bash
-#fetch JSX and start Jumpscale X inside container
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
-chmod +x /tmp/jsx; \
-/tmp/jsx container-kosmos
-```
+# Using Jumpscale
 
 ## philosophy
 
@@ -74,7 +9,6 @@ This 3bot, as we call it, will make sure your applications are properly running 
 It will even be able to engage in trade with others and this network of 3bots will act as a decentalized exchange.
 
 Don't worry nobody except you can take control over your 3bot as all your config files are encrypted (securely stored) and your keys never leaves your device.
-
 
 # 1. Using kosmos to create a wallet on the ThreeFold blockchain aka TFChain
 

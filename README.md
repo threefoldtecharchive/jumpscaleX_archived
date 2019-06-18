@@ -40,7 +40,7 @@ Some tools available in jumpscale
 
 ## Install and use Jumpscale
 
-[See installation doc](/docs/Installation)
+[See installation doc](/docs/Installation/README.md)
 
 ## Running Tests
 To run unittests you can execute the following command
