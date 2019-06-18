@@ -50,7 +50,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param nid:
         :return:
         """
-        self._sql_index_destroy(nid=nid)
         self._key_index_destroy(nid=nid)
         self._ids_destroy(nid=nid)
 

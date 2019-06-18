@@ -7,6 +7,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="export")'
 
     """
+    j.servers.zdb.start_test_instance()
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test
@@ -19,7 +20,6 @@ def main(self):
     """
     bcdb = j.data.bcdb.get("test_export")
     m = bcdb.model_get_from_schema(SCHEMA)
-    m.destroy()
 
     for i in range(10):
         o = m.new()
@@ -36,7 +36,6 @@ def main(self):
     """
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
-    m2.destroy()
 
     for i in range(10):
         o = m2.new()
