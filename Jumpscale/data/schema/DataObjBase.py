@@ -31,7 +31,6 @@ class DataObjBase:
                 setattr(self, key, val)
             except Exception as e:
                 if isinstance(e, ValueError):
-                    print("isinstance")
                     msg = "cannot update data for: %s  set prop %s with '%s'" % (self._schema.url, key, val)
                     e.args = (msg,)
                 raise e
