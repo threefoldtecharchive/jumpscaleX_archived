@@ -130,6 +130,7 @@ def main(self):
     bcdb2 = j.data.bcdb.get("test2", zdbclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
+    m3.destroy()
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
 
     # now we know that the previous indexes where not touched

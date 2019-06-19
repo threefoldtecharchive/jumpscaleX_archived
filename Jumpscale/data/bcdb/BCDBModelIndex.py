@@ -289,6 +289,11 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     obj_id = self._id_get_objid_redis(i, nid=nid)
                     # print(obj_id)
                     yield obj_id
+            else:
+                for obj in list(self.bcdb.get_all()):
+                    if obj._schema.url == self.schema.url:
+                        self.set(obj)
+                        yield obj.id
 
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
