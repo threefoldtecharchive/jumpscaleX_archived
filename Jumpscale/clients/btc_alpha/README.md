@@ -14,10 +14,10 @@ you need a key and a secret for your account.
 
 ### use the client
 - you can inquire, exchange, order.
-* example: `test_client.get_currencies` <br/>
+* example: `test_client.get_currencies()` <br/>
 also pprint for more readable response
 ```
 from pprint import pprint
-pprint(test_client.get_currencies)
+pprint(test_client.get_currencies())
 ```
 see what other methods do at: https://btc-alpha.github.io/api-docs
