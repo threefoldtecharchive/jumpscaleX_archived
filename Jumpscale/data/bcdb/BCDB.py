@@ -538,26 +538,23 @@ class BCDB(j.application.JSBaseClass):
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
                 continue
-
+            dest = "%s/%s.py" % (path, bname)
             schema_text = j.sal.fs.readFile(schemapath)
             try:
                 schema = j.data.schema.get_from_text(schema_text)
-            except Jumpscale.core.errorhandler.JSExceptions.Input as e:
+                schema = self._schema_add(schema)
+                model = self.model_get_from_schema(schema=schema, dest=dest)
+                toml_path = "%s.toml" % (schema.key)
+                if j.sal.fs.getBaseName(schemapath) != toml_path:
+                    toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
+                    j.sal.fs.renameFile(schemapath, toml_path)
+                    schemapath = toml_path
+            except:
                 error_count = errored.get(schemapath, 0)
                 if error_count > 3:
                     raise e
                 tocheck.insert(0, schemapath)
                 continue
-            schema = self._schema_add(schema)
-            toml_path = "%s.toml" % (schema.key)
-            if j.sal.fs.getBaseName(schemapath) != toml_path:
-                toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
-                j.sal.fs.renameFile(schemapath, toml_path)
-                schemapath = toml_path
-
-            dest = "%s/%s.py" % (path, bname)
-
-            model = self.model_get_from_schema(schema=schema, dest=dest)
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):

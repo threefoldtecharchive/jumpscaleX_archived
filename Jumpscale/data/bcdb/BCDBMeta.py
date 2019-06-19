@@ -24,14 +24,17 @@ class BCDBMeta(j.application.JSBaseClass):
 
         if self._data is None:
             if self._bcdb.zdbclient is None:
+                self._log_debug("schemas load from redis")
                 r = j.core.db
                 data = j.core.db.get(self._redis_key_data)
             elif self._bcdb.zdbclient.type == "RDB":
+                self._log_debug("schemas load from redis with RDB")
                 r = self._bcdb.zdbclient._redis
                 data = r.get(self._redis_key_data)
             else:
                 data = self._bcdb.zdbclient.get(0)
                 r = j.core.db
+
             if data is None:
                 self._log_debug("save, empty schema")
                 self._data = self._schema.new()

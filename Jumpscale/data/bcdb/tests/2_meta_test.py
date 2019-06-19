@@ -10,13 +10,11 @@ def main(self):
     """
 
     # get zdb client
-
+    bcdb, _ = self._load_test_model(reset=True)
     c = j.clients.zdb.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     cl1.flush()
-
-    bcdb, _ = self._load_test_model()
     assert len(bcdb.get_all()) == 0
 
     assert len(bcdb.meta.data.schemas) == 7
@@ -152,5 +150,4 @@ def main(self):
         a6._model.schema.sid == s2_sid
     )  # needs to be the new one, so the object coming back has the schema as originally intended
     assert a6.i == a3.i
-
     return "OK"
