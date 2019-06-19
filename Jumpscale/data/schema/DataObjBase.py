@@ -30,10 +30,13 @@ class DataObjBase:
             try:
                 setattr(self, key, val)
             except Exception as e:
+                print("yyyyyyyyyy")
                 if isinstance(e, ValueError):
+                    print("isinstance")
                     msg = "cannot update data for: %s  set prop %s with '%s'" % (self._schema.url, key, val)
                     e.args = (msg,)
-                raise e
+                print("before raise")
+                raise RuntimeError("cannot update data for: %s  set prop %s with '%s'" % (self._schema.url, key, val))
 
     def _load_from_data(self, data=None):
         """

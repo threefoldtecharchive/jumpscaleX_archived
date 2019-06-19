@@ -280,7 +280,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
             r = self._ids_redis
             if nid is None:
                 for nid in r.keys("bcdb:%s:*" % (self.bcdb.name)):
-                    j.shell()
                     self._id_iterator(nid=nid)
             redis_list_key = self._id_redis_listkey_get(nid)
             l = r.llen(redis_list_key)
@@ -312,7 +311,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         chunk = r.lindex(self._id_redis_listkey_get(nid=nid), pos)
         if not chunk:
             if die:
-                j.shell()
                 raise RuntimeError("should always get something back?")
             return None
         return struct.unpack("<I", chunk)[0]
@@ -334,6 +332,10 @@ class BCDBModelIndex(j.application.JSBaseClass):
             j.sal.fs.writeFile(ids_file_path, out)
 
     def _id_exists(self, id, nid=1):
+        """ 
+        Check if an object eist based on its id 
+        TODO: Improve it with a binary search 
+        """
         self._ids_init(nid=nid)
 
         if self._ids_redis_use:
@@ -346,10 +348,9 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 # this gives me an estimate where to look for the info in the list
                 trypos = int(l / last_id * id)
                 if trypos == last_id:
-                    j.shell()
-                potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
+                    potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
                 if not potentialid:
-                    j.shell()
+                    raise RuntimeError("can't get a model from data:%s" % bdata)
                 elif potentialid == id:
                     # lucky
                     return True
