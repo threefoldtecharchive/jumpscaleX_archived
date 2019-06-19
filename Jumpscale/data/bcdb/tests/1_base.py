@@ -8,6 +8,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="base")'
 
     """
+    j.servers.zdb.start_test_instance()
 
     def test(name):
         if name == "RDB":
@@ -69,7 +70,7 @@ def main(self):
                 print(model.zdbclient.nsinfo["entries"])
                 assert model.zdbclient.nsinfo["entries"] == 1
             else:
-                assert len(model.get_all()) == 0
+                assert len(model.find()) == 0
 
             for i in range(10):
                 model_obj = model.new()
@@ -84,9 +85,9 @@ def main(self):
                 model_obj.description = "something"
                 model_obj.name = "name%s" % i
                 model_obj.email = "info%s@something.com" % i
-                model_obj2 = model._set(model_obj)
+                model_obj2 = model.set(model_obj)
 
-            assert len(model.get_all()) == 10
+            assert len(model.find()) == 10
 
             model_obj3 = model.get(model_obj2.id)
 
@@ -101,7 +102,7 @@ def main(self):
         db_model = db.model_get_from_url(url="despiegk.test")
 
         if not rdbstor:
-            query = db_model.index.select()
+            query = db_model.index.sql.select()
             qres = [(item.name, item.nr) for item in query]
 
             assert qres == [
@@ -117,18 +118,18 @@ def main(self):
                 ("name9", 9),
             ]
 
-            assert db_model.index.select().where(db_model.index.nr == 5)[0].name == "name5"
+            assert db_model.index.sql.select().where(db_model.index.sql.nr == 5)[0].name == "name5"
 
-            query = db_model.index.select().where(db_model.index.nr > 5)  # should return 4 records
+            query = db_model.index.sql.select().where(db_model.index.sql.nr > 5)  # should return 4 records
             qres = [(item.name, item.nr) for item in query]
 
             assert len(qres) == 4
 
-            res = db_model.index.select().where(db_model.index.name == "name2")
+            res = db_model.index.sql.select().where(db_model.index.sql.name == "name2")
             assert len(res) == 1
             assert res.first().name == "name2"
 
-            res = db_model.index.select().where(db_model.index.email == "info2@something.com")
+            res = db_model.index.sql.select().where(db_model.index.sql.email == "info2@something.com")
             assert len(res) == 1
             assert res.first().name == "name2"
 
@@ -148,12 +149,12 @@ def main(self):
 
         model_obj.token_price = "10 USD"
         assert model_obj.token_price_usd == 10
-        db_model._set(model_obj)
+        db_model.set(model_obj)
         model_obj2 = db_model.get(model_obj.id)
         assert model_obj2.token_price_usd == 10
 
         if not rdbstor:
-            assert db_model.index.select().where(db_model.index.id == model_obj.id).first().token_price == 10
+            assert db_model.index.sql.select().where(db_model.index.sql.id == model_obj.id).first().token_price == 10
         else:
             o = db_model.get_by_name("name1")[0]
             o.name == "name1"
@@ -180,15 +181,13 @@ def main(self):
             9: "name9",
         }
 
-        assert db_model.id_exists(1)
-        assert db_model.id_exists(10) == False
-
-        j.shell()
+        # assert db_model.index.sql._id_exists(1)
+        # assert db_model.index.sql._id_exists(10) == False  #NEEDS TO BE DEBUGGED & IMPROVED
 
         self._log_info("TEST DONE: %s" % name)
 
     test("RDB")
-    # test("ZDB")
-    # test("SQLITE")
+    test("ZDB")
+    test("SQLITE")
 
     return "OK"

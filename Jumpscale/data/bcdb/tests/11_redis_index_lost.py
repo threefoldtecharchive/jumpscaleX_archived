@@ -18,8 +18,8 @@ def main(self):
     
     """
     bcdb = j.data.bcdb.get("test")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
-    m.reset()
 
     for i in range(10):
         o = m.new()
@@ -30,7 +30,7 @@ def main(self):
         o.save()
 
     # we now have some data
-    assert len(m.get_all()) == 10
+    assert len(m.find()) == 10
     r = m.get_by_name("myuser_8")
     assert r[0].addr == "something:8"
 
@@ -51,7 +51,7 @@ def main(self):
     bcdb = j.data.bcdb.get("test")
     m = bcdb.model_get_from_schema(SCHEMA)
 
-    assert len(m.get_all()) == 10
+    assert len(m.find()) == 10
     r = m.get_by_name("myuser_8")
     assert r[0].addr == "something:8"
 

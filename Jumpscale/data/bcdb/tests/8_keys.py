@@ -19,11 +19,12 @@ def main(self):
     
     
     """
-
+    j.servers.zdb.start_test_instance()
     bcdb = j.data.bcdb.get("test")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
 
-    m.reset()
+    m.destroy()
 
     o = m.new()
     assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -34,10 +35,10 @@ def main(self):
 
     assert o._model.schema.url == "threefoldtoken.wallet.test"
 
-    o2 = m.get_by_addr(o.addr)[0]
-    assert len(m.get_by_addr(o.addr)) == 1
-    o3 = m.get_by_email(o.email)[0]
-    o4 = m.get_by_username(o.username)[0]
+    o2 = m.find(addr=o.addr)[0]
+    assert len(m.find(addr=o.addr)) == 1
+    o3 = m.find(email=o.email)[0]
+    o4 = m.find(username=o.username)[0]
 
     assert o2.id == o.id
     assert o3.id == o.id
@@ -59,18 +60,19 @@ def main(self):
 
     assert o._model.schema.url == "threefoldtoken.wallet.test"
 
-    l = m.get_by_username("myuser")
+    l = m.find(username="myuser")
     assert len(l) == 2
 
-    l = m.get_from_keys(email="myemail2", username="myuser")
+    l = m.find(email="myemail2", username="myuser")
     assert len(l) == 1
 
-    assert len(m.get_all()) == 3
-    o_check = m.get_all()[-1]
+    assert len(m.find()) == 3
+    o_check = m.find()[-1]
     assert o_check.id == o.id
-    rkey = bcdb._hset_index_key_get(schema=m.schema)
+
+    rkey = m.index._key_index_hsetkey_get()
     o.delete()
-    for key in j.clients.credis_core.keys(rkey + b":*"):
+    for key in j.clients.credis_core.keys(rkey + ":*"):
         for key2 in j.clients.credis_core.hkeys(key):
             data_ = j.clients.credis_core.hget(key, key2)
             data__ = j.data.serializers.msgpack.loads(data_)
@@ -115,29 +117,21 @@ def main(self):
     o.save()
     assert o._model.schema.url == "threefoldtoken.wallet.test2"
 
-    data = bcdb._hset_index_key_get(schema=m3.schema, returndata=True)
-    redisid = data[bcdb.name][m3.schema.url]
-    rkey = bcdb._hset_index_key_get(schema=m3.schema)
-    assert rkey.decode().endswith(str(redisid))  # check that the raw info is same as the info from function
+    assert list(m3.iterate()) == m3.find()
 
-    assert len(j.clients.credis_core.keys(rkey + b":*")) == 4
+    assert len(m3.find(addr="test")) == 1
 
-    assert len(m3.get_all()) == 1
-
-    assert [i for i in m3.id_iterator] == [m3.get_all()[0].id]  # should only be the 1 id in there
-
-    assert len(m3.get_by_addr("test")) == 1
-
-    assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
-    assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
+    assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
+    assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
     a = j.servers.zdb.client_admin_get()
     zdbclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.get("test2", zdbclient2, reset=True)
-    assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
+    bcdb2 = j.data.bcdb.get("test2", zdbclient2)
+    assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
-    assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
+    m3.destroy()
+    assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
 
     # now we know that the previous indexes where not touched
 
@@ -152,15 +146,15 @@ def main(self):
 
     myid = o.id + 0  # make copy
 
-    assert len(m4.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
+    assert len(m4.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
 
-    o5 = m4.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")[0]
+    o5 = m4.find(addr="test", email="ename", ipaddr="192.168.1.1")[0]
     assert o5.id == myid
 
     bcdb.reset()
 
-    assert m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1") == []
-    assert len(m4.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
+    assert m3.find(addr="test", email="ename", ipaddr="192.168.1.1") == []
+    assert len(m4.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
 
     bcdb2.reset()
 

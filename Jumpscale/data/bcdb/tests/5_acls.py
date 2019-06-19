@@ -44,7 +44,7 @@ def main(self):
         self._log_info("ALL DATA INSERTED (DONE)")
 
         self._log_info("walk over all data")
-        l = bcdb.get_all()
+        l = bcdb.find()
 
         self._log_info("walked over all data (DONE)")
 
@@ -62,7 +62,7 @@ def main(self):
         assert a.acl.readonly is True
 
         # means we have indeed the index for acl == 2
-        assert len(bcdb.acl.get_all()) == 1
+        assert len(bcdb.acl.find()) == 1
 
         assert a.acl.hash == "4743dd07a7b22c2d80b884ebb7437ff8"
 
@@ -71,7 +71,7 @@ def main(self):
         a.save()
         assert a.acl.readonly
 
-        assert len(bcdb.acl.get_all()) == 2  # there needs to be a new acl
+        assert len(bcdb.acl.find()) == 2  # there needs to be a new acl
         assert a.acl.hash == "6c91e0d74f2ee7f42a7e0c0bf697d647"
 
         assert a.acl.rights_check(1, "r") is True

@@ -24,6 +24,8 @@ class BCDB(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
 
+        self._redis_index = j.clients.redis.core
+
         if name is None:
             raise RuntimeError("name needs to be specified")
 
@@ -55,24 +57,25 @@ class BCDB(j.application.JSBaseClass):
     def export(self, path=None, encrypt=True):
         if not path:
             j.shell()
-        for o in self.meta.data.schemas:
+        for o in list(self.meta.data.schemas):
             m = self.model_get_from_sid(o.sid)
             dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
-            for obj in m.iterate():
-                json = obj._json
-                if encrypt:
-                    ext = ".encr"
-                    json = j.data.nacl.default.encryptSymmetric(json)
-                else:
-                    ext = ""
-                if "name" in obj._ddict:
-                    dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
-                else:
-                    dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
-                j.sal.fs.writeFile(dpath_file, json)
+            for obj in list(m.iterate()):
+                if obj._model.schema.url == o.url:
+                    json = obj._json
+                    if encrypt:
+                        ext = ".encr"
+                        json = j.data.nacl.default.encryptSymmetric(json)
+                    else:
+                        ext = ""
+                    if "name" in obj._ddict:
+                        dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
+                    else:
+                        dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
+                    j.sal.fs.writeFile(dpath_file, json)
 
     def import_(self, path=None, reset=True):
         if not path:
@@ -176,6 +179,9 @@ class BCDB(j.application.JSBaseClass):
         if stop:
             self.stop()
 
+        if reset:
+            j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
+
         self._sqlclient = None
 
         self.dataprocessor_start()
@@ -214,10 +220,10 @@ class BCDB(j.application.JSBaseClass):
 
         # check if we need to rebuild the BCDB indexes
         try:
-            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
+            res = j.clients.credis_core.get(self.meta._redis_key_inited)
         except j.clients.credis_core._ConnectionError:
             j.clients.credis_core._init()
-            res = j.clients.credis_core.get(self.meta._redis_key_lookup_sid2url)
+            res = j.clients.credis_core.get(self.meta._redis_key_inited)
         except Exception as e:
             raise e
 
@@ -225,7 +231,7 @@ class BCDB(j.application.JSBaseClass):
             # means there is no index yet in the redis, need to rebuild all
             j.data.bcdb.index_rebuild()
 
-        j.clients.credis_core.set(self.meta._redis_key_lookup_sid2url, b"1")
+        j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 
@@ -314,18 +320,21 @@ class BCDB(j.application.JSBaseClass):
             self.zdbclient.flush(meta=self.meta)  # new flush command
 
         for key, m in self.models.items():
-            m.reset()
+            m.destroy()
+
+        self._redis_reset()
 
         if self._sqlclient is not None:
             self.sqlclient.close()
             self._sqlclient = None
 
-        # need to clean redis
-        # self._hset_index_key_delete()
-
         j.sal.fs.remove(self._data_dir)
 
         self.meta.reset()
+
+    def _redis_reset(self):
+        for key in self._redis_index.keys("bcdb:%s*" % self.name):
+            self._redis_index.delete(key)
 
     def stop(self):
         self._log_info("STOP BCDB")
@@ -337,9 +346,12 @@ class BCDB(j.application.JSBaseClass):
         self._log_warning("REBUILD INDEX")
         self.meta.reset()
         for o in self.meta.data.schemas:
-            model = self.model_get_from_sid(o.sid)
-            model.index_rebuild()
-            self.meta._schema_set(model.schema)
+            try:
+                model = self.model_get_from_sid(o.sid)
+                model.index_rebuild()
+                self.meta._schema_set(model.schema)
+            except:
+                pass
 
     # def cache_flush(self):
     #     # put all caches on zero
@@ -350,20 +362,20 @@ class BCDB(j.application.JSBaseClass):
     #             model.obj_cache = None
     #         model._init()
 
-    def _schema_get_sid(self, sid):
-        for s in self.meta.data.schemas:
-            if s.sid == sid:
-                s2 = j.data.schema.get_from_text(schema_text=s.text)
-                assert s2.url == s.url
-                assert s2._md5 == s.md5
-                return s2
-
-    def _schema_get_md5(self, md5):
-        for s in self.meta.data.schemas:
-            if s.md5 == md5:
-                s2 = j.data.schema.get_from_text(schema_text=s.text)
-                assert s2._md5 == s.md5
-                return s2
+    # def _schema_get_sid(self, sid):
+    #     for s in self.meta.data.schemas:
+    #         if s.sid == sid:
+    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
+    #             assert s2.url == s.url
+    #             assert s2._md5 == s.md5
+    #             return s2
+    #
+    # def _schema_get_md5(self, md5):
+    #     for s in self.meta.data.schemas:
+    #         if s.md5 == md5:
+    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
+    #             assert s2._md5 == s.md5
+    #             return s2
 
     def model_get_from_sid(self, sid):
         md5 = None
@@ -371,26 +383,24 @@ class BCDB(j.application.JSBaseClass):
             md5 = self._schema_sid_to_md5[sid]
             if md5 in self._schema_md5_to_model:
                 return self._schema_md5_to_model[md5]
-
-        # we did not find it in memory, lets lookup in metadata
-        if md5:
-            s = self._schema_get_md5(md5)
         else:
-            s = self._schema_get_sid(sid)
+            raise RuntimeError("did not find schema with sid:'%s' in mem, was metadata loaded?" % sid)
 
-        if not s:
-            raise RuntimeError("did not find schema with sid:%s" % sid)
+        if md5 in j.data.schema.md5_to_schema:
+            s = j.data.schema.md5_to_schema[md5]
+        else:
+            raise RuntimeError("could not find schema:%s in schema factory" % md5)
 
         return self.model_get_from_schema(s)
 
-    # def model_get_from_url(self, url):
-    #     """
-    #     will return the latest model found based on url
-    #     :param url:
-    #     :return:
-    #     """
-    #     s = j.data.schema.get_from_url_latest(url=url)
-    #     return self.model_get_from_schema(s)
+    def model_get_from_url(self, url):
+        """
+        will return the latest model found based on url
+        :param url:
+        :return:
+        """
+        s = j.data.schema.get_from_url_latest(url=url)
+        return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -403,7 +413,8 @@ class BCDB(j.application.JSBaseClass):
 
         self._schema_property_add_if_needed(model.schema)
         self._schema_md5_to_model[model.schema._md5] = model
-
+        self.models[model.schema.url] = model
+        # self._schema_url_to_model[model.schema.url] = model
         return model
 
     def _schema_add(self, schema):
@@ -457,24 +468,11 @@ class BCDB(j.application.JSBaseClass):
 
         self._log_info("load model:%s" % schema.url)
 
-        tpath = "%s/templates/BCDBModelClass.py" % j.data.bcdb._path
-        objForHash = schema_text
-        myclass = j.tools.jinja2.code_python_render(
-            path=tpath,
-            reload=False,
-            dest=dest,
-            objForHash=objForHash,
-            schema_text=schema_text,
-            bcdb=self,
-            schema=schema,
-            overwrite=False,
-        )
-
-        model = myclass(reset=self._need_to_reset, bcdb=self, schema=schema, namespaceid=namespaceid)
+        model = BCDBModel(bcdb=self, schema=schema)
 
         return self.model_add(model)
 
-    def _BCDBModelIndexClass_generate(self, schema, path_parent=None):
+    def _BCDBModelIndexClass_generate(self, schema):
         """
 
         :param schema: is schema object j.data.schema... or text
@@ -482,10 +480,6 @@ class BCDB(j.application.JSBaseClass):
 
         """
         self._log_debug("generate schema:%s" % schema.url)
-        if path_parent:
-            name = j.sal.fs.getBaseName(path_parent)[:-3]
-            dir_path = j.sal.fs.getDirName(path_parent)
-            dest = "%s/%s_index.py" % (dir_path, name)
 
         if j.data.types.string.check(schema):
             schema = j.data.schema.get_from_text(schema)
@@ -500,7 +494,7 @@ class BCDB(j.application.JSBaseClass):
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath, objForHash=schema._md5, reload=True, dest=dest, schema=schema, bcdb=self, index=imodel
+                path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass
@@ -538,14 +532,26 @@ class BCDB(j.application.JSBaseClass):
                 pyfiles_base.append(pyfile_base)
 
         tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
-        for schemapath in tocheck:
-
+        # Try to load all schemas from directory
+        # if one schema depends to another it will fail to load if the other one is not loaded yet
+        # that's why we keep the errored schemas and put it to the end of the queue so it waits until every thing is
+        # loaded and try again we will do that for 3 times as max for each schema
+        errored = {}
+        while tocheck:
+            schemapath = tocheck.pop()
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
                 continue
 
             schema_text = j.sal.fs.readFile(schemapath)
-            schema = j.data.schema.get_from_text(schema_text)
+            try:
+                schema = j.data.schema.get_from_text(schema_text)
+            except Jumpscale.core.errorhandler.JSExceptions.Input as e:
+                error_count = errored.get(schemapath, 0)
+                if error_count > 3:
+                    raise e
+                tocheck.insert(0, schemapath)
+                continue
             schema = self._schema_add(schema)
             toml_path = "%s.toml" % (schema.key)
             if j.sal.fs.getBaseName(schemapath) != toml_path:
@@ -572,11 +578,14 @@ class BCDB(j.application.JSBaseClass):
         :param model:
         :return:
         """
-
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
             schema_id, acl_id, bdata_encrypted = res
+            nid = 1
+            model = self.model_get_from_sid(schema_id)
+        elif len(res) == 4:
+            nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)
         else:
             raise RuntimeError("not supported format")
@@ -588,7 +597,11 @@ class BCDB(j.application.JSBaseClass):
         if return_as_capnp:
             return bdata
         else:
-            obj = model.schema.get(data=bdata)
+            try:
+                obj = model.schema.get(data=bdata, model=model)
+            except:
+                j.shell()
+            obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
             obj._model = model
@@ -597,7 +610,6 @@ class BCDB(j.application.JSBaseClass):
             return obj
 
     def obj_get(self, id):
-
         data = self.zdbclient.get(id)
         if data is None:
             return None
@@ -640,3 +652,9 @@ class BCDB(j.application.JSBaseClass):
 
     def get_all(self):
         return [obj for obj in self.iterate()]
+
+    def __str__(self):
+        out = "bcdb:%s\n" % self.name
+        return out
+
+    __repr__ = __str__

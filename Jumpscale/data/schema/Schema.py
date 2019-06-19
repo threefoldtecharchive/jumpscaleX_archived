@@ -316,7 +316,7 @@ class Schema(j.application.JSBaseClass):
             raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
         r = self.get(data=data, model=model)
         if model is not None:
-            model.notify_new(r)
+            model.triggers_call(r, "new")
         return r
 
     # @property
