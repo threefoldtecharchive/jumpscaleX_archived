@@ -115,11 +115,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
     def stop(self):
         # killing the daemon
         pane = j.tools.tmux.pane_get(self.NAME)
-        processes = pane.process_obj.children(True)
-        for process in processes:
-            process.kill()
         pane.kill()
-        """ j.sal.process.killProcessByName(self.NAME) """
 
     @builder_method()
     def test(self):
@@ -127,16 +123,16 @@ class BuilderCoreX(j.builders.system._BaseClass):
             self.stop()
 
         self.start()
-        cc = j.clients.corex.get("localhost", 7681)
+        cc = j.clients.corex.get(addr="localhost", port=7681)
         assert cc.process_list() == []
 
-        cc.process_start("/bin/true")
+        cc.process_start("true", "/bin/true")
 
-        cc = j.clients.corex.get("localhost", 7681)
+        cc = j.clients.corex.get(addr="localhost", port=7681)
         assert len(cc.process_list()) == 1
 
         self.stop()
-
+        assert self.running() is False
         print("TEST OK")
 
     @builder_method()
