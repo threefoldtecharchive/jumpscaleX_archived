@@ -413,7 +413,8 @@ class BCDB(j.application.JSBaseClass):
 
         self._schema_property_add_if_needed(model.schema)
         self._schema_md5_to_model[model.schema._md5] = model
-
+        self.models[model.schema.url] = model
+        # self._schema_url_to_model[model.schema.url] = model
         return model
 
     def _schema_add(self, schema):
@@ -577,7 +578,6 @@ class BCDB(j.application.JSBaseClass):
         :param model:
         :return:
         """
-
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
@@ -597,7 +597,10 @@ class BCDB(j.application.JSBaseClass):
         if return_as_capnp:
             return bdata
         else:
-            obj = model.schema.get(data=bdata)
+            try:
+                obj = model.schema.get(data=bdata, model=model)
+            except:
+                j.shell()
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
@@ -607,7 +610,6 @@ class BCDB(j.application.JSBaseClass):
             return obj
 
     def obj_get(self, id):
-
         data = self.zdbclient.get(id)
         if data is None:
             return None

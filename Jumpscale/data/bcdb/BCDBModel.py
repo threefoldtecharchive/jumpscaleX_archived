@@ -172,6 +172,7 @@ class BCDBModel(j.application.JSBaseClass):
         if ddict will put inside JSOBJ
         """
         if j.data.types.string.check(data):
+
             data = j.data.serializers.json.loads(data)
             if obj_id == None and "id" in data:
                 obj_id = data["id"]
@@ -180,9 +181,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(data)
+            obj = self.schema.get(data=data, model=self)
+            obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(data=data)
+            obj = self.schema.get(data=data, model=self)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
             if not obj.nid:
@@ -208,6 +210,7 @@ class BCDBModel(j.application.JSBaseClass):
                 else:
                     raise RuntimeError("need to specify nid")
             obj = self.schema.get(data)
+            obj.nid = nid
         else:
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
         if not obj.id:
@@ -226,6 +229,7 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         delete_if_not_found = False
+        # if no args are provided that mean we will do a get all
         if len(args.keys()) == 0:
             res = []
             for obj in self.iterate(nid=nid):
@@ -411,7 +415,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def destroy(self, nid=1):
         self._log_warning("destroy: %s nid:%s" % (self, nid))
-        for obj in self.find():
+        for obj in self.find(nid=nid):
             obj.delete()
         self.index.destroy()
         self.stop()
