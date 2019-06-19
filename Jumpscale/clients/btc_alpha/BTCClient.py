@@ -5,10 +5,6 @@ import requests
 from time import time
 from urllib.parse import urlencode
 
-
-# TODO:*1 FROM CLIENT import .... and put in client property
-# TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
-
 JSConfigBase = j.application.JSBaseConfigClass
 
 
