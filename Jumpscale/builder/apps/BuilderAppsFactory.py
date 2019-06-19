@@ -11,6 +11,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._digitalme = None
         self._userbot = None
         self._odoo = None
+        self._hub = None
 
     @property
     def gitea(self):
@@ -51,3 +52,11 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
             self._odoo = BuilderOdoo()
         return self._odoo
+
+    @property
+    def hub(self):
+        if self._hub is None:
+            from .BuilderHub import BuilderHub
+
+            self._hub = BuilderHub()
+        return self._hub
