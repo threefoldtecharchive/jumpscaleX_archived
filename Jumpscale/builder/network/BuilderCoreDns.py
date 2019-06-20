@@ -39,7 +39,8 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         j.builders.runtimes.golang.install()
         j.builders.db.etcd.install()
         self.tools.dir_ensure(self.package_path)
-
+        # redis as backend
+        j.builders.db.redis.sandbox()
         # https://github.com/coredns/coredns#compilation-from-source
 
         # go to package path and build (for coredns)
@@ -76,6 +77,9 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
 
     @builder_method()
     def sandbox(self, zhub_client=None, flist_create=False):
+
+        # add redis binaries
+        self.tools.copyTree(j.builders.db.redis.DIR_SANDBOX, self.DIR_SANDBOX)
 
         # copy bins
         coredns_bin = j.sal.fs.joinPaths("{DIR_BIN}", self.NAME)

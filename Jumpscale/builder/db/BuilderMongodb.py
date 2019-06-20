@@ -1,66 +1,138 @@
 from Jumpscale import j
 from time import sleep
 
+builder_method = j.builders.system.builder_method
+
 
 class BuilderMongodb(j.builders.system._BaseClass):
     NAME = "mongod"
 
-    def install(self, start=True, reset=False):
+    def _init(self):
+        self.build_dir = self.tools.joinpaths(self.DIR_BUILD, "mongo_db/")
+
+    @builder_method()
+    def install(self):
         """
-        download, install, move files to appropriate places, and create relavent configs
+        install, move files to appropriate places, and create relavent configs
         """
-        if self._done_check("install", reset):
-            return
+        # install: python3 buildscripts/scons.py --prefix=/opt/mongo install
+        bin_path = self.tools.joinpaths(self.build_dir, "mongod")
+        self._copy(bin_path, "{DIR_BIN}")
+        self.tools.dir_ensure(self._replace("{DIR_VAR}/data/mongodb"))
 
-        if j.core.platformtype.myplatform.platform_is_osx:
-            j.sal.process.execute("brew uninstall mongodb", die=False)
+    @builder_method()
+    def build(self):
+        # needs libcurl-dev and libboost dependancies
+        self.system.package.mdupdate()
+        self.system.package.install(
+            [
+                "libcurl4-openssl-dev",
+                "build-essential",
+                "libboost-filesystem-dev",
+                "libboost-program-options-dev",
+                "libboost-system-dev",
+                "libboost-thread-dev",
+                "gcc-8",
+                "g++-8",
+                "python3-pip",
+                "libssl-dev",
+                "libc6",
+                "libc6-dev",
+                "python3-dev",
+            ]
+        )
+        # update gcc
+        self._execute(
+            """
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+            """
+        )
+        # self.build_dir
+        mongo_url = "https://github.com/mongodb/mongo/"
+        self._remove(self.build_dir)
+        j.clients.git.pullGitRepo(url=mongo_url, dest=self.build_dir, branch="master", depth=1)
+        build_cmd = """
+        cd {build_dir}
+        pip3 install -r etc/pip/compile-requirements.txt
+        python3 buildscripts/scons.py mongod MONGO_VERSION=4.2.0
+        """.format(
+            build_dir=self.build_dir
+        )
+        self._execute(build_cmd, timeout=4000)
 
-        appbase = "%s/" % j.builders.tools.dir_paths["BINDIR"]
-        j.core.tools.dir_ensure(appbase)
+        self._execute(
+            """
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+            """
+        )
 
-        url = None
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
-            url = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz"
-            dest = "{DIR_TEMP}/mongodb-linux-x86_64-ubuntu1604-3.4.0/bin/"
-        elif j.builders.tools.isArch:
-            j.builders.system.package.ensure("mongodb")
-        elif j.core.platformtype.myplatform.platform_is_osx:
-            url = "https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.4.0.tgz"
-            dest = "{DIR_TEMP}/mongodb-osx-x86_64-3.4.0/bin/"
-        else:
-            raise j.exceptions.RuntimeError("unsupported platform")
+    @builder_method()
+    def clean(self):
+        self._remove(self.build_dir)
 
-        if url:
-            self._log_info("Downloading mongodb.")
-            j.builders.tools.file_download(url, to="{DIR_TEMP}", overwrite=False, expand=True)
-            tarpaths = j.builders.tools.find("{DIR_TEMP}", recursive=False, pattern="*mongodb*.tgz", type="f")
-            if len(tarpaths) == 0:
-                raise j.exceptions.Input(
-                    message="could not download:%s, did not find in %s" % (url, self._replace("{DIR_TEMP}"))
-                )
-            tarpath = tarpaths[0]
-            j.builders.tools.file_expand(tarpath, "{DIR_TEMP}")
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
 
-            for file in j.builders.tools.find(dest, type="f"):
-                j.builders.tools.file_copy(file, appbase)
+    @property
+    def startup_cmds(self):
+        self.tools.dir_ensure(self._replace("{DIR_VAR}/data/mongodb"))
+        cmd = self._replace("mongod --dbpath '{DIR_VAR}/data/mongodb'")
+        cmd_start = cmd
 
-        j.core.tools.dir_ensure("{DIR_VAR}/data/mongodb")
-        self._done_set("install")
-        if start:
-            self.start(reset=reset)
+        cmd = j.tools.startupcmd.get(self.NAME, cmd=cmd_start)
+        return [cmd]
 
-    def build(self, start=True, reset=False):
-        raise RuntimeError("not implemented")
-
-    def start(self, reset=False):
-        if self.isStarted() and not reset:
-            return
-        j.core.tools.dir_ensure("{DIR_VAR}/data/mongodb")
-        cmd = "mongod --dbpath '{DIR_VAR}/data/mongodb'"
-        j.builders.system.process.kill("mongod")
-        pm = j.builders.system.processmanager.get()
-        pm.ensure(name="mongod", cmd=cmd, env={}, path="", autostart=True)
-
+    @builder_method()
     def stop(self):
-        pm = j.builders.system.processmanager.get()
-        pm.stop("mongod")
+        j.sal.process.killProcessByName(self.NAME)
+
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
+        self.start()
+        assert self.running()
+        self.stop()
+        print("TEST OK")
+
+    @builder_method()
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_client: hub instance to upload flist tos
+        :type zhub_client:str
+        """
+
+        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(sandbox_dir)
+
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
+        self.tools.dir_ensure(bin_dest)
+        bins = ["mongod"]
+        for bin in bins:
+            self._copy("{DIR_BIN}/" + bin, bin_dest)
+
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(bin_dest, bin)
+            j.tools.sandboxer.libs_clone_under(dir_src, lib_dest)
+
+        # startup.toml
+        templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
+        startup_path = self._replace("{DIR_SANDBOX}/.startup.toml")
+        self._copy(self.tools.joinpaths(templates_dir, "mongodb_startup.toml"), startup_path)

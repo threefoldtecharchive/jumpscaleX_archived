@@ -106,9 +106,10 @@ class BuilderPHP(j.builders.system._BaseClass):
         user =  www-data
         group = www-data
 
-        listen = 127.0.0.1:9000
-
-        listen.allowed_clients = 127.0.0.1
+        listen = /var/run/php-fpm.sock
+        ;listen.allowed_clients = 127.0.0.1
+        listen.owner = www-data
+        listen.group = www-data
 
         pm = dynamic
         pm.max_children = 5
