@@ -270,11 +270,10 @@ class BCDBFactory(j.application.JSBaseClass):
             zdbclient = j.clients.rdb.client_get()  # will be to core redis
             bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
         elif sqlitestor:
+            j.servers.zdb.start_test_instance(destroydata=reset)
             bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
             bcdb2 = j.data.bcdb.bcdb_instances["test"]
             assert bcdb2.zdbclient == None
-            if reset:
-                bcdb.reset()  # empty
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
             assert zdbclient_admin.ping()
@@ -284,13 +283,15 @@ class BCDBFactory(j.application.JSBaseClass):
             assert zdbclient.ping()
             bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
 
+        if reset:
+            bcdb.reset()  # empty
+
         schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
 
         self._log_debug("bcdb already exists")
 
         model = bcdb.model_get_from_url("despiegk.test")
-
         return bcdb, model
 
     def test(self, name=""):

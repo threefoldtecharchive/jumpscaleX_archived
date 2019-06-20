@@ -66,7 +66,7 @@ def main(self):
         for i in range(1, 11):
             print(i)
             o = get_obj(i)
-            id = redis_cl.hset("objects:despiegk.test2", "new", o._json)
+            id = redis_cl.hset("objects:despiegk.test2", "new", o._ddict_json_hr)
 
         if zdb:
             self._log_debug("validate list")
@@ -77,6 +77,7 @@ def main(self):
         self._log_debug("validate added objects")
         # there should be 10 items now there
         assert redis_cl.hlen("objects:despiegk.test2") == 10
+
         assert redis_cl.hdel("objects:despiegk.test2", 5) == 1
         assert redis_cl.hlen("objects:despiegk.test2") == 9
 

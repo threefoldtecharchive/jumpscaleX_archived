@@ -50,7 +50,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param nid:
         :return:
         """
-        self._sql_index_destroy(nid=nid)
         self._key_index_destroy(nid=nid)
         self._ids_destroy(nid=nid)
 
@@ -281,7 +280,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
             r = self._ids_redis
             if nid is None:
                 for nid in r.keys("bcdb:%s:*" % (self.bcdb.name)):
-                    j.shell()
                     self._id_iterator(nid=nid)
             redis_list_key = self._id_redis_listkey_get(nid)
             l = r.llen(redis_list_key)
@@ -290,6 +288,11 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     obj_id = self._id_get_objid_redis(i, nid=nid)
                     # print(obj_id)
                     yield obj_id
+            else:
+                for obj in list(self.bcdb.get_all()):
+                    if obj._schema.url == self.schema.url:
+                        self.set(obj)
+                        yield obj.id
 
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
@@ -308,7 +311,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         chunk = r.lindex(self._id_redis_listkey_get(nid=nid), pos)
         if not chunk:
             if die:
-                j.shell()
                 raise RuntimeError("should always get something back?")
             return None
         return struct.unpack("<I", chunk)[0]
@@ -330,6 +332,10 @@ class BCDBModelIndex(j.application.JSBaseClass):
             j.sal.fs.writeFile(ids_file_path, out)
 
     def _id_exists(self, id, nid=1):
+        """ 
+        Check if an object eist based on its id 
+        TODO: Improve it with a binary search 
+        """
         self._ids_init(nid=nid)
 
         if self._ids_redis_use:
@@ -342,10 +348,9 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 # this gives me an estimate where to look for the info in the list
                 trypos = int(l / last_id * id)
                 if trypos == last_id:
-                    j.shell()
-                potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
+                    potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
                 if not potentialid:
-                    j.shell()
+                    raise RuntimeError("can't get a model from data:%s" % bdata)
                 elif potentialid == id:
                     # lucky
                     return True

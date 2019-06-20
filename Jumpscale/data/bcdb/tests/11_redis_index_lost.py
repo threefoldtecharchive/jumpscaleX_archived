@@ -18,8 +18,8 @@ def main(self):
     
     """
     bcdb = j.data.bcdb.get("test")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
-    m.reset()
 
     for i in range(10):
         o = m.new()

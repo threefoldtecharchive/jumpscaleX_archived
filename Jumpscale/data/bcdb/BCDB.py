@@ -56,29 +56,30 @@ class BCDB(j.application.JSBaseClass):
 
     def export(self, path=None, encrypt=True):
         if not path:
-            j.shell()
-        for o in self.meta.data.schemas:
+            raise RuntimeError("export no path")
+        for o in list(self.meta.data.schemas):
             m = self.model_get_from_sid(o.sid)
             dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
-            for obj in m.iterate():
-                json = obj._json
-                if encrypt:
-                    ext = ".encr"
-                    json = j.data.nacl.default.encryptSymmetric(json)
-                else:
-                    ext = ""
-                if "name" in obj._ddict:
-                    dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
-                else:
-                    dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
-                j.sal.fs.writeFile(dpath_file, json)
+            for obj in list(m.iterate()):
+                if obj._model.schema.url == o.url:
+                    json = obj._json
+                    if encrypt:
+                        ext = ".encr"
+                        json = j.data.nacl.default.encryptSymmetric(json)
+                    else:
+                        ext = ""
+                    if "name" in obj._ddict:
+                        dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
+                    else:
+                        dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
+                    j.sal.fs.writeFile(dpath_file, json)
 
     def import_(self, path=None, reset=True):
         if not path:
-            j.shell()
+            raise RuntimeError("export no path")
         if reset:
             self.reset()
             if self.zdbclient:
@@ -150,19 +151,15 @@ class BCDB(j.application.JSBaseClass):
                         try:
                             obj = model.new(data=json)
                         except:
-                            j.shell()
-                            w
+                            raise RuntimeError("can't get a new model based on json data:%s" % json)
                         if self.zdbclient:
                             obj.id = None
                     else:
                         obj = model.get(obj.id)
                         # means it exists, need to update, need to check if data is different only save if y
-                        j.shell()
                 else:
                     obj = model.get(i, die=False)
-                    if obj:
-                        j.shell()
-                    else:
+                    if not obj:
                         obj = model.new(data=json)
                 obj.save()
                 assert obj.id == i
@@ -319,7 +316,7 @@ class BCDB(j.application.JSBaseClass):
             self.zdbclient.flush(meta=self.meta)  # new flush command
 
         for key, m in self.models.items():
-            m.reset()
+            m.destroy()
 
         self._redis_reset()
 
@@ -345,9 +342,12 @@ class BCDB(j.application.JSBaseClass):
         self._log_warning("REBUILD INDEX")
         self.meta.reset()
         for o in self.meta.data.schemas:
-            model = self.model_get_from_sid(o.sid)
-            model.index_rebuild()
-            self.meta._schema_set(model.schema)
+            try:
+                model = self.model_get_from_sid(o.sid)
+                model.index_rebuild()
+                self.meta._schema_set(model.schema)
+            except:
+                pass
 
     # def cache_flush(self):
     #     # put all caches on zero
@@ -409,7 +409,8 @@ class BCDB(j.application.JSBaseClass):
 
         self._schema_property_add_if_needed(model.schema)
         self._schema_md5_to_model[model.schema._md5] = model
-
+        self.models[model.schema.url] = model
+        # self._schema_url_to_model[model.schema.url] = model
         return model
 
     def _schema_add(self, schema):
@@ -527,24 +528,33 @@ class BCDB(j.application.JSBaseClass):
                 pyfiles_base.append(pyfile_base)
 
         tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
-        for schemapath in tocheck:
-
+        # Try to load all schemas from directory
+        # if one schema depends to another it will fail to load if the other one is not loaded yet
+        # that's why we keep the errored schemas and put it to the end of the queue so it waits until every thing is
+        # loaded and try again we will do that for 3 times as max for each schema
+        errored = {}
+        while tocheck:
+            schemapath = tocheck.pop()
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
                 continue
-
-            schema_text = j.sal.fs.readFile(schemapath)
-            schema = j.data.schema.get_from_text(schema_text)
-            schema = self._schema_add(schema)
-            toml_path = "%s.toml" % (schema.key)
-            if j.sal.fs.getBaseName(schemapath) != toml_path:
-                toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
-                j.sal.fs.renameFile(schemapath, toml_path)
-                schemapath = toml_path
-
             dest = "%s/%s.py" % (path, bname)
-
-            model = self.model_get_from_schema(schema=schema, dest=dest)
+            schema_text = j.sal.fs.readFile(schemapath)
+            try:
+                schema = j.data.schema.get_from_text(schema_text)
+                schema = self._schema_add(schema)
+                model = self.model_get_from_schema(schema=schema, dest=dest)
+                toml_path = "%s.toml" % (schema.key)
+                if j.sal.fs.getBaseName(schemapath) != toml_path:
+                    toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
+                    j.sal.fs.renameFile(schemapath, toml_path)
+                    schemapath = toml_path
+            except:
+                error_count = errored.get(schemapath, 0)
+                if error_count > 3:
+                    raise e
+                tocheck.insert(0, schemapath)
+                continue
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):
@@ -561,7 +571,6 @@ class BCDB(j.application.JSBaseClass):
         :param model:
         :return:
         """
-
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
@@ -581,7 +590,10 @@ class BCDB(j.application.JSBaseClass):
         if return_as_capnp:
             return bdata
         else:
-            obj = model.schema.get(data=bdata)
+            try:
+                obj = model.schema.get(data=bdata, model=model)
+            except:
+                raise RuntimeError("can't get a model from data:%s" % bdata)
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
@@ -591,7 +603,6 @@ class BCDB(j.application.JSBaseClass):
             return obj
 
     def obj_get(self, id):
-
         data = self.zdbclient.get(id)
         if data is None:
             return None

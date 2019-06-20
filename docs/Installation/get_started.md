@@ -1,24 +1,7 @@
-# Get Started
-## Prerequisite
-* Mac OS X 10.7 (Lion) or newer or a linux OS (tested on ubuntu 18.04)
-* Git installed with a github account
-* an ssh key added to github
-    * go [here](https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to generate a ssh key
-    * go [here](https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account) to add a ssh key to your github account
-    * to list your public ssh keys `ssh-add -L`
-* Docker
-    * installation [guide](https://docs.docker.com/v17.12/install/#server)
-    * verify installation with `$docker --version`
-* Python3
-
-    * installation [guide](https://www.python.org/downloads/)
-    * verify installation with `$python3 --version`
-* pip3  
-    * `$sudo apt install python3-pip`
-* click python package  
-    *  `$pip3 install click `  
+# Using Jumpscale
 
 ## philosophy
+
 JumpscaleX aka JSX was created at the beginning so that junior system administrators can easily use this tool to manage resources, provision machines, create and deploy containers.
 
 It will evolve even further to be your digital representation that will always be available. Right now this tool works on your machine but soon it will be automatically deployed on the TF grid.
@@ -26,66 +9,6 @@ This 3bot, as we call it, will make sure your applications are properly running 
 It will even be able to engage in trade with others and this network of 3bots will act as a decentalized exchange.
 
 Don't worry nobody except you can take control over your 3bot as all your config files are encrypted (securely stored) and your keys never leaves your device.
-
-# Installation
-
-## Launch a Jumpscale X container
-
-### How it works
-
-The python script will load a docker image and start a docker container on your machine. You just need to answer a few questions during the install script. The container will bind a volume between the directory that holds the JSX code and the container (at /sandbox/code). You will be able to connect securely via ssh to this container and launch the shell (aka kosmos) to manipulate the Jumpscale X library .
-
-### Install scripts
-
-```bash
-#get the installer
-# TODO CHANGE BRANCH WITH MASTER
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx.py ; \
-#install
-python3 /tmp/jsx.py container-install; \
-cp /tmp/jsx.py /tmp/jsx; \
-chmod +x /tmp/jsx; \
-```
-
-get more help about the jsx command
-```bash
-/tmp/jsx --help
-```
-
-### shortcut to jsx
-
-if you want to be able to launch `jsx` directly instead of typing `/tmp/jsx` you should either.
-* add it to  your `$PATH`
-```
-$ PATH=$PATH:/tmp
-```
-* move the `jsx` binary to your `/usr/local/bin`
-```
-$ sudo mv /tmp/jsx /usr/local/bin
-```
-
-## launching kosmos the jumpscale X REPL(read–eval–print loop) shell
-
-you can launch kosmos the easy way with this command
-
-```bash
-#get first time your kosmos shell
-$ /tmp/jsx container-kosmos;
-```
-
-or by connecting to your container through ssh
-
-```bash
-# to login to the docker using ssh use (if std port)
-$ ssh root@localhost -A -p 9122
-root@3bot:~$ source /sandbox/env.sh; kosmos;
-```
-
-once kosmos is launched you will see this line
-
-```bash
-JSX>
-```
 
 # 1. Using kosmos to create a wallet on the ThreeFold blockchain aka TFChain
 
