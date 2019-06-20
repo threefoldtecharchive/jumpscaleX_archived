@@ -211,7 +211,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._id_redis_listkey_get(nid)
 
         """
-        return "bcdb:%s:%s:ids" % (nid, self.schema.sid)
+        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.schema.sid)
 
     def _ids_destroy(self, nid=1):
         self._ids_redis.delete(self._id_redis_listkey_get(nid=nid))

@@ -162,13 +162,13 @@ class Dictionary(TypeBaseClass):
         return "%s @%s :Data;" % (name, nr)
 
 
-class Hash(TypeBaseClass):
+class Set(TypeBaseClass):
 
     """
     hash is 2 value list, represented as 2 times 4 bytes
     """
 
-    NAME = "hash,h"
+    NAME = "h,set"
     CUSTOM = False
 
     def __init__(self, default=None):
@@ -213,7 +213,13 @@ class Hash(TypeBaseClass):
             else:
                 return int(val)
 
-        if j.data.types.list.check(value):  # or j.data.types.set.check(value):
+        if isinstance(value, int):
+            # there are prob better ways how to do this
+            b = struct.pack("L", value)
+            r = struct.unpack("II", b)
+            return r[1], r[0]
+
+        elif j.data.types.list.check(value):  # or j.data.types.set.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
                 raise RuntimeError("hash can only be list/set of 2")
@@ -224,8 +230,8 @@ class Hash(TypeBaseClass):
         elif j.data.types.bytes.check(value):
             if len(value) is not 8:
                 raise RuntimeError("bytes should be len 8")
-            # means is byte
-            return struct.unpack("II", b"aaaadddd")
+            r = struct.unpack("II", value)
+            return r[1], r[0]
 
         elif j.data.types.string.check(value):
             if ":" not in value:
@@ -237,6 +243,9 @@ class Hash(TypeBaseClass):
 
         else:
             raise RuntimeError("unrecognized format for hash:%s" % value)
+
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :Text;" % (name, nr)
 
     def python_code_get(self, value):
         """
@@ -254,7 +263,27 @@ class Hash(TypeBaseClass):
             return "%s = %s" % (key, self.python_code_get(value))
 
     def capnp_schema_get(self, name, nr):
-        return "%s @%s :Data;" % (name, nr)
+        return "%s @%s :Int64;" % (name, nr)
+
+    def toData(self, v):
+        """
+        first clean then get the data for capnp
+        :param v:
+        :return:
+        """
+        o = self.toBytes(v)
+        return struct.unpack("L", o)[0]
+
+        # return o[0] * 0xFFFFFFFF + o[1]
+
+    def toBytes(self, v):
+        """
+        first clean then get the data for capnp
+        :param v:
+        :return:
+        """
+        o = self.clean(v)
+        return struct.pack("II", o[1], o[0])
 
 
 # TODO: why do we have a set, from our perspective a set & list should be same for novice users

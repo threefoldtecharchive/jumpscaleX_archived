@@ -5,7 +5,7 @@ import types
 
 class ACL(j.data.bcdb._BCDBModelClass):
     def _init_load(self, bcdb, schema, reset):
-        schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.1")
+        schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.2")
         schema = bcdb._schema_add(schema)
         return bcdb, schema, reset
 
@@ -81,9 +81,9 @@ class ACL(j.data.bcdb._BCDBModelClass):
     def _methods_add(self, obj):
         """
         what does this do?
-        :param self: 
-        :param obj: 
-        :return: 
+        :param self:
+        :param obj:
+        :return:
         """
         obj.rights_set = types.MethodType(self.rights_set, obj)
         obj.rights_check = types.MethodType(self.rights_check, obj)

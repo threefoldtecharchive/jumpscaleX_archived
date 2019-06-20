@@ -315,8 +315,9 @@ class BCDB(j.application.JSBaseClass):
         if self.zdbclient:
             self.zdbclient.flush(meta=self.meta)  # new flush command
 
-        for key, m in self.models.items():
-            m.destroy()
+        # THINK NOT NEEDED BECAUSE THE REDIS RESET REMOVES ALL
+        # for key, m in self.models.items():
+        #     m.destroy()
 
         self._redis_reset()
 
@@ -325,8 +326,6 @@ class BCDB(j.application.JSBaseClass):
             self._sqlclient = None
 
         j.sal.fs.remove(self._data_dir)
-
-        self.meta.reset()
 
     def _redis_reset(self):
         for key in self._redis_index.keys("bcdb:%s*" % self.name):
@@ -626,7 +625,7 @@ class BCDB(j.application.JSBaseClass):
         if self.zdbclient:
             db = self.zdbclient
             for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
-                if key == 0:  # skip first metadata entry
+                if self.zdbclient.type == "zdb" and key == 0:  # skip first metadata entry
                     continue
                 if keyonly:
                     yield key

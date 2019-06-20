@@ -66,12 +66,6 @@ def main(self):
 
             db, model = self._load_test_model(sqlitestor=sqlitestor, rdbstor=rdbstor, reset=True, schema=schema)
 
-            if not sqlitestor and not rdbstor:
-                print(model.zdbclient.nsinfo["entries"])
-                assert model.zdbclient.nsinfo["entries"] == 1
-            else:
-                assert len(model.find()) == 0
-
             for i in range(10):
                 model_obj = model.new()
                 model_obj.llist.append(1)

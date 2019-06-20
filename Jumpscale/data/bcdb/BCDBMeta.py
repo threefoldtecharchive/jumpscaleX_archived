@@ -4,11 +4,11 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBMeta(j.application.JSBaseClass):
-    def __init__(self, bcdb):
+    def __init__(self, bcdb, reset=False):
         JSBASE.__init__(self)
         self._bcdb = bcdb
 
-        self._schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.meta.1")
+        self._schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.meta.2")
         self._redis_key_data = "bcdb:%s:meta:data" % bcdb.name
         self._redis_key_lookup_sid2hash = "bcdb:%s:schemas:sid2hash" % bcdb.name
         self._redis_key_lookup_hash2sid = "bcdb:%s:schemas:hash2sid" % bcdb.name
@@ -17,23 +17,39 @@ class BCDBMeta(j.application.JSBaseClass):
         self._redis_key_lookup_sid2url = "bcdb:%s:schemas:sid2url" % bcdb.name
         self._redis_key_lookup_nid2meta = "bcdb:%s:schemas:nid2meta" % bcdb.name
         self._redis_key_inited = "bcdb:%s:init" % bcdb.name  # if its there it means we have working redis
-        self.reset()
+
+        if self._bcdb.zdbclient is None:
+            self._log_debug("schemas load from redis")
+            r = j.core.db
+            data = j.core.db.get(self._redis_key_data)
+        elif self._bcdb.zdbclient.type == "RDB":
+            self._log_debug("schemas load from redis with RDB")
+            r = self._bcdb.zdbclient._redis
+            data = r.get(self._redis_key_data)
+        else:
+            data = self._bcdb.zdbclient.get(0)
+            r = j.core.db
+        self._redis = r
+
+        if reset:
+            self.reset()
+        else:
+            self._reset()
+            self.data
 
     @property
     def data(self):
 
         if self._data is None:
+            r = self._redis
             if self._bcdb.zdbclient is None:
                 self._log_debug("schemas load from redis")
-                r = j.core.db
                 data = j.core.db.get(self._redis_key_data)
             elif self._bcdb.zdbclient.type == "RDB":
                 self._log_debug("schemas load from redis with RDB")
-                r = self._bcdb.zdbclient._redis
                 data = r.get(self._redis_key_data)
             else:
                 data = self._bcdb.zdbclient.get(0)
-                r = j.core.db
 
             if data is None:
                 self._log_debug("save, empty schema")
@@ -77,16 +93,30 @@ class BCDBMeta(j.application.JSBaseClass):
         return self._data
 
     def reset(self):
+        # put new schema
+        self._reset()
+        self._data = self._schema.new()
+        self._data.name = self._bcdb.name
+        r = self._redis
+        r.delete(self._redis_key_data)
+        r.delete(self._redis_key_lookup_sid2hash)
+        r.delete(self._redis_key_lookup_hash2sid)
+        r.delete(self._redis_key_lookup_sid2schema)
+        r.delete(self._redis_key_lookup_url2sid)
+        r.delete(self._redis_key_lookup_sid2url)
+        r.delete(self._redis_key_lookup_nid2meta)
+        self._save()
+        self.data
+
+    def _reset(self):
         self._data = None
         self._schema_last_id = 0
         self._namespace_last_id = 0
         self._bcdb._schema_sid_to_md5 = {}
         self._bcdb._schema_md5_to_model = {}
-        self.data
 
     def _save(self):
-        if self._data is None:
-            self.data
+
         self._log_debug("save:\n%s" % self.data)
 
         if self._bcdb.zdbclient is None:

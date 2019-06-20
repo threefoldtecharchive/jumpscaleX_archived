@@ -39,7 +39,7 @@ class Types(j.application.JSBaseClass):
             Duration,
             Numeric,
             Percent,
-            Hash,
+            Set,
             CapnpBin,
             JSDataObjectFactory,
             Url,
@@ -115,7 +115,7 @@ class Types(j.application.JSBaseClass):
         - d, date
         - t, datetime
         - n, numeric
-        - h, hash       #set of 2 int
+        - h, set       #set of 2 int
         - p, percent
         - o, jsobject
         - ipaddr, ipaddress

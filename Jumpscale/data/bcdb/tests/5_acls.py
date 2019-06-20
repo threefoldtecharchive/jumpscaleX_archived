@@ -10,18 +10,35 @@ def main(self):
     test around acls
 
     """
-    return  # needs to be done later
 
-    schema = """
-    @url = despiegk.test5.acl
-    name = "" 
-    an_id = 0
-    """
+    def test(name):
+        if name == "RDB":
+            sqlitestor = False
+            rdbstor = True
+        elif name == "ZDB":
+            sqlitestor = False
+            rdbstor = False
+        elif name == "SQLITE":
+            sqlitestor = True
+            rdbstor = False
+        else:
+            raise RuntimeError("not supported type")
 
-    def do(bcdb):
+        def load():
 
-        # model has now been added to the DB
-        m = bcdb.model_get_from_schema(schema)
+            # don't forget the record 0 is always a systems record
+
+            schema = """
+            @url = despiegk.test5.acl
+            name = "" 
+            an_id = 0
+            """
+
+            db, model = self._load_test_model(sqlitestor=sqlitestor, rdbstor=rdbstor, reset=True, schema=schema)
+
+            return db, model
+
+        bcdb, m = load()
 
         self._log_info("POPULATE DATA")
 
@@ -33,18 +50,25 @@ def main(self):
             u.save()
 
         for i in range(10):
-            g = bcdb.group.new()
+            g = bcdb.circle.new()
             g.name = "gr_%s" % i
-            g.email = "group%s@me.com" % i
-            g.dm_id = "group%s.ibiza" % i
-            g.group_members = [x for x in range(i + 1)]
+            g.email = "circle%s@me.com" % i
+            g.dm_id = "circle%s.ibiza" % i
+            # g.circle_members = [(0, x) for x in range(i + 1)]
+            j.shell()
+            w
             g.user_members = [x for x in range(i + 1)]
             g.save()
+
+        assert len(bcdb.user.find()) == 10
+        assert len(bcdb.circle.find()) == 10
+        assert len([i for i in bcdb.circle.index._id_iterator()]) == 10
+        assert bcdb.zdbclient.list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
         self._log_info("ALL DATA INSERTED (DONE)")
 
         self._log_info("walk over all data")
-        l = bcdb.find()
+        l = bcdb.get_all()
 
         self._log_info("walked over all data (DONE)")
 
@@ -54,8 +78,11 @@ def main(self):
         a = m.new()
         a.name = "aname"
 
-        change = a.acl.rights_set(userids=[1], groupids=[2, 3], rights="rw")
+        change = a.acl.rights_set(userids=[1], circleids=[(0, 2), (0, 3)], rights="rw")
         assert change is True
+
+        j.shell()
+        w
 
         # assert a.acl.readonly is False
         a.save()
@@ -85,17 +112,10 @@ def main(self):
         assert a.acl.rights_check(1, "d") is False
         a.save()
 
-        # NEED TO DO TESTS WITH GROUPS
+        self._log_info("TEST ACL DONE: %s" % name)
 
-    zdbclient_admin = j.servers.zdb.client_admin_get()
-    zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
-    zdbclient.flush()  # empty
-    bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=True)
-
-    do(bcdb)
-    bcdb.reset()
-
-    bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=True)
-    do(bcdb)
+    test("RDB")
+    # test("ZDB")
+    # test("SQLITE")
 
     self._log_info("ACL TESTS ALL DONE")

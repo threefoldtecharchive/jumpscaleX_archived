@@ -2579,6 +2579,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
                 "dnslib",

@@ -133,7 +133,7 @@ class RDBClient(j.application.JSBaseClass):
         if not stop:
             stop = 0
         else:
-            stop = int(stop)
+            stop = int(stop) + 1
 
         if reverse:
             j.shell()
