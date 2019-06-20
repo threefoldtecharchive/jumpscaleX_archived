@@ -419,7 +419,7 @@ class Numeric(TypeBaseObjFactory):
 
     def getCur(self, value):
         value = value.lower()
-        for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
+        for cur2 in list(j.clients.currencylayer.cur2id):
             # print(cur2)
             if value.find(cur2) != -1:
                 # print("FOUND:%s"%cur2)

@@ -96,7 +96,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
         for key, item in data.items():
             if key.startswith("USD"):
                 key = key[3:]
-                self._data_cur[key.lower()] = item
+            self._data_cur[key.lower()] = item
         self._write_default()
 
     @property

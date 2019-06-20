@@ -8,6 +8,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="base")'
 
     """
+    j.servers.zdb.start_test_instance()
 
     def test(name):
         if name == "RDB":

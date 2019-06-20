@@ -120,7 +120,7 @@ class DataObjBase:
                     # find which properties need to be unique
                     # unique properties have to be indexed
                     args_search = {prop_u.name: getattr(self, prop_u.name)}
-                    r = self._model.get_from_keys(**args_search)
+                    r = self._model.find(**args_search)
                     msg = "could not save, was not unique.\n%s.\nfound:\n%s" % (args_search, r)
                     if len(r) > 1:
                         # can for sure not be ok
@@ -130,7 +130,7 @@ class DataObjBase:
                             # j.shell()
                             raise j.exceptions.Input(msg)
 
-                o = self._model._set(self)
+                o = self._model.set(self)
                 self.id = o.id
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
 

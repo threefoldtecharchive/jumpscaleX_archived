@@ -77,6 +77,8 @@ class BCDBMeta(j.application.JSBaseClass):
         self._data = None
         self._schema_last_id = 0
         self._namespace_last_id = 0
+        self._bcdb._schema_sid_to_md5 = {}
+        self._bcdb._schema_md5_to_model = {}
         self.data
 
     def _save(self):

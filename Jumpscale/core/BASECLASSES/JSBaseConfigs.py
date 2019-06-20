@@ -162,7 +162,7 @@ class JSBaseConfigs(JSBase):
             ]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
-                return self._model.get_from_keys(**kwargs)
+                return self._model.find(**kwargs)
             else:
                 raise RuntimeError(
                     "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"

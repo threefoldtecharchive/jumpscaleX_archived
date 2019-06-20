@@ -90,7 +90,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._key_index_hsetkey_get(nid)
 
         """
-        assert nid
         return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.schema.sid)
 
     def _key_index_set_(self, property_name, val, obj_id, nid=1):
@@ -101,7 +100,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param obj_id: id of the obj
         :return:
         """
-        assert nid
         key = "%s__%s" % (property_name, val)
         ids = self._key_index_getids(key, nid=nid)
         if obj_id is None:
@@ -131,7 +129,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             j.clients.credis_core.hset(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:], data)
 
     def _key_index_destroy(self, nid=1):
-        assert nid
+
         k = self._key_index_hsetkey_get(nid=nid) + ":*"
         for key in j.clients.credis_core.keys(k):
             j.clients.credis_core.delete(key)
@@ -142,7 +140,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :param key:
         :return: [] if not or the id's which are relevant for this namespace
         """
-        assert nid
+
         hash = self._key_index_redis_get(key)
 
         r = j.clients.credis_core.hget(self._key_index_hsetkey_get(nid=nid).encode() + b":" + hash[0:2], hash[2:])
@@ -204,20 +202,20 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
     ##### ID METHODS, this allows us to see which id's are in which namespace
 
-    def _id_redis_key_get(self, nid=1):
+    def _id_redis_listkey_get(self, nid=1):
         """
         :param namespaceid: default is 1 namespace = 1
         :return: list key for the storing the id's in redis
 
         use as
 
-        key = self._id_redis_key_get(nid)
+        key = self._id_redis_listkey_get(nid)
 
         """
-        return "bcdb:%s:%s:ids" % (self.bcdb.name, nid)
+        return "bcdb:%s:%s:ids" % (nid, self.schema.sid)
 
     def _ids_destroy(self, nid=1):
-        self._ids_redis.delete(self._id_redis_key_get(nid=nid))
+        self._ids_redis.delete(self._id_redis_listkey_get(nid=nid))
 
     def _ids_init(self, nid=1):
         """
@@ -229,7 +227,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             if self._ids_redis_use:
                 r = self._ids_redis
                 self._ids_last[nid] = 0
-                redis_list_key = self._id_redis_key_get(nid)
+                redis_list_key = self._id_redis_listkey_get(nid)
                 chunk = r.lindex(redis_list_key, -1)  # get the last element, works because its an ordered list
                 if not chunk:
                     # means we don't have the list yet
@@ -260,7 +258,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         if id > self._ids_last[nid]:
             if self._ids_redis_use:
                 r = self._ids_redis
-                redis_list_key = self._id_redis_key_get(nid)
+                redis_list_key = self._id_redis_listkey_get(nid)
                 r.rpush(redis_list_key, bin_id)
             else:
                 # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
@@ -285,13 +283,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 for nid in r.keys("bcdb:%s:*" % (self.bcdb.name)):
                     j.shell()
                     self._id_iterator(nid=nid)
-            redis_list_key = self._id_redis_key_get(nid)
+            redis_list_key = self._id_redis_listkey_get(nid)
             l = r.llen(redis_list_key)
             if l > 0:
                 for i in range(0, l):
-                    chunk = r.lindex(redis_list_key, i)
-                    obj_id = struct.unpack("<I", chunk)[0]
-                    print(obj_id)
+                    obj_id = self._id_get_objid_redis(i, nid=nid)
+                    # print(obj_id)
                     yield obj_id
 
         else:
@@ -306,13 +303,23 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     else:
                         break
 
+    def _id_get_objid_redis(self, pos, nid=1, die=True):
+        r = self._ids_redis
+        chunk = r.lindex(self._id_redis_listkey_get(nid=nid), pos)
+        if not chunk:
+            if die:
+                j.shell()
+                raise RuntimeError("should always get something back?")
+            return None
+        return struct.unpack("<I", chunk)[0]
+
     def _id_delete(self, id, nid=1):
         self._ids_init(nid=nid)
         if self._ids_redis_use:
             id = int(id)
             r = self._ids_redis
             bin_id = struct.pack("<I", id)
-            redis_list_key = self._id_redis_key_get(nid)
+            redis_list_key = self._id_redis_listkey_get(nid)
             r.lrem(redis_list_key, 0, bin_id)  # should remove all redis elements of the list with this id
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
@@ -325,27 +332,18 @@ class BCDBModelIndex(j.application.JSBaseClass):
     def _id_exists(self, id, nid=1):
         self._ids_init(nid=nid)
 
-        def get(r, pos, die=True):
-            b = r.lindex(redis_list_key, pos)
-            if not b:
-                if die:
-                    j.shell()
-                    raise RuntimeError("should always get something back?")
-                return None
-            return struct.unpack("<I", b)[0]
-
         if self._ids_redis_use:
             id = int(id)
             r = self._ids_redis
-            redis_list_key = self._id_redis_key_get(nid)
+            redis_list_key = self._id_redis_listkey_get(nid)
             l = r.llen(redis_list_key)
             if l > 0:
-                chunk = r.lindex(redis_list_key, -1)  # last one
-                last = struct.unpack("<I", chunk)[0]
-                trypos = int(l / last * id)
-                if trypos == last:
+                last_id = self._id_get_objid_redis(-1, nid=nid)
+                # this gives me an estimate where to look for the info in the list
+                trypos = int(l / last_id * id)
+                if trypos == last_id:
                     j.shell()
-                potentialid = get(r, trypos, die=False)
+                potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
                 if not potentialid:
                     j.shell()
                 elif potentialid == id:
@@ -354,7 +352,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 elif potentialid is None or potentialid > id:
                     # walk back
                     for i in range(trypos, 0, -1):
-                        potentialid = get(r, i)
+                        potentialid = self._id_get_objid_redis(i, nid=nid)
                         if potentialid == id:
                             return True
                         if potentialid < id:
@@ -362,7 +360,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 elif potentialid < id:
                     # walk forward
                     for i in range(0, trypos):
-                        potentialid = get(r, i)
+                        potentialid = self._id_get_objid_redis(i, nid=nid)
                         if potentialid == id:
                             return True
                         if potentialid > id:
