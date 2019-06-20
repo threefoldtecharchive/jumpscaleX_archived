@@ -207,7 +207,7 @@ def container_install(
     wiki=False,
     portrange=1,
     image=None,
-    branch=None,
+    branch=DEFAULT_BRANCH,
     reinstall=False,
     no_interactive=False,
     pull=False,
