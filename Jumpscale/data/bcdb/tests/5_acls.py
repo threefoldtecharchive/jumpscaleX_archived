@@ -2,6 +2,7 @@ from Jumpscale import j
 
 
 def main(self):
+    return
     """
     to run:
 
@@ -34,7 +35,7 @@ def main(self):
             an_id = 0
             """
 
-            db, model = self._load_test_model(sqlitestor=sqlitestor, rdbstor=rdbstor, reset=True, schema=schema)
+            db, model = self._load_test_model(type=name, reset=True, schema=schema)
 
             return db, model
 
@@ -80,9 +81,6 @@ def main(self):
 
         change = a.acl.rights_set(userids=[1], circleids=[(0, 2), (0, 3)], rights="rw")
         assert change is True
-
-        j.shell()
-        w
 
         # assert a.acl.readonly is False
         a.save()
