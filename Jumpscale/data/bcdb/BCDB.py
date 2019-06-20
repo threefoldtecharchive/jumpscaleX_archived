@@ -1,8 +1,8 @@
 # from importlib import import_module
 
 import gevent
-from Jumpscale.clients.zdb.ZDBClientBase import ZDBClientBase
-from Jumpscale.clients.rdb.RDBClient import RDBClient
+from Jumpscale.clients.stor_zdb.ZDBClientBase import ZDBClientBase
+from Jumpscale.clients.stor_rdb.RDBClient import RDBClient
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -17,10 +17,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDB(j.application.JSBaseClass):
-    def __init__(self, name=None, zdbclient=None, reset=False):
+    def __init__(self, name=None, storclient=None, reset=False):
         """
         :param name: name for the BCDB
-        :param zdbclient: if zdbclient == None then will use sqlite db
+        :param storclient: if storclient == None then will use sqlite db
         """
         JSBASE.__init__(self)
 
@@ -29,28 +29,29 @@ class BCDB(j.application.JSBaseClass):
         if name is None:
             raise RuntimeError("name needs to be specified")
 
-        if zdbclient is not None:
-            if not isinstance(zdbclient, ZDBClientBase) and not isinstance(zdbclient, RDBClient):
-                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
+        if storclient is not None:
+            if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
+                raise RuntimeError("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
 
         self._schema_md5_to_model = {}
         self._schema_sid_to_md5 = {}
 
         self.name = name
         self._sqlclient = None
+        self.dataprocessor_greenlet = None
+
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
-        self.zdbclient = zdbclient
-        self.meta = BCDBMeta(self)
+        self.storclient = storclient
+
+        self.meta = BCDBMeta(self, reset=True)
+
+        self._init_(reset=reset, stop=False)
 
         self._need_to_reset = reset
         j.data.bcdb.bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
             raise RuntimeError("name needs to be string")
-
-        self.dataprocessor_greenlet = None
-
-        self._init_(reset=reset, stop=False)
 
         j.data.nacl.default
 
@@ -82,8 +83,8 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("export no path")
         if reset:
             self.reset()
-            if self.zdbclient:
-                assert self.zdbclient.list() == [0]
+            if self.storclient:
+                assert self.storclient.list() == [0]
         self._log_info("Load bcdb:%s from %s" % (self.name, path))
         assert j.sal.fs.exists(path)
 
@@ -129,30 +130,30 @@ class BCDB(j.application.JSBaseClass):
                 if obj_id > max:
                     max = obj_id
 
-        if self.zdbclient:
-            assert self.zdbclient.nsinfo["mode"] == "sequential"
-            assert self.zdbclient.nsinfo["entries"] == 1
+        if self.storclient:
+            assert self.storclient.nsinfo["mode"] == "sequential"
+            assert self.storclient.nsinfo["entries"] == 1
             lastid = 1
 
         # have to import it in the exact same order
         for i in range(1, max + 1):
             self._log("import: %s" % json)
-            if self.zdbclient:
-                if self.zdbclient.get(key=i - 1) is None:
+            if self.storclient:
+                if self.storclient.get(key=i - 1) is None:
                     obj = model.new()
                     obj.id = None
                     obj.save()
             if i in data:
                 md5, json = data[i]
                 model = models[md5]
-                if self.zdbclient:
-                    if self.zdbclient.get(key=i) is None:
+                if self.storclient:
+                    if self.storclient.get(key=i) is None:
                         # does not exist yet
                         try:
                             obj = model.new(data=json)
                         except:
                             raise RuntimeError("can't get a new model based on json data:%s" % json)
-                        if self.zdbclient:
+                        if self.storclient:
                             obj.id = None
                     else:
                         obj = model.get(obj.id)
@@ -175,9 +176,6 @@ class BCDB(j.application.JSBaseClass):
         if stop:
             self.stop()
 
-        if reset:
-            j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
-
         self._sqlclient = None
 
         self.dataprocessor_start()
@@ -192,6 +190,9 @@ class BCDB(j.application.JSBaseClass):
         if reset:
             self._reset()
 
+        if reset:
+            j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
+
         j.sal.fs.createDir(self._data_dir)
 
         # needed for async processing
@@ -204,16 +205,6 @@ class BCDB(j.application.JSBaseClass):
             if key in sys.modules:
                 sys.modules.pop(key)
 
-        from .models_system.ACL import ACL
-        from .models_system.USER import USER
-        from .models_system.CIRCLE import CIRCLE
-        from .models_system.NAMESPACE import NAMESPACE
-
-        self.acl = self.model_add(ACL(bcdb=self))
-        self.user = self.model_add(USER(bcdb=self))
-        self.circle = self.model_add(CIRCLE(bcdb=self))
-        self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
-
         # check if we need to rebuild the BCDB indexes
         try:
             res = j.clients.credis_core.get(self.meta._redis_key_inited)
@@ -225,7 +216,17 @@ class BCDB(j.application.JSBaseClass):
 
         if not res:
             # means there is no index yet in the redis, need to rebuild all
-            j.data.bcdb.index_rebuild()
+            self.index_rebuild()
+
+        from .models_system.ACL import ACL
+        from .models_system.USER import USER
+        from .models_system.CIRCLE import CIRCLE
+        from .models_system.NAMESPACE import NAMESPACE
+
+        self.acl = self.model_add(ACL(bcdb=self))
+        self.user = self.model_add(USER(bcdb=self))
+        self.circle = self.model_add(CIRCLE(bcdb=self))
+        self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
         j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
 
@@ -312,14 +313,15 @@ class BCDB(j.application.JSBaseClass):
 
     def _reset(self):
 
-        if self.zdbclient:
-            self.zdbclient.flush(meta=self.meta)  # new flush command
+        if self.storclient:
+            self.storclient.flush(meta=self.meta)  # new flush command
 
         # THINK NOT NEEDED BECAUSE THE REDIS RESET REMOVES ALL
         # for key, m in self.models.items():
         #     m.destroy()
 
         self._redis_reset()
+        self.meta.reset()
 
         if self._sqlclient is not None:
             self.sqlclient.close()
@@ -602,7 +604,7 @@ class BCDB(j.application.JSBaseClass):
             return obj
 
     def obj_get(self, id):
-        data = self.zdbclient.get(id)
+        data = self.storclient.get(id)
         if data is None:
             return None
         return self._unserialize(id, data)
@@ -622,10 +624,10 @@ class BCDB(j.application.JSBaseClass):
         :param keyonly: bool, optional
         :raises e: [description]
         """
-        if self.zdbclient:
-            db = self.zdbclient
+        if self.storclient:
+            db = self.storclient
             for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
-                if self.zdbclient.type == "zdb" and key == 0:  # skip first metadata entry
+                if self.storclient.type.lower() == "zdb" and key == 0:  # skip first metadata entry
                     continue
                 if keyonly:
                     yield key

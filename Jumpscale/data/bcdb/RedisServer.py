@@ -111,6 +111,7 @@ class RedisServer(j.application.JSBaseClass):
                 continue
 
             elif redis_cmd in ["hscan"]:
+                ###has support for all commands which have 3 requests
                 kwargs = parser.request_to_dict(request[3:])
                 if not hasattr(self, redis_cmd):
                     raise RuntimeError("COULD NOT FIND COMMAND:%s" % redis_cmd)
@@ -145,64 +146,79 @@ class RedisServer(j.application.JSBaseClass):
         # j.shell()
         response.encode("OK")
 
-    def _split(self, key):
-        """
-        split function used in the "normal" methods
-        (len, set, get, del)
-
-        split the key into 3 composant:
-        - category: objects or schema
-        - url: url of the schema
-        - key: actual key of the object
-
-        :param key: full encoded key of an object. e.g: object:schema.url:key
-        :type key: str
-        :return: tuple of (category, url, key, model)
-        :rtype: tuple
-        """
-        if key.strip() == "":
-            raise RuntimeError("key cannot be empty")
-        splitted = key.split(":")
-        len_splitted = len(splitted)
-        m = ""
-        if len_splitted == 1:
-            cat = splitted[0]
-            url = ""
-            key = ""
-        elif len_splitted == 2:
-            cat = splitted[0]
-            url = splitted[1]
-            key = ""
-        elif len_splitted == 3:
-            cat = splitted[0]
-            url = splitted[1]
-            key = splitted[2]
-        if url != "":
-            # If we have a url we should be able to get the corresponding model if we already have seen that model
-            # otherwise we leave the model to an empty string because it is tested further on to know that we have to set
-            # this schema
-
-            if url in self.bcdb.models:
-                m = self.bcdb.model_get_from_url(url)
-        return (cat, url, key, m)
+    # def _split(self, key):
+    #     """
+    #     split function used in the "normal" methods
+    #     (len, set, get, del)
+    #
+    #     split the key into 3 composant:
+    #     - category: objects or schema
+    #     - url: url of the schema, or sid or md5 (hash)
+    #     - key: actual key of the object
+    #
+    #     :param key: full encoded key of an object. e.g: object:schema.url:key
+    #     :type key: str
+    #     :return: tuple of (category, url, key, model)
+    #     :rtype: tuple
+    #     """
+    #     if key.strip() == "":
+    #         raise RuntimeError("key cannot be empty")
+    #     splitted = key.split(":")
+    #     len_splitted = len(splitted)
+    #     m = ""
+    #     if len_splitted == 1:
+    #         cat = splitted[0]
+    #         url = ""
+    #         key = ""
+    #     elif len_splitted == 2:
+    #         cat = splitted[0]
+    #         url = splitted[1]
+    #         key = ""
+    #     elif len_splitted == 3:
+    #         cat = splitted[0]
+    #         url = splitted[1]
+    #         key = splitted[2]
+    #     if url != "":
+    #         # If we have a url we should be able to get the corresponding model if we already have seen that model
+    #         # otherwise we leave the model to an empty string because it is tested further on to know that we have to set
+    #         # this schema
+    #
+    #         j.shell()
+    #
+    #         if url in self.bcdb.models:
+    #             m = self.bcdb.model_get_from_url(url)
+    #     return (cat, url, key, m)
 
     def set(self, response, key, val):
-        cat, url, key, model = self._split(key)
-        if cat == "objects":
-            if url == "":
-                response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-                return
-            if key == "":
-                response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-                return
-
-        if cat == "schemas":
-            s = j.data.schema.get_from_text(val)
-            self.bcdb.model_get_from_schema(s)
+        if key.startswith("schemas"):
+            if key.startswith("schemas:url"):
+                url = key.split(":")[-1]
+                if not "." in url:
+                    response.error("url not properly formatted, needs to be xxx.bbb.aaa")
+                    return
+                m = self.bcdb.model_get_from_url(url)
+            elif key.startswith("schemas:sid"):
+                sid = key.split(":")[-1]
+                try:
+                    sid = int(sid)
+                except Exception as e:
+                    response.error("sid needs to be an int, now :%s" % sid)
+                m = self.bcdb.model_get_from_sid(url)
+            elif key.startswith("schemas:hash"):
+                hash = key.split(":")[-1].lower().strip()
+                if hash not in j.data.schema.md5_to_schema:
+                    response.error("cannot find schema with hash:%s" % hash)
+                schema = j.data.schema.md5_to_schema[hash]
+                m = self.model_get_from_schema(schema)
+            j.shell()
+            response.encode("OK")
+            return
+        if key.startswith("objects"):
             response.encode("OK")
             return
 
-        response.error("cannot set, cat:'%s' not supported" % cat)
+        response.error("cannot set, key:'%s' not supported" % key)
+        return
 
     def get(self, response, key):
         """
@@ -212,38 +228,25 @@ class RedisServer(j.application.JSBaseClass):
         :key: full encoded key of an object or schema. e.g: objects:schema.url:key
         :response: the response that will be returned 
         """
-        cat, url, key, model = self._split(key)
-        if model is "":
-            raise RuntimeError("did not find model from key, maybe models not loaded:%s" % key)
-
-        if url == "":
-            response.encode("ok")
+        if key.startswith("schemas"):
+            response.encode("OK")
             return
-        if cat == "info":
+        if key.startswith("data"):
+            response.encode("OK")
+            return
+        if key.startswith("info"):
             response.encode(self.info())
             return
-        elif cat == "schemas":
-            if url == "":
-                response.encode("")
-                return
-            if key == "":
-                # get content from schema
-                response.encode(model.schema.text)
-                return
-            response.encode(model.schema.text)
+
         response.error("cannot get, cat:'%s' not found" % cat)
 
     def delete(self, response, key):
-        cat, url, key, model = self._split(key)
-        if url == "" or cat == "schemas" or model == "":
-            # DO NOT DELETE SCHEMAS
-            response.encode("0")
-            return
+        j.shell()
 
         if cat == "objects":
             if key == "" and url != "":
                 # cannot delete !!! data stays there
-                if model.bcdb.zdbclient is None:
+                if model.bcdb.storclient is None:
                     model.destroy()
                 nr_deleted = 0
             else:
@@ -270,16 +273,45 @@ class RedisServer(j.application.JSBaseClass):
 
         if len(self.bcdb._schema_url_to_model) > 0:
             for url, model in self.bcdb._schema_url_to_model.items():
-                res.append("schemas:%s" % url)
-                res.append("objects:%s" % url)
+                res.append("schemas:url:%s" % url)
+                # NEED TO ADD THE OTHERS
         else:
             res.append("schemas")
             res.append("objects")
         res.append("info")
         response._array(["0", res])
 
-    def hset(self, response, key, id, val, nid=1):
-        cat, url, _, model = self._split(key)
+    def hset(self, response, key, hkey, val):
+
+        j.shell()
+        if key.startswith("schemas"):
+            if key.startswith("schemas:url"):
+                url = key.split(":")[-1]
+                if not "." in url:
+                    response.error("url not properly formatted, needs to be xxx.bbb.aaa")
+                    return
+                m = self.bcdb.model_get_from_url(url)
+
+            elif key.startswith("schemas:sid"):
+                sid = key.split(":")[-1]
+                try:
+                    sid = int(sid)
+                except Exception as e:
+                    response.error("sid needs to be an int, now :%s" % sid)
+                m = self.bcdb.model_get_from_sid(url)
+            elif key.startswith("schemas:hash"):
+                hash = key.split(":")[-1].lower().strip()
+                if hash not in j.data.schema.md5_to_schema:
+                    response.error("cannot find schema with hash:%s" % hash)
+                schema = j.data.schema.md5_to_schema[hash]
+                m = self.model_get_from_schema(schema)
+            j.shell()
+            response.encode("OK")
+            return
+        if key.startswith("objects"):
+            response.encode("OK")
+            return
+
         if cat != "objects":
             response.error("category %s not valid" % cat)
             return
@@ -307,23 +339,55 @@ class RedisServer(j.application.JSBaseClass):
 
         response.encode("%s" % o.id)
 
-    def hget(self, response, key, id):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
+    def hget(self, response, key, hkey):
+        if key.startswith("schemas"):
+            if key.startswith("schemas:url"):
+                url = hkey
+                if not "." in url:
+                    response.error("url not properly formatted, needs to be xxx.bbb.aaa")
+                    return
+                m = self.bcdb.model_get_from_url(url)
+            elif key.startswith("schemas:sid"):
+                sid = hkey
+                try:
+                    sid = int(sid)
+                except Exception as e:
+                    response.error("sid needs to be an int, now :%s" % sid)
+                m = self.bcdb.model_get_from_sid(url)
+            elif key.startswith("schemas:hash"):
+                hash = hkey
+                if hash not in j.data.schema.md5_to_schema:
+                    response.error("cannot find schema with hash:%s" % hash)
+                schema = j.data.schema.md5_to_schema[hash]
+                m = self.model_get_from_schema(schema)
+            response.encode(m.schema.text)
             return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
+        elif key.startswith("data"):
+            if key.startswith("data:url"):
+                url = key.split(":")[-1]
+                if not "." in url:
+                    response.error("url not properly formatted, needs to be xxx.bbb.aaa")
+                    return
+                m = self.bcdb.model_get_from_url(url)
+            elif key.startswith("data:sid"):
+                sid = key.split(":")[-1]
+                try:
+                    sid = int(sid)
+                except Exception as e:
+                    response.error("sid needs to be an int, now :%s" % sid)
+                m = self.bcdb.model_get_from_sid(url)
+            elif key.startswith("data:hash"):
+                hash = key.split(":")[-1].lower().strip()
+                if hash not in j.data.schema.md5_to_schema:
+                    response.error("cannot find schema with hash:%s" % hash)
+                schema = j.data.schema.md5_to_schema[hash]
+                m = self.model_get_from_schema(schema)
+            obj = m.get(int(hkey))
+            if obj is not None:
+                response.encode(obj._json)
+            else:
+                response.encode(None)
             return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-
-        obj = model.get(int(id))
-        if obj is not None:
-            response.encode(obj._json)
-        else:
-            response.encode(None)
 
     def hdel(self, response, key, id):
         cat, url, _, model = self._split(key)
@@ -379,8 +443,8 @@ class RedisServer(j.application.JSBaseClass):
         return urls
 
     def hscan(self, response, key, startid, count=10000):
-
-        cat, url, _, model = self._split(key)
+        # TODO: needs to be reimplemented per namespace & url or sid or hash
+        j.shell()
         objs = model.find()
         res = []
         if cat == "schemas":
@@ -396,6 +460,12 @@ class RedisServer(j.application.JSBaseClass):
         response._array(["0", res])
 
     def info_internal(self, response, *args):
+        """
+        is fake information but needed to let RDM work
+        :param response:
+        :param args:
+        :return:
+        """
         C = """
         # Server
         redis_version:4.0.11
@@ -520,3 +590,9 @@ class RedisServer(j.application.JSBaseClass):
         """
         C = j.core.text.strip(C)
         response.encode(C)
+
+    def __str__(self):
+        out = "redisserver:bcdb:%s\n" % self.bcdb.name
+        return out
+
+    __repr__ = __str__

@@ -2,6 +2,10 @@ from Jumpscale import j
 
 import redis
 
+"""
+try redis commands to get to BCDB
+"""
+
 
 def main(self):
 
@@ -13,6 +17,9 @@ def main(self):
     """
 
     def do(zdb=False):
+
+        if zdb:
+            j.servers.zdb.start_test_instance(destroydata=True)
 
         j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=20)
 
@@ -38,12 +45,22 @@ def main(self):
 
         schema = j.core.text.strip(schema)
         self._log_debug("set schema to 'despiegk.test2'")
-        redis_cl.set("schemas:despiegk.test2", schema)
+        redis_cl.set("schemas:url:despiegk.test2", schema)
+        redis_cl.execute_command("schemaset", schema)
+        redis_cl.execute_command("schemaset", schema, url)
+        sid = redis_cl.get("schemas:url2sid:despiegk.test2")
+        redis_cl.execute_command("schemaset", schema, sid)
+
+        j.shell()
+
+        redis_cl.set("schemas:url:despiegk.test2", schema)
         self._log_debug("compare schema")
         schema2 = redis_cl.get("schemas:despiegk.test2")
         # test schemas are same
 
         assert _compare_strings(schema, schema2)
+
+        j.shell()
 
         self._log_debug("delete data")
         # removes the data mainly tested on sqlite db now
@@ -131,22 +148,25 @@ def main(self):
 
     def sqlite_test():
         # SQLITE BACKEND
-        self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
+        bcdb, _ = self._load_test_model(reset=True, type="sqlite")
+        # self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
         do()
         # restart redis server lets see if schema's are there autoloaded
-        self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
+        self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
         check_after_restart()
 
     def zdb_test():
         # ZDB test
+        bcdb, _ = self._load_test_model(reset=True, type="zdb")
         c = j.clients.zdb.client_admin_get(port=9901)
         c.reset()  # removes the namespace from zdb, all is gone, need to create again
         c.namespace_new("test", secret="1234")
-        self.redis_server_start(port=6380, background=True, zdbclient_port=9901, reset=True)
+        self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
         do(zdb=True)
 
     sqlite_test()
-    zdb_test()
+    # zdb_test()
+
     self._log_debug("TEST OK")
 
     return "OK"

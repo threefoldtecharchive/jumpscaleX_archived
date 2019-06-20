@@ -125,9 +125,9 @@ def main(self):
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
     a = j.servers.zdb.client_admin_get()
-    zdbclient2 = a.namespace_new("test2", secret="12345")
+    storclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.get("test2", zdbclient2)
+    bcdb2 = j.data.bcdb.get("test2", storclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()

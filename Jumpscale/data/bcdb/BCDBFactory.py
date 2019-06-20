@@ -58,12 +58,12 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         for name, data in self._config.items():
             if data["type"] == "zdb":
-                zdbclient = j.clients.zdb.client_get(**data)
-                bcdb = self.get(name, zdbclient)
+                storclient = j.clients.zdb.client_get(**data)
+                bcdb = self.get(name, storclient)
                 bcdb.index_rebuild()
             if data["type"] == "rdb":
-                zdbclient = j.clients.rdb.client_get(**data)
-                bcdb = self.get(name, zdbclient)
+                storclient = j.clients.rdb.client_get(**data)
+                bcdb = self.get(name, storclient)
                 bcdb.index_rebuild()
             else:
                 bcdb = self.get(name)
@@ -88,11 +88,11 @@ class BCDBFactory(j.application.JSBaseClass):
         # TODO: implement
         raise RuntimeError("not implemented")
 
-    def get(self, name, zdbclient=None, reset=False, if_not_exist_die=False):
+    def get(self, name, storclient=None, reset=False, if_not_exist_die=False):
         """
         will create a new one or an existing one if it exists
         :param name:
-        :param zdbclient:
+        :param storclient:
         :param reset: means do not use an existing one
         :param if_not_exist_die, if True then will die if the instance does not exist yet
         :return:
@@ -113,31 +113,31 @@ class BCDBFactory(j.application.JSBaseClass):
                     if data["admin"]:
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
-                zdbclient = j.clients.zdb.client_get(**data)
+                storclient = j.clients.zdb.client_get(**data)
             if data["type"] == "rdb":
-                zdbclient = j.clients.rdb.client_get(**data)
+                storclient = j.clients.rdb.client_get(**data)
             else:
-                zdbclient = None
+                storclient = None
         elif if_not_exist_die:
             raise RuntimeError("did not find bcdb with name:%s" % name)
 
         self._log_debug("new bcdb:%s" % name)
-        if zdbclient != None and j.data.types.string.check(zdbclient):
-            raise RuntimeError("zdbclient cannot be str")
+        if storclient != None and j.data.types.string.check(storclient):
+            raise RuntimeError("storclient cannot be str")
 
         if not name in self._config:
-            if zdbclient:
-                if zdbclient.type == "RDB":
-                    data["nsname"] = zdbclient.nsname
+            if storclient:
+                if storclient.type == "RDB":
+                    data["nsname"] = storclient.nsname
                     data["type"] = "rdb"
-                    data["redisconfig_name"] = zdbclient._redis.redisconfig_name
+                    data["redisconfig_name"] = storclient._redis.redisconfig_name
                 else:
-                    data["nsname"] = zdbclient.nsname
-                    data["admin"] = zdbclient.admin
-                    data["addr"] = zdbclient.addr
-                    data["port"] = zdbclient.port
-                    data["mode"] = zdbclient.mode
-                    data["secret"] = zdbclient.secret
+                    data["nsname"] = storclient.nsname
+                    data["admin"] = storclient.admin
+                    data["addr"] = storclient.addr
+                    data["port"] = storclient.port
+                    data["mode"] = storclient.mode
+                    data["secret"] = storclient.secret
                     data["type"] = "zdb"
             else:
                 data["nsname"] = name
@@ -148,22 +148,22 @@ class BCDBFactory(j.application.JSBaseClass):
             data_encrypted = j.data.nacl.default.encryptSymmetric(data)
             j.sal.fs.writeFile(self._config_data_path, data_encrypted)
 
-        self.bcdb_instances[name] = BCDB(zdbclient=zdbclient, name=name, reset=reset)
+        self.bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
         return self.bcdb_instances[name]
 
-    def new(self, name, zdbclient=None):
+    def new(self, name, storclient=None):
         """
         create a new instance (can also do this using self.new(...))
         :param name:
-        :param zdbclient: optional
+        :param storclient: optional
         :return:
         """
-        return self.get(name=name, zdbclient=zdbclient)
+        return self.get(name=name, storclient=storclient)
 
     def bcdb_test_get(self, reset=True):
-        bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
+        bcdb = j.data.bcdb.get(name="test", storclient=None, reset=reset)
         bcdb2 = j.data.bcdb.bcdb_instances["test"]
-        assert bcdb2.zdbclient == None
+        assert bcdb2.storclient == None
         return bcdb
 
     def redis_server_start(
@@ -174,11 +174,7 @@ class BCDBFactory(j.application.JSBaseClass):
         port=6380,
         background=False,
         secret="123456",
-        zdbclient_addr="localhost",
-        zdbclient_port=9900,
-        zdbclient_namespace="test",
-        zdbclient_secret="1234",
-        zdbclient_mode="seq",
+        bcdbname="test",
     ):
 
         """
@@ -192,7 +188,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
         kosmos "j.data.bcdb.redis_server_start(background=True)"
 
-        kosmos "j.data.bcdb.redis_server_start(background=False,zdbclient_addr=None)"
+        kosmos "j.data.bcdb.redis_server_start(background=False,bcdbname="test)"
 
 
         :return:
@@ -204,11 +200,7 @@ class BCDBFactory(j.application.JSBaseClass):
             args += 'name="%s", ' % name
             args += "port=%s, " % port
             args += 'secret="%s", ' % secret
-            args += 'zdbclient_addr="%s", ' % zdbclient_addr
-            args += "zdbclient_port=%s, " % zdbclient_port
-            args += 'zdbclient_namespace="%s", ' % zdbclient_namespace
-            args += 'zdbclient_secret="%s", ' % zdbclient_secret
-            args += 'zdbclient_mode="%s"' % zdbclient_mode
+            args += 'bcdbname="%s", ' % bcdbname
 
             cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
@@ -221,17 +213,7 @@ class BCDBFactory(j.application.JSBaseClass):
             assert r.ping()
 
         else:
-            if zdbclient_addr not in ["None", None]:
-                zdbclient = j.clients.zdb.client_get(
-                    nsname=zdbclient_namespace,
-                    addr=zdbclient_addr,
-                    port=zdbclient_port,
-                    secret=zdbclient_secret,
-                    mode=zdbclient_mode,
-                )
-            else:
-                zdbclient = None
-            bcdb = self.new(name, zdbclient=zdbclient)
+            bcdb = self.get(name=bcdbname)
             bcdb.redis_server_start(port=port)
 
     @property
@@ -246,7 +228,7 @@ class BCDBFactory(j.application.JSBaseClass):
             self._code_generation_dir = path
         return self._code_generation_dir
 
-    def _load_test_model(self, reset=True, sqlitestor=False, rdbstor=False, schema=None):
+    def _load_test_model(self, reset=True, type="zdb", schema=None):
 
         if not schema:
             schema = """
@@ -266,23 +248,29 @@ class BCDBFactory(j.application.JSBaseClass):
             U = 0.0
             pool_type = "managed,unmanaged" (E)
             """
-        if rdbstor:
-            zdbclient = j.clients.rdb.client_get()  # will be to core redis
-            bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
-            j.shell()
-        elif sqlitestor:
-            # j.servers.zdb.start_test_instance(destroydata=reset)
-            bcdb = j.data.bcdb.get(name="test", zdbclient=None, reset=reset)
+
+        type = type.lower()
+
+        if type == "rdb":
+            storclient = j.clients.rdb.client_get()  # will be to core redis
+            bcdb = j.data.bcdb.get(name="test", storclient=storclient, reset=reset)
+
+        elif type == "sqlite":
+            bcdb = j.data.bcdb.get(name="test", storclient=None, reset=reset)
             bcdb2 = j.data.bcdb.bcdb_instances["test"]
-            assert bcdb2.zdbclient == None
-        else:
-            zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
-            assert zdbclient_admin.ping()
+            assert bcdb2.storclient == None
+        elif type == "zdb":
+            storclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
+            assert storclient_admin.ping()
             secret = "1234"
-            zdbclient = zdbclient_admin.namespace_new("test", secret=secret)
-            assert zdbclient.nsinfo["public"] == "no"
-            assert zdbclient.ping()
-            bcdb = j.data.bcdb.get(name="test", zdbclient=zdbclient, reset=reset)
+            storclient = storclient_admin.namespace_new("test", secret=secret)
+            if reset:
+                storclient.flush()
+            assert storclient.nsinfo["public"] == "no"
+            assert storclient.ping()
+            bcdb = j.data.bcdb.get(name="test", storclient=storclient, reset=reset)
+        else:
+            raise RuntimeError("only rdb,zdb,sqlite for stor")
 
         if reset:
             bcdb.reset()  # empty
@@ -294,9 +282,9 @@ class BCDBFactory(j.application.JSBaseClass):
 
         if reset:
 
-            if not sqlitestor and not rdbstor:
-                print(model.zdbclient.nsinfo["entries"])
-                assert model.zdbclient.nsinfo["entries"] == 1
+            if type.lower() in ["zdb"]:
+                print(model.storclient.nsinfo["entries"])
+                assert model.storclient.nsinfo["entries"] == 1
             else:
                 assert len(model.find()) == 0
 

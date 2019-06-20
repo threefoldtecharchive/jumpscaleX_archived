@@ -34,7 +34,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         self._ids_redis = self.bcdb._redis_index
         self._ids_last = {}  # need to keep last id per namespace
 
-        self.zdbclient = self.bcdb.zdbclient
+        self.storclient = self.bcdb.storclient
 
         self.readonly = self.bcdbmodel.readonly
 

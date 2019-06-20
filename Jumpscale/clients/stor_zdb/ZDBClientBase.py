@@ -84,6 +84,7 @@ class ZDBClientBase(j.application.JSBaseClass):
             meta._data = data
             # now make sure its back in the db
             meta._save()
+            meta._reset()
         else:
             self.redis.execute_command("FLUSH")
 

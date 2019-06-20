@@ -37,13 +37,13 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.schema = schema
         self.bcdb = bcdb
-        self.zdbclient = bcdb.zdbclient
+        self.storclient = bcdb.storclient
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
-        if self.zdbclient and self.zdbclient.type == "ZDB":
-            # is unique id for a bcdbmodel (unique per zdbclient !)
-            self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
+        if self.storclient and self.storclient.type == "ZDB":
+            # is unique id for a bcdbmodel (unique per storclient !)
+            self.key = "%s_%s" % (self.storclient.nsname, self.schema.url)
         else:
             self.key = self.schema.url
         self.key = self.key.replace(".", "_")
@@ -152,10 +152,10 @@ class BCDBModel(j.application.JSBaseClass):
             self.triggers_call(obj=obj, action="delete")
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
-            if not self.zdbclient:
+            if not self.storclient:
                 self.bcdb.sqlclient.delete(key=obj.id)
             else:
-                self.zdbclient.delete(obj.id)
+                self.storclient.delete(obj.id)
             self.index.delete(obj)
 
     def check(self, obj):
@@ -314,19 +314,19 @@ class BCDBModel(j.application.JSBaseClass):
             # PUT DATA IN DB
             if obj.id is None:
                 # means a new one
-                if not self.zdbclient:
+                if not self.storclient:
                     obj.id = self.bcdb.sqlclient.set(key=None, val=data)
                 else:
-                    obj.id = self.zdbclient.set(data)
+                    obj.id = self.storclient.set(data)
                 if self.readonly:
                     obj.readonly = True
                 self._log_debug("NEW:\n%s" % obj)
             else:
-                if not self.zdbclient:
+                if not self.storclient:
                     self.bcdb.sqlclient.set(key=obj.id, val=data)
                 else:
                     try:
-                        self.zdbclient.set(data, key=obj.id)
+                        self.storclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
                             raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
@@ -395,10 +395,10 @@ class BCDBModel(j.application.JSBaseClass):
         #             # print("cache hit")
         #             return obj
 
-        if not self.zdbclient:
+        if not self.storclient:
             data = self.bcdb.sqlclient.get(key=obj_id)
         else:
-            data = self.zdbclient.get(obj_id)
+            data = self.storclient.get(obj_id)
 
         if not data:
             if die:
@@ -431,14 +431,6 @@ class BCDBModel(j.application.JSBaseClass):
             o = self.get(obj_id, die=False)
             if not o:
                 continue
-            # try:
-            #     o = self.get(obj_id)
-            # except Exception as e:
-            #     if str(e).find("could not find obj") != -1:
-            #         self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
-            #         continue
-            #     else:
-            #         raise e
             yield o
 
     def __str__(self):

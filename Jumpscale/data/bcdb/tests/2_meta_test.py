@@ -8,13 +8,15 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="meta_test")'
 
     """
-
+    j.servers.zdb.start_test_instance(destroydata=True)
     # get zdb client
-    bcdb, _ = self._load_test_model(reset=True)
     c = j.clients.zdb.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     cl1.flush()
+
+    bcdb, _ = self._load_test_model(reset=True)
+
     assert len(bcdb.get_all()) == 0
 
     assert len(bcdb.meta.data.schemas) == 7
@@ -38,7 +40,7 @@ def main(self):
     assert len(bcdb.meta.data.schemas) == 8
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
-    assert "jumpscale.bcdb.circle.1" in j.data.schema.url_to_md5
+    assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
 
     schema = bcdb.model_get_from_url("jumpscale.schema.test.a")
     o = schema.new()
@@ -50,25 +52,11 @@ def main(self):
     data = redis.get(b"\x00\x00\x00\x00")
     assert len(data) > 100
 
-    # now completely remove the db, is fully empty
-    cl1.flush()
-    assert redis.get(b"\x00\x00\x00\x00") == None
-    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
-    assert cl1.get(key=0) is None
-
-    bcdb.meta.reset()  # make sure we reload from data
-
-    assert bcdb.meta.data.schemas == []
-
-    assert redis.get(b"\x00\x00\x00\x00") == None
-    assert redis.set("", value=data) == b"\x00\x00\x00\x00"
-    bcdb.meta.reset()  # make sure we reload from data
-
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
-    assert "jumpscale.bcdb.circle.1" in j.data.schema.url_to_md5
+    assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
 
     s0 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test.a")
-    s0_sid = s0.sid + 0  # to make sure we have copy
+    s0md5 = s0._md5 + ""
 
     model = bcdb.model_get_from_schema(schema=s0)
 
@@ -88,10 +76,11 @@ def main(self):
     a2.i = 2
     a2.save()
 
-    myid = a.id + 0
-    assert myid == 1
+    assert len([i for i in model.index._id_iterator()]) == 2
 
-    assert a._model.schema.sid == s0_sid
+    myid = a.id + 0
+
+    assert a._model.schema._md5 == s0md5
 
     schema_text = """
     @url = jumpscale.schema.test.a
@@ -118,10 +107,6 @@ def main(self):
 
     assert len(bcdb.meta.data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
 
-    s2_sid = s2.sid + 0
-
-    assert s2_sid == s0_sid  # means a new sid was created
-
     a3 = model2.new()
     a3.category = "acat3"
     a3.txt = "data3"
@@ -129,7 +114,6 @@ def main(self):
     a3.save()
     assert a3.i == 3.0
     assert a2.i == 2  # int
-    assert a3._model.schema.sid == s2_sid  # needs to be the new sid
 
     assert len(model2.find()) == 3  # needs to be 3 because model is for all of them
     assert len(model.find()) == 3  # needs to be 3 because model is for all of them
@@ -144,10 +128,6 @@ def main(self):
     a6_ = model.get(all[2].id)
     assert a6_ == a6
 
-    assert a4._model.schema.sid == s0_sid  # needs to be the original schemaid
     assert a6.id == a3.id
-    assert (
-        a6._model.schema.sid == s2_sid
-    )  # needs to be the new one, so the object coming back has the schema as originally intended
     assert a6.i == a3.i
     return "OK"
