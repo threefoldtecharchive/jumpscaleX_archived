@@ -170,7 +170,7 @@ class JSBaseConfigs(JSBase):
                 )
             return []
         else:
-            return self._model.get_all()
+            return self._model.find()
 
     def delete(self, name):
         o = self.get(name)

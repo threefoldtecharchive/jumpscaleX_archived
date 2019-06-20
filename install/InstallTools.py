@@ -2281,7 +2281,7 @@ class MyEnv:
         :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
         :return:
         """
-        if reset == False and MyEnv.__init:
+        if reset is False and MyEnv.__init:
             return
 
         print("MYENV INIT")

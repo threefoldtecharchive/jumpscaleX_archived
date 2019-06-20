@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
+import click
+from urllib.request import urlopen
+from importlib import util
+import sys
+import shutil
+import time
+import inspect
+import argparse
 import os
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
 
-
-import argparse
-import inspect
-import time
-import os
-import shutil
-import sys
-from importlib import util
-from urllib.request import urlopen
 
 DEFAULT_BRANCH = "development"
 
@@ -115,15 +114,13 @@ def _configure(
 #
 # IT.BaseInstaller.base()
 
-import click
-
 
 @click.group()
 def cli():
     pass
 
 
-### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
+# CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
 @click.option("--codedir", default=None, help="path where the github code will be checked out, default sandbox/code")
@@ -173,7 +170,7 @@ def configure(
     )
 
 
-### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+# INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
@@ -255,7 +252,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     return docker
 
 
-### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+# INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
@@ -283,6 +280,7 @@ def install(wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=Fa
 
     """
 
+    print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)
     _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
