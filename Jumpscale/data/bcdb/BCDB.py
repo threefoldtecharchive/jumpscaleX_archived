@@ -317,14 +317,14 @@ class BCDB(j.application.JSBaseClass):
         for key, model in self.meta._sid_to_model.items():
             yield model
 
-    def model_get_from_sid(self, sid):
+    def model_get_from_sid(self, sid, namespaceid=1):
         md5 = None
         if sid in self.meta._sid_to_model:
             return self.meta._sid_to_model[sid]
         else:
             raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
 
-    def model_get_from_url(self, url):
+    def model_get_from_url(self, url, namespaceid=1):
         """
         will return the latest model found based on url
         :param url:
