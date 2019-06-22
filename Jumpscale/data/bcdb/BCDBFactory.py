@@ -47,7 +47,7 @@ class BCDBFactory(j.application.JSBaseClass):
         return self._system
 
     def get_test(self, reset=False):
-        bcdb = j.data.bcdb.get(name="testbcdb", storclient=None, reset=reset)
+        bcdb = j.data.bcdb.new(name="testbcdb")
         bcdb2 = j.data.bcdb._bcdb_instances["testbcdb"]
         assert bcdb2.storclient == None
         return bcdb
@@ -227,10 +227,10 @@ class BCDBFactory(j.application.JSBaseClass):
 
         if type == "rdb":
             storclient = j.clients.rdb.client_get()  # will be to core redis
-            bcdb = j.data.bcdb.get(name="test", storclient=storclient, reset=reset)
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient)
 
         elif type == "sqlite":
-            bcdb = j.data.bcdb.get(name="test", storclient=None, reset=reset)
+            bcdb = j.data.bcdb.new(name="test")
             bcdb2 = j.data.bcdb.bcdb_instances["test"]
             assert bcdb2.storclient == None
         elif type == "zdb":
@@ -242,7 +242,7 @@ class BCDBFactory(j.application.JSBaseClass):
                 storclient.flush()
             assert storclient.nsinfo["public"] == "no"
             assert storclient.ping()
-            bcdb = j.data.bcdb.get(name="test", storclient=storclient, reset=reset)
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient)
         else:
             raise RuntimeError("only rdb,zdb,sqlite for stor")
 
@@ -312,8 +312,8 @@ class BCDBFactory(j.application.JSBaseClass):
 
         self._test_run(name=name)
 
-        j.servers.zdb.stop()
-        redis = j.tools.tmux.cmd_get("bcdbredis_6380")
-        redis.stop()
+        # j.servers.zdb.stop()
+        # redis = j.tools.tmux.cmd_get("bcdbredis_6380")
+        # redis.stop()
         self._log_info("All TESTS DONE")
         return "OK"

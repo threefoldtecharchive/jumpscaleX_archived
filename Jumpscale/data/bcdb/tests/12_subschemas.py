@@ -65,6 +65,25 @@ def main(self):
     bcdb.reset()
     m = bcdb.model_get_from_schema(schema)
 
-    j.shell()
+    urls = []
+    urls.append("jsx.master.1")
+    urls.append("jsx.subschema.1")
+    urls.append("jsx.subschema.2")
+    urls.append("jsx.subschema.3")
+    urls.append("jsx.subschema.3.1")
+    urls.append("jsx.subschema.3.1.1")
+    urls.append("jsx.subschema.3.1.2")
+    urls.append("jsx.subschema.3.2")
+    urls.append("jsx.subschema.3.2.1")
+    urls.append("jsx.subschema.3.2.2")
+
+    for url in urls:
+        md5 = j.data.schema.url_to_md5[url][0]
+        s = j.data.schema.get_from_md5(md5)
+        assert s._md5 == md5
+
+        md5_, url_ = bcdb.meta._schema_exists(s)
+        assert md5_ == md5
+        assert url_ == url
 
     return "OK"

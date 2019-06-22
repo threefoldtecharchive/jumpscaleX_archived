@@ -64,7 +64,7 @@ class Application(object):
     @property
     def bcdb_system(self):
         if self._bcdb_system is None:
-            bcdb = self._j.data.bcdb.get("system")
+            bcdb = self._j.data.bcdb.new("system")
             self._bcdb_system = bcdb
         return self._bcdb_system
 

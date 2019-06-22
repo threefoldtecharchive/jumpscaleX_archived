@@ -6,7 +6,7 @@ class SerializerJSXDataObj(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 
-    def dumps(self, obj, model=None, test=True):
+    def dumps(self, obj, model=None, test=False):
         """
         obj is the dataobj for JSX
 

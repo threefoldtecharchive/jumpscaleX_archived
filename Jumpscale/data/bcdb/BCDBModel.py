@@ -361,7 +361,10 @@ class BCDBModel(j.application.JSBaseClass):
         elif j.data.types.json.check(str(data)):
             data = j.data.serializers.json.loads(data)
         if data:
-            obj = self.schema.get(datadict=datadict, model=self)
+            if isinstance(data, dict):
+                obj = self.schema.get(dictdata=data, model=self)
+            else:
+                raise RuntimeError("need dict")
         else:
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)

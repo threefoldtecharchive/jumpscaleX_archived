@@ -183,6 +183,18 @@ class BCDBMeta(j.application.JSBaseClass):
         schema.sid = s.sid
         return schema
 
+    def _schema_exists(self, schema):
+        if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
+            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+
+        self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
+
+        # check if the data is already in metadatastor
+        if self._data:
+            for s in self._data.schemas:
+                if s.md5 == schema._md5:
+                    return s.md5, s.url
+
     def __repr__(self):
         return str(self._data)
 
