@@ -293,20 +293,29 @@ class Schema(j.application.JSBaseClass):
 
         return self._obj_class
 
-    def get(self, data=None, model=None):
+    def get(self, capnpdata=None, serializeddata=None, dictdata=None, model=None):
         """
         get schema_object using data and capnpbin
-        :param data dict, bytes or json(dict)
+
+        :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
+        :param capnpdata is data in capnpdata
+        :param dictdata is dict of arguments
+
         :param model: will make sure we save in the model
         :return:
         """
-        if isinstance(data, bytes):
-            return j.data.serializers.jsxdata.loads(data)
-        return self._get(data=data, model=model)
-
-    def _get(self, data=None, model=None):
-        obj = self.objclass(schema=self, data=data, model=model)
-        return obj
+        if isinstance(serializeddata, bytes):
+            return j.data.serializers.jsxdata.loads(serializeddata, model=model)
+        elif isinstance(capnpdata, bytes):
+            obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
+            return obj
+        elif dictdata:
+            obj = self.objclass(schema=self, dictdata=dictdata, model=model)
+            return obj
+        elif capnpdata is None and serializeddata is None and dictdata == None:
+            return self.objclass(schema=self, model=model)
+        else:
+            raise RuntimeError("only support binary data or dict as kwargs")
 
     def new(self, model=None, data=None):
         """
@@ -314,7 +323,10 @@ class Schema(j.application.JSBaseClass):
         """
         if isinstance(data, bytes):
             raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        r = self.get(data=data, model=model)
+        if data and isinstance(data, dict):
+            r = self.get(model=model, dictdata=data)
+        else:
+            r = self.get(model=model)
         if model is not None:
             model.triggers_call(r, "new")
         return r

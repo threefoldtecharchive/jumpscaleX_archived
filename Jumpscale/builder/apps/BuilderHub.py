@@ -105,8 +105,8 @@ class BuilderHub(j.builders.system._BaseClass):
         start_script = """
         cd /hub/python/ && python3 flist-uploader.py
         """
-        caddy_cmd = j.tools.startupcmd.get(self.NAME + "_caddy", cmd=caddy_script)
-        start_cmd = j.tools.startupcmd.get(self.NAME, cmd=start_script)
+        caddy_cmd = j.servers.startupcmd.get(self.NAME + "_caddy", cmd=caddy_script)
+        start_cmd = j.servers.startupcmd.get(self.NAME, cmd=start_script)
         return [start_cmd, caddy_cmd]
 
     def stop(self):

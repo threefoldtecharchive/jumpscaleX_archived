@@ -67,10 +67,12 @@ class JSBaseConfigs(JSBase):
         :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
         :return: the service
         """
-        self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name), data=kwargs)
 
         if name is not None and name in self._children:
             return self._children[name]
+
+        self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name), data=kwargs)
+
         new = False
         if id:
             data = self._model.get(obj_id=id)

@@ -237,7 +237,10 @@ class List(TypeBaseObjFactory):
         if ttype is None:
             ttype = self.SUBTYPE
 
-        if j.data.types.string.check(val):
+        if j.data.types.int.check(val):
+            val = [val]
+
+        elif j.data.types.string.check(val):
             if val.strip("'\" []") in [None, ""]:
                 return ListObject(self, [], ttype)
             val = [i.strip("[").strip("]") for i in val.split(",")]
@@ -246,7 +249,6 @@ class List(TypeBaseObjFactory):
             val = [i for i in val]  # get binary data
 
         if not self.check(val):
-            # j.shell()
             raise j.exceptions.Input("need list or set as input for clean on list")
 
         if len(val) == 0:

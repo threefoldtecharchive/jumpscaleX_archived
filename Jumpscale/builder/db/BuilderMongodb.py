@@ -81,7 +81,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
         cmd = self._replace("mongod --dbpath '{DIR_VAR}/data/mongodb'")
         cmd_start = cmd
 
-        cmd = j.tools.startupcmd.get(self.NAME, cmd=cmd_start)
+        cmd = j.servers.startupcmd.get(self.NAME, cmd=cmd_start)
         return [cmd]
 
     @builder_method()

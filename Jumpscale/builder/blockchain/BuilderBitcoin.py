@@ -123,7 +123,7 @@ class BuilderBitcoin(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         # bitcoin daemon
-        cmd = j.tools.startupcmd.get(self.NAME, cmd="bitcoind")
+        cmd = j.servers.startupcmd.get(self.NAME, cmd="bitcoind")
         return [cmd]
 
     @builder_method()

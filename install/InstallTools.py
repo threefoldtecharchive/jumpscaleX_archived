@@ -1435,19 +1435,28 @@ class Tools:
     #
 
     @staticmethod
-    def process_pids_get_by_filter(filterstr):
+    def process_pids_get_by_filter(filterstr, excludes=[]):
         cmd = "ps ax | grep '%s'" % filterstr
         rcode, out, err = Tools.execute(cmd)
         # print out
         found = []
+
+        def checkexclude(c, excludes):
+            for item in excludes:
+                c = c.lower()
+                if c.find(item.lower()) != -1:
+                    return True
+            return False
+
         for line in out.split("\n"):
             if line.find("grep") != -1 or line.strip() == "":
                 continue
             if line.strip() != "":
                 if line.find(filterstr) != -1:
                     line = line.strip()
-                    # print "found pidline:%s"%line
-                    found.append(int(line.split(" ")[0]))
+                    if not checkexclude(line, excludes):
+                        # print "found pidline:%s"%line
+                        found.append(int(line.split(" ")[0]))
         return found
 
     @staticmethod
@@ -2822,7 +2831,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "graphviz", "iputils-ping"]
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
 
     @staticmethod
     def apts_install():

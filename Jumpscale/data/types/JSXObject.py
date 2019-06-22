@@ -75,12 +75,11 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         if isinstance(value, j.data.schema.DataObjBase):
             return value
         if isinstance(value, bytes):
-            obj = j.data.serializers.jsxdata.loads(
-                value
-            )  # when bytes the version of the jsxobj & the schema is embedded in the bin data
+            obj = j.data.serializers.jsxdata.loads(value, model=model)
+            # when bytes the version of the jsxobj & the schema is embedded in the bin data
             return obj
         elif isinstance(value, dict):
-            return self._schema.get(data=value, model=model)
+            return self._schema.get(datadict=value, model=model)
         elif value is None:
             return self._schema.new(model=model)
         else:

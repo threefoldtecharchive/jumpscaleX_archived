@@ -14,10 +14,10 @@ class BCDBFactory(j.application.JSBaseClass):
     def _init(self):
 
         self._log_debug("bcdb starts")
-        self.bcdb_instances = {}  # key is the name
+        self._bcdb_instances = {}  # key is the name
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
 
-        self._code_generation_dir = None
+        self._code_generation_dir_ = None
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
@@ -37,37 +37,48 @@ class BCDBFactory(j.application.JSBaseClass):
 
         self._system = None
 
-    @property
-    def system(self):
+    def get_system(self, reset=False):
         """
         sqlite based BCDB, don't need ZDB for this
         :return:
         """
         if not self._system:
-            self._system = self.get("system")
+            self._system = self.get("system", reset=reset)
         return self._system
+
+    def get_test(self, reset=False):
+        bcdb = j.data.bcdb.get(name="testbcdb", storclient=None, reset=reset)
+        bcdb2 = j.data.bcdb._bcdb_instances["testbcdb"]
+        assert bcdb2.storclient == None
+        return bcdb
 
     @property
     def _BCDBModelClass(self):
         return BCDBModel
+
+    @property
+    def instances(self):
+        res = []
+        for name, data in self._config.items():
+            if data["type"] == "zdb":
+                storclient = j.clients.zdb.client_get(**data)
+                bcdb = self.get(name, storclient)
+
+            if data["type"] == "rdb":
+                storclient = j.clients.rdb.client_get(**data)
+                bcdb = self.get(name, storclient)
+            else:
+                bcdb = self.get(name)
+            res.append(bcdb)
+        return res
 
     def index_rebuild(self):
         """
         kosmos 'j.data.bcdb.index_rebuild()'
         :return:
         """
-        for name, data in self._config.items():
-            if data["type"] == "zdb":
-                storclient = j.clients.zdb.client_get(**data)
-                bcdb = self.get(name, storclient)
-                bcdb.index_rebuild()
-            if data["type"] == "rdb":
-                storclient = j.clients.rdb.client_get(**data)
-                bcdb = self.get(name, storclient)
-                bcdb.index_rebuild()
-            else:
-                bcdb = self.get(name)
-                bcdb.index_rebuild()
+        for bcdb in self.instances:
+            bcdb.index_rebuild()
 
     def reset(self):
         """
@@ -76,7 +87,7 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         j.sal.fs.remove(self._config_data_path)
         self._config = {}
-        self.bcdb_instances = {}
+        self._bcdb_instances = {}
 
     def destroy_all(self):
         """
@@ -85,8 +96,10 @@ class BCDBFactory(j.application.JSBaseClass):
         all data will be lost
         :return:
         """
-        # TODO: implement
-        raise RuntimeError("not implemented")
+        for item in self.instances:
+            item.destroy()
+        for key in j.core.db.keys("bcdb:*"):
+            j.core.db.delete(key)
 
     def get(self, name, storclient=None, reset=False, if_not_exist_die=False):
         """
@@ -98,14 +111,14 @@ class BCDBFactory(j.application.JSBaseClass):
         :return:
         """
         if reset:
-            if name in self.bcdb_instances:
-                self.bcdb_instances.pop(name)
+            if name in self._bcdb_instances:
+                self._bcdb_instances.pop(name)
             if name in self._config:
                 self._config.pop(name)
 
         data = {}
-        if name in self.bcdb_instances:
-            return self.bcdb_instances[name]
+        if name in self._bcdb_instances:
+            return self._bcdb_instances[name]
         elif name in self._config:
             data = self._config[name]
             if data["type"] == "zdb":
@@ -144,12 +157,15 @@ class BCDBFactory(j.application.JSBaseClass):
                 data["type"] = "sqlite"
 
             self._config[name] = data
-            data = j.data.serializers.msgpack.dumps(self._config)
-            data_encrypted = j.data.nacl.default.encryptSymmetric(data)
-            j.sal.fs.writeFile(self._config_data_path, data_encrypted)
+            self._config_write()
 
-        self.bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
-        return self.bcdb_instances[name]
+        self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
+        return self._bcdb_instances[name]
+
+    def _config_write(self):
+        data = j.data.serializers.msgpack.dumps(self._config)
+        data_encrypted = j.data.nacl.default.encryptSymmetric(data)
+        j.sal.fs.writeFile(self._config_data_path, data_encrypted)
 
     def new(self, name, storclient=None):
         """
@@ -160,73 +176,67 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         return self.get(name=name, storclient=storclient)
 
-    def bcdb_test_get(self, reset=True):
-        bcdb = j.data.bcdb.get(name="test", storclient=None, reset=reset)
-        bcdb2 = j.data.bcdb.bcdb_instances["test"]
-        assert bcdb2.storclient == None
-        return bcdb
-
-    def redis_server_start(
-        self,
-        name="test",
-        reset=False,
-        ipaddr="localhost",
-        port=6380,
-        background=False,
-        secret="123456",
-        bcdbname="test",
-    ):
-
-        """
-        start a redis server on port 6380 on localhost only
-
-        you need to feed it with schema's
-
-        if zdbclient_addr is None, will use sqlite embedded backend
-
-        trick: use RDM to investigate (Redis Desktop Manager) to investigate DB.
-
-        kosmos "j.data.bcdb.redis_server_start(background=True)"
-
-        kosmos "j.data.bcdb.redis_server_start(background=False,bcdbname="test)"
-
-
-        :return:
-        """
-
-        if background:
-
-            args = 'ipaddr="%s", ' % ipaddr
-            args += 'name="%s", ' % name
-            args += "port=%s, " % port
-            args += 'secret="%s", ' % secret
-            args += 'bcdbname="%s", ' % bcdbname
-
-            cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
-
-            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
-
-            cmdcmd.start(reset=reset)
-
-            j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
-            r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
-            assert r.ping()
-
-        else:
-            bcdb = self.get(name=bcdbname)
-            bcdb.redis_server_start(port=port)
+    # def redis_server_start(
+    #     self,
+    #     name="test",
+    #     reset=False,
+    #     ipaddr="localhost",
+    #     port=6380,
+    #     background=False,
+    #     secret="123456",
+    #     bcdbname="test",
+    # ):
+    #
+    #     """
+    #     start a redis server on port 6380 on localhost only
+    #
+    #     you need to feed it with schema's
+    #
+    #     if zdbclient_addr is None, will use sqlite embedded backend
+    #
+    #     trick: use RDM to investigate (Redis Desktop Manager) to investigate DB.
+    #
+    #     kosmos "j.data.bcdb.redis_server_start(background=True)"
+    #
+    #     kosmos "j.data.bcdb.redis_server_start(background=False,bcdbname="test)"
+    #
+    #
+    #     :return:
+    #     """
+    #
+    #     if background:
+    #
+    #         args = 'ipaddr="%s", ' % ipaddr
+    #         args += 'name="%s", ' % name
+    #         args += "port=%s, " % port
+    #         args += 'secret="%s", ' % secret
+    #         args += 'bcdbname="%s", ' % bcdbname
+    #
+    #         cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
+    #
+    #         cmdcmd = j.servers.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
+    #
+    #         cmdcmd.start(reset=reset)
+    #
+    #         j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
+    #         r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
+    #         assert r.ping()
+    #
+    #     else:
+    #         bcdb = self.get(name=bcdbname)
+    #         bcdb.redis_server_start(port=port)
 
     @property
-    def code_generation_dir(self):
-        if not self._code_generation_dir:
+    def _code_generation_dir(self):
+        if not self._code_generation_dir_:
             path = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "models")
             j.sal.fs.createDir(path)
             if path not in sys.path:
                 sys.path.append(path)
             j.sal.fs.touch(j.sal.fs.joinPaths(path, "__init__.py"))
             self._log_debug("codegendir:%s" % path)
-            self._code_generation_dir = path
-        return self._code_generation_dir
+            self._code_generation_dir_ = path
+        return self._code_generation_dir_
 
     def _load_test_model(self, reset=True, type="zdb", schema=None):
 
@@ -289,6 +299,46 @@ class BCDBFactory(j.application.JSBaseClass):
                 assert len(model.find()) == 0
 
         return bcdb, model
+
+    def _instance_names(self, prefix=None):
+        items = []
+        # items = [key for key in self.__dict__.keys() if not key.startswith("_")]
+        for bcdb in self.instances:
+            items.append(bcdb.name)
+        items.sort()
+        # print(items)
+        return items
+
+    def __getattr__(self, name):
+        # if private then just return
+        if name.startswith("_") or name in self._methods() or name in self._properties():
+            return self.__getattribute__(name)
+        # else see if we can from the factory find the child object
+        r = self.get(name=name)
+        # if none means does not exist yet will have to create a new one
+        if r is None:
+            r = self.new(name=name)
+        return r
+
+    def __setattr__(self, key, value):
+        if key in ["system", "test"]:
+            raise RuntimeError("no system or test allowed")
+        self.__dict__[key] = value
+
+    def __str__(self):
+
+        out = "## {GRAY}BCDBS: {BLUE}\n\n"
+
+        for bcdb in self.instances:
+            out += " = %s" % bcdb.name
+
+        out += "{RESET}"
+        out = j.core.tools.text_replace(out)
+        print(out)
+        # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        return ""
+
+    __repr__ = __str__
 
     def test(self, name=""):
         """

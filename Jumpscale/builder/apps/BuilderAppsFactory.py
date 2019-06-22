@@ -14,6 +14,15 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._corex = None
         self._sonic = None
         self._hub = None
+        self._sockexec = None
+
+    @property
+    def sockexec(self):
+        if self._sockexec is None:
+            from .BuilderSockexec import BuilderSockexec
+
+            self._sockexec = BuilderSockexec()
+        return self._sockexec
 
     @property
     def gitea(self):

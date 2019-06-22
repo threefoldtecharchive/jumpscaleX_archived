@@ -155,6 +155,8 @@ def get_completions(self, document, complete_event):
             yield from colored_completions(obj._properties_model(), "ansiyellow")
             yield from colored_completions(obj._methods(prefix=prefix), "ansiblue")
             yield from colored_completions(obj._properties(prefix=prefix), "ansigray")
+            if hasattr(obj.__class__, "_instance_names"):
+                yield from colored_completions(obj._instance_names(prefix=prefix), "ansired")
         else:
             # try dir()
             members = sorted(dir(obj), key=sort_members_key)

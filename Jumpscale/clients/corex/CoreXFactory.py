@@ -10,9 +10,6 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
     def _init(self):
         pass
 
-    def corex_server_install(self):
-        j.builders.apps.corex.install()
-
     def test(self):
         """
         kosmos 'j.clients.corex.test()'
@@ -23,19 +20,23 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
 
             j.clients.corex.reset()
 
-            if passw:
-                port = 8002
-                cmd = "/sandbox/bin/corex --port {} -c user:pass".format(port)
-                cl = self.get(name="test", addr="localhost", port=port, login="user", passwd_="pass")
-            else:
-                port = 8002
-                cmd = "/sandbox/bin/corex --port {}".format(port)
-                cl = self.get(name="test", addr="localhost", port=port)
+            s = j.servers.corex.default
+            s.port = 8002
 
-            cmd0 = j.tools.startupcmd.get(name="corex_%s" % port, cmd=cmd, ports=[port])
-            cmd0.start(reset=True)
+            if passw:
+                s.user = "user"
+                s.passwd = "pass"
+                cl = self.get(name="test", addr="localhost", port=s.port, login="user", passwd_="pass")
+            else:
+                cl = self.get(name="test", addr="localhost", port=s.port)
+
+            s.start()
+
+            cl2 = s.client
 
             assert cl.process_list() == []
+
+            j.shell()
 
             r = cl.process_start("mc", "mc")
 

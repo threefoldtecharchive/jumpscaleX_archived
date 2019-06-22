@@ -72,7 +72,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
-        cmds = [j.tools.startupcmd.get(name="coredns", cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name="coredns", cmd=cmd)]
         return cmds
 
     @builder_method()

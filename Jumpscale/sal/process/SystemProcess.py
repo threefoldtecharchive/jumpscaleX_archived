@@ -8,6 +8,11 @@ import sys
 # import threading
 # import queue
 import random
+
+try:
+    import psutil
+except:
+    pass
 import subprocess
 import signal
 from subprocess import Popen
@@ -515,8 +520,25 @@ class SystemProcess(j.application.JSBaseClass):
                         found.append(int(line.split(" ")[0]))
         return found
 
-    def getPidsByFilter(self, filterstr):
-        return j.tools.process_pids_get_by_filter(filterstr)
+    def getPidsByFilter(self, filterstr="", regex_list=[], excludes=[]):
+        if regex_list == []:
+            return j.core.tools.process_pids_get_by_filter(filterstr, excludes=excludes)
+        elif filterstr == "":
+            res = []
+            for process in psutil.process_iter():
+                try:
+                    cmdline = process.cmdline()
+                except psutil.NoSuchProcess:
+                    cmdline = None
+                if cmdline:
+                    name = " ".join(cmdline)
+                    for r in regex_list:
+                        if name.strip() != "":
+                            if j.data.regex.match(r, name):
+                                res.append(process.pid)
+            return res
+        else:
+            raise RuntimeError("filterstr or regexes")
 
     def checkstart(self, cmd, filterstr, nrtimes=1, retry=1):
         """
@@ -615,7 +637,6 @@ class SystemProcess(j.application.JSBaseClass):
         return self.getProcessObject(os.getpid())
 
     def getProcessObject(self, pid):
-        import psutil
 
         for process in psutil.process_iter():
             if process.pid == pid:
@@ -623,7 +644,6 @@ class SystemProcess(j.application.JSBaseClass):
         raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
 
     def getProcessPidsFromUser(self, user):
-        import psutil
 
         result = []
         for process in psutil.process_iter():
@@ -636,7 +656,6 @@ class SystemProcess(j.application.JSBaseClass):
             j.sal.process.kill(pid)
 
     def getSimularProcesses(self):
-        import psutil
 
         myprocess = self.getMyProcessObject()
         result = []
@@ -754,7 +773,7 @@ class SystemProcess(j.application.JSBaseClass):
         """
         if port == 0:
             return None
-        if j.core.platformtype.myplatform.platform_is_linux:
+        if False and j.core.platformtype.myplatform.platform_is_linux:
             command = "netstat -ntulp | grep ':%s '" % port
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
 
@@ -800,7 +819,6 @@ class SystemProcess(j.application.JSBaseClass):
             return None
         else:
             # TODO: needs to be validated on mac & windows
-            import psutil
 
             for process in psutil.process_iter():
                 try:

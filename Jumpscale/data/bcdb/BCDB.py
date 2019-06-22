@@ -48,7 +48,7 @@ class BCDB(j.application.JSBaseClass):
         self._init_(reset=reset, stop=False)
 
         self._need_to_reset = reset
-        j.data.bcdb.bcdb_instances[self.name] = self
+        j.data.bcdb._bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
             raise RuntimeError("name needs to be string")
@@ -275,6 +275,15 @@ class BCDB(j.application.JSBaseClass):
         """
         self._init_(stop=True, reset=True)
 
+    def destroy(self):
+        self.reset()
+        j.data.bcdb._config.pop(self.name)
+        if self.name in j.data.bcdb._bcdb_instances:
+            j.data.bcdb._bcdb_instances.pop(self.name)
+        j.data.bcdb._config_write()
+        for key in j.core.db.keys("bcdb:%s:*" % self.name):
+            j.core.db.delete(key)
+
     # def _hset_index_key_get(self, schema, returndata=False):
     #     if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
     #         raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
@@ -427,6 +436,7 @@ class BCDB(j.application.JSBaseClass):
         :param schema:
         :return:
         """
+
         for prop in schema.properties:
             if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
                 # now we know that there is a subtype, we need to store it in the bcdb as well
@@ -575,6 +585,7 @@ class BCDB(j.application.JSBaseClass):
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
+            raise RuntimeError()
             schema_id, acl_id, bdata_encrypted = res
             nid = 1
             model = self.model_get_from_sid(schema_id)
@@ -584,23 +595,22 @@ class BCDB(j.application.JSBaseClass):
         else:
             raise RuntimeError("not supported format")
 
-        bdata = j.data.nacl.default.decryptSymmetric(
-            bdata_encrypted
-        )  # need to check if this is the right encryption layer
+        bdata = j.data.nacl.default.decryptSymmetric(bdata_encrypted)
 
         if return_as_capnp:
             return bdata
         else:
             try:
-                obj = model.schema.get(data=bdata, model=model)
-            except:
-                raise RuntimeError("can't get a model from data:%s" % bdata)
+                obj = model.schema.get(serializeddata=bdata, model=model)
+            except Exception as e:
+                j.shell()
+                raise RuntimeError("can't get a model from data:%s\n%s" % (bdata, e))
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
             obj._model = model
             if model.readonly:
-                obj.readonly = True  # means we fetched from DB, we need to make sure cannot be changed
+                obj.readonly = True  # means we fetched from DB, we need to make sure it cannot be changed
             return obj
 
     def obj_get(self, id):

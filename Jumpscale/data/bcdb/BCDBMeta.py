@@ -21,15 +21,17 @@ class BCDBMeta(j.application.JSBaseClass):
         if self._bcdb.storclient is None:
             self._log_debug("schemas load from redis")
             r = j.core.db
-            data = j.core.db.get(self._redis_key_data)
+            # serializeddata = j.core.db.get(self._redis_key_data)
         elif self._bcdb.storclient.type == "RDB":
             self._log_debug("schemas load from redis with RDB")
             r = self._bcdb.storclient._redis
-            data = r.get(self._redis_key_data)
+            # serializeddata = r.get(self._redis_key_data)
         else:
-            data = self._bcdb.storclient.get(0)
+            # serializeddata = self._bcdb.storclient.get(0)
             r = j.core.db
         self._redis = r
+
+        self._logger_enable()
 
         if reset:
             self.reset()
@@ -43,20 +45,20 @@ class BCDBMeta(j.application.JSBaseClass):
             r = self._redis
             if self._bcdb.storclient is None:
                 self._log_debug("schemas load from redis")
-                data = j.core.db.get(self._redis_key_data)
+                serializeddata = j.core.db.get(self._redis_key_data)
             elif self._bcdb.storclient.type == "RDB":
                 self._log_debug("schemas load from redis with RDB")
-                data = r.get(self._redis_key_data)
+                serializeddata = r.get(self._redis_key_data)
             else:
-                data = self._bcdb.storclient.get(0)
+                serializeddata = self._bcdb.storclient.get(0)
 
-            if data is None:
+            if serializeddata is None:
                 self._log_debug("save, empty schema")
                 self._data = self._schema.new()
                 self._data.name = self._bcdb.name
             else:
                 self._log_debug("schemas load from db")
-                self._data = self._schema.get(data=data)
+                self._data = self._schema.get(serializeddata=serializeddata)
 
             if self._data.name != self._bcdb.name:
                 raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
@@ -66,18 +68,17 @@ class BCDBMeta(j.application.JSBaseClass):
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
 
-                # its only for reference purposes & maybe 3e party usage
-                r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
-                r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
-                r.hset(self._redis_key_lookup_sid2schema, s.sid, s._json)
-                r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
-                r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
-
                 if s.sid in self._bcdb._schema_sid_to_md5:
                     if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
                         raise RuntimeError("bug: should never happen")
                 else:
                     self._bcdb._schema_sid_to_md5[s.sid] = s.md5
+                    # its only for reference purposes & maybe 3e party usage
+                    r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
+                    r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
+                    r.hset(self._redis_key_lookup_sid2schema, s.sid, s._json)
+                    r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
+                    r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
 
                 # make sure we know all schema's
                 if not j.data.schema.exists(md5=s.md5):
@@ -120,19 +121,21 @@ class BCDBMeta(j.application.JSBaseClass):
 
         self._log_debug("save:\n%s" % self.data)
 
+        serializeddata = j.data.serializers.jsxdata.dumps(self.data)
+
         if self._bcdb.storclient is None:
             r = j.core.db
-            j.core.db.set(self._redis_key_data, self._data._data)
+            j.core.db.set(self._redis_key_data, serializeddata)
         elif self._bcdb.storclient.type == "RDB":
             r = self._bcdb.storclient._redis
-            j.core.db.set(self._redis_key_data, self._data._data)
+            j.core.db.set(self._redis_key_data, serializeddata)
         else:
             # if self._bcdb.storclient.get(b'\x00\x00\x00\x00') == None:
             if self._bcdb.storclient.get(0) == None:
                 # self._bcdb.storclient.execute_command("SET","", self._data._data)
-                self._bcdb.storclient.set(self._data._data)
+                self._bcdb.storclient.set(serializeddata)
             else:
-                self._bcdb.storclient.set(self._data._data, 0)
+                self._bcdb.storclient.set(serializeddata, 0)
                 # self._bcdb.storclient.execute_command("SET",b'\x00\x00\x00\x00', self._data._data)
 
     def _schema_set(self, schema):
@@ -144,7 +147,7 @@ class BCDBMeta(j.application.JSBaseClass):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        self._log_debug("schema set in BCDB:%s meta:%s" % (self._bcdb.name, schema.url))
+        self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
 
         # check if the data is already in metadatastor
         if self._data:
@@ -164,7 +167,7 @@ class BCDBMeta(j.application.JSBaseClass):
         s.sid = self._schema_last_id
         s.text = schema.text  # + "\n"  # only 1 \n at end
         s.md5 = schema._md5
-        self._log_debug("new schema in meta:\n%s" % self.data)
+        self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
         self._save()
 
         self._reset()  # lets make sure all gets loaded again

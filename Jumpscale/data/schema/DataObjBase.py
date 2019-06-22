@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class DataObjBase:
-    def __init__(self, data=None, schema=None, model=None):
+    def __init__(self, capnpdata=None, dictdata={}, schema=None, model=None):
         self._cobj_ = None
         self.id = None
         self._schema = schema
@@ -15,7 +15,9 @@ class DataObjBase:
         self._autosave = False
         self.acl_id = None
         self._acl = None
-        self._load_from_data(data=data)
+        self._load_from_data(capnpdata=capnpdata)
+        if dictdata:
+            self._data_update(dictdata)
 
     @property
     def _capnp_schema(self):
@@ -35,7 +37,7 @@ class DataObjBase:
                     e.args = (msg,)
                 raise e
 
-    def _load_from_data(self, data=None):
+    def _load_from_data(self, capnpdata=None):
         """
         THIS ERASUSES EXISTING DATA !!!
 
@@ -48,8 +50,9 @@ class DataObjBase:
         if self._readonly:
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
-        if isinstance(data, bytes):
-            self._cobj_ = self._capnp_schema.from_bytes_packed(data)
+        if isinstance(capnpdata, bytes):
+            raise RuntimeError()
+            self._cobj_ = self._capnp_schema.from_bytes_packed(capnpdata)
             set_default = False
         else:
             self._cobj_ = self._capnp_schema.new_message()
@@ -61,18 +64,6 @@ class DataObjBase:
 
         if set_default:
             self._defaults_set()  # only do when new message
-
-        if isinstance(data, bytes):
-            return
-
-        if data is not None:
-            if isinstance(data, str):
-                data = j.data.serializers.json.loads(data)
-            if isinstance(data, dict):
-                if data != {}:
-                    self._data_update(data)
-            else:
-                raise j.exceptions.Input("_load_from_data when string needs to be dict or json")
 
     def Edit(self):
         e = j.data.dict_editor.get(self._ddict)
@@ -156,16 +147,7 @@ class DataObjBase:
     @property
     def _data(self):
         self._cobj  # leave, is to make sure we have error if something happens
-        try:
-            self._cobj.clear_write_flag()
-            data = self._cobj.to_bytes_packed()
-        except Exception as e:
-            # need to catch exception much better (more narrow)
-            self._cobj_ = self._cobj.as_builder()
-            data = self._cobj_.to_bytes_packed()
-        version = 1
-        data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(self._schema._md5)) + data
-        return data2
+        return j.data.serializers.jsxdata.dumps(self, model=self._model)
 
     @property
     def _ddict_hr(self):

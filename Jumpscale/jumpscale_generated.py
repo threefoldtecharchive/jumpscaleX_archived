@@ -654,11 +654,11 @@ j.core._groups["clients"] = j.clients
 class group_tools(JSGroup):
     def __init__(self):
 
-        self._open_publish = None
         self._threefold_directory = None
         self._threefoldgrid = None
         self._kosmos = None
         self._tfbot = None
+        self._open_publish = None
         self._sandboxer = None
         self._fixer = None
         self._logger = None
@@ -679,13 +679,11 @@ class group_tools(JSGroup):
         self._timer = None
         self._cython = None
         self._formatters = None
-        self._startupcmd = None
         self._capacity = None
         self._team_manager = None
         self._memusagetest = None
         self._objectinspector = None
         self._dnstools = None
-        self._tmux = None
         self._dash = None
         self._executor = None
         self._executorLocal = None
@@ -704,14 +702,6 @@ class group_tools(JSGroup):
         self._numtools = None
         self._issuemanager = None
         self._email = None
-
-    @property
-    def open_publish(self):
-        if self._open_publish is None:
-            from DigitalMe.tools.openpublish.OpenPublishFactory import OpenPublishFactory
-
-            self._open_publish = OpenPublishFactory()
-        return self._open_publish
 
     @property
     def threefold_directory(self):
@@ -744,6 +734,14 @@ class group_tools(JSGroup):
 
             self._tfbot = TFBotFactory()
         return self._tfbot
+
+    @property
+    def open_publish(self):
+        if self._open_publish is None:
+            from DigitalMe.servers.threebot.OpenPublishFactory import OpenPublishFactory
+
+            self._open_publish = OpenPublishFactory()
+        return self._open_publish
 
     @property
     def sandboxer(self):
@@ -906,14 +904,6 @@ class group_tools(JSGroup):
         return self._formatters
 
     @property
-    def startupcmd(self):
-        if self._startupcmd is None:
-            from Jumpscale.tools.startupcmd.StartupCMDFactory import StartupCMDFactory
-
-            self._startupcmd = StartupCMDFactory()
-        return self._startupcmd
-
-    @property
     def capacity(self):
         if self._capacity is None:
             from Jumpscale.tools.capacity.Factory import Factory
@@ -952,14 +942,6 @@ class group_tools(JSGroup):
 
             self._dnstools = DNSTools()
         return self._dnstools
-
-    @property
-    def tmux(self):
-        if self._tmux is None:
-            from Jumpscale.tools.tmux.Tmux import Tmux
-
-            self._tmux = Tmux()
-        return self._tmux
 
     @property
     def dash(self):
@@ -1403,20 +1385,32 @@ j.core._groups["data"] = j.data
 class group_servers(JSGroup):
     def __init__(self):
 
+        self._rack = None
         self._gedis = None
-        self._digitalme = None
         self._myjobs = None
         self._raftserver = None
         self._dns = None
+        self._sockexec = None
         self._errbot = None
         self._openresty = None
+        self._corex = None
+        self._startupcmd = None
         self._web = None
         self._etcd = None
+        self._tmux = None
         self._mail_forwarder = None
         self._capacity = None
         self._sonic = None
         self._zdb = None
         self._jsrun = None
+
+    @property
+    def rack(self):
+        if self._rack is None:
+            from DigitalMe.servers.GeventRack.ServerRackFactory import ServerRackFactory
+
+            self._rack = ServerRackFactory()
+        return self._rack
 
     @property
     def gedis(self):
@@ -1425,14 +1419,6 @@ class group_servers(JSGroup):
 
             self._gedis = GedisFactory()
         return self._gedis
-
-    @property
-    def digitalme(self):
-        if self._digitalme is None:
-            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
-
-            self._digitalme = DigitalMe()
-        return self._digitalme
 
     @property
     def myjobs(self):
@@ -1459,6 +1445,14 @@ class group_servers(JSGroup):
         return self._dns
 
     @property
+    def sockexec(self):
+        if self._sockexec is None:
+            from Jumpscale.servers.sockexec.SockExec import SockExec
+
+            self._sockexec = SockExec()
+        return self._sockexec
+
+    @property
     def errbot(self):
         if self._errbot is None:
             from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
@@ -1475,6 +1469,22 @@ class group_servers(JSGroup):
         return self._openresty
 
     @property
+    def corex(self):
+        if self._corex is None:
+            from Jumpscale.servers.corex.CorexFactory import CorexFactory
+
+            self._corex = CorexFactory()
+        return self._corex
+
+    @property
+    def startupcmd(self):
+        if self._startupcmd is None:
+            from Jumpscale.servers.startupcmd.StartupCMDFactory import StartupCMDFactory
+
+            self._startupcmd = StartupCMDFactory()
+        return self._startupcmd
+
+    @property
     def web(self):
         if self._web is None:
             from Jumpscale.servers.webserver.JSWebServers import JSWebServers
@@ -1489,6 +1499,14 @@ class group_servers(JSGroup):
 
             self._etcd = EtcdServer()
         return self._etcd
+
+    @property
+    def tmux(self):
+        if self._tmux is None:
+            from Jumpscale.servers.tmux.Tmux import Tmux
+
+            self._tmux = Tmux()
+        return self._tmux
 
     @property
     def mail_forwarder(self):
@@ -1791,7 +1809,6 @@ class group_tutorials(JSGroup):
     def __init__(self):
 
         self._base = None
-        self._odoo = None
 
     @property
     def base(self):
@@ -1800,14 +1817,6 @@ class group_tutorials(JSGroup):
 
             self._base = Tutorial()
         return self._base
-
-    @property
-    def odoo(self):
-        if self._odoo is None:
-            from kosmos.tutorials.odoo.Odoo import Odoo
-
-            self._odoo = Odoo()
-        return self._odoo
 
 
 j.tutorials = group_tutorials()
@@ -2253,21 +2262,3 @@ class group_sal_zos(JSGroup):
 
 j.sal_zos = group_sal_zos()
 j.core._groups["sal_zos"] = j.sal_zos
-
-
-class group__builder(JSGroup):
-    def __init__(self):
-
-        self._odoo = None
-
-    @property
-    def odoo(self):
-        if self._odoo is None:
-            from kosmos.builder.apps.BuilderOdoo import BuilderOdoo
-
-            self._odoo = BuilderOdoo()
-        return self._odoo
-
-
-j._builder = group__builder()
-j.core._groups["_builder"] = j._builder
