@@ -59,17 +59,23 @@ class BCDBFactory(j.application.JSBaseClass):
     @property
     def instances(self):
         res = []
-        for name, data in self._config.items():
-            if data["type"] == "zdb":
-                storclient = j.clients.zdb.client_get(**data)
-                bcdb = self.get(name, storclient)
 
-            if data["type"] == "rdb":
-                storclient = j.clients.rdb.client_get(**data)
-                bcdb = self.get(name, storclient)
-            else:
+        for name, data in self._config.items():
+            if self.exists(name):
                 bcdb = self.get(name)
-            res.append(bcdb)
+                res.append(bcdb)
+            # SHOULD EXIST IN FIRST PLACE NO NEED TO DO NEW
+            # else:
+            #     if data["type"] == "zdb":
+            #         storclient = j.clients.zdb.client_get(**data)
+            #         bcdb = self.new(name=name, storclient=storclient)
+            #     elif data["type"] == "rdb":
+            #         storclient = j.clients.rdb.client_get(**data)
+            #         bcdb = self.new(name=name, storclient=storclient)
+            #     else:
+            #         bcdb = self.new(name=name)
+            #     res.append(bcdb)
+
         return res
 
     def index_rebuild(self):
@@ -96,29 +102,34 @@ class BCDBFactory(j.application.JSBaseClass):
         all data will be lost
         :return:
         """
-        for item in self.instances:
-            item.destroy()
         for key in j.core.db.keys("bcdb:*"):
             j.core.db.delete(key)
+        for item in self.instances:
+            item.destroy()
 
-    def get(self, name, storclient=None, reset=False, if_not_exist_die=False):
+    def exists(self, name):
+        b = self._get(name=name, reset=False, if_not_exist_die=False)
+        if b:
+            return True
+        return False
+
+    def get(self, name, reset=False):
         """
         will create a new one or an existing one if it exists
         :param name:
-        :param storclient:
-        :param reset: means do not use an existing one
-        :param if_not_exist_die, if True then will die if the instance does not exist yet
+        :param reset: will remove the data
         :return:
         """
-        if reset:
-            if name in self._bcdb_instances:
-                self._bcdb_instances.pop(name)
-            if name in self._config:
-                self._config.pop(name)
+        return self._get(name=name, reset=reset)
+
+    def _get(self, name, reset=False, if_not_exist_die=True):
 
         data = {}
         if name in self._bcdb_instances:
-            return self._bcdb_instances[name]
+            bcdb = self._bcdb_instances[name]
+            if reset:
+                bcdb.reset()
+            return bcdb
         elif name in self._config:
             data = self._config[name]
             if data["type"] == "zdb":
@@ -133,8 +144,26 @@ class BCDBFactory(j.application.JSBaseClass):
                 storclient = None
         elif if_not_exist_die:
             raise RuntimeError("did not find bcdb with name:%s" % name)
+        else:
+            return None
 
-        self._log_debug("new bcdb:%s" % name)
+        self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
+        return self._bcdb_instances[name]
+
+    def _config_write(self):
+        data = j.data.serializers.msgpack.dumps(self._config)
+        data_encrypted = j.data.nacl.default.encryptSymmetric(data)
+        j.sal.fs.writeFile(self._config_data_path, data_encrypted)
+
+    def new(self, name, storclient=None):
+        """
+        create a new instance (can also do this using self.new(...))
+        :param name:
+        :param storclient: optional
+        :return:
+        """
+
+        self._log_info("new bcdb:%s" % name)
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
 
@@ -159,72 +188,7 @@ class BCDBFactory(j.application.JSBaseClass):
             self._config[name] = data
             self._config_write()
 
-        self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
-        return self._bcdb_instances[name]
-
-    def _config_write(self):
-        data = j.data.serializers.msgpack.dumps(self._config)
-        data_encrypted = j.data.nacl.default.encryptSymmetric(data)
-        j.sal.fs.writeFile(self._config_data_path, data_encrypted)
-
-    def new(self, name, storclient=None):
-        """
-        create a new instance (can also do this using self.new(...))
-        :param name:
-        :param storclient: optional
-        :return:
-        """
-        return self.get(name=name, storclient=storclient)
-
-    # def redis_server_start(
-    #     self,
-    #     name="test",
-    #     reset=False,
-    #     ipaddr="localhost",
-    #     port=6380,
-    #     background=False,
-    #     secret="123456",
-    #     bcdbname="test",
-    # ):
-    #
-    #     """
-    #     start a redis server on port 6380 on localhost only
-    #
-    #     you need to feed it with schema's
-    #
-    #     if zdbclient_addr is None, will use sqlite embedded backend
-    #
-    #     trick: use RDM to investigate (Redis Desktop Manager) to investigate DB.
-    #
-    #     kosmos "j.data.bcdb.redis_server_start(background=True)"
-    #
-    #     kosmos "j.data.bcdb.redis_server_start(background=False,bcdbname="test)"
-    #
-    #
-    #     :return:
-    #     """
-    #
-    #     if background:
-    #
-    #         args = 'ipaddr="%s", ' % ipaddr
-    #         args += 'name="%s", ' % name
-    #         args += "port=%s, " % port
-    #         args += 'secret="%s", ' % secret
-    #         args += 'bcdbname="%s", ' % bcdbname
-    #
-    #         cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
-    #
-    #         cmdcmd = j.servers.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
-    #
-    #         cmdcmd.start(reset=reset)
-    #
-    #         j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
-    #         r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
-    #         assert r.ping()
-    #
-    #     else:
-    #         bcdb = self.get(name=bcdbname)
-    #         bcdb.redis_server_start(port=port)
+        return self.get(name=name)
 
     @property
     def _code_generation_dir(self):
@@ -315,9 +279,6 @@ class BCDBFactory(j.application.JSBaseClass):
             return self.__getattribute__(name)
         # else see if we can from the factory find the child object
         r = self.get(name=name)
-        # if none means does not exist yet will have to create a new one
-        if r is None:
-            r = self.new(name=name)
         return r
 
     def __setattr__(self, key, value):

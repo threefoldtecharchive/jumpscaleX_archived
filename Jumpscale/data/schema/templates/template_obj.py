@@ -111,6 +111,7 @@ class ModelOBJ(DataObjBase):
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
             tt =  {{prop.js_typelocation}}
+            # from pudb import set_trace; set_trace()
             data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}

@@ -65,24 +65,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
             for s in self._data.schemas:
                 # find highest schemaid used
-                if s.sid > self._schema_last_id:
-                    self._schema_last_id = s.sid
-
-                if s.sid in self._bcdb._schema_sid_to_md5:
-                    if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
-                        raise RuntimeError("bug: should never happen")
-                else:
-                    self._bcdb._schema_sid_to_md5[s.sid] = s.md5
-                    # its only for reference purposes & maybe 3e party usage
-                    r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
-                    r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
-                    r.hset(self._redis_key_lookup_sid2schema, s.sid, s._json)
-                    r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
-                    r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
-
-                # make sure we know all schema's
-                if not j.data.schema.exists(md5=s.md5):
-                    j.data.schema.add_from_text(schema_text=s.text)
+                self._schema_runtime_register(s)
 
             for n in self._data.namespaces:
                 if n.nid > self._namespace_last_id:
@@ -91,6 +74,32 @@ class BCDBMeta(j.application.JSBaseClass):
                 r.hset(self._redis_key_lookup_nid2meta, n._json)
 
         return self._data
+
+    def _schema_runtime_register(self, s):
+        """
+
+        :param s: is schema in JSX Object form
+        :return:
+        """
+        r = self._redis
+        if s.sid > self._schema_last_id:
+            self._schema_last_id = s.sid
+
+        if s.sid in self._bcdb._schema_sid_to_md5:
+            if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
+                raise RuntimeError("bug: should never happen")
+        else:
+            self._bcdb._schema_sid_to_md5[s.sid] = s.md5
+            # its only for reference purposes & maybe 3e party usage
+            r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
+            r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
+            r.hset(self._redis_key_lookup_sid2schema, s.sid, s._json)
+            r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
+            r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
+
+        # make sure we know all schema's
+        if not j.data.schema.exists(md5=s.md5):
+            j.data.schema.add_from_text(schema_text=s.text)
 
     def reset(self):
         # put new schema
@@ -167,10 +176,9 @@ class BCDBMeta(j.application.JSBaseClass):
         s.sid = self._schema_last_id
         s.text = schema.text  # + "\n"  # only 1 \n at end
         s.md5 = schema._md5
+        self._schema_runtime_register(s)
         self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
         self._save()
-
-        self._reset()  # lets make sure all gets loaded again
 
         schema.sid = s.sid
         return schema

@@ -51,7 +51,6 @@ class DataObjBase:
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
-            raise RuntimeError()
             self._cobj_ = self._capnp_schema.from_bytes_packed(capnpdata)
             set_default = False
         else:
