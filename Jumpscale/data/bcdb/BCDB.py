@@ -323,14 +323,14 @@ class BCDB(j.application.JSBaseClass):
         else:
             raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
 
-    # def model_get_from_url(self, url):
-    #     """
-    #     will return the latest model found based on url
-    #     :param url:
-    #     :return:
-    #     """
-    #     s = j.data.schema.get_from_url_latest(url=url)
-    #     return self.model_get_from_schema(s)
+    def model_get_from_url(self, url):
+        """
+        will return the latest model found based on url
+        :param url:
+        :return:
+        """
+        s = j.data.schema.get_from_url_latest(url=url)
+        return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -344,6 +344,11 @@ class BCDB(j.application.JSBaseClass):
         self._schema_property_add_if_needed(model.schema)
         self._schema_add(model.schema)  # do not forget to add the schema
         self.meta._sid_to_model[model.sid] = model
+
+        s = model.schema
+        assert self.meta._schema_md5_to_sid[s._md5]
+        assert self.meta._schema_md5_to_sid[s._md5] == model.sid
+
         return model
 
     def _schema_add(self, schema):
@@ -362,12 +367,12 @@ class BCDB(j.application.JSBaseClass):
             if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
                 # now we know that there is a subtype, we need to store it in the bcdb as well
                 s = prop.jumpscaletype.SUBTYPE._schema
-                s = self._schema_add(s)
+                self._schema_add(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
             elif prop.jumpscaletype.NAME == "jsobject":
                 s = prop.jumpscaletype._schema
-                s = self._schema_add(s)
+                self._schema_add(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
 

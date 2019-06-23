@@ -27,9 +27,9 @@ class ModelOBJ(j.data.schema._JSXObjectClass):
         self._schema_{{prop.name}} = j.data.schema.get_from_md5(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
             data = self._cobj_.{{prop.name_camel}}
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data)
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data,model=self)
         else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self)
         {% endif %}
         {% endfor %}
 

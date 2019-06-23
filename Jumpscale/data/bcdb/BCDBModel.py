@@ -29,15 +29,18 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        bcdb, schema, sid, reset = self._init_load(bcdb, schema, sid, reset)
+        if not schema:
+            if hasattr(self, "_SCHEMA"):
+                j.data.schema.get_from_text(self._SCHEMA)
+            else:
+                schema = self._schema_get()
+                assert schema
 
-        assert bcdb
-        assert schema
-        assert sid
-        assert sid > 0
+            bcdb.model_get_from_schema(schema)
 
         self.schema = schema
-        self.sid = sid
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
         self.bcdb = bcdb
         self.storclient = bcdb.storclient
         self.readonly = False
@@ -65,8 +68,8 @@ class BCDBModel(j.application.JSBaseClass):
         if reset:
             self.reset()
 
-    def _init_load(self, bcdb, schema, reset):
-        return bcdb, schema, reset
+    def _schema_get(self):
+        return None
 
     def trigger_add(self, method):
         """
@@ -308,8 +311,7 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            assert obj.sid > 0
-            l = [obj.nid, obj.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self.triggers_call(obj, action="set_pre")

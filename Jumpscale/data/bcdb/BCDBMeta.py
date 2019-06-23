@@ -64,7 +64,7 @@ class BCDBMeta(j.application.JSBaseClass):
         r.delete(self._redis_key_lookup_sid2url)
         r.delete(self._redis_key_lookup_nid2meta)
 
-    def _load_schema_obj(self, s):
+    def _load_schema_obj(self, s, initial=False):
         """
 
         :param s: is schema in JSX Object form (so not a Schema object)
@@ -79,7 +79,8 @@ class BCDBMeta(j.application.JSBaseClass):
 
         if s.sid not in self._sid_to_model:
             # not registered yet, now need to remember in redis and in mem
-            self._bcdb.model_get_from_schema(s.text)
+            if initial:
+                self._bcdb.model_get_from_schema(s.text)
             # its only for reference purposes & maybe 3e party usage
             r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
             r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
@@ -87,10 +88,11 @@ class BCDBMeta(j.application.JSBaseClass):
             r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
             r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
 
-        assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
-        assert self._sid_to_model[s.sid].schema._md5 == s.md5
-        assert self._schema_md5_to_sid[s.md5]
-        assert self._schema_md5_to_sid[s.md5] == s.sid
+        if initial:
+            assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
+            assert self._sid_to_model[s.sid].schema._md5 == s.md5
+
+        self._schema_md5_to_sid[s.md5] = s.sid
 
     def _load(self):
 
@@ -118,7 +120,7 @@ class BCDBMeta(j.application.JSBaseClass):
             raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
 
         for s in self._data.schemas:
-            self._load_schema_obj(s)
+            self._load_schema_obj(s, initial=True)
 
         for n in self._data.namespaces:
             if n.nid > self._namespace_last_id:

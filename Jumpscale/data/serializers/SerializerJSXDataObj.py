@@ -27,7 +27,6 @@ class SerializerJSXDataObj(SerializerBase):
             data = obj._cobj_.to_bytes_packed()
 
         if not model:
-            assert not hasattr(obj, "sid") or obj.sid == 0  # when model not specified then sid should be 0
             version = 1
             data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(obj._schema._md5)) + data
             j.core.db.hset(
@@ -35,17 +34,15 @@ class SerializerJSXDataObj(SerializerBase):
             )  # DEBUG
         else:
             version = 10
-            j.shell()
-            assert isinstance(obj._schema, int)
-            assert obj._schema > 0
-            data2 = version.to_bytes(2, "little") + obj._schema.sid.to_bytes(2, "little") + data
-            j.core.db.hset("debug10", obj._schema.sid, "%s:%s:%s" % (obj.id, obj._schema.sid, obj._schema.url))  # DEBUG
+            sid = obj._model.sid
+            assert isinstance(sid, int)
+            assert sid > 0
+            data2 = version.to_bytes(2, "little") + sid.to_bytes(2, "little") + data
+            j.core.db.hset("debug10", sid, "%s:%s:%s" % (obj.id, obj._schema._md5, obj._schema.url))  # DEBUG
 
         if test:
             # if not md5 in j.data.schema.md5_to_schema:
-            self.loads(data=data2)
-            if model:
-                j.shell()
+            self.loads(data=data2, model=model)
 
         return data2
 
@@ -73,4 +70,4 @@ class SerializerJSXDataObj(SerializerBase):
         elif versionnr == 10:
             sid = int.from_bytes(data[2:4], byteorder="little")
             data2 = data[4:]
-            j.shell()
+            return model.schema.get(capnpdata=data2, model=model)
