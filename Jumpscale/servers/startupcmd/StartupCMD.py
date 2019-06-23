@@ -95,8 +95,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if ports:
             for port in self.ports:
                 p = j.sal.process.getProcessByPort(port)
-                res.append(p)
-                pids_done.append(p.pid)
+                if p and p.pid:
+                    res.append(p)
+                    pids_done.append(p.pid)
 
         for pstring in self.process_strings:
             for pid in j.sal.process.getPidsByFilter(self.process_strings):
@@ -120,7 +121,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :return:
         """
         for p in self._get_processes_by_port_or_filter():
-            j.shell()
+            p.kill()
 
     def _softkill(self):
         if self.executor == "corex":
@@ -165,15 +166,19 @@ class StartupCMD(j.application.JSBaseConfigClass):
     def refresh(self):
         self._log_info("refresh: %s" % self.name)
 
+        self.time_refresh = j.data.time.epoch
+
         if not self.pid:
             return
 
         if self.executor == "corex":
             self._corex_refresh()
 
-        elif self.executor == "tmux":
-            j.shell()
-
+        elif self.executor == "tmux" or self.executor == "background":
+            if self.is_running():
+                self._notify_state("ok")
+            else:
+                self._notify_state("down")
         else:
             j.shell()
 
@@ -197,11 +202,11 @@ class StartupCMD(j.application.JSBaseConfigClass):
     #     else:
     #         self._reset()
 
-    def stop(self):
+    def stop(self, force=True):
         self._log_warning("stop: %s" % self.name)
         self._refresh_init()
 
-        if not self.state in ["init", "stopped"]:
+        if force or not self.state in ["stopped", "down"]:
 
             self._notify_state("stopping")
 
@@ -220,7 +225,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
                 if self.pid and self.pid > 0:
                     self._log_info("found process to stop:%s" % self.pid)
-                    j.sal.process.kill(self.pid)
+                    try:
+                        j.sal.process.kill(self.pid)
+                    except:
+                        pass
 
                 self._kill_processes_by_port_or_filter()
 
@@ -237,16 +245,20 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _notify_state(self, state):
         if self.state != state:
+            if state in ["down", "stopped", "stopping"]:
+                self.time_stop = j.data.time.epoch
+            if state in ["ok"]:
+                self.time_start = j.data.time.epoch
             self.state = state
             self.save()
 
     def is_running(self):
-        self._refresh_init()
+
         self._log_debug("running:%s" % self.name)
 
         if self._local and self.ports != []:
             for port in self.ports:
-                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=self.port) == False:
+                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                     self._notify_state("down")
                     return False
             # can return sooner because port check is good enough

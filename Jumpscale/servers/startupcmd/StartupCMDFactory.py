@@ -22,29 +22,32 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
         """
 
         def mc():
-            startup_cmd = self.mc
-
+            startup_cmd = self.httpbackground
+            startup_cmd.executor = "background"
+            startup_cmd.ports = 8000
             startup_cmd.path = "/tmp"
-            startup_cmd.cmd_start = "mc"
+            startup_cmd.cmd_start = "python3 -m http.server"
             startup_cmd.timeout = 10
+
+            startup_cmd.stop()
 
             self._log_info("start process mc")
             startup_cmd.start()
-            assert startup_cmd.running
+            assert startup_cmd.is_running()
 
             self._log_info("process id {}".format(startup_cmd.pid))
 
             self._log_info("stop process mc")
             startup_cmd.stop()
-            assert startup_cmd.running is False
+            assert startup_cmd.is_running() is False
 
-            cmd = self.get(
-                name="test",
-                cmd_start="j.tools.console.echo('1')\nj.tools.console.echo('2')",
-                interpreter="jumpscale",
-                daemon=False,
-            )
-            cmd.start(reset=True)
+            # cmd = self.get(
+            #     name="test",
+            #     cmd_start="j.tools.console.echo('1')\nj.tools.console.echo('2')",
+            #     interpreter="jumpscale",
+            #     daemon=False,
+            # )
+            # cmd.start(reset=True)
 
         def http_tmux():
             self.http.delete()
@@ -81,9 +84,9 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             self.http.stop()
             self.http.delete()
 
-        # mc()
+        mc()
         # http_tmux()
         # http_back()
-        http_corex()
+        # http_corex()
 
         self.http.delete()
