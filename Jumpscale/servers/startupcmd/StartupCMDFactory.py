@@ -32,14 +32,14 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
 
         def http_back():
             self.http.delete()
-            assert startup_cmd.is_running() == False
+            assert self.http.is_running() == False
             self.http.cmd_start = "python3 -m http.server"  # starts on port 8000
             self.http.ports = 8000
             self.http.executor = "background"
             self.http.start()
-            assert startup_cmd.is_running() == True
+            assert self.http.is_running() == True
             self.http.stop()
-            assert startup_cmd.is_running() == False
+            assert self.http.is_running() == False
             self.http.delete()
 
         def http_corex():
