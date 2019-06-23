@@ -54,6 +54,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             self.http.cmd_start = "python3 -m http.server"  # starts on port 8000
             self.http.ports = 8000
             self.http.start()
+            assert self.http.is_running()
             self.http.stop()
             self.http.delete()
 
@@ -94,8 +95,8 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             assert startup_cmd.is_running() == True
 
         # tmux_background()
-        http_background()
-        # http_tmux()
+        # http_background()
+        http_tmux()
         # http_back()
         # http_corex()
 
