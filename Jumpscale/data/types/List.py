@@ -222,10 +222,10 @@ class List(TypeBaseObjFactory):
         val2 = self.clean(val)
         return val2.pylist(subobj_format="H")
 
-    def toData(self, val=None):
+    def toData(self, val=None, model=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "OBJ":
-            return [j.data.serializers.jsxdata.dumps(i, model=i._model) for i in val2]
+            return [j.data.serializers.jsxdata.dumps(i, model=model) for i in val2]
         else:
             return val2._inner_list
 

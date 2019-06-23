@@ -182,7 +182,6 @@ class BCDB(j.application.JSBaseClass):
         self.user = None
         self.circle = None
 
-        self.models = {}
         self._index_schema_class_cache = {}  # cache for the index classes
 
         if reset:
@@ -314,13 +313,13 @@ class BCDB(j.application.JSBaseClass):
 
     @property
     def models(self):
-        for key, model in self._meta._sid_to_model.items():
+        for key, model in self.meta._sid_to_model.items():
             yield model
 
     def model_get_from_sid(self, sid):
         md5 = None
-        if sid in self._meta._sid_to_model:
-            return self._meta._sid_to_model[sid]
+        if sid in self.meta._sid_to_model:
+            return self.meta._sid_to_model[sid]
         else:
             raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
 
@@ -344,7 +343,7 @@ class BCDB(j.application.JSBaseClass):
         assert model.sid
         self._schema_property_add_if_needed(model.schema)
         self._schema_add(model.schema)  # do not forget to add the schema
-        self._meta._sid_to_model[model.sid] = model
+        self.meta._sid_to_model[model.sid] = model
         return model
 
     def _schema_add(self, schema):
@@ -391,14 +390,14 @@ class BCDB(j.application.JSBaseClass):
             schema_text = schema.text
 
         if not sid:
-            if schema._md5 in self._meta._schema_md5_to_sid:
-                sid = self._meta._schema_md5_to_sid[schema._md5]
+            if schema._md5 in self.meta._schema_md5_to_sid:
+                sid = self.meta._schema_md5_to_sid[schema._md5]
                 # means we already know the schema
             else:
                 sid = self._schema_add(schema)  # this will make sure the schema is registered on the metadata level
 
-        if sid in self._meta._sid_to_model:
-            return self._meta._sid_to_model[sid]
+        if sid in self.meta._sid_to_model:
+            return self.meta._sid_to_model[sid]
 
         # model not known yet need to create
         self._log_info("load model:%s" % schema.url)

@@ -128,9 +128,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _save(self):
 
-        self._log_debug("save:\n%s" % self.data)
+        self._log_debug("save:\n%s" % self)
 
-        serializeddata = j.data.serializers.jsxdata.dumps(self.data)
+        serializeddata = j.data.serializers.jsxdata.dumps(self._data)
 
         if self._bcdb.storclient is None:
             r = j.core.db
@@ -164,7 +164,7 @@ class BCDBMeta(j.application.JSBaseClass):
         else:
             # not known yet in namespace, so is new one
             self._schema_last_id += 1
-            s = self.data.schemas.new()
+            s = self._data.schemas.new()
             s.url = schema.url
             s.sid = self._schema_last_id
             s.text = schema.text  # + "\n"  # only 1 \n at end

@@ -3,18 +3,21 @@ from Jumpscale import j
 
 class JSXObject(j.application.JSBaseClass):
     def __init__(self, capnpdata=None, dictdata={}, schema=None, model=None):
+
         self._cobj_ = None
         self.id = None
-        self.nid = 1
         self._schema = schema
         self._model = model
         self._changed_items = {}
         self._autosave = False
         self.acl_id = None
         self._acl = None
+
         self._load_from_data(capnpdata=capnpdata)
         if dictdata:
             self._data_update(dictdata)
+
+        j.application.JSBaseClass.__init__(self)
 
     @property
     def _readonly(self):
