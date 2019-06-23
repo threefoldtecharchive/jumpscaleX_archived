@@ -151,9 +151,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
             # TMUX
             self._pane.kill()
             self._pane.window.kill()
-            if [item.name for item in self._pane.window.panes] == ["main"]:
-                # means we only had the main tmux window left, that one can be closed
-                self._pane.mgmt.window.server.kill_server()
+            # if [item.name for item in self._pane.window.panes] == ["main"]:
+            #     # means we only had the main tmux window left, that one can be closed
+            #     self._pane.mgmt.window.server.kill_server()
         self.state = "stopped"
         self.time_stop = j.data.time.epoch
         self.save()
