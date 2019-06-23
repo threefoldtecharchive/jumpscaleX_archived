@@ -89,7 +89,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._key_index_hsetkey_get(nid)
 
         """
-        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.schema.sid)
+        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.bcdbmodel.sid)
 
     def _key_index_set_(self, property_name, val, obj_id, nid=1):
         """
@@ -211,7 +211,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._id_redis_listkey_get(nid)
 
         """
-        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.schema.sid)
+        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.bcdbmodel.sid)
 
     def _ids_destroy(self, nid=1):
         self._ids_redis.delete(self._id_redis_listkey_get(nid=nid))

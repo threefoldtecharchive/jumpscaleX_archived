@@ -46,7 +46,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
     def _dictdata(self):
         res = []
         for item in self._inner_list:
-            if isinstance(item, j.data.schema.DataObjBase):
+            if isinstance(item, j.data.schema._JSXObjectClass):
                 res.append(item._ddict)
             else:
                 res.append(item)
@@ -100,7 +100,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         res = []
         for item in self._inner_list:
 
-            if isinstance(item, j.data.schema.DataObjBase):
+            if isinstance(item, j.data.schema._JSXObjectClass):
                 if subobj_format == "J":
                     res.append(item._ddict_json)
                 elif subobj_format == "D":
@@ -225,7 +225,7 @@ class List(TypeBaseObjFactory):
     def toData(self, val=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "OBJ":
-            return [j.data.serializers.jsxdata.dumps(i) for i in val2]
+            return [j.data.serializers.jsxdata.dumps(i, model=i._model) for i in val2]
         else:
             return val2._inner_list
 

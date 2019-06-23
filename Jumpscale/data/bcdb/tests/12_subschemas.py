@@ -1,5 +1,9 @@
 from Jumpscale import j
 
+"""
+aim is to see if the subschema's are loaded properly in the metadata db
+"""
+
 
 def main(self):
     """

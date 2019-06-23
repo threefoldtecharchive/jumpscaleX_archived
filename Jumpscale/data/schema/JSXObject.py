@@ -1,16 +1,13 @@
 from Jumpscale import j
 
 
-class DataObjBase:
+class JSXObject:
     def __init__(self, capnpdata=None, dictdata={}, schema=None, model=None):
         self._cobj_ = None
         self.id = None
+        self.nid = 1
         self._schema = schema
         self._model = model
-        if model and self._model.readonly:
-            self._readonly = True
-        else:
-            self._readonly = False
         self._changed_items = {}
         self._autosave = False
         self.acl_id = None
@@ -18,6 +15,10 @@ class DataObjBase:
         self._load_from_data(capnpdata=capnpdata)
         if dictdata:
             self._data_update(dictdata)
+
+    @property
+    def _readonly:
+        return self._model.readonly
 
     @property
     def _capnp_schema(self):
@@ -186,7 +187,7 @@ class DataObjBase:
         return out
 
     def __eq__(self, val):
-        if not isinstance(val, DataObjBase):
+        if not isinstance(val, JSXObject):
             tt = j.data.types.get("obj", self._schema.url)
             val = tt.clean(val)
         return self._data == val._data

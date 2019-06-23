@@ -166,7 +166,7 @@ class BCDBFactory(j.application.JSBaseClass):
         self._log_info("new bcdb:%s" % name)
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
-
+        data = {}
         if not name in self._config:
             if storclient:
                 if storclient.type == "RDB":
@@ -231,7 +231,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
         elif type == "sqlite":
             bcdb = j.data.bcdb.new(name="test")
-            bcdb2 = j.data.bcdb.bcdb_instances["test"]
+            bcdb2 = j.data.bcdb.get("test")
             assert bcdb2.storclient == None
         elif type == "zdb":
             storclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
@@ -275,7 +275,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
     def __getattr__(self, name):
         # if private then just return
-        if name.startswith("_") or name in self._methods() or name in self._properties():
+        if name.startswith("_") or name in self.__names_methods() or name in self.__names_properties():
             return self.__getattribute__(name)
         # else see if we can from the factory find the child object
         r = self.get(name=name)

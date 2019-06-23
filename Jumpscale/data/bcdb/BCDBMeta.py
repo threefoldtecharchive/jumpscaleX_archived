@@ -36,60 +36,50 @@ class BCDBMeta(j.application.JSBaseClass):
         if reset:
             self.reset()
         else:
-            self._reset()
+            self._load()
 
-    @property
-    def data(self):
+    def reset(self):
+        # make everything in metadata stor empty
+        self._reset_runtime_metadata()
+        self._data = self._schema.new()
+        self._data.name = self._bcdb.name
+        r = self._redis
+        r.delete(self._redis_key_data)
+        self._save()
+        self._load()
 
-        if self._data is None:
-            r = self._redis
-            if self._bcdb.storclient is None:
-                self._log_debug("schemas load from redis")
-                serializeddata = j.core.db.get(self._redis_key_data)
-            elif self._bcdb.storclient.type == "RDB":
-                self._log_debug("schemas load from redis with RDB")
-                serializeddata = r.get(self._redis_key_data)
-            else:
-                serializeddata = self._bcdb.storclient.get(0)
+    def _reset_runtime_metadata(self):
+        # reset the metadata which we can afford to loose
+        # all of this can be rebuild from the serialized information of the metastor
+        self._data = None
+        self._schema_last_id = 0
+        self._namespace_last_id = 0
+        self._sid_to_model = {}
+        self._schema_md5_to_sid = {}
+        r = self._redis
+        r.delete(self._redis_key_lookup_sid2hash)
+        r.delete(self._redis_key_lookup_hash2sid)
+        r.delete(self._redis_key_lookup_sid2schema)
+        r.delete(self._redis_key_lookup_url2sid)
+        r.delete(self._redis_key_lookup_sid2url)
+        r.delete(self._redis_key_lookup_nid2meta)
 
-            if serializeddata is None:
-                self._log_debug("save, empty schema")
-                self._data = self._schema.new()
-                self._data.name = self._bcdb.name
-            else:
-                self._log_debug("schemas load from db")
-                self._data = self._schema.get(serializeddata=serializeddata)
-
-            if self._data.name != self._bcdb.name:
-                raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
-
-            for s in self._data.schemas:
-                # find highest schemaid used
-                self._schema_runtime_register(s)
-
-            for n in self._data.namespaces:
-                if n.nid > self._namespace_last_id:
-                    self._namespace_last_id = n.nid
-
-                r.hset(self._redis_key_lookup_nid2meta, n._json)
-
-        return self._data
-
-    def _schema_runtime_register(self, s):
+    def _load_schema_obj(self, s):
         """
 
-        :param s: is schema in JSX Object form
+        :param s: is schema in JSX Object form (so not a Schema object)
         :return:
         """
         r = self._redis
+
+        assert isinstance(s, j.data.schema._JSXObjectClass)
+
         if s.sid > self._schema_last_id:
             self._schema_last_id = s.sid
 
-        if s.sid in self._bcdb._schema_sid_to_md5:
-            if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
-                raise RuntimeError("bug: should never happen")
-        else:
-            self._bcdb._schema_sid_to_md5[s.sid] = s.md5
+        if s.sid not in self._sid_to_model:
+            # not registered yet, now need to remember in redis and in mem
+            self._bcdb.model_get_from_schema(s.text)
             # its only for reference purposes & maybe 3e party usage
             r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
             r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
@@ -97,34 +87,44 @@ class BCDBMeta(j.application.JSBaseClass):
             r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
             r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
 
-        # make sure we know all schema's
-        if not j.data.schema.exists(md5=s.md5):
-            j.data.schema.add_from_text(schema_text=s.text)
+        assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
+        assert self._sid_to_model[s.sid].schema._md5 == s.md5
+        assert self._schema_md5_to_sid[s.md5]
+        assert self._schema_md5_to_sid[s.md5] == s.sid
 
-    def reset(self):
-        # put new schema
-        self._reset(loaddata=False)
-        self._data = self._schema.new()
-        self._data.name = self._bcdb.name
+    def _load(self):
+
+        self._reset_runtime_metadata()
+
         r = self._redis
-        r.delete(self._redis_key_data)
-        r.delete(self._redis_key_lookup_sid2hash)
-        r.delete(self._redis_key_lookup_hash2sid)
-        r.delete(self._redis_key_lookup_sid2schema)
-        r.delete(self._redis_key_lookup_url2sid)
-        r.delete(self._redis_key_lookup_sid2url)
-        r.delete(self._redis_key_lookup_nid2meta)
-        self._save()
-        self.data  # reload metadata from the database (redis or zdb or sqlite)
+        if self._bcdb.storclient is None:
+            self._log_debug("schemas load from redis")
+            serializeddata = j.core.db.get(self._redis_key_data)
+        elif self._bcdb.storclient.type == "RDB":
+            self._log_debug("schemas load from redis with RDB")
+            serializeddata = r.get(self._redis_key_data)
+        else:
+            serializeddata = self._bcdb.storclient.get(0)
 
-    def _reset(self, loaddata=True):
-        self._data = None
-        self._schema_last_id = 0
-        self._namespace_last_id = 0
-        self._bcdb._schema_sid_to_md5 = {}
-        self._bcdb._schema_md5_to_model = {}
-        if loaddata:
-            self.data
+        if serializeddata is None:
+            self._log_debug("save, empty schema")
+            self._data = self._schema.new()
+            self._data.name = self._bcdb.name
+        else:
+            self._log_debug("schemas load from db")
+            self._data = self._schema.get(serializeddata=serializeddata)
+
+        if self._data.name != self._bcdb.name:
+            raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
+
+        for s in self._data.schemas:
+            self._load_schema_obj(s)
+
+        for n in self._data.namespaces:
+            if n.nid > self._namespace_last_id:
+                self._namespace_last_id = n.nid
+
+            r.hset(self._redis_key_lookup_nid2meta, n._json)
 
     def _save(self):
 
@@ -149,7 +149,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _schema_set(self, schema):
         """
-        add the schema to the metadata
+        add the schema to the metadata if it was not done yet
         :param schema:
         :return:
         """
@@ -159,41 +159,26 @@ class BCDBMeta(j.application.JSBaseClass):
         self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
 
         # check if the data is already in metadatastor
-        if self._data:
-            for s in self._data.schemas:
-                if s.md5 == schema._md5:
-                    # found the schema already in stor, return the schema with sid
-                    schema.sid = s.sid
-                    return schema
-
+        if schema._md5 in self._schema_md5_to_sid:
+            return self._schema_md5_to_sid[schema._md5]
+        else:
             # not known yet in namespace, so is new one
             self._schema_last_id += 1
-        else:
-            assert self._schema_last_id == 0
-
-        s = self.data.schemas.new()
-        s.url = schema.url
-        s.sid = self._schema_last_id
-        s.text = schema.text  # + "\n"  # only 1 \n at end
-        s.md5 = schema._md5
-        self._schema_runtime_register(s)
-        self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
-        self._save()
-
-        schema.sid = s.sid
-        return schema
+            s = self.data.schemas.new()
+            s.url = schema.url
+            s.sid = self._schema_last_id
+            s.text = schema.text  # + "\n"  # only 1 \n at end
+            s.md5 = schema._md5
+            self._load_schema_obj(s)
+            self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
+            self._save()
+            return s.sid
 
     def _schema_exists(self, schema):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
-
-        # check if the data is already in metadatastor
-        if self._data:
-            for s in self._data.schemas:
-                if s.md5 == schema._md5:
-                    return s.md5, s.url
+        return schema._md5 in self._bcdb._schema_md5_to_sid
 
     def __repr__(self):
         return str(self._data)
