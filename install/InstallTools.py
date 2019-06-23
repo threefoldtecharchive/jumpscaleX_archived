@@ -2791,7 +2791,7 @@ class UbuntuInstaller:
         script = """
         apt update
         apt upgrade -y
-        apt install python3-pip  -y
+        apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
         add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
@@ -3461,12 +3461,14 @@ class DockerContainer:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
-                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.config.sshport, src1)
+                cmd = "scp -P {} -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -r {} root@localhost:/tmp/".format(self.config.sshport, src1)
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
-        self.sshexec("sudo apt install python3-click -y")
+        self.sshexec("apt install python3-click -y")
         self.sshexec(cmd)
 
         cmd = """
