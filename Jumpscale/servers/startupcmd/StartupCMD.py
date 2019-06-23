@@ -472,6 +472,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _tmux_start(self, path):
 
+        j.servers.tmux.server
+
         if "__" in self._pane.name:
             self._pane.kill()
 
