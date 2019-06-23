@@ -5,7 +5,7 @@ from .CollectionTypes import *
 from .PrimitiveTypes import *
 from .Enumeration import Enumeration
 from .IPAddress import *
-from .JSXObject import *
+from .JSXObjectTypeFactory import JSXObjectTypeFactory
 from .List import *
 
 import copy
@@ -16,7 +16,6 @@ class Types(j.application.JSBaseClass):
     __jslocation__ = "j.data.types"
 
     def _init(self):
-        # JSConfigObjectFactory
         self._types_list = [
             List,
             Dictionary,
@@ -41,7 +40,7 @@ class Types(j.application.JSBaseClass):
             Percent,
             Set,
             CapnpBin,
-            JSDataObjectFactory,
+            JSXObjectTypeFactory,
             Url,
             Enumeration,
             IPAddress,

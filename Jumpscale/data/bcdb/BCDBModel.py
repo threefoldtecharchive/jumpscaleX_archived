@@ -12,7 +12,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, schema=None, reset=False):
+    def __init__(self, bcdb, sid=None, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -29,13 +29,15 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        bcdb, schema, reset = self._init_load(bcdb, schema, reset)
+        bcdb, schema, sid, reset = self._init_load(bcdb, schema, sid, reset)
 
         assert bcdb
         assert schema
-        assert schema.sid > 0
+        assert sid
+        assert sid > 0
 
         self.schema = schema
+        self.sid = sid
         self.bcdb = bcdb
         self.storclient = bcdb.storclient
         self.readonly = False
@@ -90,7 +92,7 @@ class BCDBModel(j.application.JSBaseClass):
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
             obj2 = method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
-            if isinstance(obj2, j.data.schema.DataObjBase):
+            if isinstance(obj2, j.data.schema._JSXObjectClass):
                 # only replace if right one returned, otherwise ignore
                 obj = obj2
             else:
@@ -142,7 +144,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def delete(self, obj):
-        if not isinstance(obj, j.data.schema.DataObjBase):
+        if not isinstance(obj, j.data.schema._JSXObjectClass):
             if isinstance(obj, int):
                 obj = self.get(obj)
             else:
@@ -159,7 +161,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.index.delete(obj)
 
     def check(self, obj):
-        if not isinstance(obj, j.data.schema.DataObjBase):
+        if not isinstance(obj, j.data.schema._JSXObjectClass):
             raise RuntimeError("argument needs to be a jsx data obj")
         assert obj.nid
 
@@ -192,7 +194,7 @@ class BCDBModel(j.application.JSBaseClass):
                     obj.nid = nid
                 else:
                     raise RuntimeError("need to specify nid")
-        elif isinstance(data, j.data.schema.DataObjBase):
+        elif isinstance(data, j.data.schema._JSXObjectClass):
             obj = data
             if obj_id is None and obj.id is not None:
                 obj_id = obj.id
@@ -305,8 +307,9 @@ class BCDBModel(j.application.JSBaseClass):
                     raise e
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
-
-            l = [obj.nid, self.schema.sid, obj.acl_id, bdata_encrypted]
+            assert obj.nid > 0
+            assert obj.sid > 0
+            l = [obj.nid, obj.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self.triggers_call(obj, action="set_pre")

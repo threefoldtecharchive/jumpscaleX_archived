@@ -14,18 +14,18 @@ class JSBaseConfigs(JSBase):
         self._model_ = None
 
         if topclass:
-            self._init2(**kwargs)
+            self._init_pre(**kwargs)
             self._init()
 
-    def _class_init(self):
+    def __init_class(self):
 
-        if not hasattr(self.__class__, "_class_init_done"):
+        if not hasattr(self.__class__, "__init_class_done"):
 
             if not hasattr(self.__class__, "_CHILDCLASS"):
                 raise RuntimeError("_CHILDCLASS needs to be specified")
 
             # always needs to be in this order at end
-            JSBase._class_init(self)
+            JSBase.__init_class(self)
             self.__class__.__objcat_name = "instances"
 
             # print("classinit:%s"%self.__class__)
@@ -208,7 +208,7 @@ class JSBaseConfigs(JSBase):
 
     def __getattr__(self, name):
         # if private then just return
-        if name.startswith("_") or name in self._methods() or name in self._properties():
+        if name.startswith("_") or name in self.__names_methods() or name in self.__names_properties():
             return self.__getattribute__(name)
         # else see if we can from the factory find the child object
         r = self.get(name=name, die=False, create_new=False)

@@ -1,8 +1,8 @@
 from Jumpscale import j
-from Jumpscale.data.schema.DataObjBase import DataObjBase
+from Jumpscale.data.schema._JSXObjectClass import JSXObject
 from capnp import KjException
 
-class ModelOBJ(DataObjBase):
+class ModelOBJ(JSXObject):
 
     __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
                         {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
@@ -111,8 +111,11 @@ class ModelOBJ(DataObjBase):
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
             tt =  {{prop.js_typelocation}}
-            # from pudb import set_trace; set_trace()
-            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            try:
+                data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            except:
+                v=self._changed_items["{{prop.name}}"]
+                j.shell()
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 

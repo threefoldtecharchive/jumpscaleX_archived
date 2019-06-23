@@ -155,6 +155,9 @@ class Schema(j.application.JSBaseClass):
             p = SchemaProperty()
 
             name = propname + ""  # make sure there is copy
+            if name.endswith("***"):
+                name = name[:-3]
+                p.index_text = True
             if name.endswith("**"):
                 name = name[:-2]
                 p.index = True

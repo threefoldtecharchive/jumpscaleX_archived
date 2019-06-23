@@ -14,17 +14,24 @@ class JSBase:
         :param topclass: if True means no-one inherits from us
         """
         self._parent = parent
-        self._class_init()  # is needed to init class properties
-
-        if topclass:
-            self._init2(**kwargs)
-            self._init()
+        self.__children = []
+        self.__dataprops = []
+        self.__members = []
+        self.__init_class(topclass=topclass)  # is needed to init class properties
 
         self._obj_cache_reset()
+        assert self._key
 
-    def _class_init(self, topclass=True):
+        self._init_pre(**kwargs)
+        self._init(**kwargs)
+        self._init_post(**kwargs)
 
-        if not hasattr(self.__class__, "_class_init_done"):
+    def __init_class(self, topclass=True):
+
+        if not hasattr(self.__class__, "__init_class_done"):
+
+            if not topclass:
+                return
 
             # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
@@ -63,21 +70,50 @@ class JSBase:
                     parent._class_children.append(parent.__class__)
                 parent = parent._parent
 
-            self.__class__._methods_ = []
-            self.__class__._properties_ = []
-            self.__class__._inspected_ = False
-
-            # print("classinit_2:%s"%self.__class__)
-            # print(self.__class__._properties_)
+            self.__inspect()
 
             self.__class__._logger_min_level = 100
 
-            self.__class__._class_init_done = True
+            self.__class__._key = "%s:%s" % (self.__class__._location, self.__class__._name)
 
-            self._key = "%s:%s" % (self.__class__._location, self.__class__._name)
+            self.__init_class_post()
+
+            self.__class__.__init_class_done = True
+            self.__class__.__protected = True
+
+            print("***CLASS INIT: %s" % self.__class__._key)
 
             # lets make sure the initial loglevel gets set
             self._logger_set(children=False, parents=False)
+
+    def __init_class_post(self):
+        pass
+
+    def __inspect(self):
+        # print("INSPECT:%s"%self.__class__)
+        assert self.__class__.__names_methods_ == []
+        assert self.__class__.__names_properties_ == []
+        for name, obj in inspect.getmembers(self.__class__):
+            if inspect.ismethod(obj):
+                self.__class__.__names_methods_.append(name)
+            # elif name.startswith("_"):
+            #     continue
+            elif inspect.ismethoddescriptor(obj):
+                continue
+            elif inspect.isfunction(obj):
+                self.__class__.__names_methods_.append(name)
+            elif inspect.isclass(obj):
+                self.__class__.__names_properties_.append(name)
+            elif inspect.isgetsetdescriptor(obj):
+                continue
+            else:
+                self.__class__.__names_properties_.append(name)
+
+        for item in self.__dict__.keys():
+            if item.startswith("_"):
+                continue
+            if item not in self._methods_:
+                self.__class__.__names_properties_.append(item)
 
     def _logging_enable_check(self):
         """
@@ -172,16 +208,19 @@ class JSBase:
     def _init(self):
         pass
 
-    def _init2(self, **kwargs):
+    def _init_pre(self, **kwargs):
         """
         meant to be used by developers of the base classes
         :return:
         """
-        self._obj_cache_reset()
-        self._key = "%s:%s" % (
-            self.__class__._location,
-            self.__class__._name,
-        )  # needs to be done 2, first in class init
+        pass
+
+    def _init_post(self, **kwargs):
+        """
+        meant to be used by developers of the base classes
+        :return:
+        """
+        pass
 
     def _obj_cache_reset(self):
         """
@@ -242,70 +281,6 @@ class JSBase:
             self._cache_ = j.core.cache.get(self._objid, expiration=self._cache_expiration)
         return self._cache_
 
-    def _inspect(self):
-        if not self.__class__._inspected_:
-            # print("INSPECT:%s"%self.__class__)
-            assert self.__class__._methods_ == []
-            assert self.__class__._properties_ == []
-            for name, obj in inspect.getmembers(self.__class__):
-                if inspect.ismethod(obj):
-                    self.__class__._methods_.append(name)
-                # elif name.startswith("_"):
-                #     continue
-                elif inspect.ismethoddescriptor(obj):
-                    continue
-                elif inspect.isfunction(obj):
-                    self.__class__._methods_.append(name)
-                elif inspect.isclass(obj):
-                    self.__class__._properties_.append(name)
-                elif inspect.isgetsetdescriptor(obj):
-                    continue
-                else:
-                    self.__class__._properties_.append(name)
-
-            for item in self.__dict__.keys():
-                if item.startswith("_"):
-                    continue
-                if item not in self._methods_:
-                    self.__class__._properties_.append(item)
-
-            self.__class__._inspected_ = True
-        # else:
-        #     print("not inspect:%s"%self.__class__)
-
-    def _properties(self, prefix=""):
-        self._inspect()
-
-        if prefix == "_":
-            return [
-                item
-                for item in self.__class__._properties_
-                if (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))
-            ]
-        if prefix == "":
-            return [item for item in self.__class__._properties_ if not item.startswith("_")]
-        else:
-            return [item for item in self.__class__._properties_ if item.startswith(prefix)]
-
-    def _methods(self, prefix=""):
-        self._inspect()
-        if prefix == "_":
-            return [
-                item
-                for item in self.__class__._methods_
-                if (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))
-            ]
-        if prefix == "":
-            return [item for item in self.__class__._methods_ if not item.startswith("_")]
-        else:
-            return [item for item in self.__class__._methods_ if item.startswith(prefix)]
-
-    def _properties_children(self):
-        return []
-
-    def _properties_model(self):
-        return []
-
     @property
     def _ddict(self):
         res = {}
@@ -315,6 +290,11 @@ class JSBase:
                 if not isinstance(v, types.MethodType):
                     res[key] = v
         return res
+
+    def __check(self):
+        for key in self.__dict__.keys():
+            if key not in self.__class__.__names_properties_:
+                raise RuntimeError("a property was inserted which should not be there")
 
     ################
 
@@ -454,96 +434,292 @@ class JSBase:
         else:
             return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
 
-    def _test_error(self, name, error):
-        j.errorhandler.try_except_error_process(error, die=False)
-        self.__class__._test_runs_error[name] = error
+    ###################
 
-    def _test_run(self, name="", obj_key="main", die=True, **kwargs):
+    def __name_get(self, item):
+        if isinstance(item, str) or isinstance(item, int):
+            name = str(item)
+        elif hasattr(item.name):
+            name = item.name
+        else:
+            name = item._objid
+        return name
+
+    def __filter(self, filter=None, llist=[], nameonly=True, unique=True, sort=True):
         """
 
-        :param name: name of file to execute can be e.g. 10_test_my.py or 10_test_my or subtests/test1.py
-                    the tests are found in subdir tests of this file
-
-                if empty then will use all files sorted in tests subdir, but will not go in subdirs
-
-        :param obj_key: is the name of the function we will look for to execute, cannot have arguments
-               to pass arguments to the example script, use the templating feature, std = main
-
-
-        :return: result of the tests
-
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+        :param llist:
+        :param nameonly: will not return the items of the list but names derived from the list members
+        :param unique: will make sure there are no duplicates
+        :param sort: sort but only when nameonly
+        :return:
         """
-
-        res = self.__test_run(name=name, obj_key=obj_key, die=die, **kwargs)
-        if self.__class__._test_runs_error != {}:
-            for key, e in self.__class__._test_runs_error.items():
-                self._log_error("ERROR FOR TEST: %s\n%s" % (key, e))
-            self._log_error("SOME TESTS DIT NOT COMPLETE SUCCESFULLY")
-        else:
-            self._log_info("ALL TESTS OK")
-        return res
-
-    def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
-
-        if name == "":
-            name = None
-
-        if name is not None:
-            self._log_info("##: TEST RUN: %s" % name.upper())
-
-        if name is not None:
-
-            if name.endswith(".py"):
-                name = name[:-3]
-
-            tpath = "%s/tests/%s" % (self._dirpath, name)
-            tpath = tpath.replace("//", "/")
-            if not name.endswith(".py"):
-                tpath += ".py"
-            if not j.sal.fs.exists(tpath):
-                for item in j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py"):
-                    bname = j.sal.fs.getBaseName(item)
-                    if "_" in bname:
-                        bname2 = "_".join(bname.split("_", 1)[1:])  # remove part before first '_'
-                    else:
-                        bname2 = bname
-                    if bname2.endswith(".py"):
-                        bname2 = bname2[:-3]
-                    if bname2.strip().lower() == name:
-                        self.__test_run(name=bname, obj_key=obj_key, **kwargs)
-                        return
-                return self._test_error(
-                    name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath))
-                )
-
-            self._log_debug("##: path: %s\n\n" % tpath)
-        else:
-            items = [
-                j.sal.fs.getBaseName(item)
-                for item in j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py")
-            ]
-            items.sort()
-            for name in items:
-                self.__test_run(name=name, obj_key=obj_key, **kwargs)
-
-            return
-
-        method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
-        self._log_debug("##:LOAD: path: %s\n\n" % tpath)
-        if die or j.application.debug:
-            res = method(self=self, **kwargs)
-        else:
-            try:
-                res = method(self=self, **kwargs)
-            except Exception as e:
-                if j.application.debug:
-                    raise e
+        res = []
+        for item in llist:
+            name = self.__name_get(item)
+            if not name:
+                continue
+            if filter == "":
+                pass
+            elif name.startswith("_"):
+                continue
+            else:
+                if filter.startswith("*"):
+                    filter = filter[1:]
+                    if not name.startswith(filter):
+                        continue
+                elif filter.endswith("*"):
+                    filter = filter[:-1]
+                    if not name.endswith(filter):
+                        continue
+                elif filter.startswith("R"):
+                    j.shell()
+                    filter = filter[1:]
+                    w
                 else:
-                    j.errorhandler.try_except_error_process(e, die=False)
-                self.__class__._test_runs_error[name] = e
-                return e
-            self.__class__._test_runs[name] = res
+                    if not name == filter:
+                        continue
+            if nameonly:
+                item = name
+            if unique:
+                if item not in res:
+                    res.append(item)
+            else:
+                res.append(item)
+
+        if nameonly and sort:
+            res.sort()
+
         return res
+
+    def __parent_name_get(self):
+        return self.__name_get(self.parent)
+
+    def __children_names_get(self, filter=None):
+        return self.__filter(filter=filter, llist=self.__children_get(filter=filter))
+
+    def __children_get(self, filter=None):
+        """
+        if nothing then is self.__children
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        :return:
+        """
+        return self.__filter(filter=filter, llist=self.__children, nameonly=False)
+
+    def __child_get(self, name=None, id=None):
+        """
+        finds a child based on name or id
+        :param name:
+        :param id:
+        :return:
+        """
+        for item in self.__children_get():
+            if name:
+                assert isinstance(name, str)
+                if self.__name_get(item) == name:
+                    return item
+            elif id:
+                id = int(id)
+                if item.id == id:
+                    return item
+            else:
+                raise RuntimeError("need to specify name or id")
+        return None
+
+    def __members_names_get(self, filter=None):
+        return self.__filter(filter=filter, llist=self.__members_get(filter=filter))
+
+    def __members_get(self, filter=None):
+        """
+        normally coming from a database e.g. BCDB
+        e.g. disks in a server, or clients in SSHClientFactory
+        if nothing then is self.__members which is then normally = []
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        :return:
+        """
+        return self.__filter(filter=filter, llist=self.__members, nameonly=False)
+
+    def __member_get(self, name=None, id=None):
+        """
+        finds a member coming from e.g. a database
+        :param name:
+        :param id:
+        :return:
+        """
+        for item in self.__members_get():
+            if name:
+                assert isinstance(name, str)
+                if self.__name_get(item) == name:
+                    return item
+            elif id:
+                id = int(id)
+                if item.id == id:
+                    return item
+            else:
+                raise RuntimeError("need to specify name or id")
+        return None
+
+    def __dataprops_names_get(self, filter=None):
+        return self.__filter(filter=filter, llist=self.__dataprops_get(filter=filter))
+
+    def __dataprops_get(self, filter=None):
+        """
+        normally coming from a database e.g. BCDB
+        e.g. disks in a server, or clients in SSHClientFactory
+        if nothing then is self.__dataprops which is then normally = []
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        :return:
+        """
+        return self.__filter(filter=filter, llist=self.__dataprops, nameonly=False)
+
+    def __dataprop_get(self, name=None, id=None):
+        """
+        finds a dataprop coming from e.g. a database
+        :param name:
+        :param id:
+        :return:
+        """
+        for item in self.__dataprops_get():
+            if name:
+                assert isinstance(name, str)
+                if self.__name_get(item) == name:
+                    return item
+            elif id:
+                id = int(id)
+                if item.id == id:
+                    return item
+            else:
+                raise RuntimeError("need to specify name or id")
+        return None
+
+    def __methods_names_get(self, filter=None):
+        """
+        return the names of the methods which were defined at __init__ level by the developer
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        """
+        return self.__filter(filter=filter, llist=self.__names_methods_)
+
+    def __properties_names_get(self, filter=None):
+        """
+        return the names of the properties which were defined at __init__ level by the developer
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        """
+        others = self.__children_names_get(filter=filter)
+        pname = self.__name_parent()
+        if pname not in others:
+            others.append(pname)
+        res = [i for i in self.__filter(filter=filter, llist=self.__names_properties_) if i not in others]
+        return res
+
+    ###################
+
+    def __props_all_names(self):
+        l = (
+            self.__children_names_get()
+            + self.__properties_names_get()
+            + self.__dataprops_names_get()
+            + self.__members_names_get()
+            + self.__methods_names_get()
+        )
+        return l
+
+    def __prop_exist(self, name):
+        """
+        only returns in protected mode otherwise always True
+        :param name:
+        :return:
+        """
+        if self.__class__.__protected:
+            if name in self.__names_properties_:
+                return True
+            if name in self.__names_methods_:
+                return True
+            if self.__members_get(filter=name):
+                return True
+            if name == self.__parent_name_get():
+                return True
+            if self._children_get(filter=name):
+                return True
+            if self.__dataprops_get(filter=name):
+                return True
+            if self.__methods_names_get(filter=name):
+                return True
+            if self.__properties_names_get(filter=name):
+                return True
+        else:
+            return True
+
+    def __dir__(self):
+        l = (
+            self.__children_names_get()
+            + self.__properties_names_get()
+            + self.__dataprops_names_get()
+            + self.__members_names_get()
+            + self.__methods_names_get()
+        )
+
+        return l
+
+    def __getattr__(self, attr):
+        if not self.__prop_exist(attr):
+            raise RuntimeError("did not find attr:%s" % attr)
+
+        # if attr.startswith("_"):
+        return self.__getattribute__(attr)
+
+    def __setattr__(self, attr, value):
+        if not self.__prop_exist(attr):
+            raise RuntimeError("did not find attr:%s" % attr)
+
+        self.__dict__[attr] = value
+
+        # return self.__setattribute__(attr)
+
+    # if key.startswith("_") or key == "data":
+    #     self.__dict__[key] = value
+    #
+    # elif "data" in self.__dict__ and key in self._schema.propertynames:
+    #     # if value != self.data.__getattribute__(key):
+    #     self._log_debug("SET:%s:%s" % (key, value))
+    #     self._update_trigger(key, value)
+    #     self.__dict__["data"].__setattr__(key, value)
+    # else:
+    #     self.__dict__[key] = value
 
     def __str__(self):
 
@@ -564,10 +740,10 @@ class JSBase:
             out += "\n"
             return out
 
-        out = add("children", "GREEN", self._properties_children(), out)
-        out = add("data", "YELLOW", self._properties_model(), out)
-        out = add("methods", "BLUE", self._methods(), out)
-        out = add("properties", "GRAY", self._properties(), out)
+        out = add("children", "GREEN", self.__children_names_get(), out)
+        out = add("properties", "YELLOW", self.__properties_names_get(), out)
+        out = add("data", "BLUE", self.__dataprops_names_get(), out)
+        out = add("members", "GRAY", self.__members_names_get(), out)
 
         out += "{RESET}"
 

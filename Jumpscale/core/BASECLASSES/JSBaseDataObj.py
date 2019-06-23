@@ -4,7 +4,7 @@ import types
 
 
 class JSBaseDataObj(JSBase):
-    def __init__(self, data=None, parent=None, topclass=True, **kwargs):
+    def __init__(self, jsxobject=None, datadict={}, parent=None, topclass=True, **kwargs):
         """
         :param kwargs: will be updated in the self.data object
 
@@ -12,24 +12,19 @@ class JSBaseDataObj(JSBase):
 
         """
 
-        JSBase.__init__(self, parent=parent, topclass=False)
-
         self._schema_ = None
-
         self._isnew = False
 
-        if data:
-            if not isinstance(data, j.data.schema.DataObjBase):
+        JSBase.__init__(self, parent=parent, topclass=topclass, **kwargs)
+
+        if jsxobject:
+            if not isinstance(jsxobject, j.data.schema._JSXObjectClass):
                 raise RuntimeError("data should be a jsobj")
-            self.data = data
+            self._data = jsxobject
         else:
-            self.data = self._schema.new()
+            self._data = self._schema.new()
 
-        self._data_update(**kwargs)
-
-        if topclass:
-            self._init2(**kwargs)
-            self._init()
+        self.data_update(datadict)
 
         if kwargs == {} and data == None:
             self.load()
@@ -43,46 +38,30 @@ class JSBaseDataObj(JSBase):
             self._schema_ = j.data.schema.get_from_text(self.__class__._SCHEMATEXT)
         return self._schema_
 
-    def _class_init(self):
+    def __init_class_post(self):
 
-        if not hasattr(self.__class__, "_class_init_done"):
+        if not hasattr(self.__class__, "_SCHEMATEXT"):
+            raise RuntimeError("need _SCHEMATEXT as class property.\n")
 
-            if not hasattr(self.__class__, "_SCHEMATEXT"):
-                raise RuntimeError("need _SCHEMATEXT as class property.\n")
+        self.__class__.__objcat_name = "instance"
 
-            # always needs to be in this order at end
-            JSBase._class_init(self)
-            self.__class__.__objcat_name = "instance"
-
-            # print("classinit:%s"%self.__class__)
-
-    def _init2(self, **kwargs):
+    def _init_post(self, **kwargs):
         self._key = "%s:%s:%s" % (self.__class__._location, self.__class__._name, self.data.name)
-        # self.data._autosave = True
-        # always needs to be last
-        JSBase._init2(self, **kwargs)
-
-    # def _obj_cache_reset(self):
-    #     """
-    #     puts the object back to its basic state
-    #     :return:
-    #     """
-    #     JSBase._obj_cache_reset(self)
-    #     self.__dict__["_data"] = None
 
     @property
     def _id(self):
         return self.data.id
 
-    def _data_update(self, **kwargs):
+    def data_update(self, datadict={}):
         """
         will not automatically save the data, don't forget to call self.save()
+        datadict is a dict
 
         :param kwargs:
         :return:
         """
-        ddict = self.data._ddict
-        self.data._data_update(data=kwargs)
+        ddict = self.data._ddict  # needed to make sure something is loaded
+        self.data._data_update(data=datadict)
 
     def edit(self):
         """
@@ -111,13 +90,47 @@ class JSBaseDataObj(JSBase):
     #     data_in = self.data._toml
     #     j.tools.formatters.print_toml(data_in)
 
-    def __dir__(self):
-        items = [key for key in self.__dict__.keys() if not key.startswith("_")]
-        for item in self._schema.propertynames:
-            if item not in items:
-                items.append(item)
-        items.sort()
-        return items
+    def _update_trigger(self, key, val):
+        pass
+
+    def __dataprops_names_get(self, filter=""):
+        return self.__filter(filter=filter, llist=self._schema.propertynames)
+
+    def __dataprops_get(self, filter=None):
+        """
+        normally coming from a database e.g. BCDB
+        e.g. disks in a server, or clients in SSHClientFactory
+        if nothing then is self.__dataprops which is then normally = []
+
+        :param filter: is '' then will show all, if None will ignore _
+                when * at end it will be considered a prefix
+                when * at start it will be considered a end of line filter (endswith)
+                when R as first char its considered to be a regex
+                everything else is a full match
+
+        :return:
+        """
+        j.shell()
+
+    def __dataprop_get(self, name=None, id=None):
+        """
+        finds a dataprop coming from e.g. a database
+        :param name:
+        :param id:
+        :return:
+        """
+        for item in self.__dataprops_get():
+            if name:
+                assert isinstance(name, str)
+                if self.__name_get(item) == name:
+                    return item
+            elif id:
+                id = int(id)
+                if item.id == id:
+                    return item
+            else:
+                raise RuntimeError("need to specify name or id")
+        return None
 
     def __getattr__(self, attr):
         if attr.startswith("_"):
@@ -126,9 +139,6 @@ class JSBaseDataObj(JSBase):
             return self.data.__getattribute__(attr)
 
         return self.__getattribute__(attr)
-
-    def _update_trigger(self, key, val):
-        pass
 
     def __setattr__(self, key, value):
         if key.startswith("_") or key == "data":
@@ -142,19 +152,19 @@ class JSBaseDataObj(JSBase):
         else:
             self.__dict__[key] = value
 
-    def __str__(self):
-        out = "## "
-        out += "{BLUE}%s{RESET} " % self.__class__._location
-        out += "{GRAY}Instance: "
-        out += "{RED}'%s'{RESET} " % self.name
-        out += "{GRAY}\n"
-        out += self.data._hr_get()  # .replace("{","[").replace("}","]")
-        out += "{RESET}\n\n"
-        out = j.core.tools.text_strip(out)
-        # out = out.replace("[","{").replace("]","}")
-
-        # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
-        print(out)
-        return ""
+    # def __str__(self):
+    #     out = "## "
+    #     out += "{BLUE}%s{RESET} " % self.__class__._location
+    #     out += "{GRAY}Instance: "
+    #     out += "{RED}'%s'{RESET} " % self.name
+    #     out += "{GRAY}\n"
+    #     out += self.data._hr_get()  # .replace("{","[").replace("}","]")
+    #     out += "{RESET}\n\n"
+    #     out = j.core.tools.text_strip(out)
+    #     # out = out.replace("[","{").replace("]","}")
+    #
+    #     # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+    #     print(out)
+    #     return ""
 
     __repr__ = __str__

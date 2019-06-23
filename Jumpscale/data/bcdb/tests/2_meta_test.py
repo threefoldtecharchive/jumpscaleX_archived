@@ -35,7 +35,9 @@ def main(self):
 
     assert s.properties_unique == []
 
-    bcdb.meta._schema_set(s)
+    sid = bcdb.meta._schema_set(s)
+    assert isinstance(sid, int)
+    assert si
 
     assert len(bcdb.meta.data.schemas) == 8
 

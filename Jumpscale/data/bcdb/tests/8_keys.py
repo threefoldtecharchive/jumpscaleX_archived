@@ -80,7 +80,6 @@ def main(self):
                 raise RuntimeError("the id should not be in the redis index")
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
-    assert m2.schema.sid == m.schema.sid
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2

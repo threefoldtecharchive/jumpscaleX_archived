@@ -57,7 +57,7 @@ class JSBaseService(j.application.JSBaseClass):
 
         if topclass:
             self._init()
-            self._init2(**kwargs)
+            self._init_pre(**kwargs)
 
         if id is None and (key is not None or servicepool is not None):
             if servicepool is not None and key is None:

@@ -18,15 +18,15 @@ class JSBaseConfigParent(JSBaseConfig, JSFactoryBase):
 
         if topclass:
             self._init()
-            self._init2(**kwargs)
+            self._init_pre(**kwargs)
 
-    def _class_init(self):
+    def __init_class(self):
 
-        if not hasattr(self.__class__, "_class_init_done"):
+        if not hasattr(self.__class__, "__init_class_done"):
 
             # always needs to be in this order at end
-            JSFactoryBase._class_init(self)
-            JSBaseConfig._class_init(self)
+            JSFactoryBase.__init_class(self)
+            JSBaseConfig.__init_class(self)
             self.__class__.__objcat_name = "factory_with_config"
 
     def _obj_cache_reset(self):

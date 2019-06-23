@@ -33,9 +33,6 @@ class BCDB(j.application.JSBaseClass):
             if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
                 raise RuntimeError("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
 
-        self._schema_md5_to_model = {}
-        self._schema_sid_to_md5 = {}
-
         self.name = name
         self._sqlclient = None
         self.dataprocessor_greenlet = None
@@ -48,6 +45,7 @@ class BCDB(j.application.JSBaseClass):
         self._init_(reset=reset, stop=False)
 
         self._need_to_reset = reset
+        assert self.name
         j.data.bcdb._bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
@@ -284,50 +282,10 @@ class BCDB(j.application.JSBaseClass):
         for key in j.core.db.keys("bcdb:%s:*" % self.name):
             j.core.db.delete(key)
 
-    # def _hset_index_key_get(self, schema, returndata=False):
-    #     if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-    #         raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
-    #
-    #     key = [self.name, schema.url]
-    #     r = j.clients.credis_core.get("bcdb:schema:instances")
-    #     if r is None:
-    #         data = {}
-    #         data["lastid"] = 0
-    #     else:
-    #         data = j.data.serializers.json.loads(r)
-    #     if self.name not in data:
-    #         data[self.name] = {}
-    #     if schema.url not in data[self.name]:
-    #         data["lastid"] = data["lastid"] + 1
-    #         data[self.name][schema.url] = data["lastid"]
-    #
-    #         bindata = j.data.serializers.json.dumps(data)
-    #         j.clients.credis_core.set("bcdb:schema:instances", bindata)
-    #     if returndata:
-    #         return data
-    #     else:
-    #         return b"bcdb:%s:index:%s" % (self.name, str(data[self.name][schema.url]).encode())
-    #
-    # def _hset_index_key_delete(self):
-    #     r = j.clients.credis_core.get("bcdb:schema:instances")
-    #     if r is None:
-    #         return
-    #     data = j.data.serializers.json.loads(r)
-    #     if self.name in data:
-    #         for url, key_id in data[self.name].items():
-    #             tofind = b"bcdb:index:" + str(key_id).encode() + b":*"
-    #             for key in j.clients.credis_core.keys(tofind):
-    #                 print("HKEY DELETE:%s" % key)
-    #                 j.clients.credis_core.delete(key)
-
     def _reset(self):
 
         if self.storclient:
             self.storclient.flush(meta=self.meta)  # new flush command
-
-        # THINK NOT NEEDED BECAUSE THE REDIS RESET REMOVES ALL
-        # for key, m in self.models.items():
-        #     m.destroy()
 
         self._redis_reset()
         self.meta.reset()
@@ -351,62 +309,29 @@ class BCDB(j.application.JSBaseClass):
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX")
         self.meta.reset()
-        for o in self.meta.data.schemas:
-            try:
-                model = self.model_get_from_sid(o.sid)
-                model.index_rebuild()
-                self.meta._schema_set(model.schema)
-            except:
-                pass
+        for m in self.models:
+            m.index_rebuild()
 
-    # def cache_flush(self):
-    #     # put all caches on zero
-    #     for model in self.models.values():
-    #         if model.cache_expiration > 0:
-    #             model.obj_cache = {}
-    #         else:
-    #             model.obj_cache = None
-    #         model._init()
-
-    # def _schema_get_sid(self, sid):
-    #     for s in self.meta.data.schemas:
-    #         if s.sid == sid:
-    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
-    #             assert s2.url == s.url
-    #             assert s2._md5 == s.md5
-    #             return s2
-    #
-    # def _schema_get_md5(self, md5):
-    #     for s in self.meta.data.schemas:
-    #         if s.md5 == md5:
-    #             s2 = j.data.schema.get_from_text(schema_text=s.text)
-    #             assert s2._md5 == s.md5
-    #             return s2
+    @property
+    def models(self):
+        for key, model in self._meta._sid_to_model.items():
+            yield model
 
     def model_get_from_sid(self, sid):
         md5 = None
-        if sid in self._schema_sid_to_md5:
-            md5 = self._schema_sid_to_md5[sid]
-            if md5 in self._schema_md5_to_model:
-                return self._schema_md5_to_model[md5]
+        if sid in self._meta._sid_to_model:
+            return self._meta._sid_to_model[sid]
         else:
-            raise RuntimeError("did not find schema with sid:'%s' in mem, was metadata loaded?" % sid)
+            raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
 
-        if md5 in j.data.schema.md5_to_schema:
-            s = j.data.schema.md5_to_schema[md5]
-        else:
-            raise RuntimeError("could not find schema:%s in schema factory" % md5)
-
-        return self.model_get_from_schema(s)
-
-    def model_get_from_url(self, url):
-        """
-        will return the latest model found based on url
-        :param url:
-        :return:
-        """
-        s = j.data.schema.get_from_url_latest(url=url)
-        return self.model_get_from_schema(s)
+    # def model_get_from_url(self, url):
+    #     """
+    #     will return the latest model found based on url
+    #     :param url:
+    #     :return:
+    #     """
+    #     s = j.data.schema.get_from_url_latest(url=url)
+    #     return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -416,18 +341,15 @@ class BCDB(j.application.JSBaseClass):
         """
         if not isinstance(model, j.data.bcdb._BCDBModelClass):
             raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
-
+        assert model.sid
         self._schema_property_add_if_needed(model.schema)
-        self._schema_md5_to_model[model.schema._md5] = model
-        self.models[model.schema.url] = model
-        # self._schema_url_to_model[model.schema.url] = model
+        self._schema_add(model.schema)  # do not forget to add the schema
+        self._meta._sid_to_model[model.sid] = model
         return model
 
     def _schema_add(self, schema):
-        self.meta._schema_set(schema)  # make sure we remember schema
-        assert schema.sid != None
-        assert schema.sid > 0
-        return schema
+        sid = self.meta._schema_set(schema)  # make sure we remember schema
+        return sid
 
     def _schema_property_add_if_needed(self, schema):
         """
@@ -441,16 +363,16 @@ class BCDB(j.application.JSBaseClass):
             if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
                 # now we know that there is a subtype, we need to store it in the bcdb as well
                 s = prop.jumpscaletype.SUBTYPE._schema
-                s = self.meta._schema_set(s)
+                s = self._schema_add(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
             elif prop.jumpscaletype.NAME == "jsobject":
                 s = prop.jumpscaletype._schema
-                s = self.meta._schema_set(s)
+                s = self._schema_add(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
 
-    def model_get_from_schema(self, schema, dest="", namespaceid=1):
+    def model_get_from_schema(self, schema, sid=None):
         """
         :param schema: is schema as text or as schema obj
         :param reload: will reload template
@@ -468,15 +390,19 @@ class BCDB(j.application.JSBaseClass):
                 raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
 
-        if schema._md5 in self._schema_md5_to_model:
-            return self._schema_md5_to_model[schema._md5]
+        if not sid:
+            if schema._md5 in self._meta._schema_md5_to_sid:
+                sid = self._meta._schema_md5_to_sid[schema._md5]
+                # means we already know the schema
+            else:
+                sid = self._schema_add(schema)  # this will make sure the schema is registered on the metadata level
 
-        schema = self._schema_add(schema)
+        if sid in self._meta._sid_to_model:
+            return self._meta._sid_to_model[sid]
 
+        # model not known yet need to create
         self._log_info("load model:%s" % schema.url)
-
-        model = BCDBModel(bcdb=self, schema=schema)
-
+        model = BCDBModel(bcdb=self, schema=schema, sid=sid)
         return self.model_add(model)
 
     def _BCDBModelIndexClass_generate(self, schema):
@@ -508,7 +434,7 @@ class BCDB(j.application.JSBaseClass):
 
         return self._index_schema_class_cache[schema.key]
 
-    def model_get_from_file(self, path, namespaceid=1):
+    def model_get_from_file(self, path):
         """
         add model to BCDB
         is path to python file which represents the model
@@ -517,7 +443,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
-        model = cl(namespaceid=namespaceid)
+        model = cl()
         return self.model_add(model)
 
     def models_add(self, path, overwrite=True):
@@ -586,9 +512,6 @@ class BCDB(j.application.JSBaseClass):
 
         if len(res) == 3:
             raise RuntimeError()
-            schema_id, acl_id, bdata_encrypted = res
-            nid = 1
-            model = self.model_get_from_sid(schema_id)
         elif len(res) == 4:
             nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)
@@ -603,8 +526,9 @@ class BCDB(j.application.JSBaseClass):
             try:
                 obj = model.schema.get(serializeddata=bdata, model=model)
             except Exception as e:
-                j.shell()
-                raise RuntimeError("can't get a model from data:%s\n%s" % (bdata, e))
+                msg = "can't get a model from data:%s\n%s" % (bdata, e)
+                print(msg)
+                raise RuntimeError(msg)
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id

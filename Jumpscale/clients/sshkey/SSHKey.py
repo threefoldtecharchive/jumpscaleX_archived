@@ -71,7 +71,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         if not j.sal.fs.exists(self.path) or reset:
             cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
-            self._init2()
+            self._init_pre()
 
     def delete(self):
         """

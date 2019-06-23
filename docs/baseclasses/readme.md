@@ -3,6 +3,15 @@
 ## the lowest base class:
 
 - [j.application.JSBaseClass](jsbase.md)
+- [j.application.JSBaseDataObjClass]()          #like JSBase but add management JSXObj to the class
+
+Each class needs to inherrit of one of those, with JSX data object use the JSBaseDataObjClass otherwise JSBaseClass
+
+## how to be factory
+
+- JSBaseFactory                                 #use for when at j... factory level, is when you need e.g. test features
+
+use this when you create children
 
 ## the more advances ones:
 

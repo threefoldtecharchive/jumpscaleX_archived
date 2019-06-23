@@ -101,7 +101,7 @@ def sort_members_key(name):
         return 0
 
 
-def filter_completions_on_prefix(completions, prefix=""):
+def filter_completions_on_prefix(completions, filter=None):
     for completion in completions:
         text = completion.text
         if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
@@ -153,8 +153,8 @@ def get_completions(self, document, complete_event):
         if hasattr(obj.__class__, "_methods_"):
             yield from colored_completions(obj._properties_children(), "ansigreen")
             yield from colored_completions(obj._properties_model(), "ansiyellow")
-            yield from colored_completions(obj._methods(prefix=prefix), "ansiblue")
-            yield from colored_completions(obj._properties(prefix=prefix), "ansigray")
+            yield from colored_completions(obj.__names_methods(prefix=prefix), "ansiblue")
+            yield from colored_completions(obj.__names_properties(prefix=prefix), "ansigray")
             if hasattr(obj.__class__, "_instance_names"):
                 yield from colored_completions(obj._instance_names(prefix=prefix), "ansired")
         else:
