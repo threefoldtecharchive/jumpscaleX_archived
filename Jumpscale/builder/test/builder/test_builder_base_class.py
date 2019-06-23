@@ -16,7 +16,7 @@ class BuilderBaseTest(BaseTest):
         self.builder._done_reset()
         BaseTest.tearDown(self)
 
-    def test_init_before__names_methods(self):
+    def test_init_before_methods(self):
         self.builder.build()
         assert hasattr(self.builder, "variable")
         assert self.builder.variable == "value"

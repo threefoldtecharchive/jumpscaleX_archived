@@ -37,7 +37,7 @@ def timestamp_to_datetime(timestamp):
     return parser.parse(timestamp).replace(tzinfo=None)
 
 
-def has__names_properties(cls, property, child_properties):
+def has_properties(cls, property, child_properties):
     for child_prop in child_properties:
         if getattr(property, child_prop, None) is None:
             return False
