@@ -6,7 +6,7 @@ class SerializerJSXDataObj(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 
-    def dumps(self, obj, model=None, test=False):
+    def dumps(self, obj, model=None, test=True):
         """
         obj is the dataobj for JSX
 
@@ -30,12 +30,16 @@ class SerializerJSXDataObj(SerializerBase):
             assert not hasattr(obj, "sid") or obj.sid == 0  # when model not specified then sid should be 0
             version = 1
             data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(obj._schema._md5)) + data
-            j.core.db.hset("debug1", obj._schema._md5, "%s:%s:%s" % (obj.id, "", obj._schema.url))
+            j.core.db.hset(
+                "debug1", obj._schema._md5, "%s:%s:%s" % (obj.id, obj._schema._md5, obj._schema.url)
+            )  # DEBUG
         else:
             version = 10
             j.shell()
-            data2 = version.to_bytes(2, "little") + version.to_bytes(obj._schema.sid, "little") + data
-            j.core.db.hset("debug3", obj.model.sid, "%s:%s:%s" % (obj.id, obj._schema._md5, obj._schema.url))
+            assert isinstance(obj._schema, int)
+            assert obj._schema > 0
+            data2 = version.to_bytes(2, "little") + obj._schema.sid.to_bytes(2, "little") + data
+            j.core.db.hset("debug10", obj._schema.sid, "%s:%s:%s" % (obj.id, obj._schema.sid, obj._schema.url))  # DEBUG
 
         if test:
             # if not md5 in j.data.schema.md5_to_schema:

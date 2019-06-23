@@ -1,10 +1,10 @@
 from Jumpscale import j
-from Jumpscale.data.schema._JSXObjectClass import JSXObject
+
 from capnp import KjException
 
-class ModelOBJ(JSXObject):
+class ModelOBJ(j.data.schema._JSXObjectClass):
 
-    __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
+    __slots__ = ["id","_schema","_model","_autosave","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
                         {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
@@ -110,12 +110,12 @@ class ModelOBJ(JSXObject):
         {% for prop in obj.properties %}
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            tt =  {{prop.js_typelocation}}
-            try:
-                data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
-            except:
-                v=self._changed_items["{{prop.name}}"]
-                j.shell()
+            {% if prop.has_jsxobject %}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"],model=self._model)
+            {% else %}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            {% endif %}
+
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 
