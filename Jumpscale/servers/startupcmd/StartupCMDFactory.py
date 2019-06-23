@@ -21,7 +21,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
         :return:
         """
 
-        def mc():
+        def http_background():
             startup_cmd = self.httpbackground
             startup_cmd.executor = "background"
             startup_cmd.ports = 8000
@@ -84,9 +84,19 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             self.http.stop()
             self.http.delete()
 
-        mc()
+        def tmux_background():
+            startup_cmd = self.tmuxserver
+            startup_cmd.executor = "background"
+            startup_cmd.cmd_start = "tmux -f /sandbox/cfg/.tmux.conf new -s main"
+            startup_cmd.process_strings_regex = "^tmux -f /sandbox/cfg/.tmux.conf"
+            startup_cmd.timeout = 4
+            startup_cmd.start()
+            assert startup_cmd.is_running() == True
+
+        # tmux_background()
+        http_background()
         # http_tmux()
         # http_back()
         # http_corex()
 
-        self.http.delete()
+        # self.http.delete()
