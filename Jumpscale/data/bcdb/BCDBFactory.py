@@ -23,6 +23,10 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
 
+        self._load()
+
+    def _load(self):
+
         self._config_data_path = j.core.tools.text_replace("{DIR_CFG}/bcdb_config")
         if j.sal.fs.exists(self._config_data_path):
             data_encrypted = j.sal.fs.readFile(self._config_data_path, binary=True)
@@ -167,26 +171,28 @@ class BCDBFactory(j.application.JSBaseClass):
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
         data = {}
-        if not name in self._config:
-            if storclient:
-                if storclient.type == "RDB":
-                    data["nsname"] = storclient.nsname
-                    data["type"] = "rdb"
-                    data["redisconfig_name"] = storclient._redis.redisconfig_name
-                else:
-                    data["nsname"] = storclient.nsname
-                    data["admin"] = storclient.admin
-                    data["addr"] = storclient.addr
-                    data["port"] = storclient.port
-                    data["mode"] = storclient.mode
-                    data["secret"] = storclient.secret
-                    data["type"] = "zdb"
-            else:
-                data["nsname"] = name
-                data["type"] = "sqlite"
 
-            self._config[name] = data
-            self._config_write()
+        if storclient:
+            if storclient.type == "RDB":
+                data["nsname"] = storclient.nsname
+                data["type"] = "rdb"
+                data["redisconfig_name"] = storclient._redis.redisconfig_name
+            else:
+                data["nsname"] = storclient.nsname
+                data["admin"] = storclient.admin
+                data["addr"] = storclient.addr
+                data["port"] = storclient.port
+                data["mode"] = storclient.mode
+                data["secret"] = storclient.secret
+                data["type"] = "zdb"
+        else:
+            data["nsname"] = name
+            data["type"] = "sqlite"
+
+        self._config[name] = data
+
+        self._config_write()
+        self._load()
 
         return self.get(name=name)
 
