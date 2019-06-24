@@ -2122,7 +2122,6 @@ class MyEnv:
         """
         if interactive not in [True, False]:
             raise RuntimeError("interactive is True or False")
-        # MyEnv.interactive = interactive
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -2136,9 +2135,6 @@ class MyEnv:
 
         if readonly is None and "readonly" in args:
             readonly = True
-
-        # if interactive and "no_interactive" in args:
-        #     interactive = False
 
         if sshagent_use is None or ("no_sshagent" in args and sshagent_use is False):
             sshagent_use = False
@@ -2202,6 +2198,7 @@ class MyEnv:
         # enforce interactive flag consistency after having read the config file,
         # arguments overrides config file behaviour
         MyEnv.config["INTERACTIVE"] = MyEnv.interactive
+        
         if not "DIR_TEMP" in MyEnv.config:
             config.update(MyEnv.config)
             MyEnv.config = MyEnv.config_default_get(config=config)
