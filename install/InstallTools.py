@@ -3473,7 +3473,9 @@ class DockerContainer:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P {} -o StrictHostKeyChecking=no \
                     -o UserKnownHostsFile=/dev/null \
-                    -r {} root@localhost:/tmp/".format(self.config.sshport, src1)
+                    -r {} root@localhost:/tmp/".format(
+                    self.config.sshport, src1
+                )
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
