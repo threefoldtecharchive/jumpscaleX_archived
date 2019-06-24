@@ -2122,7 +2122,7 @@ class MyEnv:
         """
         if interactive not in [True, False]:
             raise RuntimeError("interactive is True or False")
-        MyEnv.interactive = interactive
+        # MyEnv.interactive = interactive
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -2137,8 +2137,9 @@ class MyEnv:
         if readonly is None and "readonly" in args:
             readonly = True
 
-        if interactive and "no_interactive" in args:
-            interactive = False
+        # if interactive and "no_interactive" in args:
+        #     interactive = False
+
         if sshagent_use is None or ("no_sshagent" in args and sshagent_use is False):
             sshagent_use = False
         else:
@@ -2196,14 +2197,18 @@ class MyEnv:
         else:
             MyEnv._config_load()
 
+        # merge interactive flags 
+        MyEnv.interactive = interactive and MyEnv.config["INTERACTIVE"]
+        # enforce interactive flag consistency after having read the config file,
+        # arguments overrides config file behaviour
+        MyEnv.config["INTERACTIVE"] = MyEnv.interactive
         if not "DIR_TEMP" in MyEnv.config:
             config.update(MyEnv.config)
             MyEnv.config = MyEnv.config_default_get(config=config)
 
         if readonly:
             MyEnv.config["READONLY"] = readonly
-        if interactive:
-            MyEnv.config["INTERACTIVE"] = interactive
+
         if sshagent_use:
             MyEnv.config["SSH_AGENT"] = sshagent_use
         if sshkey:
@@ -2214,7 +2219,7 @@ class MyEnv:
         for key, val in config.items():
             MyEnv.config[key] = val
 
-        if not sshagent_use and interactive:  # just a warning when interactive
+        if not sshagent_use and MyEnv.interactive:  # just a warning when interactive
             T = """
             Is it ok to continue without SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
@@ -2224,7 +2229,7 @@ class MyEnv:
 
             """
             print(Tools.text_strip(T))
-            if interactive:
+            if MyEnv.interactive:
                 if not Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
 
@@ -2237,7 +2242,7 @@ class MyEnv:
         else:
             if secret is None:
                 if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    if interactive:
+                    if MyEnv.interactive:
                         while not secret:  # keep asking till the secret is not empty
                             secret = Tools.ask_password("provide secret to use for encrypting private key")
                     else:
