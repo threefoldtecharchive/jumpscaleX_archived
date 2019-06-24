@@ -1,4 +1,5 @@
 from Jumpscale import j
+from .BCDBModel import BCDBModel
 
 JSBASE = j.application.JSBaseClass
 
@@ -115,7 +116,9 @@ class BCDBVFS(j.application.JSBaseClass):
                     # third element must be the in the list e.g. /data/5/sid
                     key = "data_%s_sid" % (nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb._schema_sid_to_md5.keys())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(
+                            self, items=self._bcdb.meta._schema_md5_to_sid.values()
+                        )
                 else:
                     try:
                         sid = int(splitted[3])
@@ -140,25 +143,25 @@ class BCDBVFS(j.application.JSBaseClass):
                             )
                         key = "data_%s_sid_%s_%s" % (nid, sid, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=self._bcdb.model_get_from_sid(sid).iterate(nid)(id)
-                            )
+                            self._dirs_cache[key] = BCDBVFS_Data(self, item=self._bcdb.model_get_from_sid(sid).get(id))
             elif splitted[2] == "hash":
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/hash
                     key = "data_%s_hash" % (nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb._schema_sid_to_md5.values())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.values())
                 else:
                     hsh = splitted[3]
+                    schema = j.data.schema.get_from_md5(hsh)
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/hash/ec541123d21b
                         # we should get all the object under the namespace id
                         key = "data_%s_hash_%s" % (nid, hsh)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
+
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                                self, items=self._bcdb.model_get_from_schema(schema).iterate(nid)
                             )
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
@@ -171,7 +174,7 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "data_%s_hash_%s_%s" % (nid, hsh, id)
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=self._bcdb.model_get_from_md5(hsh).iterate(nid)(id)
+                                self, item=self._bcdb.model_get_from_schema(schema).get(id)
                             )
             else:  # URL
                 if path_length == 3:
@@ -187,7 +190,6 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "data_%s_url_%s" % (nid, url)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            j.shell()
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
                                 self, items=self._bcdb.model_get_from_url(url).iterate(nid)
                             )
@@ -202,7 +204,7 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "data_%s_url_%s_%s" % (nid, url, id)
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=(self._bcdb.model_get_from_url(url).iterate(nid))(id)
+                                self, item=(self._bcdb.model_get_from_url(url).get(id))
                             )
         else:
             raise RuntimeError("path:%s too long " % (path))
@@ -262,7 +264,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     ## directory listing
                     key = "schemas_sid"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb._schema_sid_to_md5.keys())
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_md5_to_sid.values())
                 else:
                     try:
                         sid = int(splitted[3])
@@ -276,7 +278,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     ## directory listing
                     key = "schemas_hash"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.data.schema.url_to_md5.values())
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_md5_to_sid.keys())
                 else:
                     hsh = splitted[3]
                     key = "schemas_hash_%s" % (hsh)
@@ -287,7 +289,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     ## directory listing
                     key = "schemas_url"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.data.schema.url_to_md5.keys())
+                        res = BCDBVFS_Schema_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
                     url = splitted[3]
                     key = "schemas_url_%s" % (url)
@@ -320,18 +322,32 @@ class BCDBVFS(j.application.JSBaseClass):
     def len(self):
         return 1
 
+    def _get_serialized_obj(self, obj):
+        if isinstance(obj, j.data.schema._JSXObjectClass):
+            # TODO test with other serializers
+            if isinstance(self.serializer, type(j.data.serializers.json)):
+                return obj._json
+            else:
+                return self.serializer.dumps(obj._json)
+        else:
+            # here should be standard types
+            if isinstance(obj, str):
+                return obj
+            else:
+                return self.serializer.dumps(obj)
+
+    def _get_serialized_list(self, items):
+        for o in items:
+            yield self._get_serialized_obj(o)
+
 
 class BCDBVFS_Data_Dir:
     def __init__(self, vfs, items=[]):
         self.vfs = vfs
-
-        if type(items) is type({}.keys()) or type(items) is type({}.values()):
-            self.items = list(items)
-        else:
-            self.items = items
+        self.items = items
 
     def list(self):
-        return self.vfs.serializer.dumps(self.items)
+        return self.vfs._get_serialized_list(self.items)
 
     def get(self):
         return self
@@ -344,16 +360,13 @@ class BCDBVFS_Data_Dir:
 
 
 class BCDBVFS_Schema_Dir:
-    def __init__(self, vfs, items=[]):
+    def __init__(self, vfs, items=[], model=None):
         # we need to know if we are looking for a directory or a file
         self.vfs = vfs
-        if type(items) is type({}.keys()) or type(items) is type({}.values()):
-            self.items = list(items)
-        else:
-            self.items = items
+        self.items = items
 
     def list(self):
-        return self.vfs.serializer.dumps(self.items)
+        return self.vfs._get_serialized_list(self.items)
 
     def get(self):
         return self
@@ -374,7 +387,7 @@ class BCDBVFS_Schema:
         raise RuntimeError("Can't list on a schema")
 
     def get(self):
-        return self.vfs.serializer.dumps(self.schema)
+        return self.vfs._get_serialized_obj(self.schema)
 
     def set(self, schema):
         self.schema = self.vfs.serializer.loads(schema)
@@ -396,7 +409,7 @@ class BCDBVFS_Data:
         raise RuntimeError("Can't list on one data")
 
     def get(self):
-        return self.vfs.serializer.dumps(self.item)
+        return self.vfs._get_serialized_obj(self.item)
 
     def set(self, item):
         self.item = self.vfs.serializer.loads(item)

@@ -37,15 +37,19 @@ def main(self):
     assert len(m.find()) == 10
     r = m.get_by_name("myuser_8")
     assert r[0].addr == "something:8"
+
     vfs = j.data.bcdb._get_vfs("test")
 
     with test_case.assertRaises(Exception):
         r = vfs.get("test/schema/md5")
+        r = vfs.get("schemas/1")
         r = vfs.get("test/schema/sid/5/78")
         r = vfs.get("test/data/md5")
         r = vfs.get("test/data/2/md6")
+
     r = vfs.get("test/data/1")
-    identifier_folders = vfs.serializer.loads(r.list())
+    identifier_folders = [i for i in r.list()]
+    print(identifier_folders)
     assert (
         len(identifier_folders) == 3
         and "sid" in identifier_folders
@@ -53,7 +57,8 @@ def main(self):
         and "hash" in identifier_folders
     )
     r = vfs.get("data/1/url")
-    urls = vfs.serializer.loads(r.list())
+    urls = [i for i in r.list()]
+    print(urls)
     assert (
         len(urls) == 9
         and "jumpscale.bcdb.circle.2" in urls
@@ -61,8 +66,40 @@ def main(self):
         and "threefoldtoken.wallet.test" in urls
     )
     r = vfs.get("/data/1/url/threefoldtoken.wallet.test/")
-    urls = vfs.serializer.loads(r.list())
-    assert len(r.list()) == 10
-    print(r)
+
+    objs = [i for i in r.list()]
+    print(objs)
+    assert len(objs) == 10
+    for o in objs:
+        obj = j.data.serializers.json.loads(o)
+        if obj["addr"] == "something:5":
+            assert obj["name"] == "myuser_5"
+
+    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/12")
+
+    obj = j.data.serializers.json.loads(r.get())
+
+    assert obj["id"] == 12
+    assert obj["addr"] == "something:2"
+    assert obj["name"] == "myuser_2"
+    self._log_info("TEST GET DATA DONE")
+
+    # schema path
+    r = vfs.get("schemas/sid/")
+    r2 = vfs.get("schemas/hash/")
+    r3 = vfs.get("schemas/url/")
+    schemas = [i for i in r.list()]
+    schemas2 = [i for i in r2.list()]
+    schemas3 = [i for i in r3.list()]
+    print(schemas)
+    assert len(schemas) == schemas2 == schemas3 == 7
+    r = vfs.get("schemas/url/threefoldtoken.wallet.test")
+    schema = r.get()
+    print(schema)
+    assert len(schemas) == 7
+
+    self._log_info("TEST GET SCHEMA DONE")
+    self._log_info("TODO TEST SET DELETE DATA DONE")
+    self._log_info("TODO TEST SET DELETE SCHEMA DONE")
     self._log_info("TEST DONE")
     return "OK"
