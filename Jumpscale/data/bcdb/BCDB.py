@@ -7,7 +7,7 @@ from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
 from .BCDBDecorator import *
-from .RedisServer import RedisServer
+from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys

@@ -92,12 +92,14 @@ def main(self):
     schemas2 = [i for i in r2.list()]
     schemas3 = [i for i in r3.list()]
     print(schemas)
-    assert len(schemas) == schemas2 == schemas3 == 7
+    print(schemas2)
+    print(schemas3)
+    assert len(schemas) == len(schemas2) == 7
+    assert len(schemas3) == 9  # multiple url link to the same schema id ?
     r = vfs.get("schemas/url/threefoldtoken.wallet.test")
     schema = r.get()
     print(schema)
-    assert len(schemas) == 7
-
+    obj = j.data.serializers.json.loads(schema)
     self._log_info("TEST GET SCHEMA DONE")
     self._log_info("TODO TEST SET DELETE DATA DONE")
     self._log_info("TODO TEST SET DELETE SCHEMA DONE")

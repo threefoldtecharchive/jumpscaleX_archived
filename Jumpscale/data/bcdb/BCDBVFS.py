@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .BCDBModel import BCDBModel
+from .BCDBMeta import BCDBMeta
 
 JSBASE = j.application.JSBaseClass
 
@@ -92,6 +93,7 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def get(self, path):
         splitted = self._split_clean_path(path)
+
         if len(splitted) >= 1:
             key = None
             if splitted[0] == "data":
@@ -292,10 +294,11 @@ class BCDBVFS(j.application.JSBaseClass):
                     if not key in self._dirs_cache:
                         res = BCDBVFS_Schema_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
-                    url = splitted[3]
+                    url = splitted[2]
                     key = "schemas_url_%s" % (url)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema(self, schema=j.data.schema.get_from_url_latest(url))
+                        s = j.data.schema.get_from_url_latest(url)
+                        res = BCDBVFS_Schema(self, schema=s)
             else:
                 raise RuntimeError(
                     "Second element:%s of path:%s should be either sid hash or url" % (splitted[2], path)
@@ -324,12 +327,18 @@ class BCDBVFS(j.application.JSBaseClass):
         return 1
 
     def _get_serialized_obj(self, obj):
+
         if isinstance(obj, j.data.schema._JSXObjectClass):
             # TODO test with other serializers
             if isinstance(self.serializer, type(j.data.serializers.json)):
                 return obj._json
             else:
                 return self.serializer.dumps(obj._json)
+        # elif isinstance(obj, BCDBMeta):
+        elif isinstance(obj, j.data.schema.SCHEMA_CLASS):
+            print("TODO DO a _json or find @@@@@@@@@@@@@@@@@@@@@@@@:%s" % type(obj))
+
+            return obj._json
         else:
             # here should be standard types
             if isinstance(obj, str):
