@@ -296,13 +296,13 @@ class Schema(j.application.JSBaseClass):
 
         return self._obj_class
 
-    def get(self, capnpdata=None, serializeddata=None, dictdata=None, model=None):
+    def get(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
         get schema_object using data and capnpbin
 
         :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
         :param capnpdata is data in capnpdata
-        :param dictdata is dict of arguments
+        :param datadict is dict of arguments
 
         :param model: will make sure we save in the model
         :return:
@@ -312,10 +312,10 @@ class Schema(j.application.JSBaseClass):
         elif isinstance(capnpdata, bytes):
             obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
             return obj
-        elif dictdata:
-            obj = self.objclass(schema=self, dictdata=dictdata, model=model)
+        elif datadict:
+            obj = self.objclass(schema=self, datadict=datadict, model=model)
             return obj
-        elif capnpdata is None and serializeddata is None and dictdata == None:
+        elif capnpdata is None and serializeddata is None and datadict == None:
             return self.objclass(schema=self, model=model)
         else:
             raise RuntimeError("only support binary data or dict as kwargs")
@@ -327,7 +327,7 @@ class Schema(j.application.JSBaseClass):
         if isinstance(data, bytes):
             raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
         if data and isinstance(data, dict):
-            r = self.get(model=model, dictdata=data)
+            r = self.get(model=model, datadict=data)
         else:
             r = self.get(model=model)
         if model is not None:

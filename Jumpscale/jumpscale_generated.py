@@ -1143,7 +1143,6 @@ class group_data(JSGroup):
     def __init__(self):
 
         self._nltk = None
-        self._corex_process = None
         self._encryption = None
         self._cachelru = None
         self._inifile = None
@@ -1176,14 +1175,6 @@ class group_data(JSGroup):
 
             self._nltk = NLTKFactory()
         return self._nltk
-
-    @property
-    def corex_process(self):
-        if self._corex_process is None:
-            from Jumpscale.clients.corex.CoreXProcess import CoreXProcessFactory
-
-            self._corex_process = CoreXProcessFactory()
-        return self._corex_process
 
     @property
     def encryption(self):

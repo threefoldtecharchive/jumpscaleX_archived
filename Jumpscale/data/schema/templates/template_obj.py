@@ -154,7 +154,7 @@ class ModelOBJ(j.data.schema._JSXObjectClass):
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
-            d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+            d["{{prop.name}}"] = self.{{prop.name}}._datadict
         else:
             d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}

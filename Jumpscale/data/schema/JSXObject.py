@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class JSXObject(j.application.JSBaseClass):
-    def __init__(self, capnpdata=None, dictdata={}, schema=None, model=None):
+    def __init__(self, capnpdata=None, datadict={}, schema=None, model=None):
 
         self._cobj_ = None
         self.id = None
@@ -14,8 +14,8 @@ class JSXObject(j.application.JSBaseClass):
         self._acl = None
 
         self._load_from_data(capnpdata=capnpdata)
-        if dictdata:
-            self._data_update(dictdata)
+        if datadict:
+            self._data_update(datadict)
 
         j.application.JSBaseClass.__init__(self)
 
@@ -30,7 +30,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def _data_update(self, data):
         if not isinstance(data, dict):
-            raise RuntimeError("need to be dict")
+            raise RuntimeError("need to be dict, was:\n%s" % data)
         if self._model is not None:
             data = self._model._dict_process_in(data)
         for key, val in data.items():

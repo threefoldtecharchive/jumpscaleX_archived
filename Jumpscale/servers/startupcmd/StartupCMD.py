@@ -9,7 +9,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         @url = jumpscale.startupcmd.1
         name* = ""
         cmd_start = ""
-        interpreter = "bash,jumpscale,direct" (E)  #direct means we will not put in bash script
+        interpreter = "bash,jumpscale,direct,python" (E)  #direct means we will not put in bash script
         cmd_stop = ""
         debug = False (b)
         path = ""
@@ -437,12 +437,12 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {{cmd}}
 
             """
-        elif self.interpreter == "direct":
+        elif self.interpreter in ["direct", "python"]:
             C = self.cmd_start
-        else:
+        elif self.interpreter == "jumpscale":
             C = """
             from Jumpscale import j
-            {% if cmdpath != None %}
+            {% if cmdpath %}
             j.sal.fs.changeDir("{{cmdpath}}")
             {% endif %}
             {{cmd}}
@@ -479,7 +479,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         elif self.interpreter == "bash":
             tpath = self._cmd_path + ".sh"
             toexec = "sh %s" % tpath
-        elif self.interpreter == "jumpscale":
+        elif self.interpreter in ["jumpscale", "python"]:
             tpath = self._cmd_path + ".py"
             # toexec = "python3 %s" % tpath
             if self.debug:
@@ -511,12 +511,14 @@ class StartupCMD(j.application.JSBaseConfigClass):
             self._notify_state("stopped")
         else:
             running = self.wait_running(die=False)
+            if not self.pid:
+                j.shell()
             assert self.pid
             assert running
             self._notify_state("running")
 
-        if tpath:
-            j.sal.fs.remove(tpath)
+        # if tpath:
+        #     j.sal.fs.remove(tpath)
 
         self.save()
 

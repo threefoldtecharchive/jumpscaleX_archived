@@ -43,7 +43,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         return self._inner_list
 
     @property
-    def _dictdata(self):
+    def _datadict(self):
         res = []
         for item in self._inner_list:
             if isinstance(item, j.data.schema._JSXObjectClass):
