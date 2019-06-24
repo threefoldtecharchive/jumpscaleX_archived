@@ -191,7 +191,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def set(self, response, key, val):
         if key.startswith("schemas"):
-            if key.startswith("schemas:url"):
+            if key.startswith("schemas:url"):  # "/schemas/url vfs.get(path)
                 url = key.split(":")[-1]
                 if not "." in url:
                     response.error("url not properly formatted, needs to be xxx.bbb.aaa")

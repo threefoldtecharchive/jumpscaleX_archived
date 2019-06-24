@@ -61,12 +61,13 @@ class BCDBVFS(j.application.JSBaseClass):
         _first_level_path: all the paths that are right after root
     """
 
-    def __init__(self, inner_bcdb):
+    def __init__(self, inner_bcdb, serialize_format="json"):
         """
         :param bcbd:  the BCDB
         """
         JSBASE.__init__(self)
         self._dirs_cache = {}
+        # todo add more serializers
         self.serializer = j.data.serializers.json
         self._bcdb = inner_bcdb
         self.root_dir = self._bcdb.name
