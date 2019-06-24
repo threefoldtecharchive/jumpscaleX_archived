@@ -484,8 +484,8 @@ class BCDB(j.application.JSBaseClass):
             schema_text = j.sal.fs.readFile(schemapath)
             try:
                 schema = j.data.schema.get_from_text(schema_text)
-                schema = self._schema_add(schema)
-                model = self.model_get_from_schema(schema=schema, dest=dest)
+                self._schema_add(schema)
+                model = self.model_get_from_schema(schema=schema)
                 toml_path = "%s.toml" % (schema.key)
                 if j.sal.fs.getBaseName(schemapath) != toml_path:
                     toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)

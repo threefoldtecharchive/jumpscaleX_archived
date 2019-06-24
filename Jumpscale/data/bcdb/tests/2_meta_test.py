@@ -38,7 +38,9 @@ def main(self):
     sid = bcdb.meta._schema_set(s)
     assert isinstance(sid, int)
 
-    assert len(bcdb.meta._data.schemas) == 8
+    assert (
+        len(bcdb.meta._data.schemas) == 9
+    )  # we have 2 schema added with same url but different params (one with ** and other with *)
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
@@ -63,7 +65,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10
 
     a = model.new()
     a.category = "acat"
@@ -92,7 +94,7 @@ def main(self):
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # should be same because is same schema, should be same md5
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     schema_text = """
@@ -106,7 +108,7 @@ def main(self):
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # acl, user, circle, despiegktest and the 1 new one
 
     a3 = model2.new()
     a3.category = "acat3"
