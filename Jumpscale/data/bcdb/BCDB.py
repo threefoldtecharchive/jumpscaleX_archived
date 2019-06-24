@@ -57,7 +57,6 @@ class BCDB(j.application.JSBaseClass):
         if not path:
             raise RuntimeError("export no path")
 
-        for o in list(self.meta._data.schemas):
             m = self.model_get_from_schema(o.text)
             dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
