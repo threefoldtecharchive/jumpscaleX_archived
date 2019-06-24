@@ -211,4 +211,3 @@ class BuilderHub(j.builders.system._BaseClass):
         assert self.running()
         self.stop()
         print("TEST OK")
-

@@ -510,9 +510,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if self.executor == "foreground":
             self._notify_state("stopped")
         else:
-            running = self.wait_running(die=False)
-            if not self.pid:
-                j.shell()
+            running = self.wait_running(die=True)
             assert self.pid
             assert running
             self._notify_state("running")
