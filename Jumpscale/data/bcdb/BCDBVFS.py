@@ -76,41 +76,40 @@ class BCDBVFS:
             splitted.pop(-1)
         if splitted[0] == self.root_dir:
             splitted.pop(0)
-        if splitted[0] not in self._first_level_path:
+        if splitted[0] not in self.directories_under_root:
             raise RuntimeError(
-                "first element:%s of path:%s should be in:%s" % (splitted[0], path, self._first_level_path)
+                "first element:%s of path:%s should be in:%s" % (splitted[0], path, self.directories_under_root)
             )
         return [w.lower() for w in splitted]
 
     def get(self, path):
         splitted = self._split_clean_path(path)
-        sid = None
-        obj_id = None
-        hsh = None
-        url = None
-        key = None
-        is_dir = None
-        if splitted[0] == "data":
-            key = self._get_data(splitted, path)
-        elif splitted[0] == "schemas":
-            key = self._get_schemas(splitted, path)
-        elif splitted[0] == "info":
-            key = "info"
-            if not key in self._dirs_cache:
-                self._dirs_cache[key] = BCDBVFS_Info(self)
+        if len(splitted) >= 1:
+            key = None
+            if splitted[0] == "data":
+                key = self._get_data(splitted, path)
+            elif splitted[0] == "schemas":
+                key = self._get_schemas(splitted, path)
+            elif splitted[0] == "info":
+                key = "info"
+                if not key in self._dirs_cache:
+                    self._dirs_cache[key] = BCDBVFS_Info(self)
         else:
-            raise RuntimeError("SHOULD NOT HAPPEN")
+            # it means that we are listing the root directory
+            key = "root"
+            if not key in self._dirs_cache:
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=["data", "schemas"])
         return self._dirs_cache[key]
 
     def _get_data_items(self, splitted, nid, path):
-        path_length = len(splitted) 
+        path_length = len(splitted)
         if path_length >= 3 and path_length <= 5:
             if splitted[2] == "sid":
                 if path_length == 3:
-                # third element must be the in the list e.g. /data/5/sid
+                    # third element must be the in the list e.g. /data/5/sid
                     key = "data_%s_sid" % (nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items=self._bcdb._schema_sid_to_md5.keys())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb._schema_sid_to_md5.keys())
                 else:
                     try:
                         sid = int(splitted[3])
@@ -118,80 +117,98 @@ class BCDBVFS:
                         raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))
                     hsh = self._bcdb._schema_sid_to_md5[splitted[3]]
                     if path_length == 4:
-                    # fourth element must be the schema identifier e.g. /data/5/sid/5
-                    # we should get all the object under the namespace id
+                        # fourth element must be the schema identifier e.g. /data/5/sid/5
+                        # we should get all the object under the namespace id
                         key = "data_%s_sid_%s" % (nid, sid)
-                         # if we go through md5 url or sid that will points to the same objects 
+                        # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items= bcdb.model_get_from_md5(hsh).iterate(nid))
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
+                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                            )
                     else:
-                    # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
-                            raise RuntimeError("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
+                            raise RuntimeError(
+                                "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
+                            )
                         key = "data_%s_sid_%s_%s" % (nid, sid, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(self, splitted,item=bcdb.model_get_from_md5(hsh).iterate(nid)(id))
+                            self._dirs_cache[key] = BCDBVFS_Data(
+                                self, item=self._bcdb.model_get_from_md5(hsh).iterate(nid)(id)
+                            )
             elif splitted[2] == "hash":
                 if path_length == 3:
-                # third element must be the in the list e.g. /data/5/hash
+                    # third element must be the in the list e.g. /data/5/hash
                     key = "data_%s_hash" % (nid)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Data_Dir(self, splitted,items=self._bcdb._schema_sid_to_md5.values())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb._schema_sid_to_md5.values())
                 else:
                     hsh = splitted[3]
                     if path_length == 4:
-                    # fourth element must be the schema identifier e.g. /data/5/hash/ec541123d21b
-                    # we should get all the object under the namespace id
+                        # fourth element must be the schema identifier e.g. /data/5/hash/ec541123d21b
+                        # we should get all the object under the namespace id
                         key = "data_%s_hash_%s" % (nid, hsh)
-                         # if we go through md5 url or sid that will points to the same objects 
+                        # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items= bcdb.model_get_from_md5(hsh).iterate(nid))
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
+                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                            )
                     else:
-                    # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
-                            raise RuntimeError("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
+                            raise RuntimeError(
+                                "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
+                            )
                         key = "data_%s_hash_%s_%s" % (nid, hsh, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(self, splitted,item=bcdb.model_get_from_md5(hsh).iterate(nid)(id))
-            else: #URL
+                            self._dirs_cache[key] = BCDBVFS_Data(
+                                self, item=self._bcdb.model_get_from_md5(hsh).iterate(nid)(id)
+                            )
+            else:  # URL
                 if path_length == 3:
-                # third element must be the in the list e.g. /data/5/sid
+                    # third element must be the in the list e.g. /data/5/sid
                     key = "data_%s_url" % (nid)
                     if not key in self._dirs_cache:
-                       self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items=j.data.schema.url_to_md5.keys())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
                     url = splitted[3]
                     hsh = j.data.schema.url_to_md5[url]
                     if path_length == 4:
-                    # fourth element must be the schema identifier e.g. /data/5/url/ben.test.1 
-                    # we should get all the object under the namespace id
+                        # fourth element must be the schema identifier e.g. /data/5/url/ben.test.1
+                        # we should get all the object under the namespace id
                         key = "data_%s_url_%s" % (nid, url)
-                        # if we go through md5 url or sid that will points to the same objects 
+                        # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items= bcdb.model_get_from_md5(hsh).iterate(nid))
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
+                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                            )
                     else:
-                    # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
-                            raise RuntimeError("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
+                            raise RuntimeError(
+                                "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
+                            )
                         key = "data_%s_url_%s_%s" % (nid, url, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(self, splitted,item=(bcdb.model_get_from_md5(hsh).iterate(nid))(id))
+                            self._dirs_cache[key] = BCDBVFS_Data(
+                                self, item=(self._bcdb.model_get_from_md5(hsh).iterate(nid))(id)
+                            )
         else:
             raise RuntimeError("path:%s too long " % (path))
         return key
-            
-    def _get_data(self, splitted):
+
+    def _get_data(self, splitted, path):
         # check if we are only asking for the data directory
         if len(splitted) == 1:
             key = "data"
             if not key in self._dirs_cache:
-                 self._dirs_cache[key] = BCDBVFS_Data_Dir(self, splitted,items=self._bcdb.meta.data.namespaces)
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb.meta.data.namespaces)
         else:
             try:
                 nid = int(splitted[1])
@@ -200,15 +217,18 @@ class BCDBVFS:
             if len(splitted) == 2:
                 # second element must be the nid e.g. /data/5
                 key = "data_%s" % nid
-                if not key in self._dirs_cache: 
-                     self._dirs_cache[key] =  BCDBVFS_Data_Dir(self, splitted,items=self.directories_under_data_namespace)
+                if not key in self._dirs_cache:
+                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self.directories_under_data_namespace)
             else:
                 if splitted[2] not in self.directories_under_data_namespace:
-                    raise RuntimeError("third element:%s of path:%s should be in:%s" % (splitted[2], path, self.directories_under_data_namespace))
+                    raise RuntimeError(
+                        "third element:%s of path:%s should be in:%s"
+                        % (splitted[2], path, self.directories_under_data_namespace)
+                    )
                 key = self._get_data_items(splitted, nid, path)
         return key
-        
-    def _get_schemas(self, splitted):
+
+    def _get_schemas(self, splitted, path):
         """find schema(s) corresponding to the path splitted in list elements
         
         Arguments:
@@ -225,56 +245,57 @@ class BCDBVFS:
         if len(splitted) == 1:
             key = "schemas"
             if not key in self._dirs_cache:
-                res = BCDBVFS_Schema_Dir(self, splitted, items=self.directories_under_schemas)
+                res = BCDBVFS_Schema_Dir(self, items=self.directories_under_schemas)
         else:
             if splitted[1] not in self.directories_under_schemas:
-                    raise RuntimeError("Second element:%s of path:%s should be in:%s" % (splitted[1], path,self.directories_under_schemas))
+                raise RuntimeError(
+                    "Second element:%s of path:%s should be in:%s" % (splitted[1], path, self.directories_under_schemas)
+                )
 
             if splitted[1] == "sid":
                 if len(splitted) == 2:
                     ## directory listing
                     key = "schemas_sid"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, splitted, items=self._bcdb._schema_sid_to_md5.keys())
-                else: 
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb._schema_sid_to_md5.keys())
+                else:
                     try:
                         sid = int(splitted[3])
                         key = "schemas_sid_%s" % (sid)
                         if not key in self._dirs_cache:
-                            res = BCDBVFS_Schema(self, splitted, schema=self._find_schema_by_id(self._bcdb.data.schema, sid))
+                            res = BCDBVFS_Schema(self, schema=self._find_schema_by_id(self._bcdb.data.schema, sid))
                     except:
-                        raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))     
+                        raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))
             elif splitted[1] == "hash":
                 if len(splitted) == 2:
-                     ## directory listing
+                    ## directory listing
                     key = "schemas_hash"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, splitted, items=self._bcdb.data.schema.url_to_md5.values())
-                else: 
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.data.schema.url_to_md5.values())
+                else:
                     hsh = splitted[3]
                     key = "schemas_hash_%s" % (hsh)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema(self, splitted, schema=j.data.schema.get_from_md5(hsh))
+                        res = BCDBVFS_Schema(self, schema=j.data.schema.get_from_md5(hsh))
             elif splitted[1] == "url":
                 if len(splitted) == 2:
                     ## directory listing
                     key = "schemas_url"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, splitted, items=self._bcdb.data.schema.url_to_md5.keys())
-                else: 
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.data.schema.url_to_md5.keys())
+                else:
                     url = splitted[3]
                     key = "schemas_url_%s" % (url)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema(self, splitted, schema=j.data.schema.get_from_url_latest(url))
+                        res = BCDBVFS_Schema(self, schema=j.data.schema.get_from_url_latest(url))
             else:
                 raise RuntimeError(
                     "Second element:%s of path:%s should be either sid hash or url" % (splitted[2], path)
                 )
         if res is not None:
-            self._dirs_cache[key] = res   
+            self._dirs_cache[key] = res
         return key
 
-     
     def _find_schema_by_id(self, schemas, sid):
         # TODO OPTIMIZE OR FIND ANOTHER WAY
         for s in schemas:
@@ -283,18 +304,7 @@ class BCDBVFS:
         return None
 
     def list(self, path):
-        d = self._dir_get(path)
-        bname = j.sal.fs.getBasename(path)
-        return d.list(bname)
-        pass
-
-    def get(self, path):
-        # here we should check if we are list the root directory or not
-        d = self._dir_get(path)
-        bname = j.sal.fs.getBasename(path)
-        res = d.get(bname)
-        res2 = self.serializer.dumps(res)
-        return res2
+        self.get(path).list()
 
     def set(self, path):
         pass
@@ -307,43 +317,15 @@ class BCDBVFS:
 
 
 class BCDBVFS_Data_Dir:
-    def __init__(self, vfs,  path_elements,  nid=None):
+    def __init__(self, vfs, items=[]):
         self.vfs = vfs
-        self.nid = nid
-        self.path_elements = path_elements
-        self.elements = None
+        self.items = items
 
     def list(self):
-        if self.elements is None:
-            return self.vfs.serializer.dumps(self.elements)
-        #could be a list of namespaces / si / hash or urls 
-        path_length = len(self.path_elements)
-        if path_length == 1:
-            # /data directory we should return all the namespaces 
-            self.elements = self.vfs._bcdb.meta.data.namespaces
-        elif path_length ==2:
-            # /data/$nid we should return all the directories_under_data_namespace
-            self.elements = self.directories_under_data_namespace
-        elif path_length == 3:
-            # /data/$nid/sid or /data/$nid/hash or /data/$nid/url
-            self.elements = self._get_identifiers_by_type(self.path_elements[2])
-        else: 
-            # /data/$nid/sid/1/ or /data/$nid/hash/ce4564ed4 or /data/$nid/url/ben.test.1
-            self.elements = self._get_objects_from_identifier(self.nid, self.path_elements[2], self.path_elements[3])   
-        return self.vfs.serializer.dumps(self.elements)
-
-    def _get_objects_from_identifier(self,nid, identifier_type, id):
-        if identifier_type == "sid":
-            return self.vfs._bcdb.model_get_from_sid(id).iterate(nid)
-        elif identifier_type == "hash":
-            return self.vfs._bcdb.model_get_from_md5(id).iterate(nid)
-        else: #url
-            return self.vfs._bcdb.model_get_from_url(id).iterate(nid)
- 
-
+        return self.vfs.serializer.dumps(self.items)
 
     def get(self):
-        pass
+        return self
 
     def set(self):
         raise RuntimeError("Can't set on a directory")
@@ -353,48 +335,66 @@ class BCDBVFS_Data_Dir:
 
 
 class BCDBVFS_Schema_Dir:
-    def __init__(self, vfs, path_elements, url=None, sid=None, hash=None):
+    def __init__(self, vfs, items=[]):
         # we need to know if we are looking for a directory or a file
-        assert nid is not None
         self.vfs = vfs
-        self.path_elements = path_elements
-        self.path_elements = path_elements
+        self.items = items
 
     def list(self):
-        pass
+        return self.vfs.serializer.dumps(self.items)
 
     def get(self):
-        pass
+        return self
 
     def set(self):
-        pass
+        raise RuntimeError("Can't set on a directory")
 
     def len(self):
         raise RuntimeError("Can't do a len on a directory")
 
-class BCDBVFS_Data:
-    def __init__(self, vfs, is_dir=None, key, nid=None, url=None, sid=None, hash=None):
-        # we need to know if we are looking for a directory or a file
-        assert is_dir is not None
 
+class BCDBVFS_Schema:
+    def __init__(self, vfs, schema=None):
         self.vfs = vfs
-        self.nid = nid
-        if url:
-            pass
-        j.shell()
-        self.model
+        self.schema = schema
 
     def list(self):
-        pass
+        raise RuntimeError("Can't list on a schema")
 
     def get(self):
-        pass
+        return self.vfs.serializer.dumps(self.schema)
 
-    def set(self):
-        pass
+    def set(self, schema):
+        self.schema = self.vfs.serializer.loads(schema)
+        if self.schema is None:
+            return False
+        else:
+            return True
 
     def len(self):
-        pass
+        return len(self.vfs.serializer.dumps(self.schema))
+
+
+class BCDBVFS_Data:
+    def __init__(self, vfs, item=None):
+        self.vfs = vfs
+        self.item = item
+
+    def list(self):
+        raise RuntimeError("Can't list on one data")
+
+    def get(self):
+        return self.vfs.serializer.dumps(self.item)
+
+    def set(self, item):
+        self.item = self.vfs.serializer.loads(item)
+        if self.item is None:
+            return False
+        else:
+            return True
+
+    def len(self):
+        return len(self.vfs.serializer.dumps(self.item))
 
 
 class BCDBVFS_Info:
