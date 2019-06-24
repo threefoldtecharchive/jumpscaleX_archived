@@ -391,9 +391,21 @@ class Schema(j.application.JSBaseClass):
         res = [item.name for item in self.properties]
         return res
 
+    @property
+    def _json(self):
+        out = "{"
+        out += '"url":"%s",' % self.url
+        for item in self.propertynames:
+            prop = self.__getattribute__("property_%s" % item)
+            out += '"%s":"%s",' % (str(prop.name), str(prop.jumpscaletype.NAME))
+        out = out.rstrip(",")
+        out += "}"
+        return out
+
     def __str__(self):
         out = "## SCHEMA: %s\n\n" % self.url
         for item in self.properties:
+
             out += str(item) + "\n"
         out += str(self.systemprops)
         return out
