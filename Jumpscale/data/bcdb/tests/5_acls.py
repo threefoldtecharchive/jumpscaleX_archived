@@ -112,7 +112,7 @@ def main(self):
 
         self._log_info("TEST ACL DONE: %s" % name)
 
-    test("RDB")
+    # test("RDB")
     # test("ZDB")
     # test("SQLITE")
 

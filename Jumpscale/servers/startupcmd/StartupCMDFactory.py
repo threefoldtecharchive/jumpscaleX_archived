@@ -31,7 +31,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             assert self.http.is_running()
             self.http.stop()
             assert not self.http.is_running()
-            self.http.delete()
+            # self.http.delete()
 
         def http_back():
             self.http_back.delete()
@@ -113,3 +113,5 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
         self.http.delete()
         self.tmuxserver.delete()
         self.http_back.delete()
+
+        print("TEST STARTUPCMDS OK")

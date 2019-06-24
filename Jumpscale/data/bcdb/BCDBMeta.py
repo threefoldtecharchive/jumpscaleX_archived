@@ -130,7 +130,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _save(self):
 
-        self._log_debug("save:\n%s" % self)
+        self._log_debug("save meta:%s" % self._bcdb.name)
 
         serializeddata = j.data.serializers.jsxdata.dumps(self._data)
 
@@ -158,12 +158,12 @@ class BCDBMeta(j.application.JSBaseClass):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
-
         # check if the data is already in metadatastor
         if schema._md5 in self._schema_md5_to_sid:
+            self._log_debug("schema set in BCDB:%s meta:%s (EXISTING)" % (self._bcdb.name, schema.url))
             return self._schema_md5_to_sid[schema._md5]
         else:
+            self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
             # not known yet in namespace, so is new one
             self._schema_last_id += 1
             s = self._data.schemas.new()
@@ -172,14 +172,17 @@ class BCDBMeta(j.application.JSBaseClass):
             s.text = schema.text  # + "\n"  # only 1 \n at end
             s.md5 = schema._md5
             self._load_schema_obj(s)
-            self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
+            self._log_info("new schema in meta:\n%s: %s:%s" % (self._bcdb.name, s.url, s.md5))
             self._save()
             return s.sid
 
     def _schema_exists(self, schema):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
-        return schema._md5 in self._schema_md5_to_sid
+
+        if schema._md5 in self._schema_md5_to_sid:
+            return True
+        return False
 
     def __repr__(self):
         return str(self._data)

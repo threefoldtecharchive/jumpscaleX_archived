@@ -302,6 +302,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
             else:
                 if self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
                     # we check on ports or process strings so we know for sure its down
+                    if len(self._get_processes_by_port_or_filter()) > 0:
+                        self._notify_state("running")
+                        return True
+                    self._notify_state("down")
                     return False
 
         return -1  # means we don't know

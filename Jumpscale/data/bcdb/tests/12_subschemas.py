@@ -65,7 +65,8 @@ def main(self):
         
         """
 
-    bcdb = j.data.bcdb.get("test")
+    # bcdb = j.data.bcdb.get("test")
+    bcdb, model = self._load_test_model(reset=True, type="sqlite")
     bcdb.reset()
     m = bcdb.model_get_from_schema(schema)
 

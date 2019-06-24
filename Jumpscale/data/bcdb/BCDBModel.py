@@ -36,7 +36,7 @@ class BCDBModel(j.application.JSBaseClass):
                 schema = self._schema_get()
                 assert schema
 
-            bcdb.model_get_from_schema(schema)
+            bcdb.meta._schema_set(schema)
 
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)

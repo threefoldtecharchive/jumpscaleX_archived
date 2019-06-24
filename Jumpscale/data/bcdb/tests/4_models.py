@@ -19,6 +19,9 @@ def main(self):
 
     bcdb, _ = self._load_test_model()
 
+    from pudb import set_trace
+
+    set_trace()
     bcdb.models_add(mpath)
 
     model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
