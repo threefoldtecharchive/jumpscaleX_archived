@@ -127,7 +127,6 @@ class BCDBFactory(j.application.JSBaseClass):
         return self._get(name=name, reset=reset)
 
     def _get(self, name, reset=False, if_not_exist_die=True):
-
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
@@ -169,7 +168,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
         self._log_info("new bcdb:%s" % name)
         if name in self._bcdb_instances:  # make sure we don't remember when a new one
-            self._bcdb_instance.pop(name)
+            self._bcdb_instances.pop(name)
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
         data = {}

@@ -474,7 +474,7 @@ class BCDB(j.application.JSBaseClass):
         # that's why we keep the errored schemas and put it to the end of the queue so it waits until every thing is
         # loaded and try again we will do that for 3 times as max for each schema
         errored = {}
-        while tocheck:
+        while tocheck != []:
             schemapath = tocheck.pop()
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):

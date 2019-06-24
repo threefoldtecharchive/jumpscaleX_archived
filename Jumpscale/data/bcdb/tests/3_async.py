@@ -30,7 +30,7 @@ def main(self):
     assert model_obj2._data == model_obj._data
 
     # will process 1000 obj (set)
-    for x in range(1000):
+    for x in range(100):
         model.set_dynamic(get_obj(x))
 
     # should be nothing in queue

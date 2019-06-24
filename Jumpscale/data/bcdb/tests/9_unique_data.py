@@ -9,7 +9,7 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.bcdb.test(name="unique_data")' --debug
+    kosmos 'j.data.bcdb.test(name="unique_data")'
 
     #. Create schema with unique attributes and save it.
     #. Create another object and try to use same name for first one, should fail.

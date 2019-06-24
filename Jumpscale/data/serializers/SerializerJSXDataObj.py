@@ -37,7 +37,7 @@ class SerializerJSXDataObj(SerializerBase):
             sid = obj._model.sid
             assert isinstance(sid, int)
             assert sid > 0
-            data2 = version.to_bytes(2, "little") + sid.to_bytes(2, "little") + data
+            data2 = version.to_bytes(1, "little") + sid.to_bytes(2, "little") + data
             j.core.db.hset("debug10", sid, "%s:%s:%s" % (obj.id, obj._schema._md5, obj._schema.url))  # DEBUG
 
         if test:
@@ -68,6 +68,9 @@ class SerializerJSXDataObj(SerializerBase):
                 j.shell()
                 raise RuntimeError("could not find schema with md5:%s" % md5)
         elif versionnr == 10:
-            sid = int.from_bytes(data[2:4], byteorder="little")
-            data2 = data[4:]
-            return model.schema.get(capnpdata=data2, model=model)
+            sid = int.from_bytes(data[1:3], byteorder="little")
+            data2 = data[3:]
+            model2 = model.bcdb.model_get_from_sid(sid)  # weird concept but it could be we get other model based on sid
+            return model2.schema.get(capnpdata=data2, model=model)
+        else:
+            raise RuntimeError("version wrong")
