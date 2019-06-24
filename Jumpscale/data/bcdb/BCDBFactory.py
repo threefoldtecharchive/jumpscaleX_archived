@@ -142,7 +142,7 @@ class BCDBFactory(j.application.JSBaseClass):
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
                 storclient = j.clients.zdb.client_get(**data)
-            if data["type"] == "rdb":
+            elif data["type"] == "rdb":
                 storclient = j.clients.rdb.client_get(**data)
             else:
                 storclient = None
@@ -168,6 +168,8 @@ class BCDBFactory(j.application.JSBaseClass):
         """
 
         self._log_info("new bcdb:%s" % name)
+        if name in self._bcdb_instances:  # make sure we don't remember when a new one
+            self._bcdb_instance.pop(name)
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
         data = {}
@@ -194,7 +196,12 @@ class BCDBFactory(j.application.JSBaseClass):
         self._config_write()
         self._load()
 
-        return self.get(name=name)
+        bcdb = self.get(name=name)
+
+        if storclient:
+            assert bcdb.storclient
+            assert bcdb.storclient.type == storclient.type
+        return bcdb
 
     @property
     def _code_generation_dir(self):

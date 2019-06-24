@@ -42,7 +42,6 @@ class BCDBModel(j.application.JSBaseClass):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
         self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
         self.bcdb = bcdb
-        self.storclient = bcdb.storclient
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
@@ -70,6 +69,10 @@ class BCDBModel(j.application.JSBaseClass):
 
     def _schema_get(self):
         return None
+
+    @property
+    def storclient(self):
+        return self.bcdb.storclient
 
     def trigger_add(self, method):
         """
