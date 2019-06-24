@@ -70,6 +70,6 @@ git pull
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/jsx.py
 rm -f /tmp/InstallTools.py;
-ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx.py;
+ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```

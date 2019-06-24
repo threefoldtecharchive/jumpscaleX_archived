@@ -22,8 +22,7 @@ def load_install_tools():
     if not os.path.exists(path):
         rootdir = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(rootdir, "InstallTools.py")
-
-        if not os.path.exists(path) or path.find("/code/") == -1:
+        if not os.path.exists(path) and path.find("/code/") == -1:
             url = (
                 "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
             )
