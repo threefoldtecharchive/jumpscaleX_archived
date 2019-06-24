@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from .BCDB import BCDB
 from .BCDBModel import BCDBModel
+from .BCDBVFS import BCDBVFS
 import os
 import sys
 import redis
@@ -125,6 +126,9 @@ class BCDBFactory(j.application.JSBaseClass):
         :return:
         """
         return self._get(name=name, reset=reset)
+
+    def _get_vfs(self, name, reset=False):
+        return BCDBVFS(self.get(name, reset))
 
     def _get(self, name, reset=False, if_not_exist_die=True):
         data = {}

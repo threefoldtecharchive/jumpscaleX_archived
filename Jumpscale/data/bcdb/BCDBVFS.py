@@ -1,7 +1,9 @@
 from Jumpscale import j
 
+JSBASE = j.application.JSBaseClass
 
-class BCDBVFS:
+
+class BCDBVFS(j.application.JSBaseClass):
     """
     Virtual File System
     navigate through the BCDB like it was a file system
@@ -58,14 +60,18 @@ class BCDBVFS:
         _first_level_path: all the paths that are right after root
     """
 
-    def __init__(self, bcdb_name):
+    def __init__(self, inner_bcdb):
+        """
+        :param bcbd:  the BCDB
+        """
+        JSBASE.__init__(self)
         self._dirs_cache = {}
         self.serializer = j.data.serializers.json
-        self.root_dir = bcdb_name
-        self._bcdb = j.data.bcdb.get(bcdb_name)
+        self._bcdb = inner_bcdb
+        self.root_dir = self._bcdb.name
         self.directories_under_data_namespace = ["sid", "hash", "url"]
         self.directories_under_schemas = ["sid", "hash", "url", "url2sid"]
-        self.directories_under_root = ["data", "schema", "info"]
+        self.directories_under_root = ["data", "schemas", "info"]
 
     def _split_clean_path(self, path):
         splitted = path.lower().split("/")
@@ -115,7 +121,6 @@ class BCDBVFS:
                         sid = int(splitted[3])
                     except:
                         raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))
-                    hsh = self._bcdb._schema_sid_to_md5[splitted[3]]
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/sid/5
                         # we should get all the object under the namespace id
@@ -123,7 +128,7 @@ class BCDBVFS:
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                                self, items=self._bcdb.model_get_from_sid(sid).iterate(nid)
                             )
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
@@ -136,7 +141,7 @@ class BCDBVFS:
                         key = "data_%s_sid_%s_%s" % (nid, sid, id)
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=self._bcdb.model_get_from_md5(hsh).iterate(nid)(id)
+                                self, item=self._bcdb.model_get_from_sid(sid).iterate(nid)(id)
                             )
             elif splitted[2] == "hash":
                 if path_length == 3:
@@ -176,15 +181,15 @@ class BCDBVFS:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
                     url = splitted[3]
-                    hsh = j.data.schema.url_to_md5[url]
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/url/ben.test.1
                         # we should get all the object under the namespace id
                         key = "data_%s_url_%s" % (nid, url)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
+                            j.shell()
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_md5(hsh).iterate(nid)
+                                self, items=self._bcdb.model_get_from_url(url).iterate(nid)
                             )
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
@@ -197,7 +202,7 @@ class BCDBVFS:
                         key = "data_%s_url_%s_%s" % (nid, url, id)
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=(self._bcdb.model_get_from_md5(hsh).iterate(nid))(id)
+                                self, item=(self._bcdb.model_get_from_url(url).iterate(nid))(id)
                             )
         else:
             raise RuntimeError("path:%s too long " % (path))
@@ -319,7 +324,11 @@ class BCDBVFS:
 class BCDBVFS_Data_Dir:
     def __init__(self, vfs, items=[]):
         self.vfs = vfs
-        self.items = items
+
+        if type(items) is type({}.keys()) or type(items) is type({}.values()):
+            self.items = list(items)
+        else:
+            self.items = items
 
     def list(self):
         return self.vfs.serializer.dumps(self.items)
@@ -338,7 +347,10 @@ class BCDBVFS_Schema_Dir:
     def __init__(self, vfs, items=[]):
         # we need to know if we are looking for a directory or a file
         self.vfs = vfs
-        self.items = items
+        if type(items) is type({}.keys()) or type(items) is type({}.values()):
+            self.items = list(items)
+        else:
+            self.items = items
 
     def list(self):
         return self.vfs.serializer.dumps(self.items)
