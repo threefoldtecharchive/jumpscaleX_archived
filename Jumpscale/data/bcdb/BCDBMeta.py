@@ -179,8 +179,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def _schema_exists(self, schema):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
-
-        return schema._md5 in self._bcdb._schema_md5_to_sid
+        return schema._md5 in self._schema_md5_to_sid
 
     def __repr__(self):
         return str(self._data)

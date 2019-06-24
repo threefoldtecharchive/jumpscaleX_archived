@@ -86,8 +86,8 @@ def main(self):
         s = j.data.schema.get_from_md5(md5)
         assert s._md5 == md5
 
-        md5_, url_ = bcdb.meta._schema_exists(s)
-        assert md5_ == md5
-        assert url_ == url
+        bcdb.meta._schema_exists(s)
+        assert s._md5 == md5
+        assert s.url == url
 
     return "OK"
