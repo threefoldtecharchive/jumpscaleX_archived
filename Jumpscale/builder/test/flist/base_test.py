@@ -42,5 +42,5 @@ class BaseTest(TestCase):
         self.cont_client = self.node.client.container.client(self.cont.get())
 
     def check_container_flist(self, command):
-        return self.cont_client.system(command)
+        return self.cont_client.system(command).get()
 
