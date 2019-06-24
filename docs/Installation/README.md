@@ -9,7 +9,7 @@ Before starting the installation to make sure to install the [prerequisites](/do
 ```bash
 # TODO CHANGE BRANCH WITH MASTER (replace development_installer)
 # get the jsx command (installer)
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx ; \
 chmod +x /tmp/jsx; \
 # install
 /tmp/jsx container-install
@@ -101,6 +101,6 @@ git pull
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/jsx.py
 rm -f /tmp/InstallTools.py;
-ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py /tmp/jsx.py;
+ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```

@@ -303,6 +303,7 @@ class DocSite(j.application.JSBaseClass):
             "js",
             "mov",
             "py",
+            "svg",
         ]:
             self._log_debug("found file:%s" % path)
             base = self._clean(base)
