@@ -127,8 +127,8 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         return self._get(name=name, reset=reset)
 
-    def _get_vfs(self, name, reset=False):
-        return BCDBVFS(self.get(name, reset))
+    def _get_vfs(self):
+        return BCDBVFS(self._bcdb_instances)
 
     def _get(self, name, reset=False, if_not_exist_die=True):
         data = {}
