@@ -2,25 +2,40 @@ from Jumpscale import j
 from wsgidav import compat, util
 from wsgidav.dav_provider import DAVCollection, DAVNonCollection, DAVProvider
 
+
 class DirCollection(DAVCollection):
-    """Root collection, lists all bcdbs"""
+    """
+    Handles all kinds of directory-like resources
+    """
 
     def __init__(self, path, environ):
         DAVCollection.__init__(self, path, environ)
         self.vfs = self.provider.vfs
 
     def get_member_names(self):
-        # import ipdb; ipdb.set_trace()
-        return [name.get() for name in self.vfs.list(self.path)]
+        """
+        get member names to be listed from the path
+        :return: list of member names
+        """
+        return [name for name in self.vfs.list(self.path)]
 
     def get_member(self, name):
+        """
+        get member by name
+        :param name: member name
+        :return: DirCollection if the member is a dir-like or DocResource if the member is a doc
+        """
         path = j.sal.fs.joinPaths(self.path, name)
         if self.vfs.is_dir(path):
             return DirCollection(path, self.environ)
         else:
             return DocResource(path, self.environ, self.vfs.get(path))
 
+
 class DocResource(DAVNonCollection):
+    """
+    Handles docs. a doc is bcdb data object treated like a documentation
+    """
 
     def __init__(self, path, environ, doc):
         DAVNonCollection.__init__(self, path, environ)
@@ -28,7 +43,7 @@ class DocResource(DAVNonCollection):
 
     def get_content(self):
         html = "<pre>" + self.doc.get() + "</pre>"
-        return compat.StringIO(html.encode("utf8"))
+        return compat.StringIO(html)
 
     def get_content_length(self):
         return len(self.get_content().read())
@@ -44,14 +59,13 @@ class DocResource(DAVNonCollection):
 
 
 class BCDBResourceProvider(DAVProvider):
-
     def __init__(self):
         DAVProvider.__init__(self)
-        # self.vfs = j.data.bcdb.vfs_get()
-        self.vfs = FakeVFS()
-    def get_resource_inst(self, path, environ):
-        """Return DAVResource object for path.
+        self.vfs = j.data.bcdb._get_vfs()
 
+    def get_resource_inst(self, path, environ):
+        """
+        Return DAVResource object for path.
         """
         root = DirCollection("/", environ)
         return root.resolve("/", path)
