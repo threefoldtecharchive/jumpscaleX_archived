@@ -235,7 +235,7 @@ class TFChainCapacity:
                 "disk_type": disk_type,
                 "mode": mode,
                 "password": password,
-                "duration": months,
+                "duration": duration,
             }
         )
         _validate_reservation_namespace(reservation)
