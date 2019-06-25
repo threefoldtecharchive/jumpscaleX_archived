@@ -523,7 +523,7 @@ def check():
 
 def _generate(path=None):
     j = jumpscale_get(die=True)
-    j.application.generate()
+    j.application.generate(path)
 
 
 if __name__ == "__main__":
