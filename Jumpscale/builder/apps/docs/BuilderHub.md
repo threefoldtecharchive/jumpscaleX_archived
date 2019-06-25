@@ -3,13 +3,10 @@
 
 ## Install locally
 
-### Get client id and client secret from ```https://itsyou.online/#/organizations```
-
-```python
-export CLIENT_ID = client id of your iyo 
-export CLIENT_SECRET = client secret of your iyo 
-export IP_PORT = localhost
+```python 
+export IP_PORT="127.0.0.1:5555"
 ```
+* or export your IP in kosmos via  `>>> j.builders.apps.hub.in_docker("127.0.0.1:5555")`
 ### Using kosmos
 ```
 j.builders.apps.hub.install()
@@ -22,7 +19,7 @@ j.builders.apps.hub.start()
 ```
 You can view it 
 
-``` localhost:80```
+``` your-host-ip:5555```
 
 
 ## Install in container
@@ -46,10 +43,10 @@ Using kosmos
 cl =j.clients.zos.get("zhub", host="IP_Node", password=jwt)
 
 
-cl.client.container.create(name='testzhub',root_url='your_flist_after_merge',nics=[{'type':'default', 'name':'defaultnic', 'id':' None'}], port{2015:2015,8080:80, 5555:5555}, env={"CLIENT_SECRET":"your_client_secret", "CLIENT_ID":"your_client_id", "IP_PORT":"IP_Node:8080"}).get()
+cl.client.container.create(name='testzhub',root_url='your_flist_after_merge',nics=[{'type':'default', 'name':'defaultnic', 'id':' None'}], port{2015:2015,8080:80, 5555:5555}, env={"IP_PORT":"IP_Node:5555"}).get()
 ```
 
 You can view it 
 
-```IP_Node:8080```
-example ```10.102.178.130:8080```
+```IP_Node:5555```<br>
+example ```10.102.178.130:5555```

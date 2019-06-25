@@ -8,21 +8,34 @@ class BuilderHub(j.builders.system._BaseClass):
     NAME = "zerohub"
 
     def _init(self):
-        self.build_dir = self.tools.joinpaths(self.DIR_BUILD, "code")
-        self.makeopts = "-j 5"
-        self.curl_dest = self.tools.joinpaths(self.build_dir, "curl")
-        self.capnp_dest = self.tools.joinpaths(self.build_dir, "capnp")
-        self.hub_dest = self.tools.joinpaths(self.build_dir, "hub")
-        self.zeroflist_dest = self.tools.joinpaths(self.build_dir, "zeroflist")
+        self.DIR_CODE = self.tools.joinpaths(self.DIR_BUILD, "code")
+        self.MAKEOPTS = "-j 5"
+        self.DEST_CURL = self.tools.joinpaths(self.DIR_CODE, "curl")
+        self.DEST_CAPNP = self.tools.joinpaths(self.DIR_CODE, "capnp")
+        self.DEST_HUB = self.tools.joinpaths(self.DIR_CODE, "hub")
+        self.DEST_ZEROFLIST = self.tools.joinpaths(self.DIR_CODE, "zeroflist")
+        self.HUB_SANDBOX = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(self.HUB_SANDBOX)
+        self.DEST_SANDBOX_HUB = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "hub")
+        self.DEST_SANDBOX_ZEROFLIST = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "zeroflist")
 
     @builder_method()
     def clean(self):
-        self._remove(self.build_dir)
+        self._remove(self.DIR_CODE)
+        self._remove(self.HUB_SANDBOX)
 
     @builder_method()
     def reset(self):
         super().reset()
         self.clean()
+
+    @builder_method()
+    def in_docker(self, docker_ip):
+        """
+        for testing purposes just pass your docker ip to this method
+        to set it to environment variables
+        """
+        self.profile.env_set_part("IP_PORT", docker_ip)
 
     @builder_method()
     def build(self):
@@ -56,11 +69,11 @@ class BuilderHub(j.builders.system._BaseClass):
 
         # libcurl build
         curl_url = "https://github.com/curl/curl"
-        j.clients.git.pullGitRepo(dest=self.curl_dest, url=curl_url, depth=1, branch="curl-7_62_0")
+        j.clients.git.pullGitRepo(dest=self.DEST_CURL, url=curl_url, depth=1, branch="curl-7_62_0")
 
         curl_cmd = """
         rm -f /usr/local/lib/libcurl.so.*
-        cd {curl_dest}
+        cd {DEST_CURL}
         autoreconf -f -i -s
         ./configure --disable-debug --enable-optimize --disable-curldebug --disable-symbol-hiding --disable-rt \
         --disable-ftp --disable-ldap --disable-ldaps --disable-rtsp --disable-proxy --disable-dict \
@@ -68,33 +81,35 @@ class BuilderHub(j.builders.system._BaseClass):
         --disable-manual --disable-libcurl-option --disable-sspi --disable-ntlm-wb --without-brotli --without-librtmp --without-winidn \
         --disable-threaded-resolver \
         --with-openssl
-        make {makeopts}
-        """.format(
-            curl_dest=self.curl_dest, makeopts=self.makeopts
-        )
+        make {MAKEOPTS}
+        make install
+        make install DESTDIR="/sandbox/"
+        ldconfig
+        """
         self._execute(curl_cmd)
 
         # capnp builder
         capnp_url = "https://github.com/opensourcerouting/c-capnproto"
-        j.clients.git.pullGitRepo(dest=self.capnp_dest, url=capnp_url, depth=1)
+        j.clients.git.pullGitRepo(dest=self.DEST_CAPNP, url=capnp_url, depth=1)
 
         capnp_cmd = """
-        cd {dest}
+        cd {DEST_CAPNP}
         git submodule update --init --recursive
         autoreconf -f -i -s
         ./configure
-        make {makeopts}
-        """.format(
-            dest=self.capnp_dest, makeopts=self.makeopts
-        )
+        make {MAKEOPTS}
+        make install
+        make install DESTDIR="/sandbox/"
+        ldconfig
+        """
         self._execute(capnp_cmd)
 
         # zeroflist
         zeroflist_url = "https://github.com/threefoldtech/0-flist/"
-        j.clients.git.pullGitRepo(dest=self.zeroflist_dest, url=zeroflist_url, depth=1, branch="development")
+        j.clients.git.pullGitRepo(dest=self.DEST_ZEROFLIST, url=zeroflist_url, depth=1, branch="development")
 
         zeroflist_cmd = """
-        cd {}
+        cd {DEST_ZEROFLIST}
         pushd libflist
         make
         popd
@@ -103,57 +118,32 @@ class BuilderHub(j.builders.system._BaseClass):
         popd
         cp zflist/zflist /tmp/zflist
         strip -s /tmp/zflist
-        """.format(
-            self.zeroflist_dest
-        )
+        """
         self._execute(zeroflist_cmd)
 
         # hub
         hub_url = "https://github.com/threefoldtech/0-hub"
-        j.clients.git.pullGitRepo(dest=self.hub_dest, url=hub_url, depth=1, branch="playground")
+        j.clients.git.pullGitRepo(dest=self.DEST_HUB, url=hub_url, depth=1, branch="playground")
 
     @builder_method()
     def install(self):
-        # install curl
-        curl_install_cmd = """
-            cd {curl_dest}
-            make install
-            make install DESTDIR="/sandbox/"
-            ldconfig
-        """.format(
-            curl_dest=self.curl_dest
-        )
-        self._execute(curl_install_cmd)
-
-        # install capnp
-        capnp_install_cmd = """
-        cd {dest}
-        make install
-        ldconfig
-        """.format(
-            dest=self.capnp_dest
-        )
-        self._execute(capnp_install_cmd)
-
         # install hub
-        hub_cmd = """
-        cp {dest}/python/config.py.sample {dest}/python/config.py
-        sed -i "s/'authentication': True/'authentication': False/" {dest}/python/config.py
-        sed -i "s/'zflist-bin': '\/opt\/0-flist\/zflist\/zflist'/'zflist-bin': \
-            '\/tmp\/builders\/zerohub\/code\/zeroflist\/zflist\/zflist'/" {dest}/python/config.py
-        sed -i "s/'backend-internal-host': \\"my-zdb-host\\"/'backend-internal-host': \
-            \\"127.0.0.1\\"/" {dest}/python/config.py
-        """.format(
-            dest=self.hub_dest
+        file_src = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "zerohub_config.py")
+        file_dest = self.tools.joinpaths(self.DEST_HUB, "python", "config.py")
+        self._copy(file_src, file_dest)
+        self._execute(
+            """
+            sed -i "s/\\"zflist-bin\\": \\"\/opt\/0-flist\/zflist\/zflist\\"/\\"zflist-bin\\":\
+                 \\"\/tmp\/builders\/zerohub\/code\/zeroflist\/zflist\/zflist\\"/" {DEST_HUB}/python/config.py
+        """
         )
-        self._execute(hub_cmd)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
-        self.tools.dir_ensure(sandbox_dir)
+        # ensure dirs
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
+
         # sandbox zdb
         bins = ["zdb"]
         for bin in bins:
@@ -167,42 +157,35 @@ class BuilderHub(j.builders.system._BaseClass):
 
         # sandbox curl
         curl_install_cmd = """
-            cd {curl_dest}
-            make install
-            make install DESTDIR={sandbox}
-            ldconfig
-        """.format(
-            curl_dest=self.curl_dest, sandbox=sandbox_dir
-        )
+        cd {DEST_CURL}
+        make install DESTDIR={HUB_SANDBOX}
+        ldconfig
+        """
         self._execute(curl_install_cmd)
 
         # sandbox capnp
         capnp_sandbox_cmd = """
-        cd {dest}
-        make install DESTDIR={sandbox}
+        cd {DEST_CAPNP}
+        make install DESTDIR={HUB_SANDBOX}
         ldconfig
-        """.format(
-            dest=self.capnp_dest, sandbox=sandbox_dir
-        )
+        """
         self._execute(capnp_sandbox_cmd)
 
         # sandbox zflist
-        self._copy(self.zeroflist_dest, sandbox_dir)
+        self._copy(self.DEST_ZEROFLIST, self.DEST_SANDBOX_ZEROFLIST)
         # sandbox hub
-        self._copy(self.hub_dest, sandbox_dir)
+        self._copy(self.DEST_HUB, self.DEST_SANDBOX_HUB)
 
         # install hub
-        hub_cmd = """
-        cp {sandbox_dir}/python/config.py.sample {sandbox_dir}/python/config.py
-        sed -i "s/'authentication': True/'authentication': False/" {sandbox_dir}/python/config.py
-        sed -i "s/'zflist-bin': '\/opt\/0-flist\/zflist\/zflist'/'zflist-bin': \
-            '\/sandbox\/zeroflist\/zflist\/zflist'/" {sandbox_dir}/python/config.py
-        sed -i "s/'backend-internal-host': \\"my-zdb-host\\"/'backend-internal-host': \
-            \\"127.0.0.1\\"/" {sandbox_dir}/python/config.py
-        """.format(
-            sandbox_dir=sandbox_dir
+        file_src = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "zerohub_config.py")
+        file_dest = self.tools.joinpaths(self.DEST_SANDBOX_HUB, "python", "config.py")
+        self._copy(file_src, file_dest)
+        self._execute(
+            """
+            sed -i "s/\\"zflist-bin\\": \\"\/opt\/0-flist\/zflist\/zflist\\"/\\"zflist-bin\\":\
+            \\"\/sandbox\/zeroflist\/zflist\/zflist\\"/" {DEST_SANDBOX_HUB}/python/config.py
+        """
         )
-        self._execute(hub_cmd)
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "zerohub_startup.toml")
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
@@ -212,10 +195,10 @@ class BuilderHub(j.builders.system._BaseClass):
     def startup_cmds(self):
 
         j.builders.db.zdb.start()
-        start_script = """
-        cd {}/hub/python/ && python3 flist-uploader.py
-        """.format(
-            self.build_dir
+        start_script = self._replace(
+            """
+        cd {DIR_CODE}/hub/python/ && python3 flist-uploader.py
+        """
         )
         start_cmd = j.tools.startupcmd.get(self.NAME, cmd=start_script)
         return [start_cmd]
@@ -228,6 +211,9 @@ class BuilderHub(j.builders.system._BaseClass):
 
     @builder_method()
     def test(self):
+        if self.running():
+            self.stop()
         self.start()
+        assert self.running()
         self.stop()
-
+        print("TEST OK")

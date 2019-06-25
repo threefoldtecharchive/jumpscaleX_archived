@@ -120,3 +120,33 @@ class TestCases(BaseTest):
 
         logger.debug("Check that zdb flist works by run zdb binary, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/bin/sandbox/zdb -h"))
+
+    def test010_digitalme(self):
+        j.builders.apps.digitalme.sandbox(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )
+        self.deploy_flist_container("digitalme")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/openresty -h"))
+
+    def test011_postgresql(self):
+        j.builders.db.postgres.sandbox(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )        
+        self.deploy_flist_container("postgresql")
+        self.assertIn("PostgreSQL server", self.check_container_flist("/sandbox/bin/postgres -h"))
+
+    def test012_redis(self):
+        j.builders.db.redis.sandbox(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )     
+        self.deploy_flist_container("redis")
+        self.assertIn("Usage: redis-cli", self.check_container_flist("/sandbox/bin/redis-cli -h"))
