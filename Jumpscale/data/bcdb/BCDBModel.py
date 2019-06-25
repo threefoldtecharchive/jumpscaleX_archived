@@ -88,7 +88,7 @@ class BCDBModel(j.application.JSBaseClass):
         if method not in self._triggers:
             self._triggers.append(method)
 
-    def triggers_call(self, obj, action=None, propertyname=None):
+    def _triggers_call(self, obj, action=None, propertyname=None):
         """
         will go over all triggers and call them with arguments given
         see docs/baseclasses/data_mgmt_on_obj.md
@@ -103,7 +103,7 @@ class BCDBModel(j.application.JSBaseClass):
                 obj = obj2
             else:
                 if obj2 is not None:
-                    raise RuntimeError("obj return from action needs to be a JSX data obj or None")
+                    raise RuntimeError("obj return from action needs to be a JSXObject or None")
         return obj
 
     # def cache_reset(self):
@@ -157,7 +157,7 @@ class BCDBModel(j.application.JSBaseClass):
                 raise RuntimeError("specify id or obj")
         assert obj.nid
         if obj.id is not None:
-            self.triggers_call(obj=obj, action="delete")
+            self._triggers_call(obj=obj, action="delete")
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
             if not self.storclient:
@@ -317,7 +317,7 @@ class BCDBModel(j.application.JSBaseClass):
             l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
-            obj = self.triggers_call(obj, action="set_pre")
+            obj = self._triggers_call(obj, action="set_pre")
 
             # PUT DATA IN DB
             if obj.id is None:
@@ -343,7 +343,7 @@ class BCDBModel(j.application.JSBaseClass):
         if index:
             self.index.set(obj)
 
-        obj = self.triggers_call(obj=obj, action="set_post")
+        obj = self._triggers_call(obj=obj, action="set_post")
 
         return obj
 
@@ -377,7 +377,7 @@ class BCDBModel(j.application.JSBaseClass):
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
         obj.nid = nid
-        obj = self.triggers_call(obj=obj, action="new")
+        obj = self._triggers_call(obj=obj, action="new")
         return obj
 
     def _methods_add(self, obj):
@@ -420,7 +420,7 @@ class BCDBModel(j.application.JSBaseClass):
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
 
-        obj = self.triggers_call(obj=obj, action="get")
+        obj = self._triggers_call(obj=obj, action="get")
 
         return obj
 

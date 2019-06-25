@@ -282,7 +282,7 @@ class Schema(j.application.JSBaseClass):
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
-            tpath = "%s/templates/template_obj.py" % self._path
+            tpath = "%s/templates/JSXObject2.py" % self._path
 
             # lets do some tests to see if it will render well, jinja doesn't show errors propertly
             for prop in self.properties:
@@ -291,7 +291,7 @@ class Schema(j.application.JSBaseClass):
                 prop.js_typelocation
 
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
+                name="schema_%s" % self.key, obj_key="JSXObject2", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class
@@ -331,7 +331,7 @@ class Schema(j.application.JSBaseClass):
         else:
             r = self.get(model=model)
         if model is not None:
-            model.triggers_call(r, "new")
+            model._triggers_call(r, "new")
         return r
 
     # @property

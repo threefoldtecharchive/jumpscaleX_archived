@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from capnp import KjException
 
-class ModelOBJ(j.data.schema._JSXObjectClass):
+class JSXObject2(j.data.schema._JSXObjectClass):
 
     # __slots__ = ["id","_schema","_model","_autosave","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
     #                     {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
@@ -69,7 +69,7 @@ class ModelOBJ(j.data.schema._JSXObjectClass):
             self._changed_items["{{prop.name}}"] = val
             if self._model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
-                self._model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
+                self._model._triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
             if self._autosave:
                 self.save()
         {% endif %}

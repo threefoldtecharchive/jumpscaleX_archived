@@ -22,7 +22,7 @@ class JSXObject(j.application.JSBaseClass):
     @property
     def _readonly(self):
         return False
-        return self._model.readonly
+        return self._readonly
 
     @property
     def _capnp_schema(self):
@@ -50,7 +50,7 @@ class JSXObject(j.application.JSBaseClass):
         :return:
         """
 
-        if self._model is not None and self._model.readonly:
+        if self._model is not None and self._readonly:
             raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
         if self._readonly:
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
@@ -100,7 +100,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def save(self):
         if self._model:
-            if self._model.readonly:
+            if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
@@ -136,7 +136,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def delete(self):
         if self._model:
-            if self._model.readonly or self._readonly:
+            if self._readonly or self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
