@@ -42,6 +42,11 @@ def main(self):
     r = vfs.get("/")
     bcdb_names = [i for i in r.list()]
     assert "test" in bcdb_names
+    r = vfs.get("/test")
+
+    indetifiers = [i for i in r.list()]
+    print(indetifiers)
+    assert "data" in indetifiers
     self._log_info("TEST ROOT DIR DONE")
 
     with test_case.assertRaises(Exception):
@@ -51,8 +56,6 @@ def main(self):
         r = vfs.get("test/data/md5")
         r = vfs.get("test/data/2/md6")
 
-    self._log_info("TEST DELETE DATA DONE")
-
     r = vfs.get("test/data/1")
     identifier_folders = [i for i in r.list()]
     assert (
@@ -61,7 +64,7 @@ def main(self):
         and "url" in identifier_folders
         and "hash" in identifier_folders
     )
-    r = vfs.get("data/1/url")
+    r = vfs.get("data/1/url")  # current bcdb is test do to last test
     urls = [i for i in r.list()]
     print(urls)
     assert (

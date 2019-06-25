@@ -12,9 +12,9 @@ class BCDBVFS(j.application.JSBaseClass):
     the root directory is the bcdb name 
     Here is the file system directories
     / should list all the bcdbs
-     /test
+     /$(bcdb_name)
         /data
-            /nid
+            /$(nid)
                 /sid
                     /1
                         object1
@@ -75,80 +75,71 @@ class BCDBVFS(j.application.JSBaseClass):
         self.serializer = j.data.serializers.json
         self._bcdb_instances = bcdb_instances
         self._bcdb_names = list(bcdb_instances.keys())
-        self.root_dir = self._bcdb_names[0]
-        self._bcdb = bcdb_instances[self.root_dir]
+        self.current_bcbd_name = self._bcdb_names[0]
+        self._bcdb = bcdb_instances[self.current_bcbd_name]
         self.directories_under_data_namespace = ["sid", "hash", "url"]
         self.directories_under_schemas = ["sid", "hash", "url", "url2sid"]
         self.directories_under_root = ["data", "schemas", "info"]
 
     def change_current_bcdb(self, bcdb_name):
-        if bcdb_name in self._bcdb_names:
-            self.root_dir = bcdb_name
+        if bcdb_name in self._bcdb_names and self.current_bcbd_name != bcdb_name:
+            self.current_bcbd_name = bcdb_name
             self._bcdb = self._bcdb_instances[bcdb_name]
         else:
             raise RuntimeError("cannot change current bcdb name:%s is not in:%s" % (bcdb_name, self._bcdb_names))
 
     def _split_clean_path(self, path):
-        splitted = path.lower().split("/")
-        # make sure that the first and last element are not empty and not the bcdb name
-        # TODO unit test this one is crucial
-
-        if len(splitted) == 0:
-            return []
-        while splitted[0] == "":
-            splitted.pop(0)
-            if len(splitted) == 0:
+        if path:
+            splitted = path.lower().split("/")
+            # let's remove all the empty parts
+            splitted = list(filter(None, splitted))
+            if len(splitted) == 0:  # it means we are at the root directory of the current bcdb
                 return []
-        while splitted[-1] == "":
-            splitted.pop(-1)
-        if splitted[0] == self.root_dir:
-            splitted.pop(0)
-
-        if splitted[0] in self._bcdb_names:
-            self.change_current_bcdb(splitted[0])
-            return self._split_clean_path(path)
+            else:  # one or more elements
+                if (
+                    splitted[0] == self.current_bcbd_name
+                ):  # if the first element is the current bcdb just remove it and restart
+                    splitted.pop(0)
+                    if len(splitted) > 0:
+                        return self._split_clean_path("/".join(splitted))
+                    else:
+                        return [self.current_bcbd_name]
+                elif splitted[0] in self._bcdb_names:  # we have to set the bcdb to the current one and restart
+                    self.change_current_bcdb(splitted[0])
+                    splitted.pop(0)
+                    if len(splitted) > 0:
+                        return self._split_clean_path("/".join(splitted))
+                    else:
+                        return [self.current_bcbd_name]
+                elif splitted[0] in self.directories_under_root:  # it is either data schemas or info
+                    return [w.lower() for w in splitted]
+                else:
+                    raise RuntimeError(
+                        "first element:%s of path:%s should be in:%s or an existing bcdb name:%s"
+                        % (splitted[0], path, self.directories_under_root, self._bcdb_names)
+                    )
         else:
-            if splitted[0] not in self.directories_under_root and splitted[0] not in self._bcdb_names:
-                raise RuntimeError(
-                    "first element:%s of path:%s should be in:%s" % (splitted[0], path, self.directories_under_root)
-                )
-
-        return [w.lower() for w in splitted]
-
-        """return the bcdb name or root directory of the path
-        if the path begins by data or schemas we will return the 
-        current bcdb name
-        
-        Arguments:
-            path {sting} -- path
-
-        Returns:
-             string -- bcdb name
-        """
-        """  def _get_bcdb_name_from_path(self, path):
-        splitted = path.lower().split("/")
-        # make sure that the first and last element are not empty and not the bcdb name
-        while splitted[0] == "":
-            splitted.pop(0)
-        if splitted[0] == self.root_dir or splitted[0] in self.directories_under_root:
-            return self.root_dir
-        elif len(splitted) == 1:
-            return splitted[0]
-        elif  len(splitted) >= 1: """
+            return []
 
     def get(self, path):
         splitted = self._split_clean_path(path)
-
-        if len(splitted) >= 1:
+        print("################### path:%s splited:%s" % (path, splitted))
+        if len(splitted) > 0:
             key = None
             if splitted[0] == "data":
                 key = self._get_data(splitted, path)
             elif splitted[0] == "schemas":
                 key = self._get_schemas(splitted, path)
             elif splitted[0] == "info":
-                key = "info"
+                key = "%s_info" % self.current_bcbd_name
                 if not key in self._dirs_cache:
                     self._dirs_cache[key] = BCDBVFS_Info(self)
+            elif len(splitted) == 1 and splitted[0] == self.current_bcbd_name:
+                key = "directories_under_root"
+                if not key in self._dirs_cache:
+                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self.directories_under_root)
+            else:
+                raise RuntimeError("should not happen if _split_clean_path has done properly its job")
         else:
             # it means that we are listing the root directory
             key = "root"
@@ -162,7 +153,7 @@ class BCDBVFS(j.application.JSBaseClass):
             if splitted[2] == "sid":
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/sid
-                    key = "data_%s_sid" % (nid)
+                    key = "%s_data_%s_sid" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(
                             self, items=self._bcdb.meta._schema_md5_to_sid.values()
@@ -175,7 +166,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/sid/5
                         # we should get all the object under the namespace id
-                        key = "data_%s_sid_%s" % (nid, sid)
+                        key = "%s_data_%s_sid_%s" % (self.current_bcbd_name, nid, sid)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
@@ -189,14 +180,14 @@ class BCDBVFS(j.application.JSBaseClass):
                             raise RuntimeError(
                                 "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
                             )
-                        key = "data_%s_sid_%s_%s" % (nid, sid, id)
+                        key = "%s_data_%s_sid_%s_%s" % (self.current_bcbd_name, nid, sid, id)
                         if not key in self._dirs_cache:
                             m = self._bcdb.model_get_from_sid(sid)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             elif splitted[2] == "hash":
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/hash
-                    key = "data_%s_hash" % (nid)
+                    key = "%s_data_%s_hash" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.values())
                 else:
@@ -205,7 +196,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/hash/ec541123d21b
                         # we should get all the object under the namespace id
-                        key = "data_%s_hash_%s" % (nid, hsh)
+                        key = "%s_data_%s_hash_%s" % (self.current_bcbd_name, nid, hsh)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
 
@@ -220,14 +211,14 @@ class BCDBVFS(j.application.JSBaseClass):
                             raise RuntimeError(
                                 "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
                             )
-                        key = "data_%s_hash_%s_%s" % (nid, hsh, id)
+                        key = "%s_data_%s_hash_%s_%s" % (self.current_bcbd_name, nid, hsh, id)
                         if not key in self._dirs_cache:
                             m = self._bcdb.model_get_from_schema(schema)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             else:  # URL
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/sid
-                    key = "data_%s_url" % (nid)
+                    key = "%s_data_%s_url" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
@@ -235,7 +226,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     if path_length == 4:
                         # fourth element must be the schema identifier e.g. /data/5/url/ben.test.1
                         # we should get all the object under the namespace id
-                        key = "data_%s_url_%s" % (nid, url)
+                        key = "%s_data_%s_url_%s" % (self.current_bcbd_name, nid, url)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(
@@ -249,7 +240,7 @@ class BCDBVFS(j.application.JSBaseClass):
                             raise RuntimeError(
                                 "fifth id element:%s of path:%s must be an integer" % (splitted[4], path)
                             )
-                        key = "data_%s_url_%s_%s" % (nid, url, id)
+                        key = "%s_data_%s_url_%s_%s" % (self.current_bcbd_name, nid, url, id)
                         if not key in self._dirs_cache:
                             m = self._bcdb.model_get_from_url(url)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
@@ -260,7 +251,7 @@ class BCDBVFS(j.application.JSBaseClass):
     def _get_data(self, splitted, path):
         # check if we are only asking for the data directory
         if len(splitted) == 1:
-            key = "data"
+            key = "%s_data" % self.current_bcbd_name
             if not key in self._dirs_cache:
                 self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb.meta.data.namespaces)
         else:
@@ -270,7 +261,7 @@ class BCDBVFS(j.application.JSBaseClass):
                 raise RuntimeError("Second element:%s of path:%s should be the namespace id" % (splitted[1], path))
             if len(splitted) == 2:
                 # second element must be the nid e.g. /data/5
-                key = "data_%s" % nid
+                key = "%s_data_%s" % (self.current_bcbd_name, nid)
                 if not key in self._dirs_cache:
                     self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self.directories_under_data_namespace)
             else:
@@ -391,7 +382,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     keys[url] = "schemas_url_%s" % url
         return keys """
 
-    def add_schemas(self, schemas_text=None):
+    def add_schemas(self, schemas_text=None, bcdb_name=None):
         """set new schemas based on their text to the current bcdb
         Keyword Arguments:
             schemas_text {string} -- can be one or several schema text
@@ -399,12 +390,15 @@ class BCDBVFS(j.application.JSBaseClass):
              list: all the schemas path added to the cache
         """
         path_added = []
+        if bcdb_name:
+            self.change_current_bcdb(bcdb_name)
+
         if schemas_text:
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    key = "schemas_url_%s" % s.url
-                    path = "%s/schemas/url/%s" % (self.root_dir, s.url)
+                    key = "%s_schemas_url_%s" % (self.current_bcbd_name, s.url)
+                    path = "%s/schemas/url/%s" % (self.current_bcbd_name, s.url)
                     path_added.append(path)
                     # we do not check if it exist as anyway it will
                     # replace the latest schema with this url

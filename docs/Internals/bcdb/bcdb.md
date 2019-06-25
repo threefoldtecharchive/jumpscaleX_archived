@@ -79,8 +79,9 @@ the root directory is the bcdb name.
 
 Here is the file system directories
 ```
+ /$(bcdb_name)
     /data
-        /nid
+        /$(nid)
             /sid
                 /1
                     object1
