@@ -5,8 +5,8 @@ import unittest
 
 
 class TestCases(BaseTest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
         logger.add("sandbox_tests.log")
         logger.debug("Starting of sandbox testcases.")
 
@@ -137,7 +137,7 @@ class TestCases(BaseTest):
             reset=True,
             flist_create=True,
             merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
-        )        
+        )
         self.deploy_flist_container("postgresql")
         self.assertIn("PostgreSQL server", self.check_container_flist("/sandbox/bin/postgres -h"))
 
@@ -147,6 +147,6 @@ class TestCases(BaseTest):
             reset=True,
             flist_create=True,
             merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
-        )     
+        )
         self.deploy_flist_container("redis")
         self.assertIn("Usage: redis-cli", self.check_container_flist("/sandbox/bin/redis-cli -h"))

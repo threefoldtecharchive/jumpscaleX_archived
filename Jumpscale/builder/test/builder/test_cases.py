@@ -6,10 +6,10 @@ from loguru import logger
 
 
 class TestCases(BaseTest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        logger.add("builder_tests.log")
-        logger.debug("Starting of builders testcases which test main methods: build, install, start, stop ")
+    @classmethod
+    def setUpClass(cls):
+        logger.add("sandbox_tests.log")
+        logger.debug("Starting of sandbox testcases.")
 
     def test001_zbd(self):
         logger.debug("Zdb builder: run build method.")
