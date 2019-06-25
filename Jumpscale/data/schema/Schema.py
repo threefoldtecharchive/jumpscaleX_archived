@@ -296,7 +296,7 @@ class Schema(j.application.JSBaseClass):
 
         return self._obj_class
 
-    def get(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
+    def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
         get schema_object using data and capnpbin
 
@@ -307,6 +307,8 @@ class Schema(j.application.JSBaseClass):
         :param model: will make sure we save in the model
         :return:
         """
+        if model:
+            assert isinstance(model, j.data.bcdb._BCDBModelClass)
         if isinstance(serializeddata, bytes):
             return j.data.serializers.jsxdata.loads(serializeddata, model=model)
         elif isinstance(capnpdata, bytes):
@@ -319,20 +321,8 @@ class Schema(j.application.JSBaseClass):
             return self.objclass(schema=self, model=model)
         else:
             raise RuntimeError("only support binary data or dict as kwargs")
-
-    def new(self, model=None, data=None):
-        """
-        data is dict or None
-        """
-        if isinstance(data, bytes):
-            raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        if data and isinstance(data, dict):
-            r = self.get(model=model, datadict=data)
-        else:
-            r = self.get(model=model)
         if model is not None:
             model._triggers_call(r, "new")
-        return r
 
     # @property
     # def propertynames_index_sql(self):

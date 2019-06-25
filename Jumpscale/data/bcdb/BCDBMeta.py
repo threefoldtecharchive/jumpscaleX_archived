@@ -114,7 +114,7 @@ class BCDBMeta(j.application.JSBaseClass):
             self._data.name = self._bcdb.name
         else:
             self._log_debug("schemas load from db")
-            self._data = self._schema.get(serializeddata=serializeddata)
+            self._data = self._schema.new(serializeddata=serializeddata)
 
         if self._data.name != self._bcdb.name:
             raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")

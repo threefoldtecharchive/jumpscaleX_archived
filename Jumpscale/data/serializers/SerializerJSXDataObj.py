@@ -59,7 +59,7 @@ class SerializerJSXDataObj(SerializerBase):
             data2 = data[17:]
             if md5 in j.data.schema.md5_to_schema:
                 schema = j.data.schema.md5_to_schema[md5]
-                obj = schema.get(capnpdata=data2, model=model)
+                obj = schema.new(capnpdata=data2, model=model)
                 return obj
             else:
                 j.shell()
@@ -71,6 +71,6 @@ class SerializerJSXDataObj(SerializerBase):
             sid = int.from_bytes(data[1:3], byteorder="little")
             data2 = data[3:]
             model2 = model.bcdb.model_get_from_sid(sid)  # weird concept but it could be we get other model based on sid
-            return model2.schema.get(capnpdata=data2, model=model)
+            return model2.schema.new(capnpdata=data2, model=model)
         else:
             raise RuntimeError("version wrong")

@@ -529,7 +529,7 @@ class BCDB(j.application.JSBaseClass):
             return bdata
         else:
             try:
-                obj = model.schema.get(serializeddata=bdata, model=model)
+                obj = model.schema.new(serializeddata=bdata, model=model)
             except Exception as e:
                 msg = "can't get a model from data:%s\n%s" % (bdata, e)
                 print(msg)

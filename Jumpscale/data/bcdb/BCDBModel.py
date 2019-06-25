@@ -189,10 +189,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data, model=self)
+            obj = self.schema.new(datadict=data, model=self)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(serializeddata=data, model=self)
+            obj = self.schema.new(serializeddata=data, model=self)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
             if not obj.nid:
@@ -217,7 +217,7 @@ class BCDBModel(j.application.JSBaseClass):
                     data["nid"] = nid
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data)
+            obj = self.schema.new(datadict=data)
             obj.nid = nid
         else:
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
@@ -370,7 +370,7 @@ class BCDBModel(j.application.JSBaseClass):
             data = j.data.serializers.json.loads(data)
         if data:
             if isinstance(data, dict):
-                obj = self.schema.get(datadict=data, model=self)
+                obj = self.schema.new(datadict=data, model=self)
             else:
                 raise RuntimeError("need dict")
         else:

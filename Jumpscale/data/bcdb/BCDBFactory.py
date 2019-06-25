@@ -24,6 +24,8 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
 
+        self._BCDBModelClass = BCDBModel  # j.data.bcdb._BCDBModelClass
+
         self._load()
 
     def _load(self):
