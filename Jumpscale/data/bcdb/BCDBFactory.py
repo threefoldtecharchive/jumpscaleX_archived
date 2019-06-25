@@ -6,6 +6,7 @@ from .BCDBVFS import BCDBVFS
 import os
 import sys
 import redis
+from .connectors.webdav.BCDBResourceProvider import BCDBResourceProvider
 
 
 class BCDBFactory(j.application.JSBaseClass):
@@ -60,6 +61,10 @@ class BCDBFactory(j.application.JSBaseClass):
     @property
     def _BCDBModelClass(self):
         return BCDBModel
+
+    @property
+    def WebDavProvider(self):
+        return BCDBResourceProvider()
 
     @property
     def instances(self):
