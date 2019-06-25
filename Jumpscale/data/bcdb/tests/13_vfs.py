@@ -49,7 +49,6 @@ def main(self):
 
     r = vfs.get("test/data/1")
     identifier_folders = [i for i in r.list()]
-    print(identifier_folders)
     assert (
         len(identifier_folders) == 3
         and "sid" in identifier_folders
@@ -75,13 +74,13 @@ def main(self):
         if obj["addr"] == "something:5":
             assert obj["name"] == "myuser_5"
 
-    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/12")
+    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/8")
 
     obj = j.data.serializers.json.loads(r.get())
 
-    assert obj["id"] == 12
-    assert obj["addr"] == "something:2"
-    assert obj["name"] == "myuser_2"
+    assert obj["id"] == 8
+    assert str(obj["addr"]).startswith("something:")
+    assert str(obj["name"]).startswith("myuser_")
     self._log_info("TEST GET DATA DONE")
 
     # schema path
@@ -98,10 +97,27 @@ def main(self):
     assert len(schemas3) == 9  # multiple url link to the same schema id ?
     r = vfs.get("schemas/url/threefoldtoken.wallet.test")
     schema = r.get()
-    print(schema)
     obj = j.data.serializers.json.loads(schema)
+    assert str(obj["url"]) == "threefoldtoken.wallet.test"
+    assert str(obj["name"]) == "string"
     self._log_info("TEST GET SCHEMA DONE")
+
+    r = vfs.get("data/1/url/threefoldtoken.wallet.test/1")
+    obj = r.get()
+    r.delete()
+    with test_case.assertRaises(Exception):
+        r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/1")
+    r2 = vfs.get("data/1/url/threefoldtoken.wallet.test/2")
+    obj2raw = r2.get()
+
+    obj2 = j.data.serializers.json.loads(obj2raw)
+    assert obj2["name"] == "myuser_1"
+    assert obj2["id"] == 2
+
+    with test_case.assertRaises(Exception):
+        obj = r_deleted.get()  # can't get deleted data
+
     self._log_info("TODO TEST SET DELETE DATA DONE")
-    self._log_info("TODO TEST SET DELETE SCHEMA DONE")
+
     self._log_info("TEST DONE")
     return "OK"

@@ -126,7 +126,8 @@ On each level we can do
   
 
 ### client to DB
-zdb client communicate with 0db and uses redis protocol
+zdb client communicate with 0db and uses redis  protocol  called [RESP](https://redis.io/topics/protocol).
+
 rdb client is compatible with 0db client but uses redis as a backend 
 
 

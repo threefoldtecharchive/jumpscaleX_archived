@@ -146,7 +146,8 @@ class BCDBVFS(j.application.JSBaseClass):
                             )
                         key = "data_%s_sid_%s_%s" % (nid, sid, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(self, item=self._bcdb.model_get_from_sid(sid).get(id))
+                            m = self._bcdb.model_get_from_sid(sid)
+                            self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             elif splitted[2] == "hash":
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/hash
@@ -176,9 +177,8 @@ class BCDBVFS(j.application.JSBaseClass):
                             )
                         key = "data_%s_hash_%s_%s" % (nid, hsh, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=self._bcdb.model_get_from_schema(schema).get(id)
-                            )
+                            m = self._bcdb.model_get_from_schema(schema)
+                            self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             else:  # URL
                 if path_length == 3:
                     # third element must be the in the list e.g. /data/5/sid
@@ -206,9 +206,8 @@ class BCDBVFS(j.application.JSBaseClass):
                             )
                         key = "data_%s_url_%s_%s" % (nid, url, id)
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data(
-                                self, item=(self._bcdb.model_get_from_url(url).get(id))
-                            )
+                            m = self._bcdb.model_get_from_url(url)
+                            self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
         else:
             raise RuntimeError("path:%s too long " % (path))
         return key
@@ -334,10 +333,8 @@ class BCDBVFS(j.application.JSBaseClass):
                 return obj._json
             else:
                 return self.serializer.dumps(obj._json)
-        # elif isinstance(obj, BCDBMeta):
+        # for meta we use the json representation otherwise it is not serializable
         elif isinstance(obj, j.data.schema.SCHEMA_CLASS):
-            print("TODO DO a _json or find @@@@@@@@@@@@@@@@@@@@@@@@:%s" % type(obj))
-
             return obj._json
         else:
             # here should be standard types
@@ -355,6 +352,9 @@ class BCDBVFS_Data_Dir:
     def __init__(self, vfs, items=[]):
         self.vfs = vfs
         self.items = items
+
+    def delete(self):
+        raise RuntimeError("Data directory can't be deleted")
 
     def list(self):
         return self.vfs._get_serialized_list(self.items)
@@ -375,6 +375,9 @@ class BCDBVFS_Schema_Dir:
         self.vfs = vfs
         self.items = items
 
+    def delete(self):
+        raise RuntimeError("Schema directory can't be deleted")
+
     def list(self):
         return self.vfs._get_serialized_list(self.items)
 
@@ -382,7 +385,7 @@ class BCDBVFS_Schema_Dir:
         return self
 
     def set(self):
-        raise RuntimeError("Can't set on a directory")
+        raise RuntimeError("Can't set on a schema directory")
 
     def len(self):
         raise RuntimeError("Can't do a len on a directory")
@@ -394,7 +397,7 @@ class BCDBVFS_Schema:
         self.schema = schema
 
     def list(self):
-        raise RuntimeError("Can't list on a schema")
+        raise RuntimeError("Schema can't be listed")
 
     def get(self):
         return self.vfs._get_serialized_obj(self.schema)
@@ -406,20 +409,36 @@ class BCDBVFS_Schema:
         else:
             return True
 
+    def delete(self):
+        raise RuntimeError("Schemas can't be deleted")
+
     def len(self):
         return len(self.vfs.serializer.dumps(self.schema))
 
 
 class BCDBVFS_Data:
-    def __init__(self, vfs, item=None):
+    def __init__(self, vfs, key=None, model=None, item=None):
         self.vfs = vfs
+        assert item
+        assert model
+        assert key
+        self.key = key
         self.item = item
+        self.model = model
 
     def list(self):
-        raise RuntimeError("Can't list on one data")
+        raise RuntimeError("Data can't be listed")
+
+    def delete(self):
+        self.model.delete(self.item)
+        self.item = None
+        return self.vfs._dirs_cache.pop(self.key, None)
 
     def get(self):
-        return self.vfs._get_serialized_obj(self.item)
+        if self.item:
+            return self.vfs._get_serialized_obj(self.item)
+        else:
+            raise RuntimeError("Data has been deleted")
 
     def set(self, item):
         self.item = self.vfs.serializer.loads(item)
@@ -435,6 +454,9 @@ class BCDBVFS_Data:
 class BCDBVFS_Info:
     def __init__(self, vfs):
         self.vfs = vfs
+
+    def delete(self):
+        raise RuntimeError("Info can't be deleted")
 
     def list(self):
         raise RuntimeError("Info is not a directory")
