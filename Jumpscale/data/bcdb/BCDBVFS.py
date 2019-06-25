@@ -11,29 +11,31 @@ class BCDBVFS(j.application.JSBaseClass):
     navigate through the BCDB like it was a file system
     the root directory is the bcdb name 
     Here is the file system directories
-    /data
-        /nid
+    / should list all the bcdbs
+     /test
+        /data
+            /nid
+                /sid
+                    /1
+                        object1
+                        object2
+                /hash
+                    /0eccf565df45
+                        object1
+                        object2
+                /url
+                    /ben.test.1
+                        object1
+                        object2
+        /schemas
             /sid
-                /1
-                    object1
-                    object2
+                1
             /hash
-                /0eccf565df45
-                    object1
-                    object2
+                0eccf565df45
             /url
-                /ben.test.1
-                    object1
-                    object2
-    /schemas
-        /sid
-            1
-        /hash
-            0eccf565df45
-        /url
-            ben.test.1
-        /url2sid
-            ben.test.1
+                ben.test.1 (url / properties of the schema itself)
+            /url2sid
+                ben.test.1
     info
     eg. test/data/2/url/ben.test.1/object1, test/schemas/hash/0eccf565df45 
     if bcdb name is set eg. /data/2/url/ben.test.1/, data/2/url/ben.test.1/object2,
@@ -62,34 +64,77 @@ class BCDBVFS(j.application.JSBaseClass):
         _first_level_path: all the paths that are right after root
     """
 
-    def __init__(self, inner_bcdb, serialize_format="json"):
+    def __init__(self, bcdb_instances, serialize_format="json"):
         """
-        :param bcbd:  the BCDB
+        :param bcdb_instances:  all the BCDB instances
         """
         JSBASE.__init__(self)
         self._dirs_cache = {}
         # todo add more serializers
+        assert bcdb_instances
         self.serializer = j.data.serializers.json
-        self._bcdb = inner_bcdb
-        self.root_dir = self._bcdb.name
+        self._bcdb_instances = bcdb_instances
+        self._bcdb_names = list(bcdb_instances.keys())
+        self.root_dir = self._bcdb_names[0]
+        self._bcdb = bcdb_instances[self.root_dir]
         self.directories_under_data_namespace = ["sid", "hash", "url"]
         self.directories_under_schemas = ["sid", "hash", "url", "url2sid"]
         self.directories_under_root = ["data", "schemas", "info"]
 
+    def change_current_bcdb(self, bcdb_name):
+        if bcdb_name in self._bcdb_names:
+            self.root_dir = bcdb_name
+            self._bcdb = self._bcdb_instances[bcdb_name]
+        else:
+            raise RuntimeError("cannot change current bcdb name:%s is not in:%s" % (bcdb_name, self._bcdb_names))
+
     def _split_clean_path(self, path):
         splitted = path.lower().split("/")
         # make sure that the first and last element are not empty and not the bcdb name
+        # TODO unit test this one is crucial
+
+        if len(splitted) == 0:
+            return []
         while splitted[0] == "":
             splitted.pop(0)
+            if len(splitted) == 0:
+                return []
         while splitted[-1] == "":
             splitted.pop(-1)
         if splitted[0] == self.root_dir:
             splitted.pop(0)
-        if splitted[0] not in self.directories_under_root:
-            raise RuntimeError(
-                "first element:%s of path:%s should be in:%s" % (splitted[0], path, self.directories_under_root)
-            )
+
+        if splitted[0] in self._bcdb_names:
+            self.change_current_bcdb(splitted[0])
+            return self._split_clean_path(path)
+        else:
+            if splitted[0] not in self.directories_under_root and splitted[0] not in self._bcdb_names:
+                raise RuntimeError(
+                    "first element:%s of path:%s should be in:%s" % (splitted[0], path, self.directories_under_root)
+                )
+
         return [w.lower() for w in splitted]
+
+        """return the bcdb name or root directory of the path
+        if the path begins by data or schemas we will return the 
+        current bcdb name
+        
+        Arguments:
+            path {sting} -- path
+
+        Returns:
+             string -- bcdb name
+        """
+        """  def _get_bcdb_name_from_path(self, path):
+        splitted = path.lower().split("/")
+        # make sure that the first and last element are not empty and not the bcdb name
+        while splitted[0] == "":
+            splitted.pop(0)
+        if splitted[0] == self.root_dir or splitted[0] in self.directories_under_root:
+            return self.root_dir
+        elif len(splitted) == 1:
+            return splitted[0]
+        elif  len(splitted) >= 1: """
 
     def get(self, path):
         splitted = self._split_clean_path(path)
@@ -108,7 +153,7 @@ class BCDBVFS(j.application.JSBaseClass):
             # it means that we are listing the root directory
             key = "root"
             if not key in self._dirs_cache:
-                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=["data", "schemas"])
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb_names)
         return self._dirs_cache[key]
 
     def _get_data_items(self, splitted, nid, path):
@@ -272,7 +317,9 @@ class BCDBVFS(j.application.JSBaseClass):
                         sid = int(splitted[3])
                         key = "schemas_sid_%s" % (sid)
                         if not key in self._dirs_cache:
-                            res = BCDBVFS_Schema(self, schema=self._find_schema_by_id(self._bcdb.data.schema, sid))
+                            res = BCDBVFS_Schema(
+                                self, key=key, schema=self._find_schema_by_id(self._bcdb.data.schema, sid)
+                            )
                     except:
                         raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))
             elif splitted[1] == "hash":
@@ -285,7 +332,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     hsh = splitted[3]
                     key = "schemas_hash_%s" % (hsh)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema(self, schema=j.data.schema.get_from_md5(hsh))
+                        res = BCDBVFS_Schema(self, key=key, schema=j.data.schema.get_from_md5(hsh))
             elif splitted[1] == "url":
                 if len(splitted) == 2:
                     ## directory listing
@@ -297,7 +344,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     key = "schemas_url_%s" % (url)
                     if not key in self._dirs_cache:
                         s = j.data.schema.get_from_url_latest(url)
-                        res = BCDBVFS_Schema(self, schema=s)
+                        res = BCDBVFS_Schema(self, key=key, schema=s)
             else:
                 raise RuntimeError(
                     "Second element:%s of path:%s should be either sid hash or url" % (splitted[2], path)
@@ -314,13 +361,58 @@ class BCDBVFS(j.application.JSBaseClass):
         return None
 
     def list(self, path):
-        self.get(path).list()
+        return self.get(path).list()
 
-    def set(self, path):
+    def is_dir(self, path):
+        self.get(path).is_dir()
+
+    def set(self, path, items=None):
+        """set new items on the specified path
+        
+        Arguments:
+            path {string} -- the destination path were the objects will be added
+ 
+        Keyword Arguments:
+            items {Schema | JSXObject} -- items to be added in the specified path (default: {None})
+        """
+        # j.data.schema.add_from_text(schema_text, url)
         pass
+
+        """    def _get_schemas_keys_from_text_url(self, schema_text=None):
+        keys = None
+        if schema_text:
+            txt = j.core.text.strip(schema_text)
+            for line in txt.split("\n"):
+                strip_line = line.lower().strip()
+                if strip_line == "" or strip_line.startswith("#"):
+                    continue
+                if strip_line.startswith("@url"):
+                    url = strip_line.split("=")[1]
+                    keys[url] = "schemas_url_%s" % url
+        return keys """
+
+    def add_schemas(self, schemas_text=None):
+        """set new schemas based on their text to the current bcdb
+        Keyword Arguments:
+            schemas_text {string} -- can be one or several schema text
+        Returns:
+             list: all the schemas path added to the cache
+        """
+        path_added = []
+        if schemas_text:
+            schemas = j.data.schema.add_from_text(schemas_text)
+            if schemas:
+                for s in schemas:
+                    key = "schemas_url_%s" % s.url
+                    path = "%s/schemas/url/%s" % (self.root_dir, s.url)
+                    path_added.append(path)
+                    # we do not check if it exist as anyway it will
+                    # replace the latest schema with this url
+                    self._dirs_cache[key] = BCDBVFS_Schema(self, key=key, schema=s)
+        return path_added
 
     def delete(self, path):
-        pass
+        return self.get(path).delete()
 
     def len(self):
         return 1
@@ -347,6 +439,17 @@ class BCDBVFS(j.application.JSBaseClass):
         for o in items:
             yield self._get_serialized_obj(o)
 
+    def _get_nid_from_data_key(self, key):
+        splitted = key.lower().split("_")
+        # make sure that the first and last element are not empty and not the bcdb name
+        if splitted[0] != "data":
+            raise RuntimeError("first element:%s of key:%s must be data" % (splitted[0], key))
+        try:
+            nid = int(splitted[1])
+        except:
+            raise RuntimeError("second element:%s of key:%s must be an integer" % (splitted[1], key))
+        return nid
+
 
 class BCDBVFS_Data_Dir:
     def __init__(self, vfs, items=[]):
@@ -367,6 +470,9 @@ class BCDBVFS_Data_Dir:
 
     def len(self):
         raise RuntimeError("Can't do a len on a directory")
+
+    def is_dir(self):
+        return True
 
 
 class BCDBVFS_Schema_Dir:
@@ -390,24 +496,29 @@ class BCDBVFS_Schema_Dir:
     def len(self):
         raise RuntimeError("Can't do a len on a directory")
 
+    def is_dir(self):
+        return True
+
 
 class BCDBVFS_Schema:
-    def __init__(self, vfs, schema=None):
+    def __init__(self, vfs, key=None, schema=None):
         self.vfs = vfs
+        assert vfs
         self.schema = schema
+        # key can be None if it is only to set a new schema
+        self.key = key
 
     def list(self):
         raise RuntimeError("Schema can't be listed")
 
     def get(self):
-        return self.vfs._get_serialized_obj(self.schema)
-
-    def set(self, schema):
-        self.schema = self.vfs.serializer.loads(schema)
-        if self.schema is None:
-            return False
+        if self.schema:
+            return self.vfs._get_serialized_obj(self.schema)
         else:
-            return True
+            raise RuntimeError("Schema is not present")
+
+    def set(self, schema_text):
+        raise RuntimeError("Schemas can't be overwritten but you can create a new one check add_schemas()")
 
     def delete(self):
         raise RuntimeError("Schemas can't be deleted")
@@ -415,11 +526,14 @@ class BCDBVFS_Schema:
     def len(self):
         return len(self.vfs.serializer.dumps(self.schema))
 
+    def is_dir(self):
+        return False
+
 
 class BCDBVFS_Data:
     def __init__(self, vfs, key=None, model=None, item=None):
         self.vfs = vfs
-        assert item
+        assert vfs
         assert model
         assert key
         self.key = key
@@ -440,8 +554,9 @@ class BCDBVFS_Data:
         else:
             raise RuntimeError("Data has been deleted")
 
-    def set(self, item):
-        self.item = self.vfs.serializer.loads(item)
+    def set(self, item_data, id):
+        nid = self.vfs._get_nid_from_data_key(self.key)
+        self.item = self.model.set_dynamic(item_data, id=id, nid=nid)
         if self.item is None:
             return False
         else:
@@ -449,6 +564,9 @@ class BCDBVFS_Data:
 
     def len(self):
         return len(self.vfs.serializer.dumps(self.item))
+
+    def is_dir(self):
+        return False
 
 
 class BCDBVFS_Info:
@@ -597,3 +715,5 @@ class BCDBVFS_Info:
         C = j.core.text.strip(C)
         return self.vfs.serializer.dumps(C)
 
+    def is_dir(self):
+        return False

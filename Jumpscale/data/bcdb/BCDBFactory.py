@@ -127,8 +127,8 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         return self._get(name=name, reset=reset)
 
-    def _get_vfs(self, name, reset=False):
-        return BCDBVFS(self.get(name, reset))
+    def _get_vfs(self):
+        return BCDBVFS(self._bcdb_instances)
 
     def _get(self, name, reset=False, if_not_exist_die=True):
         data = {}
@@ -288,14 +288,6 @@ class BCDBFactory(j.application.JSBaseClass):
         items.sort()
         # print(items)
         return items
-
-    def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self.__names_methods() or name in self.__names_properties():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name)
-        return r
 
     def __setattr__(self, key, value):
         if key in ["system", "test"]:

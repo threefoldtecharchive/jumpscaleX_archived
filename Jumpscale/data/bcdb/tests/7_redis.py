@@ -17,13 +17,14 @@ def main(self):
     """
 
     def do(zdb=False):
-
-        if zdb:
-            j.servers.zdb.start_test_instance(destroydata=True)
-
-        j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=20)
-
-        redis_cl = j.clients.redis.get(ipaddr="localhost", port=6380)
+        cmd = """
+        . /sandbox/env.sh;
+        kosmos 'j.data.bcdb.new("test").redis_server_start(port=6380)'
+        """
+        j.servers.tmux.execute(cmd)
+        j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=15)
+        bcdb = j.data.bcdb.get("test")
+        bcdb.reset()
 
         schema = """
         @url = despiegk.test2
@@ -42,10 +43,18 @@ def main(self):
         if zdb:
             cl = j.clients.zdb.client_get(port=9901)
             cl.flush()
-
         schema = j.core.text.strip(schema)
+        m = bcdb.model_get_from_schema(schema)
+
+        redis_cl = j.clients.redis.get(ipaddr="localhost", port=6380)
+
         self._log_debug("set schema to 'despiegk.test2'")
+        print(redis_cl.get("schemas:url"))
         redis_cl.set("schemas:url:despiegk.test2", schema)
+        print(redis_cl.get("schemas:url:despiegk.test2"))
+        redis_cl.delete("schemas:url:despiegk.test2")
+        print(redis_cl.get("schemas:url:despiegk.test2"))
+        j.shell()
         redis_cl.execute_command("schemaset", schema)
         redis_cl.execute_command("schemaset", schema, url)
         sid = redis_cl.get("schemas:url2sid:despiegk.test2")
@@ -53,7 +62,6 @@ def main(self):
 
         j.shell()
 
-        redis_cl.set("schemas:url:despiegk.test2", schema)
         self._log_debug("compare schema")
         schema2 = redis_cl.get("schemas:despiegk.test2")
         # test schemas are same
@@ -149,7 +157,7 @@ def main(self):
     def sqlite_test():
         # SQLITE BACKEND
         bcdb, _ = self._load_test_model(reset=True, type="sqlite")
-        # self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
+
         do()
         # restart redis server lets see if schema's are there autoloaded
         self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
