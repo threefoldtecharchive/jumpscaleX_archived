@@ -574,4 +574,3 @@ class BCDBVFS_Info:
         """
         C = j.core.text.strip(C)
         return self.vfs.serializer.dumps(C)
-
