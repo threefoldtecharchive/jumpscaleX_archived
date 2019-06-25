@@ -1,9 +1,15 @@
 from Jumpscale import j
 from base_test import BaseTest
+from loguru import logger
 import unittest
 
 
 class TestCases(BaseTest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        logger.add("sandbox_tests.log")
+        logger.debug("Starting of sandbox testcases.")
+
     @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/299")
     def test001_caddy(self):
         j.builders.web.caddy.sandbox(
@@ -88,21 +94,29 @@ class TestCases(BaseTest):
         self.deploy_flist_container("coredns")
 
     def test008_docker(self):
+        logger.debug("Run docker sandbox, should succeed and upload flist on hub.")
         j.builders.virtualization.docker.sandbox(
-            zhub_client=self.zhub,
+            zhub_instance=self.hub_instance,
             reset=True,
             create_flist=True,
             merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
         )
+        logger.debug("Deploy container with uploaded zdb builder flist.")
         self.deploy_flist_container("docker")
+
+        logger.debug("Check that docker flist works.")
         self.assertIn("Usage:", self.check_container_flist("/bin/sandbx/dockerd -h"))
 
     def test009_zdb(self):
+        logger.debug("run zdb sandbox, should succeed and upload flist on hub.")
         j.builders.db.zdb.sandbox(
             zhub_client=self.zhub,
             reset=True,
             flist_create=True,
             merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
         )
+        logger.debug("deploy container with uploaded zdb builder flist.")
         self.deploy_flist_container("0-db")
+
+        logger.debug("Check that zdb flist works by run zdb binary, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/bin/sandbox/zdb -h"))

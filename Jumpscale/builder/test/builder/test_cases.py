@@ -2,15 +2,27 @@ from Jumpscale import j
 from Jumpscale.builder.test.builder.base_test import BaseTest
 import unittest
 import time
+from loguru import logger
 
 
 class TestCases(BaseTest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        logger.add("builder_tests.log")
+        logger.debug("Starting of builders testcases which test main methods: build, install, start, stop ")
+
     def test001_zbd(self):
+        logger.debug("Zdb builder: run build method.")
         j.builders.db.zdb.build(reset=True)
+        logger.debug("zdb builder: run install method.")
         j.builders.db.zdb.install()
+        logger.debug("zdb builder: run start method.")
         j.builders.db.zdb.start()
+        logger.debug("check that zdb server started successfully.")
         self.assertEqual(1, len(j.sal.process.getProcessPid("zdb")))
+        logger.debug("zdb builder: run stop method.")
         j.builders.db.zdb.stop()
+        logger.debug("check that zdb server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("zdb")))
 
     @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
@@ -31,11 +43,17 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid("nginx")))
 
     def test004_traefik(self):
+        logger.debug("traefik builder: run build method.")
         j.builders.web.traefik.build(reset=True)
+        logger.debug("traefik builder: run install method.")
         j.builders.web.traefik.install()
+        logger.debug("traefik builder: run start method.")
         j.builders.web.traefik.start()
+        logger.debug("check that traefik server started successfully.")
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("traefik")))
+        logger.debug("traefik builder: run stop method.")
         j.builders.web.traefik.stop()
+        logger.debug("check that traefik server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("traefik")))
 
     def test005_minio(self):
@@ -229,3 +247,17 @@ class TestCases(BaseTest):
         self.assertTrue(j.sal.process.getProcessPid("php-fpm"))
         j.builders.runtimes.php.stop()
         self.assertFalse(j.sal.process.getProcessPid("php-fpm"))
+
+    def test028_docker(self):
+        logger.debug("docker builder: run build method.")
+        j.builders.virtualization.docker.build(reset=True)
+        logger.debug("docker builder: run install method.")
+        j.builders.virtualization.docker.install()
+        logger.debug("docker builder: run start method.")
+        j.builders.virtualization.docker.start()
+        logger.debug("check that docker server started successfully.")
+        self.assertTrue(j.sal.process.getProcessPid("containerd"))
+        logger.debug("docker builder: run stop method.")
+        j.builders.virtualization.docker.stop()
+        logger.debug("check that docker server stopped successfully.")
+        self.assertFalse(j.sal.process.getProcessPid("containerd"))
