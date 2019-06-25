@@ -26,10 +26,11 @@ class DirCollection(DAVCollection):
         :return: DirCollection if the member is a dir-like or DocResource if the member is a doc
         """
         path = j.sal.fs.joinPaths(self.path, name)
-        if self.vfs.is_dir(path):
+        doc = self.vfs.get(path)
+        if doc.is_dir():
             return DirCollection(path, self.environ)
         else:
-            return DocResource(path, self.environ, self.vfs.get(path))
+            return DocResource(path, self.environ, doc)
 
 
 class DocResource(DAVNonCollection):
@@ -39,10 +40,10 @@ class DocResource(DAVNonCollection):
 
     def __init__(self, path, environ, doc):
         DAVNonCollection.__init__(self, path, environ)
-        self.doc = doc
+        self.doc = doc.get()
 
     def get_content(self):
-        html = "<pre>" + self.doc.get() + "</pre>"
+        html = "<pre>" + self.doc + "</pre>"
         return compat.StringIO(html)
 
     def get_content_length(self):
@@ -52,7 +53,7 @@ class DocResource(DAVNonCollection):
         return "text/html"
 
     def get_display_name(self):
-        return compat.to_native(self.doc.key)
+        return compat.to_native(self.doc)
 
     def get_display_info(self):
         return {"type": "BCDB Model"}
