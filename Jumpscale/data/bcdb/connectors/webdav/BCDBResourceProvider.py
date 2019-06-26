@@ -26,11 +26,12 @@ class DirCollection(DAVCollection):
         :return: DirCollection if the member is a dir-like or DocResource if the member is a doc
         """
         path = j.sal.fs.joinPaths(self.path, name)
-        doc = self.vfs.get(path)
-        if doc.is_dir():
+
+        vfile = self.vfs.get(path)
+        if vfile.is_dir():
             return DirCollection(path, self.environ)
         else:
-            return DocResource(path, self.environ, doc)
+            return DocResource(path, self.environ, vfile)
 
 
 class DocResource(DAVNonCollection):
@@ -38,13 +39,13 @@ class DocResource(DAVNonCollection):
     Handles docs. a doc is bcdb data object treated like a documentation
     """
 
-    def __init__(self, path, environ, doc):
+    def __init__(self, path, environ, vfile):
         DAVNonCollection.__init__(self, path, environ)
-        self.doc = doc.get()
+        self.doc = vfile.get()
 
     def get_content(self):
         html = "<pre>" + self.doc + "</pre>"
-        return compat.StringIO(html)
+        return compat.BytesIO(html.encode("utf-8"))
 
     def get_content_length(self):
         return len(self.get_content().read())
