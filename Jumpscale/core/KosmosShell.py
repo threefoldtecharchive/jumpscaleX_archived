@@ -1,4 +1,5 @@
 import inspect
+import traceback
 
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
@@ -24,63 +25,20 @@ class KosmosShellConfig:
     pass
 
 
-def get_object(tbc, locals_=None, globals_=None, walkback=False):
+def eval_code(stmts, locals_=None, globals_=None):
     """
-    tries starting from the string e.g. j.clients.ssh to get to an object out of the stack
-    :param tbc: the line on the console = text before cursor
-    :param locals_:
-    :param globals_:
-    :param walkback:
-    :return:
+    a helper function to ignore incomplete syntax erros when evaluating code
+    while typing incomplete lines, e.g.: j.clien...
     """
-    j = KosmosShellConfig.j
+    if not stmts:
+        return
 
     try:
-        obj = eval(tbc)
-        return obj
-    except Exception as e:
-        # print(e)
-        pass
+        code = compile(stmts, filename="<kosmos>", mode="eval")
+    except SyntaxError:
+        return
 
-    tbc2 = tbc.split(".")[0]  # e.g. ssh.a becomes ssh, because I need to find the ssh object in the stack
-
-    obj = None
-    frame_ = inspect.currentframe()
-    if locals_ is None:
-        locals_ = frame_.f_locals
-        locals_ = j._locals_get(locals_)
-
-    if tbc2 in locals_:
-        obj = locals_[tbc2]
-
-    if not obj:
-
-        if not globals_:
-            globals_ = frame_.f_back.f_globals
-
-        if tbc2 in globals_:
-            obj = globals_[tbc2]
-
-    if not obj:
-
-        if walkback:
-            # now walk up to the frames
-            while obj is None and frame_:
-                locals_ = frame_.f_locals
-
-                if tbc2 in locals_:
-                    obj = locals_[tbc2]
-                else:
-                    frame_ = frame_.f_back
-
-    if "." in tbc:
-        tbc3 = ".".join(tbc.split(".")[1:])
-        try:
-            obj2 = eval("obj.%s" % tbc3)
-            return obj2
-        except Exception as e:
-            return
-    return obj
+    return eval(code, globals_, locals_)
 
 
 def sort_members_key(name):
@@ -130,8 +88,6 @@ def get_completions(self, document, complete_event):
 
     :rtype: `Completion` generator
     """
-    j = KosmosShellConfig.j
-    j.application._in_autocomplete = True
 
     def colored_completions(names, color):
         for name in names:
@@ -148,7 +104,7 @@ def get_completions(self, document, complete_event):
     except ValueError:
         return
 
-    obj = get_object(parent, self.get_locals(), self.get_globals())
+    obj = eval_code(parent, self.get_locals(), self.get_globals())
     if obj:
         if hasattr(obj.__class__, "_methods_"):
             yield from colored_completions(obj._properties_children(), "ansigreen")
@@ -162,12 +118,9 @@ def get_completions(self, document, complete_event):
             members = sorted(dir(obj), key=sort_members_key)
             yield from colored_completions(members, "ansigray")
 
-    j.application._in_autocomplete = False
 
-
-def get_doc_string(tbc):
-    j = KosmosShellConfig.j
-    obj = get_object(tbc, locals_=None, globals_=None, walkback=True)
+def get_doc_string(tbc, locals_, globals_):
+    obj = eval_code(tbc, locals_=locals_, globals_=globals_)
     if not obj:
         return
 
@@ -380,10 +333,9 @@ def ptconfig(repl):
 
     @repl.add_key_binding("?", filter=~IsInsideString(repl))
     def _docevent(event):
-        j = KosmosShellConfig.j
         b = event.cli.current_buffer
         tbc = b.document.current_line_before_cursor.rstrip("(")
-        d = get_doc_string(tbc)
+        d = get_doc_string(tbc, repl.get_locals(), repl.get_globals())
         if d:
             repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
         else:
@@ -418,14 +370,16 @@ def ptconfig(repl):
         try:
             _, _, prefix = get_current_line(document)
         except ValueError:
-            print("error in custom get completion")
-            j.application._in_autocomplete = False
             return
 
-        completions = list(get_completions(self, document, complete_event))
+        completions = []
+        try:
+            completions = list(get_completions(self, document, complete_event))
+        except Exception:
+            j.tools.logger._log_error("Error while getting completions\n" + traceback.format_exc())
+
         if not completions:
             completions = old_get_completions(self, document, complete_event)
-        # j.application._in_autocomplete = False
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions

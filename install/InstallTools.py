@@ -1077,6 +1077,8 @@ class Tools:
             logdict["context"] = ""
 
         p = print
+        if MyEnv.config['DEBUG'] and MyEnv.config.get('log_printer'):
+            p = MyEnv.config['log_printer']
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
@@ -2782,9 +2784,9 @@ class UbuntuInstaller:
         apt-get update
         apt-get install -y curl rsync unzip
         locale-gen --purge en_US.UTF-8
-        
+
         apt-get install python3-pip -y
-        apt-get install locales -y        
+        apt-get install locales -y
 
         """
         Tools.execute(script, interactive=True)
@@ -3499,9 +3501,9 @@ class DockerContainer:
 
         # if you use a container do:
         jsx container-kosmos
-        
+
         or
-        
+
         kosmos
 
         """
