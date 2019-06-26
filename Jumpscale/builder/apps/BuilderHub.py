@@ -16,6 +16,8 @@ class BuilderHub(j.builders.system._BaseClass):
         self.DEST_ZEROFLIST = self.tools.joinpaths(self.DIR_CODE, "zeroflist")
         self.HUB_SANDBOX = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(self.HUB_SANDBOX)
+        self.DEST_SANDBOX_HUB = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "hub")
+        self.DEST_SANDBOX_ZEROFLIST = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "zeroflist")
 
     @builder_method()
     def clean(self):
@@ -33,7 +35,7 @@ class BuilderHub(j.builders.system._BaseClass):
         for testing purposes just pass your docker ip to this method
         to set it to environment variables
         """
-        self.profile.env_set_part("IP_PORT", docker_ip + ":5555")
+        self.profile.env_set_part("IP_PORT", docker_ip)
 
     @builder_method()
     def build(self):
@@ -141,8 +143,6 @@ class BuilderHub(j.builders.system._BaseClass):
         # ensure dirs
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
-        DEST_HUB = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "hub")
-        DEST_ZEROFLIST = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "zeroflist")
 
         # sandbox zdb
         bins = ["zdb"]
@@ -172,14 +172,20 @@ class BuilderHub(j.builders.system._BaseClass):
         self._execute(capnp_sandbox_cmd)
 
         # sandbox zflist
-        self._copy(self.DEST_ZEROFLIST, DEST_ZEROFLIST)
+        self._copy(self.DEST_ZEROFLIST, self.DEST_SANDBOX_ZEROFLIST)
         # sandbox hub
-        self._copy(self.DEST_HUB, DEST_HUB)
+        self._copy(self.DEST_HUB, self.DEST_SANDBOX_HUB)
 
         # install hub
         file_src = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "zerohub_config.py")
-        file_dest = self.tools.joinpaths(DEST_HUB, "python", "config.py")
+        file_dest = self.tools.joinpaths(self.DEST_SANDBOX_HUB, "python", "config.py")
         self._copy(file_src, file_dest)
+        self._execute(
+            """
+            sed -i "s/\\"zflist-bin\\": \\"\/opt\/0-flist\/zflist\/zflist\\"/\\"zflist-bin\\":\
+            \\"\/sandbox\/zeroflist\/zflist\/zflist\\"/" {DEST_SANDBOX_HUB}/python/config.py
+        """
+        )
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "zerohub_startup.toml")
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
