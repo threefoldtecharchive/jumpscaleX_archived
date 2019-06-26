@@ -123,7 +123,7 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def get(self, path):
         splitted = self._split_clean_path(path)
-        print("################### path:%s splited:%s" % (path, splitted))
+        self._log_debug("vfs get path:%s " % path)
         if len(splitted) > 0:
             key = None
             if splitted[0] == "data":
@@ -253,7 +253,12 @@ class BCDBVFS(j.application.JSBaseClass):
         if len(splitted) == 1:
             key = "%s_data" % self.current_bcbd_name
             if not key in self._dirs_cache:
-                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb.meta.data.namespaces)
+                # namespaces = self._bcdb.get_all()
+                # self._ids_last
+                # if len(namespaces) == 0:
+                # namespaces = self._bcdb.meta._data.namespaces
+                # namespaces = [0]
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=[1])
         else:
             try:
                 nid = int(splitted[1])
@@ -357,7 +362,7 @@ class BCDBVFS(j.application.JSBaseClass):
     def is_dir(self, path):
         self.get(path).is_dir()
 
-    def set(self, path, items=None):
+    def set(self, items=None):
         """set new items on the specified path
         
         Arguments:
@@ -367,20 +372,8 @@ class BCDBVFS(j.application.JSBaseClass):
             items {Schema | JSXObject} -- items to be added in the specified path (default: {None})
         """
         # j.data.schema.add_from_text(schema_text, url)
-        pass
-
-        """    def _get_schemas_keys_from_text_url(self, schema_text=None):
-        keys = None
-        if schema_text:
-            txt = j.core.text.strip(schema_text)
-            for line in txt.split("\n"):
-                strip_line = line.lower().strip()
-                if strip_line == "" or strip_line.startswith("#"):
-                    continue
-                if strip_line.startswith("@url"):
-                    url = strip_line.split("=")[1]
-                    keys[url] = "schemas_url_%s" % url
-        return keys """
+        for i in items:
+            i.url
 
     def add_schemas(self, schemas_text=None, bcdb_name=None):
         """set new schemas based on their text to the current bcdb
@@ -406,7 +399,14 @@ class BCDBVFS(j.application.JSBaseClass):
         return path_added
 
     def delete(self, path):
-        return self.get(path).delete()
+        if self._split_clean_path(path) == []:
+            # will change the current bcdb if it has to
+            # it means we are trying to remove everything on the current bcdb
+            self._log_debug("WARNING bcdb:%s reset" % self.current_bcbd_name)
+            self._bcdb.reset()
+            self._dirs_cache = {}
+        else:
+            return self.get(path).delete()
 
     def len(self):
         return 1
@@ -435,13 +435,13 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def _get_nid_from_data_key(self, key):
         splitted = key.lower().split("_")
-        # make sure that the first and last element are not empty and not the bcdb name
-        if splitted[0] != "data":
-            raise RuntimeError("first element:%s of key:%s must be data" % (splitted[0], key))
+        # make sure that the second element are not empty
+        if splitted[1] != "data":
+            raise RuntimeError("first element:%s of key:%s must be data" % (splitted[1], key))
         try:
-            nid = int(splitted[1])
+            nid = int(splitted[2])
         except:
-            raise RuntimeError("second element:%s of key:%s must be an integer" % (splitted[1], key))
+            raise RuntimeError("second element:%s of key:%s must be an integer" % (splitted[2], key))
         return nid
 
 
@@ -551,6 +551,7 @@ class BCDBVFS_Data:
     def set(self, item_data, id):
         nid = self.vfs._get_nid_from_data_key(self.key)
         self.item = self.model.set_dynamic(item_data, id=id, nid=nid)
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@item:%s" % sel)
         if self.item is None:
             return False
         else:
