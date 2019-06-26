@@ -4,21 +4,30 @@ from Jumpscale import j
 class JSXObject(j.application.JSBaseClass):
     def __init__(self, capnpdata=None, datadict={}, schema=None, model=None):
 
-        self._cobj_ = None
+        self._capnp_obj_ = None
         self.id = None
         self.nid = 1
         self._schema = schema
         self._model = model
-        self._changed_items = {}
+        if model:
+            assert self._schema == self._model.schema  # they need to be the same
+        self._deserialized_items = {}
         self._autosave = False
         self.acl_id = None
         self._acl = None
 
-        self._load_from_data(capnpdata=capnpdata)
+        self._load_from_data(capnpdata=capnpdata)  # ONLY LOADS THE self._capnp_obj_
         if datadict:
             self._data_update(datadict)
 
         j.application.JSBaseClass.__init__(self)
+
+        if self.id:
+            self._key = "%s:%s" % (self._schema.url, self.id)
+        else:
+            self._key = self._schema.url
+        self._logger_enable()
+        self._log_debug("1")
 
     @property
     def _readonly(self):
@@ -49,7 +58,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def _load_from_data(self, capnpdata=None):
         """
-        THIS ERASUSES EXISTING DATA !!!
+        THIS ERASES EXISTING DATA !!!
 
         :param data: can be binary (capnp), str=json, or dict
         :return:
@@ -61,15 +70,13 @@ class JSXObject(j.application.JSBaseClass):
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
-            self._cobj_ = self._capnp_schema.from_bytes_packed(capnpdata)
+            self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
             set_default = False
         else:
-            self._cobj_ = self._capnp_schema.new_message()
+            self._capnp_obj_ = self._capnp_schema.new_message()
             set_default = True
             self.acl_id = 0
             self._acl = None
-
-        self._reset()
 
         if set_default:
             self._defaults_set()  # only do when new message
@@ -103,7 +110,11 @@ class JSXObject(j.application.JSBaseClass):
             out += "- %-30s: %s\n" % (key, item)
         return out
 
-    def save(self):
+    def save(self, serialize=False):
+        if self._changed:
+            self._capnp_obj  # makes sure we get back to binary form
+            if serialize:
+                self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
             if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
@@ -112,7 +123,7 @@ class JSXObject(j.application.JSBaseClass):
                 if self.acl.id is None:
                     self.acl.save()
                 if self.acl.id != self.acl_id:
-                    self._changed_items["ACL"] = True
+                    self._deserialized_items["ACL"] = True
 
             if self._changed:
 
@@ -133,9 +144,7 @@ class JSXObject(j.application.JSBaseClass):
                 o = self._model.set(self)
                 self.id = o.id
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
-
                 return o
-
             return self
         raise RuntimeError("cannot save, model not known")
 
@@ -155,7 +164,7 @@ class JSXObject(j.application.JSBaseClass):
 
     @property
     def _data(self):
-        self._cobj  # leave, is to make sure we have error if something happens
+        self._capnp_obj  # leave, is to make sure we have error if something happens
         return j.data.serializers.jsxdata.dumps(self, model=self._model)
 
     @property
@@ -163,7 +172,7 @@ class JSXObject(j.application.JSBaseClass):
         """
         human readable dict
         """
-        d = self._ddict_hr_get()
+        d = self._ddict_hr_get(ansi=False)
         return d
 
     @property
@@ -185,16 +194,6 @@ class JSXObject(j.application.JSBaseClass):
     def _msgpack(self):
         return j.data.serializers.msgpack.dumps(self._ddict)
 
-    def _str(self):
-        out = "## "
-        out += "{BLUE}%s{RESET}\n" % self._schema.url
-        out += "{GRAY}id: %s{RESET} " % self.id
-        if hasattr(self, "name"):
-            out += "{RED}name:'%s'{RESET} " % self.name
-        out += self._hr_get()
-
-        return out
-
     def __eq__(self, val):
         if not isinstance(val, JSXObject):
             tt = j.data.types.get("obj", self._schema.url)
@@ -202,14 +201,11 @@ class JSXObject(j.application.JSBaseClass):
         return self._data == val._data
 
     def __str__(self):
-        return j.data.serializers.toml.dumps(self._ddict_hr)
-        # out = self._str()
-        #
-        # out += "{RESET}\n\n"
-        # out = j.core.tools.text_replace(out)
-        # # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
-        # #IS UGLY WORKAROUND
-        # print(out)
-        # return ""
+        out = self._str_get(ansi=True)
+        out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+        # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
+        # IS UGLY WORKAROUND
+        print(out)
+        return ""
 
     __repr__ = __str__

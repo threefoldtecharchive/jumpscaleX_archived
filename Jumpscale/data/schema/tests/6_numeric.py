@@ -19,7 +19,7 @@ def main(self):
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)
-    schema_test = schema_object.get()
+    schema_test = schema_object.new()
 
     schema_test.token_price = "10 USD"
 

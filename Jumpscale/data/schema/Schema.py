@@ -43,21 +43,29 @@ class Schema(j.application.JSBaseClass):
         urls = self.url.split(".")
         if len(urls) > 0:
             try:
-                # try if last one is version nr, if so pop it
-                j.data.types.int.clean(urls[-1])
-                self.version = urls.pop(len(urls) - 1)
-                # will remove the version from the url
-                self.url_noversion = ".".join(self.url.split(".")[:-1])
-                if self.url_noversion in j.data.schema.schemas_versionless:
-                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
-                        # version itself can be replaced as well, there could be an update
-                        j.data.schema.schemas_versionless[self.url_noversion] = self
-                else:
-                    j.data.schema.schemas_versionless[self.url_noversion] = self
+                v = int(urls[-1])
             except:
-                self.version = None
-                self.url_noversion = None
-            urls = ".".join(urls)
+                v = None
+                self.version = 1
+                self.url_noversion = self.url
+            if v is not None:
+                self.version = urls.pop(len(urls) - 1)
+                self.url_noversion = ".".join(urls)
+            # if self.url_noversion in j.data.schema.schemas_versionless:
+            #     if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
+            #         # version itself can be replaced as well, there could be an update
+            #         j.data.schema.schemas_versionless[self.url_noversion] = self
+            # else:
+            #     j.data.schema.schemas_versionless[self.url_noversion] = self
+
+    @property
+    def url_str(self):
+        u = self.url_noversion + ""
+        if "schema" in u:
+            u = u.split("schema", 1)[1]
+        if "jumpscale" in u:
+            u = u.split("schema", 1)[1]
+        return u
 
     @property
     def _path(self):
@@ -309,18 +317,18 @@ class Schema(j.application.JSBaseClass):
         """
         if model:
             assert isinstance(model, j.data.bcdb._BCDBModelClass)
-        if isinstance(serializeddata, bytes):
+        if serializeddata and isinstance(serializeddata, bytes):
             return j.data.serializers.jsxdata.loads(serializeddata, model=model)
-        elif isinstance(capnpdata, bytes):
+        elif capnpdata and isinstance(capnpdata, bytes):
             obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
             return obj
-        elif datadict:
+        elif datadict and datadict != {}:
             obj = self.objclass(schema=self, datadict=datadict, model=model)
             return obj
         elif capnpdata is None and serializeddata is None and datadict == None:
             return self.objclass(schema=self, model=model)
         else:
-            raise RuntimeError("only support binary data or dict as kwargs")
+            raise RuntimeError("wrong arguments to new on schema")
         if model is not None:
             model._triggers_call(r, "new")
 
