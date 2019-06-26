@@ -89,7 +89,6 @@ def main(self):
     r = vfs.get("/data/1/url/threefoldtoken.wallet.test/")
 
     objs_from_test_wallet = [i for i in r.list()]
-    print(objs_from_test_wallet)
     assert len(objs_from_test_wallet) == 10
     for o in objs_from_test_wallet:
         obj = j.data.serializers.json.loads(o)
@@ -128,7 +127,16 @@ def main(self):
     schema = r.get()
     obj = j.data.serializers.json.loads(schema)
     assert str(obj["url"]) == "threefoldtoken.wallet.test"
-    assert str(obj["name"]) == "string"
+    assert "ipaddr = (ipaddr)" in str(obj["text"])
+
+    # get the same schema via sid
+    sid = vfs.get("schemas/url2sid/threefoldtoken.wallet.test")
+    r = vfs.get("schemas/sid/%s" % sid.item)
+    schema = r.get()
+    obj = j.data.serializers.json.loads(schema)
+    assert str(obj["url"]) == "threefoldtoken.wallet.test"
+    assert "ipaddr = (ipaddr)" in str(obj["text"])
+
     self._log_info("TEST GET SCHEMA DONE")
 
     r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
@@ -183,7 +191,6 @@ def main(self):
     r3 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id_3)
     obj3raw = r3.get()
     obj3 = j.data.serializers.json.loads(obj3raw)
-    print("@@@@@@@@@@@@@#  get via get:%s" % obj3)
     assert obj3["id"] == obj_id_3
     assert obj3["email"] == "myemail3@test.fr"
     assert obj3["username"] == "nothing here_3"
@@ -192,7 +199,6 @@ def main(self):
     t3 = r3.set(model_obj)
     # let's try to get via get
     obj3 = j.data.serializers.json.loads(r3.get())
-    print("@@@@@@@@@@@@@# let's try to get via get:%s" % obj3)
     assert obj3["id"] == obj_id_3 == t3.id
     assert obj3["email"] == "ben1@threefoldtech.com"
     assert obj3["username"] == "incredible_username1"
@@ -200,7 +206,6 @@ def main(self):
     r3 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % t3.id)
     obj3raw = r3.get()
     obj3 = j.data.serializers.json.loads(obj3raw)
-    print("@@@@@@@@@@@@@# let's try to get via path:%s" % obj3)
     assert obj3["id"] == obj_id_3 == t3.id
     assert obj3["email"] == "ben1@threefoldtech.com"
     assert obj3["username"] == "incredible_username1"
@@ -222,6 +227,8 @@ def main(self):
         if obj["email"] == "ben18@threefoldtech.com":
             assert obj["username"] == "incredible_username18"
             obj_id_18 = obj["id"]
+    assert obj_id_18
+    assert obj_id_81
 
     # we should be able to find the same object via url
     r4 = vfs.get("data/1/url/threefoldtoken.wallet.test/")
@@ -229,7 +236,6 @@ def main(self):
 
     for o in obj_ids:
         obj = j.data.serializers.json.loads(o)
-        print("@@@@@@@@@@@@@@@@@@@@@objid:%s obj:%s" % (obj["id"], obj))
         if obj["email"] == "ben81@threefoldtech.com":
             assert obj["username"] == "incredible_username81"
             obj_id_81 = obj["id"]
@@ -238,28 +244,42 @@ def main(self):
             obj_id_18 = obj["id"]
     assert obj_id_18
     assert obj_id_81
-    # data_dir.set(model_new_obj)
 
     # let's try to add new data from directory
-    assert False
-    model_new_objs = [get_obj(81), get_obj(18)]
-    sid = vfs.get("schemas/url2sid/threefoldtoken.wallet.test")
-    vfs.add_datas(model_new_objs, 1, sid.item)
-    # let's try to check the new data
-
+    model_new_objs = [get_obj(42), get_obj(24)]
     r4 = vfs.get("data/1/sid/%s" % sid.item)
+    res = r4.set(model_new_objs)
+
+    # let's try to check the new data
     obj_ids = [i for i in r4.list()]
 
     for o in obj_ids:
         obj = j.data.serializers.json.loads(o)
-        if obj["email"] == "ben81@threefoldtech.com":
-            assert obj["username"] == "incredible_username81"
-            obj_id_81 = obj["id"]
-        if obj["email"] == "ben18@threefoldtech.com":
-            assert obj["username"] == "incredible_username18"
-            obj_id_18 = obj["id"]
-    self._log_info("TEST SET DATA DONE")
+        if obj["email"] == "ben42@threefoldtech.com":
+            assert obj["username"] == "incredible_username42"
+            obj_id_42 = obj["id"]
+        if obj["email"] == "ben24@threefoldtech.com":
+            assert obj["username"] == "incredible_username24"
+            obj_id_24 = obj["id"]
+    assert obj_id_42
+    assert obj_id_24
 
+    # we should be able to find the same object via url
+    r4 = vfs.get("data/1/url/threefoldtoken.wallet.test/")
+    obj_ids = [i for i in r4.list()]
+
+    for o in obj_ids:
+        obj = j.data.serializers.json.loads(o)
+        if obj["email"] == "ben42@threefoldtech.com":
+            assert obj["username"] == "incredible_username42"
+            obj_id_42 = obj["id"]
+        if obj["email"] == "ben24@threefoldtech.com":
+            assert obj["username"] == "incredible_username24"
+            obj_id_24 = obj["id"]
+    assert obj_id_42
+    assert obj_id_24
+
+    self._log_info("TEST SET DATA DONE")
     vfs.delete("/")
     self._log_info("TEST DONE")
     return "OK"
