@@ -38,7 +38,16 @@ def main(self):
     r = m.get_by_name("myuser_8")
     assert r[0].addr == "something:8"
 
-    vfs = j.data.bcdb._get_vfs("test")
+    vfs = j.data.bcdb._get_vfs()
+    r = vfs.get("/")
+    bcdb_names = [i for i in r.list()]
+    assert "test" in bcdb_names
+    r = vfs.get("/test")
+
+    indetifiers = [i for i in r.list()]
+    print(indetifiers)
+    assert "data" in indetifiers
+    self._log_info("TEST ROOT DIR DONE")
 
     with test_case.assertRaises(Exception):
         r = vfs.get("test/schema/md5")
@@ -49,14 +58,13 @@ def main(self):
 
     r = vfs.get("test/data/1")
     identifier_folders = [i for i in r.list()]
-    print(identifier_folders)
     assert (
         len(identifier_folders) == 3
         and "sid" in identifier_folders
         and "url" in identifier_folders
         and "hash" in identifier_folders
     )
-    r = vfs.get("data/1/url")
+    r = vfs.get("data/1/url")  # current bcdb is test do to last test
     urls = [i for i in r.list()]
     print(urls)
     assert (
@@ -75,13 +83,13 @@ def main(self):
         if obj["addr"] == "something:5":
             assert obj["name"] == "myuser_5"
 
-    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/12")
+    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/8")
 
     obj = j.data.serializers.json.loads(r.get())
 
-    assert obj["id"] == 12
-    assert obj["addr"] == "something:2"
-    assert obj["name"] == "myuser_2"
+    assert obj["id"] == 8
+    assert str(obj["addr"]).startswith("something:")
+    assert str(obj["name"]).startswith("myuser_")
     self._log_info("TEST GET DATA DONE")
 
     # schema path
@@ -98,10 +106,48 @@ def main(self):
     assert len(schemas3) == 9  # multiple url link to the same schema id ?
     r = vfs.get("schemas/url/threefoldtoken.wallet.test")
     schema = r.get()
-    print(schema)
     obj = j.data.serializers.json.loads(schema)
+    assert str(obj["url"]) == "threefoldtoken.wallet.test"
+    assert str(obj["name"]) == "string"
     self._log_info("TEST GET SCHEMA DONE")
-    self._log_info("TODO TEST SET DELETE DATA DONE")
-    self._log_info("TODO TEST SET DELETE SCHEMA DONE")
+
+    r = vfs.get("data/1/url/threefoldtoken.wallet.test/1")
+    obj = r.get()
+    r.delete()
+    with test_case.assertRaises(Exception):
+        r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/1")
+    r2 = vfs.get("data/1/url/threefoldtoken.wallet.test/2")
+    obj2raw = r2.get()
+
+    obj2 = j.data.serializers.json.loads(obj2raw)
+    assert obj2["name"] == "myuser_1"
+    assert obj2["id"] == 2
+
+    with test_case.assertRaises(Exception):
+        obj = r_deleted.get()  # can't get deleted data
+
+    self._log_info("TEST DELETE DATA DONE")
+    SCHEMAS = """
+    @url = ben.pc.test
+    description* = "top_pc"
+    cpu = "6ghz" (S)            # power
+    ram =  (LI)                   
+    enable = true (B)  
+    @url = ben.pc.test.2
+    description* = "super_top_pc"
+    cpu = "12ghz" (S)            # power
+    ram =  (LI)                   
+    enable = false (B)            
+    """
+    res = vfs.add_schemas(SCHEMAS)
+    s = vfs.get(res[0])
+    obj = j.data.serializers.json.loads(s.get())
+    assert obj["url"] == "ben.pc.test"
+    sch_dir = vfs.get("data/1/url")
+    assert "ben.pc.test.2" in [i for i in sch_dir.list()]
+    self._log_info("TEST SET SCHEMAS DONE")
+    self._log_info("TEST SET DATA DONE")
+
+    self._log_info("TEST SET SCHEMA DONE")
     self._log_info("TEST DONE")
     return "OK"
