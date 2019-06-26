@@ -100,11 +100,17 @@ class TestCases(BaseTest):
             self.assertTrue(False)
 
     def test010_digitalme(self):
+        logger.debug("DigitalMe builder: run build method. ")
         j.builders.apps.digitalme.build(reset=True)
+        logger.debug("DigitalMe builder: run install method. ")
         j.builders.apps.digitalme.install()
+        logger.debug("DigitalMe builder: run start method. ")
         j.builders.apps.digitalme.start()
+        logger.debug("check that DigitalMe builder is started successfully ")
         self.assertTrue(len(j.sal.process.getProcessPid("openresty")))
+        logger.debug("DigitalMe builder: run stop method. ")
         j.builders.apps.digitalme.stop()
+        logger.debug("check that DigitalMe builder is stopped successfully ")
         self.assertEqual(0, len(j.sal.process.getProcessPid("openresty")))
 
     def test011_bitcoin(self):
@@ -124,13 +130,19 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid("ethereum")))
 
     def test013_etcd(self):
+        logger.debug("ETCD builder: run build method. ")
         j.builders.db.etcd.build(reset=True)
+        logger.debug("ETCD builder: run install method. ")
         j.builders.db.etcd.install()
+        logger.debug("ETCD builder: run start method. ")
         j.builders.db.etcd.start()
         time.sleep(10)
+        logger.debug("check that etcd builder is started successfully. ")
         self.assertTrue(len(j.sal.process.getProcessPid("etcd")))
+        logger.debug("ETCD builder: run stop method. ")
         j.builders.db.etcd.stop()
         time.sleep(10)
+        logger.debug("check that etcd builder is stopped successfully. ")
         self.assertEqual(0, len(j.sal.process.getProcessPid("etcd")))
 
     def test014_capnp(self):
@@ -167,11 +179,17 @@ class TestCases(BaseTest):
             self.assertTrue(False)
 
     def test018_redis(self):
+        logger.debug("Redis builder: run build method. ")
         j.builders.db.redis.build(reset=True)
+        logger.debug("Redis builder: run install method. ")
         j.builders.db.redis.install()
+        logger.debug("Redis builder: run start method. ")
         j.builders.db.redis.start()
+        logger.debug("check that Redis builder is started successfully")
         self.assertEqual(2, len(j.sal.process.getProcessPid("redis-server")))
+        logger.debug("Redis builder: run stop method. ")
         j.builders.db.redis.stop()
+        logger.debug("check that Redis builder is stopped successfully")
         self.assertEqual(1, len(j.sal.process.getProcessPid("redis-server")))
 
     def test019_syncthing(self):
@@ -193,9 +211,12 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
 
     def test021_cmake(self):
+        logger.debug("cmake builder: run build method.")
         j.builders.libs.cmake.build(reset=True)
+        logger.debug("cmake builder: run install method.")
         j.builders.libs.cmake.install()
         try:
+            logger.debug("check that cmake is installed successfully")
             j.sal.process.execute("which cmake")
         except:
             self.assertTrue(False)
@@ -217,27 +238,45 @@ class TestCases(BaseTest):
             self.assertTrue(False)
 
     def test024_ardb(self):
+        logger.debug("ardb builder: run build method. ")
         j.builders.db.ardb.build(reset=True)
+        logger.debug("ardb builder: run install method. ")
         j.builders.db.ardb.install()
+        logger.debug("ardb builder: run start method. ")
         j.builders.db.ardb.start()
+        logger.debug("check that ardb builder is started successfully. ")
         self.assertTrue(j.sal.process.getProcessPid("ardb"))
+        logger.debug("ardb builder: run stop method. ")
         j.builders.db.ardb.stop()
+        logger.debug("check that ardb builder is stopped successfully. ")
         self.assertFalse(j.sal.process.getProcessPid("ardb"))
 
     def test025_postgres(self):
+        logger.debug("PostgresDB builder: run build method. ")
         j.builders.db.postgres.build(reset=True)
+        logger.debug("PostgresDB builder: run install method. ")
         j.builders.db.postgres.install()
+        logger.debug("PostgresDB builder: run start method. ")
         j.builders.db.postgres.start()
+        logger.debug("check that postgres builder is started correctly")
         self.assertTrue(j.sal.process.getProcessPid("postgres"))
+        logger.debug("PostgresDB builder: run stop method. ")
         j.builders.db.postgres.stop()
+        logger.debug("check that postgres builder is stopped correctly")
         self.assertFalse(j.sal.process.getProcessPid("postgres"))
 
     def test026_influx(self):
+        logger.debug("influxDB builder: run build method. ")
         j.builders.db.influxdb.build(reset=True)
+        logger.debug("influxDB builder: run install method. ")
         j.builders.db.influxdb.install()
+        logger.debug("influxDB builder: run start method. ")
         j.builders.db.influxdb.start()
+        logger.debug("check that influxdb builder is started correctly")
         self.assertTrue(j.sal.process.getProcessPid("influx"))
+        logger.debug("influxDB builder: run stop method. ")
         j.builders.db.influxdb.stop()
+        logger.debug("check that influxdb builder is started correctly")
         self.assertFalse(j.sal.process.getProcessPid("influx"))
 
     def test027_php(self):
@@ -261,3 +300,18 @@ class TestCases(BaseTest):
         j.builders.virtualization.docker.stop()
         logger.debug("check that docker server stopped successfully.")
         self.assertFalse(j.sal.process.getProcessPid("containerd"))
+
+    def test028_mongodb(self):
+        logger.debug("mongodb builder: run build method.")
+        j.builders.db.mongodb.build(reset=True)
+        logger.debug("mongodb builder: run install method.")
+        j.builders.db.mongodb.install() 
+        logger.debug("mongodb builder: run start method.")
+        j.builders.db.mongodb.start()      
+        logger.debug("check that mongodb started successfully.")
+        self.assertTrue(j.sal.process.getProcessPid("mongod"))   
+        logger.debug("mongodb builder: run stop method.")
+        j.builders.db.mongodb.stop()
+        logger.debug("check that mongodb stopped successfully.")
+        self.assertFalse(j.sal.process.getProcessPid("mongod")) 
+
