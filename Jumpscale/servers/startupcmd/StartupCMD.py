@@ -1,50 +1,30 @@
 from Jumpscale import j
 
 import time
+from .Monitors import Monitors
 
 
 class StartupCMD(j.application.JSBaseConfigClass):
 
-    _SCHEMATEXT = """
-        @url = jumpscale.startupcmd.1
-        name* = ""
-        cmd_start = ""
-        interpreter = "bash,jumpscale" (E)
-        cmd_stop = ""
-        debug = False (b)
-        path = ""
-        env = (dict)
-        ports = (LI)
-        timeout = 0
-        process_strings = (ls)
-        process_strings_regex = (ls)
-        pid = 0
-        executor = "tmux,corex,foreground,background" (E)
-        daemon = true (b)
-        hardkill = false (b)
-
-        state = "init,ok,error,stopped,stopping,down,notfound" (E)
-        corex_client_name = "default" (S)
-        corex_id = (S)
-        
-        error = "" (S)
-        
-        time_start = (T)
-        time_refresh = (T)
-        time_stop = (T)
-
-        """
+    _SCHEMATEXT = j.sal.fs.readFile(j.sal.fs.getDirName(__file__) + "/schema.toml")
 
     def _init(self):
+
         self._pane_ = None
         self._corex_local_ = None
-        self._refresh_init_ = False
+        self._logger_enable()
+        self._autosave = True  # means when change on one of the props will save automatically
+
+        if self.executor == "corex":
+            self._corex_clean()
+
+        self.init()
 
     def _reset(self):
-        self.time_start = 0
-        self.time_stop = 0
-        self.pid = 0
-        self.state = "init"
+        self.runtime.time_start = 0
+        self.runtime.time_stop = 0
+        self.runtime.pid = 0
+        self.runtime.state = "init"
         self.corex_id = ""
 
     @property
@@ -52,67 +32,98 @@ class StartupCMD(j.application.JSBaseConfigClass):
         return j.sal.fs.joinPaths(j.servers.startupcmd._cmdsdir, self.name)
 
     def _error_raise(self, msg):
-        msg = "error in startupcmd :%s\n%s\n" % (self, msg)
+        msg = "error in startupcmd :%s\n%s\n" % (self.name, msg)
         raise RuntimeError(msg)
 
+    def init(self):
+        # only runs one time (also runs when start called)
+        p = self._process_detect()
+
     def delete(self):
-        self._refresh_init()
-        self.stop()
         j.application.JSBaseConfigClass.delete(self)
+        j.sal.fs.remove(self._cmd_path)
         j.sal.fs.remove(self._cmd_path + ".cmd")
         j.sal.fs.remove(self._cmd_path + ".sh")
         j.sal.fs.remove(self._cmd_path + ".lua")
         j.sal.fs.remove(self._cmd_path + ".py")
 
-    @property
-    def process(self):
-        self._refresh_init()
+    def _process_detect(self):
+        """
+        only do this once at start or at init
+        :return:
+        """
+
+        def notify_p(p):
+            if p.status().casefold() in ["running", "sleeping", "idle"]:
+                self._notify_state("running")
+                if p.pid != self.runtime.pid:
+                    self.runtime.pid = p.pid
+                    self.save()
+            else:
+                self._notify_state("down")
+            return p
+
+        if self.runtime.pid:
+            p = j.sal.process.getProcessObject(self.runtime.pid, die=False)
+            if not p:
+                self.runtime.pid = 0
+            else:
+                return notify_p(p)
+
+        if self._local:
+            ps = self._get_processes_by_port_or_filter()
+            if len(ps) == 1:
+                return notify_p(ps[0])
+
+    def _get_processes_by_port_or_filter(self, process_filter=True, ports=True):
         if self.executor == "corex" and not self._corex_local:
-            self._error_raise("cannot get process object from remote corex")
-
-        assert self.pid != "" and self.pid > 0
-
-        return j.sal.process.getProcessObject(self.pid)
-
-    @property
-    def logs(self):
-        self._refresh_init()
-        if self.executor == "background":
-            self._error_raise("not supported for background")
-        elif self.executor == "tmux":
-            self._error_raise("not supported for background")
-        if self.executor == "corex":
-            r = self._corex_client._query("/process/logs", params={"id": self.corex_id}, json=False)
-            return r
-
-    def _get_processes_by_port_or_filter(self, ports=True):
-        if self.executor == "corex" and not self._corex_local:
-            self._error_raise("cannot get process object from remote corex")
+            return self._error_raise("cannot get process object from remote corex")
 
         pids_done = []
         res = []
 
         if ports:
-            for port in self.ports:
+            for port in self.monitor.ports:
                 p = j.sal.process.getProcessByPort(port)
-                res.append(p)
-                pids_done.append(p.pid)
-
-        for pstring in self.process_strings:
-            for pid in j.sal.process.getPidsByFilter(self.process_strings):
-                p = j.sal.process.getProcessObject(pid)
-                if p.pid not in pids_done:
-                    pids_done.append(p.pid)
+                if p and p.pid:
                     res.append(p)
-
-        if self.process_strings_regex != []:
-            for pid in j.sal.process.getPidsByFilter(regex_list=self.process_strings_regex):
-                p = j.sal.process.getProcessObject(pid)
-                if p.pid not in pids_done:
                     pids_done.append(p.pid)
-                    res.append(p)
+
+        if process_filter:
+            for pstring in self.monitor.process_strings:
+                for pid in j.sal.process.getPidsByFilter(self.monitor.process_strings):
+                    p = j.sal.process.getProcessObject(pid)
+                    if p.pid not in pids_done:
+                        pids_done.append(p.pid)
+                        res.append(p)
+
+            if self.monitor.process_strings_regex != []:
+                for pid in j.sal.process.getPidsByFilter(regex_list=self.monitor.process_strings_regex):
+                    p = j.sal.process.getProcessObject(pid)
+                    if p.pid not in pids_done:
+                        pids_done.append(p.pid)
+                        res.append(p)
         # we return all processes which match
         return res
+
+    @property
+    def process(self):
+        if self.executor == "corex" and not self._corex_local:
+            return self._error_raise("cannot get process object from remote corex")
+
+        if not self.runtime.pid:
+            return
+
+        return j.sal.process.getProcessObject(self.runtime.pid)
+
+    def stdout_err_get(self):
+        if self.executor == "background":
+            return self._error_raise("not supported for background")
+        elif self.executor == "tmux":
+            return self._error_raise("not supported for background")
+        if self.executor == "corex":
+            r = self._corex_client._query("/process/logs", params={"id": self.corex_id}, json=False)
+            return r
 
     def _kill_processes_by_port_or_filter(self):
         """
@@ -120,9 +131,13 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :return:
         """
         for p in self._get_processes_by_port_or_filter():
-            j.shell()
+            p.kill()
 
     def _softkill(self):
+        """
+
+        :return: True if it actually tried a softkill, otherwise False
+        """
         if self.executor == "corex":
             if not self.corex_id:
                 self._corex_clean()
@@ -130,12 +145,36 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 if not self.corex_id:
                     raise RuntimeError("corexid cannot be empty")
             r = self._corex_client.process_stop(self.corex_id)
-            return r
+            return True
+        if self._local:
+            if self.cmd_stop:
+                cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
+                self._log_warning("stopcmd:%s" % cmd)
+                rc, out, err = j.sal.process.execute(cmd, die=False)
+                return True
+        return False
 
     def _hardkill(self, signal=9):
+        """
+
+        :param signal:
+        :return: True if we know hardkill worked, otherwise False
+        """
+
+        # will try to use process manager but this only works for local
+        if self._local:
+            if self.runtime.pid and self.runtime.pid > 0:
+                self._log_info("found process to stop:%s" % self.runtime.pid)
+                p = self.process
+                if p and self.runtime.state == "running":
+                    p.kill()
+                    time.sleep(0.2)
+
+            self._kill_processes_by_port_or_filter()
 
         if self.executor == "background":
-            pass
+            # only process mechanism above can have worked
+            return False
         elif self.executor == "corex":
             if not self.corex_id:
                 self._corex_clean()
@@ -143,200 +182,210 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 if not self.corex_id:
                     raise RuntimeError("corexid cannot be empty")
             r = self._corex_client.process_kill(self.corex_id)
-            return r
+            self._notify_state("stopped")
+            return True
         elif self.executor == "tmux":
             # TMUX
             self._pane.kill()
             self._pane.window.kill()
-            if [item.name for item in self._pane.window.panes] == ["main"]:
-                # means we only had the main tmux window left, that one can be closed
-                self._pane.mgmt.window.server.kill_server()
-        self.state = "stopped"
-        self.time_stop = j.data.time.epoch
-        self.save()
-
-    def _refresh_init(self):
-        if not self._refresh_init_:
-            if self.executor == "corex":
-                self._corex_clean()
-            self.refresh()
-            self._refresh_init_ = True
+            # if [item.name for item in self._pane.window.panes] == ["main"]:
+            #     # means we only had the main tmux window left, that one can be closed
+            #     self._pane.mgmt.window.server.kill_server()
+            self._notify_state("stopped")
+            return True
 
     def refresh(self):
+        """
+        refresh the state of the running process
+        :return:
+        """
         self._log_info("refresh: %s" % self.name)
 
-        if not self.pid:
+        self.time_refresh = j.data.time.epoch
+
+        if self.executor == "foreground":
             return
 
         if self.executor == "corex":
             self._corex_refresh()
 
-        elif self.executor == "tmux":
-            j.shell()
-
+        if self.is_running():
+            self._notify_state("running")
         else:
-            j.shell()
+            self._notify_state("down")
 
-        if not self.pid:
+    def stop(self, force=False, waitstop=True, die=True):
+        """
+
+        :param force: will do a hardkill after the softkill even if it measures down
+        :param die: will die if we confirmed is still alive
+        :param waitstop: will wait to stop
+        :return: True (was ok), -1: we don't know, False (it did not stop, only relevant if die=False)
+        """
+        self._log_warning("stop: %s" % self.name)
+
+        if self.is_running() == False:  # if we don't know it will be -1
             return
 
-    # def save(self):
-    #     tpath = self._cmd_path + ".data"
-    #     # means we need to serialize & save
-    #     v = j.data.serializers.jsxdata.dumps(self.data)
-    #     bine = j.data.nacl.default.encryptSymmetric(v)
-    #     j.sal.fs.writeFile(tpath, bine)
-    #
-    # def load(self):
-    #     tpath = self._cmd_path + ".data"
-    #     if j.sal.fs.exists(tpath):
-    #         bine = j.sal.fs.readFile(tpath, binary=True)
-    #         bin = j.data.nacl.default.decryptSymmetric(bine)
-    #         data = j.data.serializers.jsxdata.loads(bin)
-    #         self.data = data
-    #     else:
-    #         self._reset()
+        self._notify_state("stopping")
 
-    def stop(self):
-        self._log_warning("stop: %s" % self.name)
-        self._refresh_init()
+        if self._softkill():
+            # means we really tried a softkill
+            stopped = self.wait_stopped(die=False, timeout=self.timeout)
+            if stopped == True and force == False:  # this means we really know for sure it died
+                return True
 
-        if not self.state in ["init", "stopped"]:
+        self._hardkill()  # will remove tmux pane or other hard method of stopping
 
-            self._notify_state("stopping")
-
-            if self.cmd_stop:
-                cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
-                self._log_warning("stopcmd:%s" % cmd)
-                rc, out, err = j.sal.process.execute(cmd, die=False)
-                time.sleep(0.2)
-
-            if self.executor == "corex":
-                if not self.pid and not self.corex_id:
-                    return
-                self._softkill()
-
-            if self._local:
-
-                if self.pid and self.pid > 0:
-                    self._log_info("found process to stop:%s" % self.pid)
-                    j.sal.process.kill(self.pid)
-
-                self._kill_processes_by_port_or_filter()
-
-                if not self.wait_stopped(die=False, timeout=2):
-                    self._hardkill()  # will remove tmux pane
-                    self.wait_stopped(die=True, timeout=4)
-
-            else:
-                # means is corex
-                self._softkill()  # will trigger remote kill in nice way
-                if not self.wait_stopped(die=False, timeout=2):
-                    self._hardkill()  # use the underlying process manager to stop
-                    self.wait_stopped(die=True, timeout=4)
+        if waitstop:
+            self.wait_stopped(die=die, timeout=self.timeout)
+            if die:
+                return True
+        return -1  # we could not know for sure
 
     def _notify_state(self, state):
-        if self.state != state:
-            self.state = state
+        """
+        make sure we keep the state table healthy
+
+        state = "init,running,error,stopped,stopping,down,notfound" (E)
+
+        :param state:
+        :return:
+        """
+        if self.runtime.state != state:
+            if state in ["down", "stopped", "stopping", "notfound", "init"]:
+                self.runtime.time_stop = j.data.time.epoch
+            if state in ["running"]:
+                self.runtime.time_start = j.data.time.epoch
+            self.runtime.state = state
             self.save()
 
+    def _is_running(self):
+
+        # self._log_debug("running:%s" % self.name)
+
+        nrok = 0
+        res = []
+
+        nrok_, res_ = Monitors.tcp_check(self)
+        nrok += nrok_
+        res += res_
+
+        nrok_, res_ = Monitors.socket_check(self)
+        nrok += nrok_
+        res += res_
+
+        nrok_, res_ = Monitors.process_check(self)
+        nrok += nrok_
+        res += res_
+
+        nrok_, res_ = Monitors.nrprocess_check(self)
+        nrok += nrok_
+        res += res_
+
+        return nrok, res
+
     def is_running(self):
-        self._refresh_init()
-        self._log_debug("running:%s" % self.name)
+        """
+        :return: 1 if we don't know but prob ok, 2 if ok for sure, False if not ok
+        """
 
-        if self._local and self.ports != []:
-            for port in self.ports:
-                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=self.port) == False:
-                    self._notify_state("down")
-                    return False
-            # can return sooner because port check is good enough
-            return True
+        # self._log_debug("running:%s" % self.name)
 
-        if self.executor == "corex":
-            if not self.pid and not self.corex_id:
-                self._error_raise("cannot check running don't have pid or corex_id")
-            self.refresh()
-            j.shell()
+        nrok, errors = self._is_running()
 
-        if self._local:
-            p = self.process
-            if not p.status().casefold() in ["running", "sleeping", "idle"]:
-                self._notify_state("down")
+        if len(errors) == 0:
+            if self.monitor.conclusive:
+                # means if conclusive and nothing found we know its running
+                if len(nrok) > 0:
+                    self._notify_state("running")
+                    return 2
+                else:
+                    # we can't know for sure because there were no tests
+                    return 1
+            else:
                 return False
-
-        self._notify_state("ok")
-        return True
-
-    def wait_stopped(self, die=True, timeout=5):
-        self._log_debug("wait_stopped:%s" % self.name)
-        end = j.data.time.epoch + timeout
-
-        while j.data.time.epoch < end:
-            nr = 0
-            for port in self.ports:
-                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
-                    nr += 1
-            if nr == len(self.ports):
-                self._log_info("IS HALTED based on TCP %s" % self.name)
-                break
-
-            time.sleep(0.05)
-
-        while self.state != "ok" and j.data.time.epoch < end:
-            if len(self._get_processes_by_port_or_filter(ports=False)) == 0:
-                self.state = "stopped"
-                self.save()
-                return
-
-            time.sleep(0.2)
-
-        if die:
-            self._error_raise("could not stop")
         else:
+            self._notify_state("down")
             return False
 
-    def wait_running(self, die=True, timeout=10):
-        if timeout is None:
-            timeout = self.timeout
+    def wait_running(self, die=True, timeout=None):
+        """
+        :param die:
+        :param timeout:
+        :return: will return True if it  is running, False if it did not work, -1 if we don't know
+                 if die and stopped will raise error
+        """
+        self._log_debug("wait_running:%s" % self.name)
+        if not timeout:
+            timeout = self.monitor.timeout
         end = j.data.time.epoch + timeout
-        if self.ports == []:
-            time.sleep(0.1)  # need this one or it doesn't check if it failed
-        self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
+
         while j.data.time.epoch < end:
-            if self._local:
-                if self.ports == []:
-                    if self.process:
-                        if self.process.status().casefold() in ["running", "sleeping", "idle"]:
-                            self._log_info("IS RUNNING %s" % self.name)
-                            return True
-                    elif self.daemon == False:
-                        return True
-                else:
-                    nr = 0
-                    for port in self.ports:
-                        if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port):
-                            nr += 1
-                    if nr == len(self.ports) and len(self.ports) > 0:
-                        self._log_info("IS RUNNING %s" % self.name)
-                        return True
-            else:
-                r = self._corex_client.process_info_get(pid=self.pid)
-                time.sleep(1)
-                r = self._corex_client.process_info_get(pid=self.pid)
-                if r["state"] in ["stopped", "stopping", "error"]:
-                    self.error = self.logs
-                    self.state = "error"
-                    return False
-                elif r["state"] in ["running"]:
+            nrok, errors = self._is_running()
+            nr_tests = nrok + len(errors)  # total tests done
+
+            if len(errors) == 0 and nr_tests > 0:
+                # now we know for sure its ok because we did tests and all tests where ok
+                if self.monitor.conclusive:
+                    return True
+            elif nr_tests == 0:
+                # no tests done, so we know nothing, but there is nothing to test
+                if self.monitor.conclusive:
                     return True
                 else:
-                    j.shell()
-        if die:
-            self._error_raise("could not start")
-        else:
-            return False
+                    return -1
+            # means at least 1 test failed, need to keep on waiting
 
-    def start(self, reset=False, checkrunning=True):
+            time.sleep(0.1)
+
+        if die:
+            return self._error_raise("could not define process is up, timeout")
+        return -1
+
+    def wait_stopped(self, die=True, timeout=None):
+        """
+        :param die:
+        :param timeout:
+        :return: will return True if it stopped, False if it did not work,
+                -1 if we don't know 100% for sure but prob down
+                 if die and stopped will raise error
+        """
+        self._log_debug("wait_stopped:%s" % self.name)
+        if not timeout:
+            timeout = self.monitor.timeout
+        end = j.data.time.epoch + timeout
+
+        # dont use conclusive check here because we can do some test, its better than nothing
+
+        while j.data.time.epoch < end:
+            nrok, errors = self._is_running()
+            nr_tests = nrok + len(errors)  # total tests done
+
+            if len(errors) > 0 and len(errors) == nr_tests:
+                # now we know for sure its ok because we did test and all tests where down
+                if self.monitor.conclusive:
+                    return True
+                else:
+                    return -1  # its not conclusive but prob down
+            elif len(errors) > 0:
+                # at least one test failed but we don't know if it was complete but enough to exit if not conclusive
+                if not self.monitor.conclusive:
+                    return -1
+                # need to wait for more tests because is conclusive
+            elif nr_tests == 0:
+                # no tests done, so we know nothing, but there is nothing to test so we can say -1
+                # its never True because how can we be sure with no tests? even in conclusive mode
+                return -1
+
+            time.sleep(0.1)
+
+        if die:
+            return self._error_raise("could not define process is down")
+
+        return False
+
+    def start(self, reset=False):
         """
 
         :param reset:
@@ -344,20 +393,22 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :param foreground: means will not do in e.g. tmux
         :return:
         """
-        self._refresh_init()
         self._log_debug("start:%s" % self.name)
+
         if self.executor == "foreground" is False:
             if reset:
                 self.stop()
                 self._hardkill()
-            else:
-                if self.is_running():
-                    self._log_info("no need to start was already started:%s" % self.name)
-                    return
 
-        self._pid = None
+        if self.is_running() == True:
+            self._log_info("no need to start was already started:%s" % self.name)
+            return
 
-        if self.interpreter == "bash":
+        assert self.cmd_start
+
+        if "\n" in self.cmd_start.strip():
+            C = self.cmd_start
+        elif self.interpreter == "bash":
             C = """            
             reset
             {% if cmdobj.executor=='tmux' %}
@@ -376,11 +427,13 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {{cmd}}
 
             """
-        else:
+        elif self.interpreter in ["direct", "python"]:
+            C = self.cmd_start
+        elif self.interpreter == "jumpscale":
             C = """
             from Jumpscale import j
-            {% if cmdpath != None %}
-            #cd {{cmdpath}}
+            {% if cmdpath %}
+            j.sal.fs.changeDir("{{cmdpath}}")
             {% endif %}
             {{cmd}}
             """
@@ -391,67 +444,74 @@ class StartupCMD(j.application.JSBaseConfigClass):
             text=C2, args=self.env, cmdpath=self.path, cmd=self.cmd_start, name=self.name, cmdobj=self
         )
 
-        # NEED TO BE CAREFUL< THINGS WILL FAIL IF WE ENABLE AGAIN
-        # if self.interpreter == "bash":
-        #     # C3 = C3.replace("\"", "'").replace("''", "'")
-        #     C3 = C3.replace("\"", "'")
-
         self._log_debug("\n%s" % C3)
 
-        if self.interpreter == "bash":
-            tpath = self._cmd_path + ".sh"
-        elif self.interpreter == "jumpscale":
-            tpath = self._cmd_path + ".py"
-        else:
-            self._error_raise("only jumpscale or bash supported")
+        if not self._local:
+            # when not local we always have to wrap in in such a way we can execute it remotely so without file
+            tpath = None
+            if "\n" in C3.strip():
+                # means we have to wrap it in other way
+                toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
+            else:
+                toexec = C3.strip()
+            if self.path:
+                toexec = "mkdir -p %s;cd %s;%s" % (self.path, self.path, toexec)
 
-        j.sal.fs.writeFile(tpath, C3 + "\n\n")
-        j.sal.fs.chmod(tpath, 0o770)
+        elif self.interpreter == "direct":
+            # means we need to execute without file unless when script
+            if "\n" in C3.strip():
+                tpath = self._cmd_path
+                toexec = tpath
+            else:
+                tpath = None  # means need to execute directly
+                toexec = C3.strip()
+
+        elif self.interpreter == "bash":
+            tpath = self._cmd_path + ".sh"
+            toexec = "sh %s" % tpath
+        elif self.interpreter in ["jumpscale", "python"]:
+            tpath = self._cmd_path + ".py"
+            # toexec = "python3 %s" % tpath
+            if self.debug:
+                toexec = "kosmos %s --debug" % tpath
+            else:
+                toexec = "python3 %s" % tpath
+        else:
+            return self._error_raise("only jumpscale or bash supported")
+
+        if tpath:
+            j.sal.fs.writeFile(tpath, C3 + "\n\n")
+            j.sal.fs.chmod(tpath, 0o770)
+
+        self.runtime.pid = 0
 
         if self.executor == "foreground":
-
-            self.time_start = j.data.time.epoch
-
-            if self.interpreter == "bash":
-                j.sal.process.executeWithoutPipe("bash %s" % tpath)
-            else:
-                if self.debug:
-                    j.sal.process.executeWithoutPipe("kosmos %s --debug" % tpath)
-                else:
-                    j.sal.process.executeWithoutPipe("kosmos %s" % tpath)
-
-            # was a one time
-            self.time_stop = j.data.time.epoch
-            self.state = "stopped"
-            self.save()
-
+            self._notify_state("running")
+            j.sal.process.executeInteractive(toexec)
+        elif self.executor == "background":
+            self._background_start(toexec)
+        elif self.executor == "tmux":
+            self._tmux_start(toexec)
+        elif self.executor != "corex":
+            self._corex_start(toexec)
         else:
-            if self.executor == "background":
-                self._background_start(tpath)
-            elif self.executor == "corex":
-                self._corex_start(tpath)
-            elif self.executor == "tmux":
-                self._tmux_start(tpath)
+            return self._error_raise("could not find executor:'%s'" % self.executor)
 
-            running = self.wait_running()
+        # will see if we can find the process
+        self.init()
+
+        if self.executor == "foreground":
+            self._notify_state("stopped")
+        else:
+            running = self.wait_running(die=True)
+            assert self.runtime.pid
             assert running
+            self._notify_state("running")
 
-            if self._local:
-                if not self.pid or self.pid == 0:
-                    ps = self._get_processes_by_port_or_filter()
-                    if len(ps) != 1:
-                        self._error_raise(
-                            "cannot use background start, should specify ports, unixsocket or process regex to make sure only 1 process returns"
-                        )
-                    self.pid = ps[0].pid
+        # if tpath:
+        #     j.sal.fs.remove(tpath)
 
-                j.sal.fs.remove(tpath)
-            else:
-                assert self.pid and self.pid > 0
-
-            self.time_start = j.data.time.epoch
-            self.state = "ok"
-            self.save()
+        self.save()
 
     @property
     def _local(self):
@@ -469,21 +529,29 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _tmux_start(self, path):
 
+        j.servers.tmux.server
+
         if "__" in self._pane.name:
             self._pane.kill()
 
         if self.interpreter == "bash":
-            self._pane.execute("source %s" % path)
-        else:
-            if self.debug:
-                self._pane.execute("kosmos %s --debug" % path)
+            if path.startswith("sh "):
+                path = path[3:]
+                self._pane.execute("source %s" % path)
+            elif path.startswith("bash "):
+                path = path[5:]
+                self._pane.execute("source %s" % path)
             else:
-                self._pane.execute("kosmos %s" % path)
+                raise RuntimeError()
+
+        else:
+            self._pane.execute(path)
 
     ####BACKGROUND
 
     def _background_start(self, path):
         cmd = "nohup %s >/dev/null 2>/dev/null &" % path
+        self._log_debug(cmd)
         j.core.tools.execute(cmd)
 
     ####COREX
@@ -494,31 +562,31 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _corex_start(self, path):
 
-        if self.state == "error":
-            self._error_raise("process in error:\n%s" % p)
+        if self.runtime.state == "error":
+            return self._error_raise("process in error:\n%s" % p)
 
-        if self.state == "ok":
+        if self.runtime.state == "running":
             return
 
         r = self._corex_client.process_start("sh %s" % path)
 
-        self.pid = r["pid"]
+        self.runtime.pid = r["pid"]
         self.corex_id = r["id"]
 
-        res = self._corex_client.process_info_get(pid=self.pid)
-        assert res["pid"] == self.pid
+        res = self._corex_client.process_info_get(pid=self.runtime.pid)
+        assert res["pid"] == self.runtime.pid
 
         assert str(res["id"]) == self.corex_id
 
     def _corex_clean(self):
-        if self.pid:
-            y = self._corex_client.process_info_get(pid=self.pid)
+        if self.runtime.pid:
+            y = self._corex_client.process_info_get(pid=self.runtime.pid)
             if y:
-                assert self.pid == y["pid"]
+                assert self.runtime.pid == y["pid"]
                 self.corex_id = y["id"]
             else:
-                self.pid = 0
-                self.state = "init"
+                self.runtime.pid = 0
+                self.runtime.state = "init"
         processlist = self._corex_client.process_list()
         for x in processlist:
             clean = False
@@ -533,7 +601,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 elif x["state"] in ["running"]:
                     if not foundpid:
                         self._log_info("found process with pid:\n%s" % x)
-                        self.pid = x["pid"]
+                        self.runtime.pid = x["pid"]
                         self.corex_id = x["id"]
                         self.save()
                         foundpid = True
@@ -569,7 +637,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _corex_refresh(self):
 
-        res = self._corex_client.process_info_get(pid=self.pid, corex_id=self.corex_id)
+        res = self._corex_client.process_info_get(pid=self.runtime.pid, corex_id=self.corex_id)
 
         def update(res, state):
             dosave = False
@@ -578,16 +646,16 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
             self.corex_id = res["id"]
 
-            if self.state != state:
-                self.state = state
+            if self.runtime.state != state:
+                self.runtime.state = state
                 dosave = True
 
             if self.time_refresh < j.data.time.epoch - 300:
                 # means we write state every 5min no matter what
                 dosave = True
 
-            if self.pid != res["pid"]:
-                self.pid = res["pid"]
+            if self.runtime.pid != res["pid"]:
+                self.runtime.pid = res["pid"]
                 dosave = True
 
             self.time_refresh = j.data.time.epoch
@@ -602,7 +670,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if res:
 
             if res["state"] == "running":
-                update(res, state="ok")
+                update(res, state="running")
             elif res["state"] == "stopping":
                 update(res, state="stopping")
             elif res["state"] == "stopped":
@@ -610,5 +678,5 @@ class StartupCMD(j.application.JSBaseConfigClass):
             else:
                 j.shell()
         else:
-            self.state = "notfound"
+            self.runtime.state = "notfound"
             self.save()

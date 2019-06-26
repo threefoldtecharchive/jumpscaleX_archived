@@ -72,13 +72,6 @@ class SockExec(j.application.JSBaseDataObjClass):
                 return res
             time.sleep(0.01)
 
-    def _socket_check(self):
-        if os.path.exists(self.socketpath):
-            client = socket.socket(socket.AF_UNIX)
-            client.connect(self.socketpath)
-            return True
-        return False
-
     def test(self, reset=False):
         """
         kosmos 'j.servers.sockexec.test()'

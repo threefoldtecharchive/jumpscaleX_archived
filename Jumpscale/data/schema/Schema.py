@@ -282,7 +282,7 @@ class Schema(j.application.JSBaseClass):
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
-            tpath = "%s/templates/template_obj.py" % self._path
+            tpath = "%s/templates/JSXObject2.py" % self._path
 
             # lets do some tests to see if it will render well, jinja doesn't show errors propertly
             for prop in self.properties:
@@ -291,48 +291,38 @@ class Schema(j.application.JSBaseClass):
                 prop.js_typelocation
 
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
+                name="schema_%s" % self.key, obj_key="JSXObject2", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class
 
-    def get(self, capnpdata=None, serializeddata=None, dictdata=None, model=None):
+    def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
         get schema_object using data and capnpbin
 
         :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
         :param capnpdata is data in capnpdata
-        :param dictdata is dict of arguments
+        :param datadict is dict of arguments
 
         :param model: will make sure we save in the model
         :return:
         """
+        if model:
+            assert isinstance(model, j.data.bcdb._BCDBModelClass)
         if isinstance(serializeddata, bytes):
             return j.data.serializers.jsxdata.loads(serializeddata, model=model)
         elif isinstance(capnpdata, bytes):
             obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
             return obj
-        elif dictdata:
-            obj = self.objclass(schema=self, dictdata=dictdata, model=model)
+        elif datadict:
+            obj = self.objclass(schema=self, datadict=datadict, model=model)
             return obj
-        elif capnpdata is None and serializeddata is None and dictdata == None:
+        elif capnpdata is None and serializeddata is None and datadict == None:
             return self.objclass(schema=self, model=model)
         else:
             raise RuntimeError("only support binary data or dict as kwargs")
-
-    def new(self, model=None, data=None):
-        """
-        data is dict or None
-        """
-        if isinstance(data, bytes):
-            raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        if data and isinstance(data, dict):
-            r = self.get(model=model, dictdata=data)
-        else:
-            r = self.get(model=model)
         if model is not None:
-            model.triggers_call(r, "new")
-        return r
+            model._triggers_call(r, "new")
 
     # @property
     # def propertynames_index_sql(self):
@@ -391,9 +381,21 @@ class Schema(j.application.JSBaseClass):
         res = [item.name for item in self.properties]
         return res
 
+    @property
+    def _json(self):
+        out = "{"
+        out += '"url":"%s",' % self.url
+        for item in self.propertynames:
+            prop = self.__getattribute__("property_%s" % item)
+            out += '"%s":"%s",' % (str(prop.name), str(prop.jumpscaletype.NAME))
+        out = out.rstrip(",")
+        out += "}"
+        return out
+
     def __str__(self):
         out = "## SCHEMA: %s\n\n" % self.url
         for item in self.properties:
+
             out += str(item) + "\n"
         out += str(self.systemprops)
         return out

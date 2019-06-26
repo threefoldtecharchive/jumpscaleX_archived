@@ -65,7 +65,8 @@ def main(self):
         
         """
 
-    bcdb = j.data.bcdb.get("test")
+    # bcdb = j.data.bcdb.get("test")
+    bcdb, model = self._load_test_model(reset=True, type="sqlite")
     bcdb.reset()
     m = bcdb.model_get_from_schema(schema)
 
@@ -86,8 +87,8 @@ def main(self):
         s = j.data.schema.get_from_md5(md5)
         assert s._md5 == md5
 
-        md5_, url_ = bcdb.meta._schema_exists(s)
-        assert md5_ == md5
-        assert url_ == url
+        bcdb.meta._schema_exists(s)
+        assert s._md5 == md5
+        assert s.url == url
 
     return "OK"

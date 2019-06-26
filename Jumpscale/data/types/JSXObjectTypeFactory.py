@@ -46,9 +46,9 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         """
         return self.clean(val)
 
-    def toData(self, val):
+    def toData(self, val, model=None):
         val = self.clean(val)
-        return val._data
+        return j.data.serializers.jsxdata.dumps(val, model=model)
 
     def toString(self, val):
         """
@@ -79,7 +79,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
             # when bytes the version of the jsxobj & the schema is embedded in the bin data
             return obj
         elif isinstance(value, dict):
-            return self._schema.get(datadict=value, model=model)
+            return self._schema.new(datadict=value, model=model)
         elif value is None:
             return self._schema.new(model=model)
         else:

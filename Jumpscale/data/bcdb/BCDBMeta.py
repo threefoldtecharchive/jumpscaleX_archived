@@ -36,7 +36,7 @@ class BCDBMeta(j.application.JSBaseClass):
         if reset:
             self.reset()
         else:
-            self._load()
+            self._load()b
 
     def reset(self):
         # make everything in metadata stor empty
@@ -64,7 +64,7 @@ class BCDBMeta(j.application.JSBaseClass):
         r.delete(self._redis_key_lookup_sid2url)
         r.delete(self._redis_key_lookup_nid2meta)
 
-    def _load_schema_obj(self, s):
+    def _load_schema_obj(self, s, initial=False):
         """
 
         :param s: is schema in JSX Object form (so not a Schema object)
@@ -79,7 +79,10 @@ class BCDBMeta(j.application.JSBaseClass):
 
         if s.sid not in self._sid_to_model:
             # not registered yet, now need to remember in redis and in mem
-            self._bcdb.model_get_from_schema(s.text)
+
+            if initial:
+                self._bcdb.model_get_from_schema(s.text)
+
             # its only for reference purposes & maybe 3e party usage
             r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
             r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
@@ -89,8 +92,12 @@ class BCDBMeta(j.application.JSBaseClass):
 
         assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
         assert self._sid_to_model[s.sid].schema._md5 == s.md5
-        assert self._schema_md5_to_sid[s.md5]
-        assert self._schema_md5_to_sid[s.md5] == s.sid
+
+        if initial:
+            assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
+            assert self._sid_to_model[s.sid].schema._md5 == s.md5
+
+        self._schema_md5_to_sid[s.md5] = s.sid
 
     def _load(self):
 
@@ -112,13 +119,13 @@ class BCDBMeta(j.application.JSBaseClass):
             self._data.name = self._bcdb.name
         else:
             self._log_debug("schemas load from db")
-            self._data = self._schema.get(serializeddata=serializeddata)
+            self._data = self._schema.new(serializeddata=serializeddata)
 
         if self._data.name != self._bcdb.name:
             raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
 
         for s in self._data.schemas:
-            self._load_schema_obj(s)
+            self._load_schema_obj(s, initial=True)
 
         for n in self._data.namespaces:
             if n.nid > self._namespace_last_id:
@@ -128,9 +135,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _save(self):
 
-        self._log_debug("save:\n%s" % self.data)
+        self._log_debug("save meta:%s" % self._bcdb.name)
 
-        serializeddata = j.data.serializers.jsxdata.dumps(self.data)
+        serializeddata = j.data.serializers.jsxdata.dumps(self._data)
 
         if self._bcdb.storclient is None:
             r = j.core.db
@@ -156,21 +163,21 @@ class BCDBMeta(j.application.JSBaseClass):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
-
         # check if the data is already in metadatastor
         if schema._md5 in self._schema_md5_to_sid:
+            self._log_debug("schema set in BCDB:%s meta:%s (EXISTING)" % (self._bcdb.name, schema.url))
             return self._schema_md5_to_sid[schema._md5]
         else:
+            self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
             # not known yet in namespace, so is new one
             self._schema_last_id += 1
-            s = self.data.schemas.new()
+            s = self._data.schemas.new()
             s.url = schema.url
             s.sid = self._schema_last_id
             s.text = schema.text  # + "\n"  # only 1 \n at end
             s.md5 = schema._md5
             self._load_schema_obj(s)
-            self._log_info("new schema in meta:\n%s: %s:%s" % (self, s.url, s.md5))
+            self._log_info("new schema in meta:\n%s: %s:%s" % (self._bcdb.name, s.url, s.md5))
             self._save()
             return s.sid
 

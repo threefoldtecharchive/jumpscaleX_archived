@@ -32,7 +32,7 @@ class SchemaProperty(j.application.JSBaseClass):
         return self.jumpscaletype.default_get()
 
     @property
-    def has_model(self):
+    def has_jsxobject(self):
         if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "jsobject":
             return True
         if self.jumpscaletype.NAME == "jsobject":

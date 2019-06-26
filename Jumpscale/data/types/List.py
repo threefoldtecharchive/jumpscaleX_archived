@@ -43,7 +43,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         return self._inner_list
 
     @property
-    def _dictdata(self):
+    def _datadict(self):
         res = []
         for item in self._inner_list:
             if isinstance(item, j.data.schema._JSXObjectClass):
@@ -222,9 +222,9 @@ class List(TypeBaseObjFactory):
         val2 = self.clean(val)
         return val2.pylist(subobj_format="H")
 
-    def toData(self, val=None):
+    def toData(self, val=None, model=None):
         val2 = self.clean(val)
-        if self.SUBTYPE.BASETYPE == "OBJ":
+        if self.SUBTYPE.BASETYPE == "JSXOBJ":
             return [j.data.serializers.jsxdata.dumps(i, model=i._model) for i in val2]
         else:
             return val2._inner_list

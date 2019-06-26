@@ -34,7 +34,7 @@ class TypeBaseObjClass:
         raise j.exceptions.NotImplemented()
 
     @property
-    def _dictdata(self):
+    def _datadict(self):
         return self._data
 
     @property
@@ -165,7 +165,7 @@ class TypeBaseClass:  #!!TYPEBASECLASS!!
         """
         o = self.clean(v)
         if isinstance(o, TypeBaseObjClass):
-            data = o._dictdata
+            data = o._datadict
         else:
             data = o
         return data

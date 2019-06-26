@@ -1,10 +1,10 @@
 from Jumpscale import j
-from Jumpscale.data.schema._JSXObjectClass import JSXObject
+
 from capnp import KjException
 
-class ModelOBJ(JSXObject):
+class JSXObject2(j.data.schema._JSXObjectClass):
 
-    __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
+    __slots__ = ["id","_schema","_model","_autosave","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
                         {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
@@ -27,9 +27,9 @@ class ModelOBJ(JSXObject):
         self._schema_{{prop.name}} = j.data.schema.get_from_md5(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
             data = self._cobj_.{{prop.name_camel}}
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data)
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(serializeddata=data,model=self._model)
         else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self._model)
         {% endif %}
         {% endfor %}
 
@@ -69,7 +69,7 @@ class ModelOBJ(JSXObject):
             self._changed_items["{{prop.name}}"] = val
             if self._model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
-                self._model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
+                self._model._triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
             if self._autosave:
                 self.save()
         {% endif %}
@@ -110,12 +110,11 @@ class ModelOBJ(JSXObject):
         {% for prop in obj.properties %}
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            tt =  {{prop.js_typelocation}}
-            try:
-                data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
-            except:
-                v=self._changed_items["{{prop.name}}"]
-                j.shell()
+            {% if prop.has_jsxobject %}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"],model=self._model)
+            {% else %}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            {% endif %}
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 
@@ -154,7 +153,7 @@ class ModelOBJ(JSXObject):
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
-            d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+            d["{{prop.name}}"] = self.{{prop.name}}._datadict
         else:
             d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}

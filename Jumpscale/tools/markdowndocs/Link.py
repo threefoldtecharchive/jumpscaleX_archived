@@ -387,7 +387,7 @@ class Link(j.application.JSBaseClass):
             # only possible for images (video, image)
             if self.source.startswith("!"):
                 self.cat = "image"
-                if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4"]:
+                if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4", "svg"]:
                     return self.error("found unsupported image file: extension:%s" % self.extension)
 
             if self.cat == "":

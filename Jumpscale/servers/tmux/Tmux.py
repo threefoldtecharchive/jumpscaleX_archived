@@ -79,6 +79,7 @@ class Tmux(j.application.JSBaseClass):
 
             self._server = tmuxp.Server()
             time.sleep(1)
+
             self._log_info("tmux server is running")
 
         return self._server

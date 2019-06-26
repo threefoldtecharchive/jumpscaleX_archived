@@ -636,12 +636,13 @@ class SystemProcess(j.application.JSBaseClass):
     def getMyProcessObject(self):
         return self.getProcessObject(os.getpid())
 
-    def getProcessObject(self, pid):
+    def getProcessObject(self, pid, die=True):
 
         for process in psutil.process_iter():
             if process.pid == pid:
                 return process
-        raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
+        if die:
+            raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
 
     def getProcessPidsFromUser(self, user):
 

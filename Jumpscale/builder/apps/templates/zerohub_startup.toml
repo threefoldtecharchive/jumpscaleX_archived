@@ -4,8 +4,8 @@ protected = true #set protected to true to respawn the container if it crashed
 
 [startup.hub.args]
 script = """
-pip3 install -r /hub/requirements.txt;
+sed -i 's/"zflist-bin": "\/opt\/0-flist\/zflist\/zflist"/"zflist-bin":\ "\/sandbox\/zeroflist\/zflist\/zflist"/' /sandbox/hub/python/config.py
+pip3 install -r /sandbox/hub/requirements.txt;
 tmux new-session -d -s 0-db '/sandbox/bin/zdb';
-tmux new-session -d -s hub 'cd /hub/python/ && python3 flist-uploader.py';
-tmux new-session -d -s caddy '/sandbox/bin/caddy --conf /hub/Caddyfile'
+tmux new-session -d -s hub '/sandbox/hub/python/ && python3 flist-uploader.py';
 """

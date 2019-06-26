@@ -7,7 +7,7 @@ from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
 from .BCDBDecorator import *
-from .RedisServer import RedisServer
+from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
@@ -56,8 +56,9 @@ class BCDB(j.application.JSBaseClass):
     def export(self, path=None, encrypt=True):
         if not path:
             raise RuntimeError("export no path")
-        for o in list(self.meta.data.schemas):
-            m = self.model_get_from_sid(o.sid)
+
+        for o in list(self.meta._data.schemas):
+            m = self.model_get_from_schema(o.text)
             dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
@@ -182,7 +183,6 @@ class BCDB(j.application.JSBaseClass):
         self.user = None
         self.circle = None
 
-        self.models = {}
         self._index_schema_class_cache = {}  # cache for the index classes
 
         if reset:
@@ -314,24 +314,25 @@ class BCDB(j.application.JSBaseClass):
 
     @property
     def models(self):
-        for key, model in self._meta._sid_to_model.items():
+
+        for key, model in self.meta._sid_to_model.items():
             yield model
 
-    def model_get_from_sid(self, sid):
+    def model_get_from_sid(self, sid, namespaceid=1):
         md5 = None
-        if sid in self._meta._sid_to_model:
-            return self._meta._sid_to_model[sid]
+        if sid in self.meta._sid_to_model:
+            return self.meta._sid_to_model[sid]
         else:
             raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
 
-    # def model_get_from_url(self, url):
-    #     """
-    #     will return the latest model found based on url
-    #     :param url:
-    #     :return:
-    #     """
-    #     s = j.data.schema.get_from_url_latest(url=url)
-    #     return self.model_get_from_schema(s)
+    def model_get_from_url(self, url, namespaceid=1):
+        """
+        will return the latest model found based on url
+        :param url:
+        :return:
+        """
+        s = j.data.schema.get_from_url_latest(url=url)
+        return self.model_get_from_schema(s)
 
     def model_add(self, model):
         """
@@ -344,7 +345,13 @@ class BCDB(j.application.JSBaseClass):
         assert model.sid
         self._schema_property_add_if_needed(model.schema)
         self._schema_add(model.schema)  # do not forget to add the schema
-        self._meta._sid_to_model[model.sid] = model
+
+        self.meta._sid_to_model[model.sid] = model
+
+        s = model.schema
+        assert self.meta._schema_md5_to_sid[s._md5]
+        assert self.meta._schema_md5_to_sid[s._md5] == model.sid
+
         return model
 
     def _schema_add(self, schema):
@@ -391,14 +398,14 @@ class BCDB(j.application.JSBaseClass):
             schema_text = schema.text
 
         if not sid:
-            if schema._md5 in self._meta._schema_md5_to_sid:
-                sid = self._meta._schema_md5_to_sid[schema._md5]
+            if schema._md5 in self.meta._schema_md5_to_sid:
+                sid = self.meta._schema_md5_to_sid[schema._md5]
                 # means we already know the schema
             else:
                 sid = self._schema_add(schema)  # this will make sure the schema is registered on the metadata level
 
-        if sid in self._meta._sid_to_model:
-            return self._meta._sid_to_model[sid]
+        if sid in self.meta._sid_to_model:
+            return self.meta._sid_to_model[sid]
 
         # model not known yet need to create
         self._log_info("load model:%s" % schema.url)
@@ -470,7 +477,7 @@ class BCDB(j.application.JSBaseClass):
         # that's why we keep the errored schemas and put it to the end of the queue so it waits until every thing is
         # loaded and try again we will do that for 3 times as max for each schema
         errored = {}
-        while tocheck:
+        while tocheck != []:
             schemapath = tocheck.pop()
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
@@ -479,8 +486,8 @@ class BCDB(j.application.JSBaseClass):
             schema_text = j.sal.fs.readFile(schemapath)
             try:
                 schema = j.data.schema.get_from_text(schema_text)
-                schema = self._schema_add(schema)
-                model = self.model_get_from_schema(schema=schema, dest=dest)
+                self._schema_add(schema)
+                model = self.model_get_from_schema(schema=schema)
                 toml_path = "%s.toml" % (schema.key)
                 if j.sal.fs.getBaseName(schemapath) != toml_path:
                     toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
@@ -524,7 +531,7 @@ class BCDB(j.application.JSBaseClass):
             return bdata
         else:
             try:
-                obj = model.schema.get(serializeddata=bdata, model=model)
+                obj = model.schema.new(serializeddata=bdata, model=model)
             except Exception as e:
                 msg = "can't get a model from data:%s\n%s" % (bdata, e)
                 print(msg)

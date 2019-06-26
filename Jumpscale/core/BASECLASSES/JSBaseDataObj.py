@@ -19,7 +19,7 @@ class JSBaseDataObj(JSBase):
 
         if jsxobject:
             if not isinstance(jsxobject, j.data.schema._JSXObjectClass):
-                raise RuntimeError("data should be a jsobj")
+                raise RuntimeError("data should be a jsxobject")
             self._data = jsxobject
         else:
             self._data = self._schema.new()

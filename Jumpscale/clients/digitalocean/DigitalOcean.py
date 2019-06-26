@@ -49,6 +49,10 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         return self._digitalocean_images
 
     @property
+    def digitalocean_myimages(self):
+        return self.client.get_images(private=True)
+
+    @property
     def digitalocean_sizes(self):
         if not self._digitalocean_sizes:
             self._digitalocean_sizes = self.client.get_all_sizes()
@@ -98,8 +102,12 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 return item
         raise RuntimeError("did not find region:%s" % name)
 
+    @property
+    def digitalocean_account_images(self):
+        return self.digitalocean_images + self.digitalocean_myimages
+
     def image_get(self, name):
-        for item in self.digitalocean_images:
+        for item in self.digitalocean_account_images:
             if item.description:
                 name_do = item.description.lower()
             else:
@@ -160,12 +168,12 @@ class DigitalOcean(j.application.JSBaseConfigClass):
 
         if region.slug not in imagedo.regions:
             j.shell()
-
+        img_slug_or_id = imagedo.slug if imagedo.slug else imagedo.id
         droplet = digitalocean.Droplet(
             token=self.token_,
             name=name,
             region=region.slug,
-            image=imagedo.slug,
+            image=img_slug_or_id,
             size_slug=size_slug,
             ssh_keys=[sshkey],
             backups=False,

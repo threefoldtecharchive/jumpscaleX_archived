@@ -29,17 +29,20 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        bcdb, schema, sid, reset = self._init_load(bcdb, schema, sid, reset)
+        if not schema:
+            if hasattr(self, "_SCHEMA"):
+                j.data.schema.get_from_text(self._SCHEMA)
+            else:
+                schema = self._schema_get()
+                assert schema
 
-        assert bcdb
-        assert schema
-        assert sid
-        assert sid > 0
+            bcdb.meta._schema_set(schema)
 
         self.schema = schema
-        self.sid = sid
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
+
         self.bcdb = bcdb
-        self.storclient = bcdb.storclient
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
@@ -65,8 +68,12 @@ class BCDBModel(j.application.JSBaseClass):
         if reset:
             self.reset()
 
-    def _init_load(self, bcdb, schema, reset):
-        return bcdb, schema, reset
+    def _schema_get(self):
+        return None
+
+    @property
+    def storclient(self):
+        return self.bcdb.storclient
 
     def trigger_add(self, method):
         """
@@ -82,7 +89,7 @@ class BCDBModel(j.application.JSBaseClass):
         if method not in self._triggers:
             self._triggers.append(method)
 
-    def triggers_call(self, obj, action=None, propertyname=None):
+    def _triggers_call(self, obj, action=None, propertyname=None):
         """
         will go over all triggers and call them with arguments given
         see docs/baseclasses/data_mgmt_on_obj.md
@@ -97,7 +104,7 @@ class BCDBModel(j.application.JSBaseClass):
                 obj = obj2
             else:
                 if obj2 is not None:
-                    raise RuntimeError("obj return from action needs to be a JSX data obj or None")
+                    raise RuntimeError("obj return from action needs to be a JSXObject or None")
         return obj
 
     # def cache_reset(self):
@@ -151,7 +158,7 @@ class BCDBModel(j.application.JSBaseClass):
                 raise RuntimeError("specify id or obj")
         assert obj.nid
         if obj.id is not None:
-            self.triggers_call(obj=obj, action="delete")
+            self._triggers_call(obj=obj, action="delete")
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
             if not self.storclient:
@@ -183,10 +190,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data, model=self)
+            obj = self.schema.new(datadict=data, model=self)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(serializeddata=data, model=self)
+            obj = self.schema.new(serializeddata=data, model=self)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
             if not obj.nid:
@@ -211,7 +218,7 @@ class BCDBModel(j.application.JSBaseClass):
                     data["nid"] = nid
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data)
+            obj = self.schema.new(datadict=data)
             obj.nid = nid
         else:
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
@@ -308,11 +315,10 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            assert obj.sid > 0
-            l = [obj.nid, obj.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
-            obj = self.triggers_call(obj, action="set_pre")
+            obj = self._triggers_call(obj, action="set_pre")
 
             # PUT DATA IN DB
             if obj.id is None:
@@ -338,7 +344,7 @@ class BCDBModel(j.application.JSBaseClass):
         if index:
             self.index.set(obj)
 
-        obj = self.triggers_call(obj=obj, action="set_post")
+        obj = self._triggers_call(obj=obj, action="set_post")
 
         return obj
 
@@ -365,14 +371,14 @@ class BCDBModel(j.application.JSBaseClass):
             data = j.data.serializers.json.loads(data)
         if data:
             if isinstance(data, dict):
-                obj = self.schema.get(dictdata=data, model=self)
+                obj = self.schema.new(datadict=data, model=self)
             else:
                 raise RuntimeError("need dict")
         else:
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
         obj.nid = nid
-        obj = self.triggers_call(obj=obj, action="new")
+        obj = self._triggers_call(obj=obj, action="new")
         return obj
 
     def _methods_add(self, obj):
@@ -415,7 +421,7 @@ class BCDBModel(j.application.JSBaseClass):
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
 
-        obj = self.triggers_call(obj=obj, action="get")
+        obj = self._triggers_call(obj=obj, action="get")
 
         return obj
 

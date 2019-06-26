@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from .BCDB import BCDB
 from .BCDBModel import BCDBModel
+from .BCDBVFS import BCDBVFS
 import os
 import sys
 import redis
@@ -22,6 +23,12 @@ class BCDBFactory(j.application.JSBaseClass):
         j.clients.redis.core_get()  # just to make sure the redis got started
 
         j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
+
+        self._BCDBModelClass = BCDBModel  # j.data.bcdb._BCDBModelClass
+
+        self._load()
+
+    def _load(self):
 
         self._config_data_path = j.core.tools.text_replace("{DIR_CFG}/bcdb_config")
         if j.sal.fs.exists(self._config_data_path):
@@ -122,8 +129,10 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         return self._get(name=name, reset=reset)
 
-    def _get(self, name, reset=False, if_not_exist_die=True):
+    def _get_vfs(self):
+        return BCDBVFS(self._bcdb_instances)
 
+    def _get(self, name, reset=False, if_not_exist_die=True):
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
@@ -138,7 +147,7 @@ class BCDBFactory(j.application.JSBaseClass):
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
                 storclient = j.clients.zdb.client_get(**data)
-            if data["type"] == "rdb":
+            elif data["type"] == "rdb":
                 storclient = j.clients.rdb.client_get(**data)
             else:
                 storclient = None
@@ -164,31 +173,40 @@ class BCDBFactory(j.application.JSBaseClass):
         """
 
         self._log_info("new bcdb:%s" % name)
+        if name in self._bcdb_instances:  # make sure we don't remember when a new one
+            self._bcdb_instances.pop(name)
         if storclient != None and j.data.types.string.check(storclient):
             raise RuntimeError("storclient cannot be str")
         data = {}
-        if not name in self._config:
-            if storclient:
-                if storclient.type == "RDB":
-                    data["nsname"] = storclient.nsname
-                    data["type"] = "rdb"
-                    data["redisconfig_name"] = storclient._redis.redisconfig_name
-                else:
-                    data["nsname"] = storclient.nsname
-                    data["admin"] = storclient.admin
-                    data["addr"] = storclient.addr
-                    data["port"] = storclient.port
-                    data["mode"] = storclient.mode
-                    data["secret"] = storclient.secret
-                    data["type"] = "zdb"
+
+        if storclient:
+            if storclient.type == "RDB":
+                data["nsname"] = storclient.nsname
+                data["type"] = "rdb"
+                data["redisconfig_name"] = storclient._redis.redisconfig_name
             else:
-                data["nsname"] = name
-                data["type"] = "sqlite"
+                data["nsname"] = storclient.nsname
+                data["admin"] = storclient.admin
+                data["addr"] = storclient.addr
+                data["port"] = storclient.port
+                data["mode"] = storclient.mode
+                data["secret"] = storclient.secret
+                data["type"] = "zdb"
+        else:
+            data["nsname"] = name
+            data["type"] = "sqlite"
 
-            self._config[name] = data
-            self._config_write()
+        self._config[name] = data
 
-        return self.get(name=name)
+        self._config_write()
+        self._load()
+
+        bcdb = self.get(name=name)
+
+        if storclient:
+            assert bcdb.storclient
+            assert bcdb.storclient.type == storclient.type
+        return bcdb
 
     @property
     def _code_generation_dir(self):

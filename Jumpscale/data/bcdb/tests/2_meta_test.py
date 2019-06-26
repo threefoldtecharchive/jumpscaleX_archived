@@ -19,8 +19,8 @@ def main(self):
 
     assert len(bcdb.get_all()) == 0
 
-    assert len(bcdb.meta.data.schemas) == 7
-    s = bcdb.meta.data.schemas[-1]
+    assert len(bcdb.meta._data.schemas) == 7
+    s = bcdb.meta._data.schemas[-1]
     assert s.url == "despiegk.test"
 
     m = bcdb.model_get_from_url("despiegk.test")
@@ -64,7 +64,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta.data._ddict["schemas"]) == 8
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10
 
     a = model.new()
     a.category = "acat"
@@ -93,7 +93,7 @@ def main(self):
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
-    assert len(bcdb.meta.data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     schema_text = """
@@ -107,7 +107,7 @@ def main(self):
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta.data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # acl, user, circle, despiegktest and the 1 new one
 
     a3 = model2.new()
     a3.category = "acat3"

@@ -1,8 +1,9 @@
 from Jumpscale import j
 
 
-class JSXObject:
-    def __init__(self, capnpdata=None, dictdata={}, schema=None, model=None):
+class JSXObject(j.application.JSBaseClass):
+    def __init__(self, capnpdata=None, datadict={}, schema=None, model=None):
+
         self._cobj_ = None
         self.id = None
         self.nid = 1
@@ -12,9 +13,17 @@ class JSXObject:
         self._autosave = False
         self.acl_id = None
         self._acl = None
+
         self._load_from_data(capnpdata=capnpdata)
-        if dictdata:
-            self._data_update(dictdata)
+        if datadict:
+            self._data_update(datadict)
+
+        j.application.JSBaseClass.__init__(self)
+
+    @property
+    def _readonly(self):
+        return False
+        return self._readonly
 
     @property
     def _readonly:
@@ -26,7 +35,7 @@ class JSXObject:
 
     def _data_update(self, data):
         if not isinstance(data, dict):
-            raise RuntimeError("need to be dict")
+            raise RuntimeError("need to be dict, was:\n%s" % data)
         if self._model is not None:
             data = self._model._dict_process_in(data)
         for key, val in data.items():
@@ -46,7 +55,7 @@ class JSXObject:
         :return:
         """
 
-        if self._model is not None and self._model.readonly:
+        if self._model is not None and self._readonly:
             raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
         if self._readonly:
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
@@ -96,7 +105,7 @@ class JSXObject:
 
     def save(self):
         if self._model:
-            if self._model.readonly:
+            if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
@@ -132,7 +141,7 @@ class JSXObject:
 
     def delete(self):
         if self._model:
-            if self._model.readonly or self._readonly:
+            if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
