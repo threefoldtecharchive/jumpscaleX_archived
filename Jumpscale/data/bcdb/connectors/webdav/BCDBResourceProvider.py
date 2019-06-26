@@ -27,11 +27,42 @@ class DirCollection(DAVCollection):
         """
         path = j.sal.fs.joinPaths(self.path, name)
 
-        vfile = self.vfs.get(path)
+        # This to avoid returning 500 response if there was an error in bcdb returned data
+        try:
+            vfile = self.vfs.get(path)
+        except Exception as e:
+            return CorruptedResource(path, self.environ, str(e))
+
         if vfile.is_dir():
             return DirCollection(path, self.environ)
         else:
             return DocResource(path, self.environ, vfile)
+
+
+class CorruptedResource(DAVNonCollection):
+    """
+    Represents a corrupted resource which could happen because of bcdb failure
+    """
+    def __init__(self, path, environ, error):
+        DAVNonCollection.__init__(self, path, environ)
+        self.path = path
+        self.error = error
+
+    def get_content(self):
+        html = "<pre>" + self.error + "</pre>"
+        return compat.BytesIO(html.encode("utf-8"))
+
+    def get_content_length(self):
+        return len(self.get_content().read())
+
+    def get_content_type(self):
+        return "text/html"
+
+    def get_display_name(self):
+        return compat.to_native(self.path + " --corrupted")
+
+    def get_display_info(self):
+        return {"type": "Corrupted resource"}
 
 
 class DocResource(DAVNonCollection):
@@ -44,20 +75,24 @@ class DocResource(DAVNonCollection):
         self.doc = vfile.get()
 
     def get_content(self):
-        html = "<pre>" + self.doc + "</pre>"
+        html = self.doc
         return compat.BytesIO(html.encode("utf-8"))
 
     def get_content_length(self):
         return len(self.get_content().read())
 
     def get_content_type(self):
-        return "text/html"
+        try:
+            j.data.serializers.json.loads(self.doc)
+            return "application/json"
+        except:
+            return "text/html"
 
     def get_display_name(self):
         return compat.to_native(self.doc)
 
     def get_display_info(self):
-        return {"type": "BCDB Model"}
+        return {"type": "resource"}
 
 
 class BCDBResourceProvider(DAVProvider):
