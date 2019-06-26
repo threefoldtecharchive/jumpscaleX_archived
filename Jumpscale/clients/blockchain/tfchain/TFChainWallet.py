@@ -41,6 +41,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         seed = "" (S)
         key_count = 1 (I)
         key_scan_count = -1 (I)
+        reservations_transactions = (LS)
         """
 
     def _init(self):

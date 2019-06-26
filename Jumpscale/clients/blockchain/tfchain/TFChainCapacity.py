@@ -74,27 +74,30 @@ class TFChainCapacity:
 
     def reservations_transactions_list(self):
         """
-        list all transactions that happened due to a reservation
+        list ids of all transactions that happened due to a reservation
         """
-        transactions = list()
-        for transaction in self._wallet.transactions:
-            if not transaction.data:
-                continue
-            try:
-                _, data_dict = self._notary_data_get(transaction.data.value.decode())
-                if data_dict.get("type") in ["vm", "reverse_proxy", "namespace", "s3"]:
-                    transactions.append(transaction)
-            except Exception as e:
-                if "reservation not found" not in str(e):
-                    raise e
-        return transactions
+        if not self._wallet.reservations_transactions:
+            transactions = list()
+            for transaction in self._wallet.transactions:
+                if not transaction.data:
+                    continue
+                try:
+                    _, data_dict = self._notary_data_get(transaction.data.value.decode())
+                    if data_dict.get("type") in ["vm", "reverse_proxy", "namespace", "s3"]:
+                        transactions.append(transaction.id)
+                except Exception as e:
+                    if "reservation not found" not in str(e):
+                        raise e
+            self._wallet.reservations_transactions = transactions
+            self._wallet.save()
+        return self._wallet.reservations_transactions
 
-    def reservation_extend(self, transaction, duration=1, source=None, refund=None):
+    def reservation_extend(self, transaction_id, duration=1, source=None, refund=None):
         """
         extend the expiry of an existing reservation
 
-        :param transaction: transaction that was created for this reservation
-        :type transaction: tfchain transaction object
+        :param transaction_id: id of the transaction that was created for the reservation you want to extend
+        :type transaction_id: string
         :param duration: number of months to extend the expiry by
         :type duration: int
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
@@ -106,6 +109,7 @@ class TFChainCapacity:
         :rtype: tuple
 
         """
+        transaction = self._wallet.client.transaction_get(transaction_id)
         try:
             threebot_id, reservation = self._notary_data_get(transaction.data.value.decode())
             if reservation.get("type") not in ["vm", "reverse_proxy", "namespace", "s3"]:
@@ -290,7 +294,10 @@ class TFChainCapacity:
 
         signature = self._sign_reservation(threebot_id, reservation)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
-        return self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
+        transaction_result =  self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
+        self._wallet.reservations_transactions.append(transaction_result.transaction.id)
+        self._wallet.save()
+        return transaction_result
 
     def _sign_reservation(self, threebot_id, reservation):
         # get binary representation
