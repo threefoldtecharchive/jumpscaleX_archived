@@ -29,6 +29,12 @@ class BaseTest(TestCase):
 
         self.node_instance = "node_instance_{}".format(randint(1, 1000))
         self.node = j.clients.zos.get(name=self.node_instance, password=self.node_jwt, host=self.node_ip)
+        self.sandbox_args = dict(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )
 
     def tearDown(self):
         pass
