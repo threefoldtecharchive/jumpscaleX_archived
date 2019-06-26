@@ -155,31 +155,42 @@ class RedisServer(j.application.JSBaseClass):
                 return
             except:
                 response.error("cannot set, key:'%s' not supported" % key)
+
+        else:
+            try:
+                self.vfs.set(val)
+                response.encode("OK")
+                return
+            except:
+                response.error("cannot set, key:'%s' not supported" % key)
         return
 
     def get(self, response, key):
         parse_key = key.replace(":", "/")
-        try:
-            vfs_objs = self.vfs.get(self.bcdb.name+"/"+parse_key)
+        parse_key = parse_key.replace("_", ".")
 
+        try:
+            vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
             if not isinstance(vfs_objs.get(), str):
                 objs = [i for i in vfs_objs.list()]
-                response.encode(objs)
+                response._array(["0", objs])
             else:
-                response.encode(vfs_objs.get())
+                objs = vfs_objs.get()
+
+                response.encode(objs)
             return
         except:
-            response.error("cannot get, key:'%s' not found" % key)
+            response.error("cannot get, key:'%s' not found" % parse_key)
 
     def delete(self, response, key):
-        
+
         parse_key = key.replace(":", "/")
         try:
-            vfs_objs = self.vfs.delete(self.bcdb.name+"/"+parse_key)
+            vfs_objs = self.vfs.delete(self.bcdb.name + "/" + parse_key)
             response.encode(vfs_objs)
             return
         except:
-            response.error("cannot delete, key:'%s' not found" % key)
+            response.error("cannot delete, key:'%s'" % key)
 
     def scan(self, response, startid, match="*", count=10000, *args):
         """
@@ -191,15 +202,16 @@ class RedisServer(j.application.JSBaseClass):
         """
         # in first version will only do 1 page, so ignore scan
         res = []
-
-        if len(self.bcdb.models) > 0:
-            for url, model in self.bcdb.models.items():
-                res.append("schemas:%s" % url)
-                res.append("objects:%s" % url)
-        else:
-            res.append("schemas")
-            res.append("objects")
-        res.append("info")
+        for i in self.vfs._bcdb_names:
+            bcdb_instance = j.data.bcdb.get(i)
+            models = [i for i in bcdb_instance.models]
+            if len(models) > 0:
+                for url in models:
+                    res.append("{}:schemas:url:{}".format(i, url.key))
+                    res.append("{}:data:url:{}".format(i, url.key))
+            else:
+                res.append("%s:schemas:url" % i)
+                res.append("%s:data:url" % i)
         response._array(["0", res])
 
     def hset(self, response, key, id, val):
@@ -232,22 +244,17 @@ class RedisServer(j.application.JSBaseClass):
         response.encode("%s" % o.id)
 
     def hget(self, response, key, id):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
+        parse_key = key.replace(":", "/")
+        try:
+            vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
+            if not isinstance(vfs_objs.get(), str):
+                objs = [i for i in vfs_objs.list()]
+                response.encode(objs)
+            else:
+                response.encode(vfs_objs.get())
             return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-
-        obj = model.get(int(id))
-        if obj is not None:
-            response.encode(obj._json)
-        else:
-            response.encode(None)
+        except:
+            response.error("cannot get, key:'%s' not found" % key)
 
     def hdel(self, response, key, id):
         cat, url, _, model = self._split(key)
@@ -291,12 +298,7 @@ class RedisServer(j.application.JSBaseClass):
         :param type: is the key we need to give type for
         :return:
         """
-        cat, url, key, model = self._split(type)
-        if key == "" and url != "":
-            # then its hset
-            response.encode("hash")
-        else:
-            response.encode("string")
+        response.encode("string")
 
     def _urls(self):
         urls = [i for i in self.bcdb.models.keys()]
