@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.schema.test(name="base")' --debug
+    kosmos 'j.data.schema.test(name="base")'
     """
 
     schema = """
@@ -47,7 +47,7 @@ def main(self):
         schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
     )
 
-    o = schema_object.get()
+    o = schema_object.new()
 
     assert o.nrdefault == 0
     assert o.nrdefault2 == 2147483647
@@ -101,16 +101,16 @@ def main(self):
     schema_object1 = j.data.schema.get_from_url_latest(url="despiegk.test2")
     schema_object2 = j.data.schema.get_from_url_latest(url="despiegk.test3")
 
-    o1 = schema_object1.get()
-    o2 = schema_object2.get()
+    o1 = schema_object1.new()
+    o2 = schema_object2.new()
     o1.llist2.append("5")
     o1.llist2.append(6)
 
     assert "5" in o1.llist2
     assert "6" in o1.llist2
 
-    c = o1._cobj
-    c2 = o1._cobj
+    c = o1._capnp_obj
+    c2 = o1._capnp_obj
 
     assert c.llist2[0] == "5"
     assert c2.llist2[0] == "5"
@@ -124,11 +124,11 @@ def main(self):
     o2.llist.append("1")
 
     assert o1.enum == "RED"
-    assert o1._cobj.enum == 1
+    assert o1._capnp_obj.enum == 1
 
     o1.enum = 2
     assert o1.enum == "GREEN"
-    assert o1._cobj.enum == 2
+    assert o1._capnp_obj.enum == 2
     o1.enum = "  green"
     assert o1.enum == "GREEN"
     assert o1.enum == " GREEN"
@@ -136,8 +136,8 @@ def main(self):
 
     assert o1._ddict_hr["enum"] == "GREEN"
 
-    assert o1._cobj.nr == 4
-    assert o1._cobj.llist2[0] == "5"
+    assert o1._capnp_obj.nr == 4
+    assert o1._capnp_obj.llist2[0] == "5"
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
     assert len(o1._data) <= 30 + 17
@@ -174,8 +174,6 @@ def main(self):
     assert o.bool8 == False
     assert o.int1 == 10
 
-    self._log_info("TEST DONE BASE")
-
     schema = """
     @url = despiegk.doubletest
     name = ""
@@ -195,5 +193,7 @@ def main(self):
     s2 = j.data.schema.get_from_url_latest(url="despiegk.doubletest")
     assert s2._md5 == s1._md5
     assert s2._md5 != s0._md5
+
+    self._log_info("TEST DONE BASE")
 
     return "OK"

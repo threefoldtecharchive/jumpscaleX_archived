@@ -8,7 +8,7 @@ class JSBaseDataObj(JSBase):
         """
         :param kwargs: will be updated in the self.data object
 
-        the self.data object is a jsobject (result of using the jsx schemas)
+        the self.data object is a jsxobject (result of using the jsx schemas)
 
         """
 
@@ -58,7 +58,6 @@ class JSBaseDataObj(JSBase):
 
     def _init2(self, **kwargs):
         self._key = "%s:%s:%s" % (self.__class__._location, self.__class__._name, self.data.name)
-        # self.data._autosave = True
         # always needs to be last
         JSBase._init2(self, **kwargs)
 

@@ -8,10 +8,7 @@ class SchemaProperty(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.name = ""
         self.jumpscaletype = None
-        # self.isList = False
-        # self.enumeration = []
         self.comment = ""
-        # self.pointer_type = None  #if the property links to another object
         self.nr = 0
         self._default = None
         self.index = False  # as used in sqlite
@@ -33,9 +30,23 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def has_jsxobject(self):
-        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "jsobject":
+        return self.is_list_jsxobject or self.is_jsxobject
+
+    @property
+    def is_list_jsxobject(self):
+        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "JSXOBJ":
             return True
-        if self.jumpscaletype.NAME == "jsobject":
+        return False
+
+    @property
+    def is_jsxobject(self):
+        if self.jumpscaletype.BASETYPE == "JSXOBJ":
+            return True
+        return False
+
+    @property
+    def is_list(self):
+        if self.jumpscaletype.NAME == "list":
             return True
         return False
 
@@ -58,6 +69,10 @@ class SchemaProperty(j.application.JSBaseClass):
             else:
                 out += item.capitalize()
         return out
+
+    @property
+    def name_str(self):
+        return "%-20s" % self.name
 
     @property
     def js_typelocation(self):

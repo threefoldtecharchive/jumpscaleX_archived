@@ -6,11 +6,11 @@ from .JSFactoryBase import JSFactoryBase
 class JSBaseConfigParent(JSBaseConfig, JSFactoryBase):
     def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
-        :param data, is a jsobject as result of jsX schema's
+        :param data, is a jsxobject as result of jsX schema's
         :param factory, don't forget to specify this
         :param kwargs: will be updated in the self.data object
 
-        the self.data object is a jsobject (result of using the jsx schemas)
+        the self.data object is a jsxobject (result of using the jsx schemas)
 
         """
         JSFactoryBase.__init__(self, topclass=False)

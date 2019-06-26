@@ -8,7 +8,7 @@ from collections.abc import MutableSequence
 
 
 class ListObject(TypeBaseObjClass, MutableSequence):
-    def __init__(self, list_factory_type, values=[], child_type=None):
+    def __init__(self, list_factory_type, values=[], child_type=None, model=None):
         """
 
         :param child_type: is the JSX basetype which is the child of the list, can be None, will be detected when required then
@@ -16,9 +16,32 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         """
         self._list_factory_type = list_factory_type
         self._inner_list = values
-        self._changed = False
+        self.__changed = False
         self._child_type_ = child_type
         self._current = 0
+        self._model = model
+
+    @property
+    def _changed(self):
+        if self.__changed:
+            return self.__changed
+        for item in self._inner_list:
+            # need to check if underlying jsxobjexts got changed?
+            if isinstance(item, j.data.schema._JSXObjectClass):
+                if item._changed:
+                    self.__changed = True
+                    return True
+        return False
+
+    @_changed.setter
+    def _changed(self, value):
+        assert value == False  # only supported mode
+        # need to make sure the objects (list(jsxobj) or jsxobj need to set their state to changed)
+        for item in self._inner_list:
+            # need to check if underlying jsxobjexts will change their change state
+            if isinstance(item, j.data.schema._JSXObjectClass):
+                item._changed = False
+        self.__changed = False
 
     def __len__(self):
         """
@@ -27,7 +50,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         return len(self._inner_list)
 
     def __eq__(self, val):
-        val = self._list_factory_type.clean(val)
+        val = self._list_factory_type.clean(val, model=self._model)
         return val._inner_list == self._inner_list
 
     def __delitem__(self, index):
@@ -36,7 +59,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         """
 
         self._inner_list.__delitem__(index)
-        self._changed = True
+        self.__changed = True
 
     @property
     def value(self):
@@ -64,8 +87,11 @@ class ListObject(TypeBaseObjClass, MutableSequence):
             return self._inner_list[self._current - 1]
 
     def insert(self, index, value):
-        self._inner_list.insert(index, self._child_type.clean(value))
-        self._changed = True
+        if isinstance(value, j.data.schema._JSXObjectClass):
+            self._inner_list.insert(index, self._child_type.clean(value, model=self._model))
+        else:
+            self._inner_list.insert(index, self._child_type.clean(value))
+        self.__changed = True
 
     def __setitem__(self, index, value):
         """
@@ -74,8 +100,11 @@ class ListObject(TypeBaseObjClass, MutableSequence):
             index : location in collections
             value : value that add in collections
         """
-        self._inner_list[index] = self._child_type.clean(value)
-        self._changed = True
+        if isinstance(value, j.data.schema._JSXObjectClass):
+            self._inner_list[index] = self._child_type.clean(value, model=self._model)
+        else:
+            self._inner_list[index] = self._child_type.clean(value)
+        self.__changed = True
 
     def __getitem__(self, index):
         """
@@ -125,9 +154,9 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         return new subitem, only relevant when there are pointer_types used
         """
 
-        data2 = self._child_type.clean(data)
+        data2 = self._child_type.clean(data, model=self._model)
         self.append(data2)
-        self._changed = True
+        self.__changed = True
         return data2
 
     @property
@@ -179,7 +208,7 @@ class List(TypeBaseObjFactory):
             self._default = default
 
         if subtype:
-            if subtype == "o":
+            if subtype == "o" or "jsxobj" in subtype or subtype == "jsxobject":
                 # need to take original default, but cannot store in obj, is for list of jsx objects
                 self._SUBTYPE = j.data.types.get(subtype, default=default, cache=False)
             else:
@@ -224,12 +253,12 @@ class List(TypeBaseObjFactory):
 
     def toData(self, val=None, model=None):
         val2 = self.clean(val)
-        if self.SUBTYPE.BASETYPE == "OBJ":
+        if self.SUBTYPE.BASETYPE == "JSXOBJ":
             return [j.data.serializers.jsxdata.dumps(i, model=model) for i in val2]
         else:
             return val2._inner_list
 
-    def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
+    def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None, model=None):
         if isinstance(val, ListObject):
             return val
         if val is None:
@@ -271,7 +300,7 @@ class List(TypeBaseObjFactory):
         if sort:
             res.sort()
 
-        res = ListObject(self, res, ttype)
+        res = ListObject(self, res, ttype, model=model)
 
         return res
 

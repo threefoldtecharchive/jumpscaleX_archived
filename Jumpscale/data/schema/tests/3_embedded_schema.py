@@ -13,6 +13,7 @@ def main(self):
         schema = """
             @url = jumpscale.schema.test3.a
             cmd = (O) !jumpscale.schema.test3.b
+            x = "1"
     
             @url = jumpscale.schema.test3.b
             name = ""
@@ -24,9 +25,15 @@ def main(self):
         so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
         so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
+        assert o._changed == False
+        o.x = "2"
+        assert o._changed
+        assert o.x == "2"
 
+        assert o.cmd._changed == False
         o.cmd.name = "a"
-
+        assert o.cmd._changed
+        j.shell()
         assert o.cmd.name == "a"
         assert o.cmd.comment == ""
 
@@ -41,6 +48,8 @@ def main(self):
         o2 = j.data.serializers.jsxdata.loads(data)
 
         print(o2)  # TODO: does not serialize well
+
+        j.shell()
 
         assert o2.cmd.name == "a"
 
@@ -130,7 +139,7 @@ def main(self):
     schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.serverschema")
     schema_object3 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmdbox")
 
-    schema_test = schema_object2.get()
+    schema_test = schema_object2.new()
 
     for i in range(4):
         schema_object = schema_test.cmds.new()
@@ -144,7 +153,7 @@ def main(self):
 
     print(schema_test._data)
 
-    schema_test3 = schema_object3.get()
+    schema_test3 = schema_object3.new()
     schema_test3.cmd.name = "test"
     schema_test3.cmd2.name = "test"
     assert schema_test3.cmd.name == "test"

@@ -116,7 +116,7 @@ class Types(j.application.JSBaseClass):
         - n, numeric
         - h, set       #set of 2 int
         - p, percent
-        - o, jsobject
+        - o, jsxobject
         - ipaddr, ipaddress
         - ipport, tcpport
         - iprange

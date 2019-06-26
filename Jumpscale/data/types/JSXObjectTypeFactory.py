@@ -7,11 +7,12 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     jumpscale data object as result of using j.data.schema.
     """
 
-    NAME = "jsobject,o,obj"
+    BASETYPE = "JSXOBJ"
+    NAME = "jsxobject,o"
     CUSTOM = True
 
     def __init__(self, default=None):
-        self.BASETYPE = "OBJ"
+        self.BASETYPE = "JSXOBJ"
         self.SUBTYPE = None
         if not default:
             raise j.exceptions.Input("Cannot init JSDataObjectFactory without md5 or url")
@@ -47,6 +48,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         return self.clean(val)
 
     def toData(self, val, model=None):
+        if model:
+            assert isinstance(model, j.data.bcdb._BCDBModelClass)
         val = self.clean(val)
         return j.data.serializers.jsxdata.dumps(val, model=model)
 
@@ -62,8 +65,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     def check(self, value):
         return isinstance(value, j.data.schema._JSXObjectClass)
 
-    def default_get(self):
-        return self._schema.new()
+    def default_get(self, model=None):
+        return self._schema.new(model=model)
 
     def clean(self, value, model=None):
         """
@@ -74,14 +77,14 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         """
         if isinstance(value, j.data.schema._JSXObjectClass):
             return value
-        if isinstance(value, bytes):
+        elif not value:
+            return self._schema.new(model=model)
+        elif isinstance(value, bytes):
             obj = j.data.serializers.jsxdata.loads(value, model=model)
             # when bytes the version of the jsxobj & the schema is embedded in the bin data
             return obj
         elif isinstance(value, dict):
             return self._schema.new(datadict=value, model=model)
-        elif value is None:
-            return self._schema.new(model=model)
         else:
             raise j.exceptions.Input("can only accept dataobj, bytes (capnp) or dict as input for jsxobj")
 

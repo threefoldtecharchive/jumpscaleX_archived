@@ -365,13 +365,13 @@ class BCDB(j.application.JSBaseClass):
         """
 
         for prop in schema.properties:
-            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsxobject):
                 # now we know that there is a subtype, we need to store it in the bcdb as well
                 s = prop.jumpscaletype.SUBTYPE._schema
                 self._schema_add(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
-            elif prop.jumpscaletype.NAME == "jsobject":
+            elif prop.jumpscaletype.NAME == "jsxobject":
                 s = prop.jumpscaletype._schema
                 self._schema_add(s)
                 # now see if more subtypes

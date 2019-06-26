@@ -4,35 +4,17 @@ from capnp import KjException
 
 class JSXObject2(j.data.schema._JSXObjectClass):
 
-    # __slots__ = ["id","_schema","_model","_autosave","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
-    #                     {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
+    __slots__ = ["id","_schema","_model","_autosave","_capnp_obj_","_deserialized_items","_acl_id","_acl",
+                        {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
         pass
         {% for prop in obj.properties %}
-        {% if not prop.jumpscaletype.NAME == "jsobject" %}
+        {% if not prop.is_jsxobject %}
         if {{prop.default_as_python_code}} not in [None,"","0.0",0,'0']:
             self.{{prop.name}} = {{prop.default_as_python_code}}
         {% endif %}
         {% endfor %}
-
-    def _reset(self):
-        """
-        :return:
-        """
-        self._changed_items = {}
-        #PROP
-        {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._schema_{{prop.name}} = j.data.schema.get_from_md5(md5="{{prop.jumpscaletype._schema_md5}}")
-        if self._cobj_.{{prop.name_camel}}:
-            data = self._cobj_.{{prop.name_camel}}
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(serializeddata=data,model=self._model)
-        else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self._model)
-        {% endif %}
-        {% endfor %}
-
 
     {# generate the properties #}
     {% for prop in obj.properties %}
@@ -43,36 +25,39 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {{prop.comment}}
         '''
         {% endif %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        return self._changed_items["{{prop.name}}"]
-        {% else %}
-        if "{{prop.name}}" in self._changed_items:
-            return self._changed_items["{{prop.name}}"]
-        else:
-            v = {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
-            if isinstance(v,j.data.types._TypeBaseObjClass):
-                self._changed_items["{{prop.name}}"] = v
-            return v
 
-        {% endif %}
+        #this deals with lists and other object types which have customer JSX types
+        #if a primitive type then it will just be returned immediately from the capnp
+        if "{{prop.name}}" in self._deserialized_items:
+            return self._deserialized_items["{{prop.name}}"]
+        else:
+            {% if prop.has_jsxobject %}
+            v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}},model=self._model)
+            {% else %}
+            v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}})
+            {% endif %}
+            if isinstance(v,j.data.types._TypeBaseObjClass):
+                self._deserialized_items["{{prop.name}}"] = v
+            return v
 
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
         if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._changed_items["{{prop.name}}"] = val
+        #CLEAN THE OBJ
+        {% if prop.has_jsxobject %}
+        val = {{prop.js_typelocation}}.clean(val,model=self._model)
         {% else %}
-        #will make sure that the input args are put in right format
-        val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
+        val = {{prop.js_typelocation}}.clean(val)
+        {% endif %}
+        # self._log_debug("set:{{prop.name}}='%s'"%(val))
         if val != self.{{prop.name}}:
-            self._changed_items["{{prop.name}}"] = val
+            self._log_debug("change:{{prop.name}} %s"%(val))
+            self._deserialized_items["{{prop.name}}"] = val
             if self._model:
-                # self._log_debug("change:{{prop.name}} %s"%(val))
                 self._model._triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
             if self._autosave:
                 self.save()
-        {% endif %}
 
     {% if prop.jumpscaletype.NAME == "numeric" %}
     @property
@@ -96,35 +81,52 @@ class JSXObject2(j.data.schema._JSXObjectClass):
 
     @property
     def _changed(self):
-        if  self._changed_items != {}:
-            return True
-        return False
+        changed=False
+        {% for prop in obj.properties %}
+        {% if prop.has_jsxobject %}
+        if self.{{prop.name}}._changed:
+            changed = True
+        {% else %}
+        if "{{prop.name}}" in self._deserialized_items:
+            changed = True
+        {% endif %}
+        {% endfor %}
+
+        return changed
+
+    @_changed.setter
+    def _changed(self,value):
+        assert value==False #only supported mode
+        #need to make sure the objects (list(jsxobj) or jsxobj need to set their state to changed)
+        {% for prop in obj.properties %}
+        {% if prop.has_jsxobject %}
+        self.{{prop.name}}._changed = False
+        {% endif %}
+        {% endfor %}
 
     @property
-    def _cobj(self):
+    def _capnp_obj(self):
         if self._changed is False:
-            return self._cobj_
+            return self._capnp_obj_
 
-        ddict = self._cobj_.to_dict()
+        ddict = self._capnp_obj_.to_dict()
 
         {% for prop in obj.properties %}
-        #convert jsobjects to data data
-        if "{{prop.name}}" in self._changed_items:
+        #convert jsxobjects to data data
+        if "{{prop.name}}" in self._deserialized_items:
             {% if prop.has_jsxobject %}
-            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"],model=self._model)
+            data =  {{prop.js_typelocation}}.toData(self._deserialized_items["{{prop.name}}"],model=self._model)
             {% else %}
-            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            data =  {{prop.js_typelocation}}.toData(self._deserialized_items["{{prop.name}}"])
             {% endif %}
-
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 
 
         try:
-            self._cobj_ = self._capnp_schema.new_message(**ddict)
+            self._capnp_obj_ = self._capnp_schema.new_message(**ddict)
         except KjException as e:
             msg="\nERROR: could not create capnp message\n"
-            j.shell()
             try:
                 msg+=j.core.text.indent(j.data.serializers.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
             except:
@@ -134,23 +136,16 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             msg+="error was:\n%s\n"%e
             raise RuntimeError(msg)
 
-        self._reset()
-
-        return self._cobj_
+        return self._capnp_obj_
 
 
     @property
     def _ddict(self):
+        self._log_debug("DDICT")
         d={}
 
         {% for prop in obj.properties %}
-        # prop.name: {{prop.name}}
-        # prop.jumpscaletype.NAME: {{prop.jumpscaletype.NAME}}
-        # prop.jumpscaletype.BASETYPE: {{prop.jumpscaletype.BASETYPE}}
-        {% endfor %}
-
-        {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
+        {% if prop.is_jsxobject %}
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
@@ -167,29 +162,20 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             d=self._model._dict_process_out(d)
         return d
 
-
-
-    def _ddict_hr_get(self,exclude=[],maxsize=100):
+    def _ddict_hr_get(self,exclude=[]):
         """
         human readable dict
         """
         d = {}
         {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        # d["{{prop.name}}"] = j.data.serializers.yaml.dumps(self.{{prop.name}}._ddict_hr)
-        d["{{prop.name}}"] = "\n"+j.core.text.indent(self.{{prop.name}}._str(),4)
+        {% if prop.is_jsxobject %}
+        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr_get(exclude=exclude)
         {% else %}
         if {{prop.js_typelocation}}.NAME in ["list"]:
             res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         else:
             res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
-            # if len(str(res))<maxsize:
-            #     res = "\n"+j.core.text.indent(res,4)
         d["{{prop.name}}"] = res
-        # if len(str(res))<maxsize:
-        #     d["{{prop.name}}"] = res
-        # else:
-        #     d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
         {% endif %}
         {% endfor %}
         if self.id is not None:
@@ -197,7 +183,34 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         for item in exclude:
             if item in d:
                 d.pop(item)
-        if self._model is not None:
-            d=self._model._dict_process_out(d)
         return d
 
+    def _str_get(self, ansi=True):
+        out = "## "
+        if ansi:
+            out += "{BLUE}%s\n{RESET}" % self._schema.url_str
+        if self.id:
+            if ansi:
+                out += "{GRAY}id: %s\n{RESET}" % self.id
+            else:
+                out += "id:%s\n" % self.id
+        {% for prop in obj.properties %}
+        {% if prop.name == "name" %}
+        if ansi:
+            out += "{RED}{{prop.name_str}}: %s\n{RESET}" % self.name
+        else:
+            out += "{{prop.name_str}}: %s\n" % self.name
+        {% else %}
+        {% if prop.is_jsxobject %}
+        out+= j.core.text.indent(self.{{prop.name}}._str_get(ansi=ansi).rstrip(),4)+"\n"
+        {% elif prop.is_list %}
+        out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}}).rstrip()
+        {% else %}
+        out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}}).rstrip()
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+        if ansi:
+            out += "{RESET}"
+        out = j.core.tools.text_strip(out, replace=True)
+        return out

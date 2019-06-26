@@ -13,7 +13,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         self._pane_ = None
         self._corex_local_ = None
         self._logger_enable()
-        self._autosave = True  # means when change on one of the props will save automatically
+        # self._autosave = True  # means when change on one of the props will save automatically
 
         if self.executor == "corex":
             self._corex_clean()
