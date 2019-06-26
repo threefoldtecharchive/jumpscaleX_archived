@@ -146,6 +146,48 @@ class RedisServer(j.application.JSBaseClass):
         # j.shell()
         response.encode("OK")
 
+    def _split(self, key):
+        """
+        split function used in the "normal" methods
+        (len, set, get, del)
+        split the key into 3 composant:
+        - category: objects or schema
+        - url: url of the schema
+        - key: actual key of the object
+        :param key: full encoded key of an object. e.g: object:schema.url:key
+        :type key: str
+        :return: tuple of (category, url, key, model)
+        :rtype: tuple
+        """
+        url = ""
+        cat = ""
+        if key.strip() == "":
+            raise RuntimeError("key cannot be empty")
+        splitted = key.split(":")
+        len_splitted = len(splitted)
+        m = ""
+        if len_splitted == 3:
+            cat = splitted[1]
+            url = ""
+            key = ""
+        elif len_splitted == 4:
+            cat = splitted[1]
+            url = splitted[3]
+            key = ""
+        elif len_splitted == 5:
+            cat = splitted[1]
+            url = splitted[3]
+            key = splitted[4]
+        if url != "":
+            # If we have a url we should be able to get the corresponding model if we already have seen that model
+            # otherwise we leave the model to an empty string because it is tested further on to know that we have to set
+            # this schema
+            for i in self._urls():
+                if url == i.key:
+                    url_model = url.replace("_", ".")
+                    m = self.bcdb.model_get_from_url(url_model)
+        return (cat, url, key, m)
+
     def set(self, response, key, val):
         parse_key = key.replace(":", "/")
         if "schemas" in parse_key:
@@ -278,16 +320,12 @@ class RedisServer(j.application.JSBaseClass):
         response.encode(nr_deleted)
 
     def hlen(self, response, key):
-        cat, url, _, model = self._split(key)
 
-        if cat == "schemas" or model == "":
+        if "schemas" in key:
             response.encode(0)
             return
 
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        response.encode(len(model.get_all()))
+        response.encode(len(self.bcdb.get_all()))
         return
 
     def ttl(self, response, key):
@@ -301,17 +339,17 @@ class RedisServer(j.application.JSBaseClass):
         response.encode("hash")
 
     def _urls(self):
-        urls = [i for i in self.bcdb.models.keys()]
+        urls = [i for i in self.bcdb.models]
         return urls
 
     def hscan(self, response, key, startid, count=10000):
 
         cat, url, _, model = self._split(key)
-        objs = model.get_all()
+        # objs = model.get_all()
         res = []
-        if cat == "schemas":
-            res.append(self.bcdb.models[url].schema.sid)
-            res.append(self.bcdb.models[url].schema.text)
+        if "schemas" in key:
+            res.append(model.sid)
+            res.append(model.schema.text)
             response._array(["0", res])
             return
 
