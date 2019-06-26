@@ -1,6 +1,7 @@
-import nacl
-from Jumpscale import j
 import decimal
+import nacl
+import time
+from Jumpscale import j
 
 from . import schemas
 
@@ -290,7 +291,9 @@ class TFChainCapacity:
         amount = reservation_amount(reservation)
 
         # validate bot id exists
-        self._wallet.client.threebot.record_get(threebot_id)
+        bot = self._wallet.client.threebot.record_get(threebot_id)
+        if j.tools.time.extend(time.time(), reservation.duration) > bot.expiration:
+            raise ValueError("Capacity expiration time exceeds threebot's expiration")
 
         signature = self._sign_reservation(threebot_id, reservation)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)

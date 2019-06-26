@@ -155,6 +155,7 @@ class group_tools(JSGroup):
         self._executor = None
         self._team_manager = None
         self._syncer = None
+        self._time = None
         self._bash = None
         self._tarfile = None
         self._issuemanager = None
@@ -422,6 +423,12 @@ class group_tools(JSGroup):
             from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
             self._syncer =  SyncerFactory()
         return self._syncer
+    @property
+    def time(self):
+        if self._time is None:
+            from Jumpscale.tools.time.Time import Time
+            self._time =  Time()
+        return self._time
     @property
     def bash(self):
         if self._bash is None:
