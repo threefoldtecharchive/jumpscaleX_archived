@@ -35,7 +35,11 @@ class BCDBVFS(j.application.JSBaseClass):
             /url
                 ben.test.1 (url / properties of the schema itself)
             /url2sid
-                ben.test.1
+                /ben.test.1
+                    1
+
+
+ 
     info
     eg. test/data/2/url/ben.test.1/object1, test/schemas/hash/0eccf565df45 
     if bcdb name is set eg. /data/2/url/ben.test.1/, data/2/url/ben.test.1/object2,
@@ -123,7 +127,7 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def get(self, path):
         splitted = self._split_clean_path(path)
-        self._log_debug("vfs get path:%s " % path)
+        self._log_info("vfs get path:%s " % path)
         if len(splitted) > 0:
             key = None
             if splitted[0] == "data":
@@ -137,14 +141,14 @@ class BCDBVFS(j.application.JSBaseClass):
             elif len(splitted) == 1 and splitted[0] == self.current_bcbd_name:
                 key = "directories_under_root"
                 if not key in self._dirs_cache:
-                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self.directories_under_root)
+                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, items=self.directories_under_root)
             else:
                 raise RuntimeError("should not happen if _split_clean_path has done properly its job")
         else:
             # it means that we are listing the root directory
             key = "root"
             if not key in self._dirs_cache:
-                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self._bcdb_names)
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, items=self._bcdb_names)
         return self._dirs_cache[key]
 
     def _get_data_items(self, splitted, nid, path):
@@ -156,7 +160,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     key = "%s_data_%s_sid" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                            self, items=self._bcdb.meta._schema_md5_to_sid.values()
+                            self, key, items=self._bcdb.meta._schema_md5_to_sid.values()
                         )
                 else:
                     try:
@@ -169,9 +173,8 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "%s_data_%s_sid_%s" % (self.current_bcbd_name, nid, sid)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_sid(sid).iterate(nid)
-                            )
+                            m = self._bcdb.model_get_from_sid(sid)
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, m.iterate(nid), m)
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
@@ -189,7 +192,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     # third element must be the in the list e.g. /data/5/hash
                     key = "%s_data_%s_hash" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.values())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=j.data.schema.url_to_md5.values())
                 else:
                     hsh = splitted[3]
                     schema = j.data.schema.get_from_md5(hsh)
@@ -199,10 +202,8 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "%s_data_%s_hash_%s" % (self.current_bcbd_name, nid, hsh)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_schema(schema).iterate(nid)
-                            )
+                            m = self._bcdb.model_get_from_schema(schema)
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, m.iterate(nid), m)
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
@@ -220,7 +221,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     # third element must be the in the list e.g. /data/5/sid
                     key = "%s_data_%s_url" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=j.data.schema.url_to_md5.keys())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=j.data.schema.url_to_md5.keys())
                 else:
                     url = splitted[3]
                     if path_length == 4:
@@ -229,9 +230,8 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "%s_data_%s_url_%s" % (self.current_bcbd_name, nid, url)
                         # if we go through md5 url or sid that will points to the same objects
                         if not key in self._dirs_cache:
-                            self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                                self, items=self._bcdb.model_get_from_url(url).iterate(nid)
-                            )
+                            m = self._bcdb.model_get_from_url(url)
+                            self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, m.iterate(nid), m)
                     else:
                         # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
                         try:
@@ -258,7 +258,7 @@ class BCDBVFS(j.application.JSBaseClass):
                 # if len(namespaces) == 0:
                 # namespaces = self._bcdb.meta._data.namespaces
                 # namespaces = [0]
-                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=[1])
+                self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=[1])
         else:
             try:
                 nid = int(splitted[1])
@@ -268,7 +268,7 @@ class BCDBVFS(j.application.JSBaseClass):
                 # second element must be the nid e.g. /data/5
                 key = "%s_data_%s" % (self.current_bcbd_name, nid)
                 if not key in self._dirs_cache:
-                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, items=self.directories_under_data_namespace)
+                    self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=self.directories_under_data_namespace)
             else:
                 if splitted[2] not in self.directories_under_data_namespace:
                     raise RuntimeError(
@@ -314,7 +314,7 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "schemas_sid_%s" % (sid)
                         if not key in self._dirs_cache:
                             res = BCDBVFS_Schema(
-                                self, key=key, schema=self._find_schema_by_id(self._bcdb.data.schema, sid)
+                                self, key=key, item=self._find_schema_by_id(self._bcdb.data.schema, sid)
                             )
                     except:
                         raise RuntimeError("sid element:%s of path:%s must be an integer" % (splitted[3], path))
@@ -328,7 +328,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     hsh = splitted[3]
                     key = "schemas_hash_%s" % (hsh)
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema(self, key=key, schema=j.data.schema.get_from_md5(hsh))
+                        res = BCDBVFS_Schema(self, key=key, item=j.data.schema.get_from_md5(hsh))
             elif splitted[1] == "url":
                 if len(splitted) == 2:
                     ## directory listing
@@ -340,7 +340,20 @@ class BCDBVFS(j.application.JSBaseClass):
                     key = "schemas_url_%s" % (url)
                     if not key in self._dirs_cache:
                         s = j.data.schema.get_from_url_latest(url)
-                        res = BCDBVFS_Schema(self, key=key, schema=s)
+                        res = BCDBVFS_Schema(self, key=key, item=s)
+            elif splitted[1] == "url2sid":
+                if len(splitted) == 2:
+                    ## directory listing same as schemas_url
+                    key = "schemas_url"
+                    if not key in self._dirs_cache:
+                        res = BCDBVFS_Schema_Dir(self, items=j.data.schema.url_to_md5.keys())
+                else:
+                    url = splitted[2]
+                    key = "schemas_url2sid_%s" % (url)
+                    # should not be cached or should be redone after new schema
+                    if not key in self._dirs_cache:
+                        s = self._get_url_to_sid_and_hash()
+                        res = BCDBVFS_Schema(self, key=key, item=s[url][0])
             else:
                 raise RuntimeError(
                     "Second element:%s of path:%s should be either sid hash or url" % (splitted[2], path)
@@ -348,6 +361,21 @@ class BCDBVFS(j.application.JSBaseClass):
         if res is not None:
             self._dirs_cache[key] = res
         return key
+
+    def _get_url_to_sid_and_hash(self):
+        md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
+        res = {}
+        for k, v in self._bcdb.meta._schema_md5_to_sid.items():
+            res[md5_to_url[k]] = (v,k)
+        return res
+ 
+    def _get_sid_to_url_and_hash(self):
+        sid_to_md5 = {v: k for k, v in self._bcdb.meta._schema_md5_to_sid.items()}
+        md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
+        res = {}
+        for k, v in md5_to_url:
+            res[self._bcdb.meta._schema_md5_to_sid[k]] = (v,k)
+        return res
 
     def _find_schema_by_id(self, schemas, sid):
         # TODO OPTIMIZE OR FIND ANOTHER WAY
@@ -362,18 +390,18 @@ class BCDBVFS(j.application.JSBaseClass):
     def is_dir(self, path):
         self.get(path).is_dir()
 
-    def set(self, items=None):
-        """set new items on the specified path
-        
+    def add_datas(self, data_items, nid, sid, bcdb_name=None):
+        """set new data items. To set data we need the bcdb name, namespace id and schema id
         Arguments:
-            path {string} -- the destination path were the objects will be added
- 
-        Keyword Arguments:
-            items {Schema | JSXObject} -- items to be added in the specified path (default: {None})
+            data_items {list(JSXObject) | JSXObject} -- items to be added in the specified directory 
+            bcdb_name {string} -- the bcdb name to be added to if None will use the current one
+            nid {integer} -- the namespace to be added to
+            sid {integer} -- the schema that the objects follow
         """
-        # j.data.schema.add_from_text(schema_text, url)
-        for i in items:
-            i.url
+        if bcdb_name == None:
+            bcdb_name = self.current_bcbd_name
+        data_dir = self.get("/%s/data/%s/sid/%s" % (bcdb_name, nid, sid))
+        return data_dir.set(data_items)
 
     def add_schemas(self, schemas_text=None, bcdb_name=None):
         """set new schemas based on their text to the current bcdb
@@ -395,15 +423,21 @@ class BCDBVFS(j.application.JSBaseClass):
                     path_added.append(path)
                     # we do not check if it exist as anyway it will
                     # replace the latest schema with this url
-                    self._dirs_cache[key] = BCDBVFS_Schema(self, key=key, schema=s)
+                    self._dirs_cache[key] = BCDBVFS_Schema(self, key=key, item=s)
         return path_added
 
     def delete(self, path):
         if self._split_clean_path(path) == []:
             # will change the current bcdb if it has to
             # it means we are trying to remove everything on the current bcdb
-            self._log_debug("WARNING bcdb:%s reset" % self.current_bcbd_name)
+            self._log_info("WARNING bcdb:%s reset" % self.current_bcbd_name)
             self._bcdb.reset()
+            for o in self._dirs_cache.keys():
+                try:
+                    self._log_info("deleting:%s" % o)
+                    self._dirs_cache[o].delete()
+                except:
+                    pass
             self._dirs_cache = {}
         else:
             return self.get(path).delete()
@@ -444,11 +478,117 @@ class BCDBVFS(j.application.JSBaseClass):
             raise RuntimeError("second element:%s of key:%s must be an integer" % (splitted[2], key))
         return nid
 
+    def _extract_info_from_key(self, key, info_dict=None):
+        splitted = key.lower().split("_")
+        # let's remove all the empty parts
+        splitted = list(filter(None, splitted))
+        if info_dict == None:
+            info_dict = {}
+        # make sure that the first element is iether a bcdb name or in data schemas or info
+        if splitted[0] in self.directories_under_root:
+            if not "bcdb_name" in info_dict:
+                info_dict["bcdb_name"] = self.current_bcbd_name
+            info_dict["type"] = splitted[0]
+            if splitted[0] == self.directories_under_root[0]:  # data url
+                if len(splitted > 1):  # if true then it is a data nid
+                    info_dict["nid"] = splitted[1]
+                    if len(splitted > 2):  # if true then it is a data identifier
+                        if not splitted[2] in self.directories_under_data_namespace:
+                            raise RuntimeError("key element:%s must be in:%s" % (splitted[2], self.directories_under_data_namespace))
+                        info_dict["identifier_type"] = splitted[2]
+                        if len(splitted > 3):  # if true then it is a data sid hash or url
+                            info_dict["identifier"] = splitted[3]
+                            if len(splitted > 3):  # if true then it is a data id
+                                info_dict["obj_id"] = splitted[4]
+            else:
+                if len(splitted > 1):  # if true then it is a schemas url
+                    info_dict["identifier_type"] = splitted[1]
+                    if len(splitted > 2):  # if true then it is a schema id
+                        info_dict["identifier"] = splitted[2]
+        else:
+            if splitted[0] in self._bcdb_names:
+                info_dict["bcdb_name"] = splitted[0]
+                return self._extract_info_from_key(("_".join(splitted)), info_dict)
+            else:
+                raise RuntimeError(
+                    "first key element:%s of key:%s must be in:%s or in:%s"
+                    % (splitted[0], key, self.directories_under_root, self._bcdb_names)
+                )
+        return info_dict
 
+
+
+    """ def _raw_update_data_cache():
+        obj = self.model.set_dynamic(data, nid=nid)
+        # we have to update the cache
+        obj_key = "%s_%s" % (self.key, obj.id)
+        self.vfs._log_info("data added key:%s obj:%s" % (obj_key, obj))
+        if not obj_key in self.vfs._dirs_cache:
+            self.vfs._dirs_cache[obj_key] = BCDBVFS_Data(self, key=obj_key, model=self.model, item=obj)
+        else:
+            self.vfs._dirs_cache[obj_key].item = obj """
+
+    def _get_model_based_on_info(self, info):
+        if info['indentifier_type'] == "sid":
+            return self._bcdb.model_get_from_sid(info['indentifier'])
+        elif info['indentifier_type'] == "url":
+            return self._bcdb.model_get_from_url(info['indentifier'])
+        elif info['indentifier_type'] == "hash":
+            schema = j.data.schema.get_from_md5(info['indentifier'])
+            return self._bcdb.model_get_from_schema(schema)
+        else:
+            raise RuntimeError("impossible to model from info:%s" % info)                
+
+    def _update_all_data_cache(self, keys, obj_data):
+        for key in keys
+
+    def _update_data_cache(self, key, obj_data, model):
+        """will change or add the data objects item based on its key 
+        and then update the cache for all the possible keys. For instance let's take a 
+        schema with id=5 md5=ecf2345 url=test.1 if the current bcdb name is test, the provided key is
+        data_1_url_test.1_18. We will update the object and the cache for the keys 
+        test_data_1_url_test.1_18, test_data_1_hash_ecf2345_18 and test_data_1_sid_5_18 
+        if there is no id at the end of the key we will create a new object
+
+        Arguments:
+            key {[type]} -- [description]
+            obj_item {[type]} -- [description]
+        """
+        info = self._extract_info_from_key(key)
+        if info['type'] == self.directories_under_root[0]:#must be a data key
+            keybase = "%s_data_%s_" % (info["bcdb_name"], info["nid"])
+            if info['identifier_type'] == self.directories_under_data_namespace[0]: # sid
+                if not "obj_id" in info: #it means we are going to create an object
+                    obj = self.model.set_dynamic(data, nid=nid)
+                else: #it means we are going to update the object
+                    obj_id = info['obj_id']
+                    obj = self.model.set_dynamic(data,id=obj_id, nid=nid)
+                key_with_sid = "%ssid_%s_%s" % (keybase, info['identifier'] ,obj_id)
+                keys["sid"] = (key_with_sid, model)
+                conv = self._get_sid_to_url_and_hash()
+                url_for_sid = conv[info['identifier']][0]
+                key_with_url = "%surl_%s_%s" % (keybase, url_for_sid ,obj_id)
+                hash_for_sid = conv[info['identifier']][1]
+                key_with_hash = "%shash_%s_%s" % (keybase, hash_for_sid ,obj_id)
+
+                keys = self._get_all_correponding_key_and_model(keys)
+                #get hash and url corresponding to that id
+            elif info['identifier_type'] == self.directories_under_data_namespace[1]: # hash
+                #get sid and url corresponding to that id
+            else info['identifier_type'] == self.directories_under_data_namespace[2]: # url
+                #get hash and sid corresponding to that id
+            if "bcdb_name" in info:
+                self.change_current_bcdb(info["bcdb_name"])
+        else:
+            raise RuntimeError("key:%s is not a data key. Update cache data can only work with data keys" % key)
+
+   
 class BCDBVFS_Data_Dir:
-    def __init__(self, vfs, items=[]):
+    def __init__(self, vfs, key, items=[], model=None):
         self.vfs = vfs
         self.items = items
+        self.model = model
+        self.key = key
 
     def delete(self):
         raise RuntimeError("Data directory can't be deleted")
@@ -459,8 +599,40 @@ class BCDBVFS_Data_Dir:
     def get(self):
         return self
 
-    def set(self):
-        raise RuntimeError("Can't set on a directory")
+    def set(self, items_data):
+        """set one or multiple item on the directory
+        
+        Arguments:
+            items_data {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        if self.model:
+            res = []
+            nid = self.vfs._get_nid_from_data_key(self.key)
+            if isinstance(items_data, list):
+                for data in items_data:
+                    obj = self.model.set_dynamic(data, nid=nid)
+                    # we have to update the cache
+                    obj_key = "%s_%s" % (self.key, obj.id)
+                    self.vfs._log_info("data added key:%s obj:%s" % (obj_key, obj))
+                    if not obj_key in self.vfs._dirs_cache:
+                        self.vfs._dirs_cache[obj_key] = BCDBVFS_Data(self, key=obj_key, model=self.model, item=obj)
+                    else:
+                        self.vfs._dirs_cache[obj_key].item = obj
+                    res.append(obj)
+            else:
+                obj = self.model.set_dynamic(data, nid=nid)
+                obj_key = "%s_%s" % (self.key, obj.id)
+                if not obj_key in self.vfs._dirs_cache:
+                    self.vfs._dirs_cache[obj_key] = BCDBVFS_Data(self, key=obj_key, model=self.model, item=obj)
+                else:
+                    self.vfs._dirs_cache[obj_key].item = obj
+                res.append(obj)
+            return res
+        else:  # we are probably trying to add a doc in a root or bcdb path
+            raise RuntimeError("Can't add data to that directory")
 
     def len(self):
         raise RuntimeError("Can't do a len on a directory")
@@ -495,10 +667,10 @@ class BCDBVFS_Schema_Dir:
 
 
 class BCDBVFS_Schema:
-    def __init__(self, vfs, key=None, schema=None):
+    def __init__(self, vfs, key=None, item=None):
         self.vfs = vfs
         assert vfs
-        self.schema = schema
+        self.item = item
         # key can be None if it is only to set a new schema
         self.key = key
 
@@ -506,8 +678,8 @@ class BCDBVFS_Schema:
         raise RuntimeError("Schema can't be listed")
 
     def get(self):
-        if self.schema:
-            return self.vfs._get_serialized_obj(self.schema)
+        if self.item:
+            return self.vfs._get_serialized_obj(self.item)
         else:
             raise RuntimeError("Schema is not present")
 
@@ -518,7 +690,7 @@ class BCDBVFS_Schema:
         raise RuntimeError("Schemas can't be deleted")
 
     def len(self):
-        return len(self.vfs.serializer.dumps(self.schema))
+        return len(self.vfs.serializer.dumps(self.item))
 
     def is_dir(self):
         return False
@@ -528,19 +700,26 @@ class BCDBVFS_Data:
     def __init__(self, vfs, key=None, model=None, item=None):
         self.vfs = vfs
         assert vfs
-        assert model
         assert key
         self.key = key
         self.item = item
-        self.model = model
+        self._model = model
 
     def list(self):
         raise RuntimeError("Data can't be listed")
 
+    def _get_model(self):
+        if self._model == None:
+            info = self.vfs._extract_info_from_key(self.key)
+            self._model = self.vfs._get_model_based_on_info(info)       
+        else:
+            return self.model
+
     def delete(self):
-        self.model.delete(self.item)
-        self.item = None
-        return self.vfs._dirs_cache.pop(self.key, None)
+        self._get_model().delete(self.item)  # removing from db
+        self.item = None  # removing from obj memory
+        removed_obj = self.vfs._dirs_cache.pop(self.key, None)  # removing from cache
+        return removed_obj
 
     def get(self):
         if self.item:
@@ -548,14 +727,27 @@ class BCDBVFS_Data:
         else:
             raise RuntimeError("Data has been deleted")
 
-    def set(self, item_data, id):
-        nid = self.vfs._get_nid_from_data_key(self.key)
-        self.item = self.model.set_dynamic(item_data, id=id, nid=nid)
-        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@item:%s" % sel)
-        if self.item is None:
-            return False
-        else:
-            return True
+    def set(self, item_data, nid=None):
+        """replace the item wit the new data
+        
+        Arguments:
+            item_data {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        # We get the nid if there is no nid this should raise an exception
+        if nid ==None:
+            nid = self.vfs._get_nid_from_data_key(self.key)
+        id = None
+        if self.item != None:
+            id = self.item.id
+        res = self._get_model().set_dynamic(item_data, id, nid=nid)
+        if res == None:
+            raise RuntimeError("set data on key:%s failed" % self.key)
+        self.item = res
+        self.vfs._dirs_cache[self.key] = res
+        return res
 
     def len(self):
         return len(self.vfs.serializer.dumps(self.item))
