@@ -334,5 +334,13 @@ class TestCases(BaseTest):
         logger.debug("mongodb builder: run stop method.")
         j.builders.db.mongodb.stop()
         logger.debug("check that mongodb stopped successfully.")
-        self.assertFalse(j.sal.process.getProcessPid("mongod")) 
+        self.assertFalse(j.sal.process.getProcessPid("mongod"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/652")
+    def test028_mariadb(self):
+        j.builders.db.mariadb.build(reset=True)
+        j.builders.db.mariadb.install()
+        j.builders.db.mariadb.start()
+        self.assertTrue(j.sal.process.getProcessPid("mysql"))
+        j.builders.db.mariadb.stop()
+        self.assertFalse(j.sal.process.getProcessPid("mysql"))

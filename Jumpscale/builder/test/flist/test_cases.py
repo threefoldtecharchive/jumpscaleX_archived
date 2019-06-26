@@ -160,3 +160,14 @@ class TestCases(BaseTest):
 
         logger.debug("Check that minio flist works by run zdb binary, should succeed. ")
         self.assertIn("Usage: minio", self.check_container_flist("/sandbox/bin/minio"))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
+    def test010_mariadb(self):
+        j.builders.db.mariadb.sandbox(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )
+        self.deploy_flist_container("mariadb")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/usr/local/mysql -h"))
