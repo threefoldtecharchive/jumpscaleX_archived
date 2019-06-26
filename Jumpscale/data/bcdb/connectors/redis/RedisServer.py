@@ -298,7 +298,7 @@ class RedisServer(j.application.JSBaseClass):
         :param type: is the key we need to give type for
         :return:
         """
-        response.encode("string")
+        response.encode("hash")
 
     def _urls(self):
         urls = [i for i in self.bcdb.models.keys()]
