@@ -43,10 +43,20 @@ def main(self):
     bcdb_names = [i for i in r.list()]
     assert "test" in bcdb_names
     r = vfs.get("/test")
+    indentifiers = [i for i in r.list()]
+    print(indentifiers)
+    assert "data" in indentifiers
 
-    indetifiers = [i for i in r.list()]
-    print(indetifiers)
-    assert "data" in indetifiers
+    r = vfs.get("/test/data")
+    namespaces = [i for i in r.list()]
+    print("TODO@@@@@@@@@@@@@@@@@@@namespaces")
+    # assert 1 in namespaces
+
+    assert "system" in bcdb_names
+    r = vfs.get("/system/data")
+    namespaces = [i for i in r.list()]
+    print(namespaces)
+    assert "1" in namespaces
     self._log_info("TEST ROOT DIR DONE")
 
     with test_case.assertRaises(Exception):
@@ -127,8 +137,8 @@ def main(self):
 
     with test_case.assertRaises(Exception):
         obj = r_deleted.get()  # can't get deleted data
-
     self._log_info("TEST DELETE DATA DONE")
+
     SCHEMAS = """
     @url = ben.pc.test
     description* = "top_pc"
@@ -148,8 +158,21 @@ def main(self):
     sch_dir = vfs.get("data/1/url")
     assert "ben.pc.test.2" in [i for i in sch_dir.list()]
     self._log_info("TEST SET SCHEMAS DONE")
+
+    def get_obj(i):
+        model_obj = m.new()
+        model_obj.email = "ben%s@threefoldtech.com" % i
+        model_obj.username = "incredible_username%s" % i
+        return model_obj
+
+    model_obj = get_obj(1)
+    # j.shell()
+    # vx = vfs.set(model_obj)
+    # model.set_dynamic(model_obj)
+
     self._log_info("TEST SET DATA DONE")
 
     self._log_info("TEST SET SCHEMA DONE")
+    vfs.delete("/")
     self._log_info("TEST DONE")
     return "OK"
