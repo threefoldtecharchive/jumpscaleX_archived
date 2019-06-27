@@ -92,3 +92,16 @@ class Db_TestCases(BaseTest):
         self.deploy_flist_container("ardb")
         logger.debug("Check that ardb flist works by run ardb command, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/ardb -h"))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
+    def test008_mariadb(self):
+        """ SAN-018
+        *Test mariadb builer sandbox*
+        """
+        logger.debug("run mariadb sandbox, should succeed and upload flist on hub.")
+        j.builders.db.mariadb.sandbox(**self.sandbox_args)
+        logger.debug("deploy container with uploaded mariadb builder flist.")
+        self.deploy_flist_container("mariadb")
+        logger.debug("Check that mariadb flist works by run mariadb command, should succeed. ")
+        data = self.cont_client.system("/sandbox/usr/local/mysql -h").get()
+        self.assertIn("Usage: /sandbox/bin/zdb", data.stdout)
