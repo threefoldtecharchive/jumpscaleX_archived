@@ -46,7 +46,7 @@ class DirCollection(DAVCollection):
         except Exception as e:
             return CorruptedResource(path, self.environ, str(e))
 
-        if vfile.is_dir():
+        if vfile.is_dir:
             return DirCollection(path, self.environ)
         else:
             return DocResource(path, self.environ, vfile)
