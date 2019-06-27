@@ -10,7 +10,7 @@ class db_TestCases(BaseTest):
         logger.add("db_tests_{time}.log")
         logger.debug("Starting of db testcases.")
 
-    def test001_zbd(self):
+    def test001_zdb(self):
         """ BLD-016
         *Test zdb builer sandbox*
         """
