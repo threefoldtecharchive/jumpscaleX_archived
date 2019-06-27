@@ -444,7 +444,8 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    r = self._bcdb.meta._schema_set(s)
+                    r = self._bcdb.meta._schema_set(s) # add the schema to the bcdb meta 
+                    self._bcdb.model_get_from_schema(s) #should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
                     key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)
