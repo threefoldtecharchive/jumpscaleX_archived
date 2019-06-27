@@ -109,6 +109,7 @@ def main(self):
     assert obj["id"] == obj_id
     assert str(obj["addr"]).startswith("something:")
     assert str(obj["name"]).startswith("myuser_")
+
     self._log_info("TEST GET DATA DONE")
 
     # schema path
@@ -148,8 +149,13 @@ def main(self):
     r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
     obj = r.get()
     r.delete()
+
+    schema_wallet_obj = j.data.serializers.json.loads(schema)
     with test_case.assertRaises(Exception):  # can't delete an already deleted data
         r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
+        r_should_also_be_deleted = vfs.get("/data/1/hash/%s/%s" % (schema_wallet_obj["md5"], obj_id))
+        r_should_be_deleted_too = vfs.get("/data/1/sid/%s/%s" % (schema_wallet_obj["sid"], obj_id))
+
     r2 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id_2)
     obj2raw = r2.get()
     obj2 = j.data.serializers.json.loads(obj2raw)
@@ -160,8 +166,12 @@ def main(self):
         obj = r_deleted.get()  # can't get deleted data
 
     removed_obj = r2.delete()
-    assert removed_obj.item == None
-    assert removed_obj.key == r2.key
+    for ro in removed_obj:
+        if ro != None:
+            if ro.key == r2.key:
+                obj_key_removed_found = True
+    assert obj_key_removed_found
+
     self._log_info("TEST DELETE DATA DONE")
 
     SCHEMAS = """
