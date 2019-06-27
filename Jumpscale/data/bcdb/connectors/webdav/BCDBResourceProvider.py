@@ -17,7 +17,20 @@ class DirCollection(DAVCollection):
         get member names to be listed from the path
         :return: list of member names
         """
-        return [name for name in self.vfs.list(self.path)]
+        names = self.vfs.list(self.path)
+        res = []
+        for name in names:
+            try:
+                json_data = j.data.serializers.json.loads(name)
+                if 'id' in json_data:
+                    res.append(str(json_data['id']))
+                elif 'name' in json_data:
+                    res.append(json_data['name'])
+                else:
+                    res.append(name)
+            except:
+                res.append(name)
+        return res
 
     def get_member(self, name):
         """
@@ -73,6 +86,25 @@ class DocResource(DAVNonCollection):
     def __init__(self, path, environ, vfile):
         DAVNonCollection.__init__(self, path, environ)
         self.doc = vfile.get()
+        self._title = None
+
+    @property
+    def title(self):
+        if not self._title:
+            try:
+                json_data = j.data.serializers.json.loads(self.doc)
+                if 'name' in json_data.keys():
+                    self._title = json_data['name']
+                elif 'id' in json_data.keys():
+                    self._title = json_data['id']
+                elif 'url' in json_data.keys():
+                    self._title = json_data['url']
+                else:
+                    self._title = self.doc[:15]
+            except:
+                self._title = self.doc[:15]
+
+        return self._title
 
     def get_content(self):
         html = self.doc
@@ -89,7 +121,7 @@ class DocResource(DAVNonCollection):
             return "text/html"
 
     def get_display_name(self):
-        return compat.to_native(self.doc)
+        return compat.to_native(self.title)
 
     def get_display_info(self):
         return {"type": "resource"}
