@@ -141,7 +141,7 @@ class TestCases(BaseTest):
         logger.debug("deploy container with uploaded cmake builder flist.")
         self.deploy_flist_container("cmake")
         logger.debug("Check that cmake flist works by run cmake command, should succeed. ")
-        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/cmake -h"))
+        self.assertIn("Usage", self.check_container_flist("/sandbox/bin/cmake"))
 
     def test016_ardb(self):
         logger.debug("run ardb sandbox, should succeed and upload flist on hub.")
@@ -157,17 +157,40 @@ class TestCases(BaseTest):
         j.builders.storage.minio.sandbox(**self.sandbox_args)
         logger.debug("Deploy container with uploaded minio builder flist.")
         self.deploy_flist_container("minio")
-
         logger.debug("Check that minio flist works by run zdb binary, should succeed. ")
         self.assertIn("Usage: minio", self.check_container_flist("/sandbox/bin/minio"))
 
     @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
-    def test010_mariadb(self):
-        j.builders.db.mariadb.sandbox(
-            zhub_client=self.zhub,
-            reset=True,
-            flist_create=True,
-            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
-        )
+    def test018_mariadb(self):
+        j.builders.db.mariadb.sandbox(**self.sandbox_args)
         self.deploy_flist_container("mariadb")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/usr/local/mysql -h"))
+
+    def test019_freeflow(self):
+        logger.debug("Run  freeflow sandbox, should succeed and upload flist on hub.")
+        j.builders.apps.freeflow.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded freeflow builder flist.")
+        self.deploy_flist_container("freeflow")
+        logger.debug("Check that freeflow flist works by run apache2 binary, should succeed. ")
+        self.assertIn("Usage: apache2", self.check_container_flist("/sandbox/bin/apache2 -h"))
+
+    def test020_capnp(self):
+        logger.debug("Run  capnp sandbox, should succeed and upload flist on hub.")
+        j.builders.libs.capnp.sandbox(**self.sandbox_args) 
+        logger.debug("Deploy container with uploaded capnp builder flist.")
+        self.deploy_flist_container("capnp")
+        logger.debug("Check that capnp flist works by checking capnp file existing, should succeed. ")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/capnp --help"))        
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/660")
+    def test021_libffi(self):
+        logger.debug("Run  libffi sandbox, should succeed and upload flist on hub.")
+        j.builders.libs.libffi.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded libffi builder flist.")
+        self.deploy_flist_container("libffi")
+        logger.debug("Check that libffi flist works by checking libffi file existing, should succeed. ")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/libtoolize --help"))
+
+    
+    
+

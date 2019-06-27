@@ -251,6 +251,7 @@ class TestCases(BaseTest):
         except:
             self.assertTrue(False)
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/660")
     def test022_libffi(self):
         logger.debug("libffi builder: run build method.")
         j.builders.libs.libffi.build(reset=True)
@@ -346,16 +347,7 @@ class TestCases(BaseTest):
         logger.debug("mongodb builder: run stop method.")
         j.builders.db.mongodb.stop()
         logger.debug("check that mongodb stopped successfully.")
-<<<<<<< HEAD
         self.assertFalse(j.sal.process.getProcessPid("mongod")) 
-
-    def test029_hub(self):
-        logger.debug("hub builder: run build method.")
-        j.builders.apps.hub.in_docker(127.0.0.1:5555)
-        logger.debug("hub builder: run install method.")
-        j.builders.db.mongodb.install()
-=======
-        self.assertFalse(j.sal.process.getProcessPid("mongod"))
 
     @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/652")
     def test028_mariadb(self):
@@ -365,4 +357,4 @@ class TestCases(BaseTest):
         self.assertTrue(j.sal.process.getProcessPid("mysql"))
         j.builders.db.mariadb.stop()
         self.assertFalse(j.sal.process.getProcessPid("mysql"))
->>>>>>> 7c7d9d1698ae3a183d15ebac71bbbc9abc5fbbd6
+
