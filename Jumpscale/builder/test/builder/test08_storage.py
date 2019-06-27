@@ -1,5 +1,5 @@
 from Jumpscale import j
-from base_test import BaseTest
+from .base_test import BaseTest
 from loguru import logger
 import unittest, time
 
