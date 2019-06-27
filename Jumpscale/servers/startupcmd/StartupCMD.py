@@ -277,12 +277,13 @@ class StartupCMD(j.application.JSBaseConfigClass):
     def is_running(self):
 
         # self._log_debug("running:%s" % self.name)
-
         if self._local and self.ports != []:
             for port in self.ports:
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                     self._notify_state("down")
                     return False
+                else:
+                    return True
 
         if self.executor == "corex":
             if not self.pid and not self.corex_id:
@@ -511,7 +512,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             self._notify_state("stopped")
         else:
             running = self.wait_running(die=True)
-            assert self.pid
+            # assert self.pid
             assert running
             self._notify_state("running")
 
