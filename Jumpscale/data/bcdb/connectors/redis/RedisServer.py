@@ -182,13 +182,19 @@ class RedisServer(j.application.JSBaseClass):
             # If we have a url we should be able to get the corresponding model if we already have seen that model
             # otherwise we leave the model to an empty string because it is tested further on to know that we have to set
             # this schema
-            for i in self._urls():
-                if url == i.key:
-                    url_model = url.replace("_", ".")
-                    m = self.bcdb.model_get_from_url(url_model)
+            for i in list(self.bcdb.meta._data.schemas):
+
+                if url == i.url:
+                    m = self.bcdb.model_get_from_url(i.url)
+                elif url == i.md5:
+                    m = self.bcdb.model_get_from_url(i.url)
+                elif url == str(i.sid):
+                    m = self.bcdb.model_get_from_url(i.url)
+
         return (cat, url, key, m)
 
     def set(self, response, key, val):
+
         parse_key = key.replace(":", "/")
         if "schemas" in parse_key:
             try:
@@ -200,7 +206,17 @@ class RedisServer(j.application.JSBaseClass):
 
         else:
             try:
-                self.vfs.set(val)
+                key = parse_key.split("/")
+                type_of_set = key[2]  # url ,hash or sid
+                if type_of_set == "url":
+                    schema = self.vfs._find_schema_by_url(key[3])
+                    self.vfs.add_datas(val, int(key[1]), schema.sid)
+                elif type_of_set == "hash":
+                    schema = self.vfs._find_schema_by_hash(key[3])
+                    self.vfs.add_datas(val, int(key[1]), schema.sid)
+
+                else:
+                    self.vfs.add_datas(val, int(key[1]), int(key[3]))
                 response.encode("OK")
                 return
             except:
@@ -228,8 +244,8 @@ class RedisServer(j.application.JSBaseClass):
 
         parse_key = key.replace(":", "/")
         try:
-            vfs_objs = self.vfs.delete(self.bcdb.name + "/" + parse_key)
-            response.encode(vfs_objs)
+            self.vfs.delete(self.bcdb.name + "/" + parse_key)
+            response.encode(1)
             return
         except:
             response.error("cannot delete, key:'%s'" % key)
@@ -246,14 +262,24 @@ class RedisServer(j.application.JSBaseClass):
         res = []
         for i in self.vfs._bcdb_names:
             bcdb_instance = j.data.bcdb.get(i)
-            models = [i for i in bcdb_instance.models]
-            if len(models) > 0:
-                for url in models:
-                    res.append("{}:schemas:url:{}".format(i, url.key))
-                    res.append("{}:data:url:{}".format(i, url.key))
+
+            if len([bcdb_instance.meta._data.schemas]) > 0:
+                for url in list(bcdb_instance.meta._data.schemas):
+                    res.append("{}:schemas:url:{}".format(i, url.url))
+                    res.append("{}:schemas:sid:{}".format(i, url.sid))
+                    res.append("{}:schemas:hash:{}".format(i, url.md5))
+
+                    res.append("{}:data:1:url:{}".format(i, url.url))
+                    res.append("{}:data:1:sid:{}".format(i, url.sid))
+                    res.append("{}:data:1:hash:{}".format(i, url.md5))
+
             else:
                 res.append("%s:schemas:url" % i)
                 res.append("%s:data:url" % i)
+                res.append("%s:schemas:sid" % i)
+                res.append("%s:data:sid" % i)
+                res.append("%s:schemas:hash" % i)
+                res.append("%s:data:hash" % i)
         response._array(["0", res])
 
     def hset(self, response, key, id, val):
@@ -336,7 +362,10 @@ class RedisServer(j.application.JSBaseClass):
         :param type: is the key we need to give type for
         :return:
         """
-        response.encode("hash")
+        try:
+            response.encode("hash")
+        except:
+            response.encode("string")
 
     def _urls(self):
         urls = [i for i in self.bcdb.models]
@@ -352,10 +381,13 @@ class RedisServer(j.application.JSBaseClass):
             res.append(model.schema.text)
             response._array(["0", res])
             return
-
-        for obj in objs:
-            res.append(obj.id)
-            res.append(obj._json)
+        else:
+            key = key.replace(":", "/")
+            objs = self.vfs.get(key)
+            for obj in objs.list():
+                schema = j.data.serializers.json.loads(obj)
+                res.append(schema["id"])
+                res.append(obj)
 
         response._array(["0", res])
 

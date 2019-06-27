@@ -463,6 +463,7 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
+                    self._bcdb.model_get_from_schema(s)
                     r = self._bcdb.meta._schema_set(s)
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
@@ -567,12 +568,12 @@ class BCDBVFS(j.application.JSBaseClass):
         return info_dict
 
     def _get_model_based_on_info(self, info):
-        if info["indentifier_type"] == "sid":
-            return self._bcdb.model_get_from_sid(info["indentifier"])
-        elif info["indentifier_type"] == "url":
-            return self._bcdb.model_get_from_url(info["indentifier"])
-        elif info["indentifier_type"] == "hash":
-            schema = j.data.schema.get_from_md5(info["indentifier"])
+        if info["identifier_type"] == "sid":
+            return self._bcdb.model_get_from_sid(info["identifier"])
+        elif info["identifier_type"] == "url":
+            return self._bcdb.model_get_from_url(info["identifier"])
+        elif info["identifier_type"] == "hash":
+            schema = j.data.schema.get_from_md5(info["identifier"])
             return self._bcdb.model_get_from_schema(schema)
         else:
             raise Exception("impossible to model from info:%s" % info)

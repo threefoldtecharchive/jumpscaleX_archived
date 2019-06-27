@@ -34,7 +34,6 @@ def main(self):
         nr* = 0
         date_start* = 0 (D)
         description = ""
-        token_price* = "10 USD" (N)
         cost_estimate = 0.0 #this is a comment
         llist = []
         llist3 = "1,2,3" (LF)
@@ -43,55 +42,43 @@ def main(self):
         if zdb:
             cl = j.clients.zdb.client_get(port=9901)
             cl.flush()
+
         schema = j.core.text.strip(schema)
         m = bcdb.model_get_from_schema(schema)
+
+        def get_obj(i):
+            schema_obj = m.new()
+            schema_obj.nr = i
+            schema_obj.name = "somename%s" % i
+            return schema_obj
 
         redis_cl = j.clients.redis.get(ipaddr="localhost", port=6380)
 
         self._log_debug("set schema to 'despiegk.test2'")
         print(redis_cl.get("schemas:url"))
-        redis_cl.set("schemas:url:despiegk.test2", schema)
+
+        redis_cl.set("schemas:url:despiegk.test2", m.schema.text)
         print(redis_cl.get("schemas:url:despiegk.test2"))
-        redis_cl.delete("schemas:url:despiegk.test2")
-        print(redis_cl.get("schemas:url:despiegk.test2"))
-        j.shell()
-        redis_cl.execute_command("schemaset", schema)
-        redis_cl.execute_command("schemaset", schema, url)
-        sid = redis_cl.get("schemas:url2sid:despiegk.test2")
-        redis_cl.execute_command("schemaset", schema, sid)
-
-        j.shell()
-
-        self._log_debug("compare schema")
-        schema2 = redis_cl.get("schemas:despiegk.test2")
-        # test schemas are same
-
-        assert _compare_strings(schema, schema2)
-
-        j.shell()
-
-        self._log_debug("delete data")
-        # removes the data mainly tested on sqlite db now
-        redis_cl.delete("objects:despiegk.test2")
-
-        self._log_debug("there should be 0 objects")
-        assert redis_cl.hlen("objects:despiegk.test2") == 0
-
-        schema = j.data.schema.get_from_text(schema)
-
-        self._log_debug("add objects")
-
-        def get_obj(i):
-            schema_obj = schema.new()
-            schema_obj.nr = i
-            schema_obj.name = "somename%s" % i
-            schema_obj.token_price = "10 EUR"
-            return schema_obj
-
+        print(redis_cl.get("schemas:url"))
         for i in range(1, 11):
             print(i)
             o = get_obj(i)
-            id = redis_cl.hset("objects:despiegk.test2", "new", o._ddict_json_hr)
+            id = redis_cl.set("data:1:url:despiegk.test2", o._json)
+
+        print(redis_cl.get("data:1:url:despiegk.test2"))
+
+        print(redis_cl.get("data:1:hash:a30e1c9380ebd1a4b75da96e2e9a3cc3"))
+        print(redis_cl.delete("data:1:url:despiegk.test2:5"))
+
+        print(redis_cl.get("data:1:sid:7"))
+
+        self._log_debug("compare schema")
+        schema2 = redis_cl.get("schemas:url:despiegk.test2")
+        # test schemas are same
+
+        assert _compare_strings(schema, j.data.serializers.json.loads(schema2)["text"])
+        return
+        j.shell()
 
         if zdb:
             self._log_debug("validate list")
@@ -160,8 +147,8 @@ def main(self):
 
         do()
         # restart redis server lets see if schema's are there autoloaded
-        self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
-        check_after_restart()
+        # self.redis_server_start(port=6380, background=True, bcdbname=bcdb.name)
+        # check_after_restart()
 
     def zdb_test():
         # ZDB test
