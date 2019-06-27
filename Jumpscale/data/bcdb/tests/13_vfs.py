@@ -177,7 +177,16 @@ def main(self):
     enable = false (B)            
     """
     res = vfs.add_schemas(SCHEMAS)
-    s = vfs.get(res[0])
+    assert len(res) == 2
+
+    s1 = vfs.get("schemas/hash/%s" % (res[1].md5))
+    s2 = vfs.get("schemas/sid/%s" % (res[0].sid))
+    obj1 = j.data.serializers.json.loads(s1.get())
+    obj2 = j.data.serializers.json.loads(s2.get())
+    assert obj1["url"] == "ben.pc.test" or obj1["url"] == "ben.pc.test.2"
+    assert obj2["url"] == "ben.pc.test" or obj2["url"] == "ben.pc.test.2"
+
+    s = vfs.get("schemas/url/ben.pc.test")
     obj = j.data.serializers.json.loads(s.get())
     assert obj["url"] == "ben.pc.test"
     sch_dir = vfs.get("data/1/url")
@@ -220,8 +229,8 @@ def main(self):
     model_new_objs = [get_obj(81), get_obj(18)]
     sid = vfs.get("schemas/url2sid/threefoldtoken.wallet.test")
     vfs.add_datas(model_new_objs, 1, sid.item)
-    # let's try to check the new data
 
+    # let's try to check the new data
     r4 = vfs.get("data/1/sid/%s" % sid.item)
     obj_ids = [i for i in r4.list()]
 

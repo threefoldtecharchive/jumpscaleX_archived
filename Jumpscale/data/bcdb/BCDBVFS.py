@@ -434,7 +434,7 @@ class BCDBVFS(j.application.JSBaseClass):
         Returns:
              list: all the schemas path added to the cache
         """
-        path_added = []
+        added_schemas = []
         if bcdb_name:
             self.change_current_bcdb(bcdb_name)
 
@@ -442,13 +442,18 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    key = "%s_schemas_url_%s" % (self.current_bcbd_name, s.url)
-                    path = "%s/schemas/url/%s" % (self.current_bcbd_name, s.url)
-                    path_added.append(path)
+                    r = self._bcdb.meta._schema_set(s)
+                    s_obj = self._find_schema_by_id(r)
+                    key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
+                    key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)
+                    key_hash = "%s_schemas_hash_%s" % (self.current_bcbd_name, s_obj.md5) 
+                    added_schemas.append(s_obj)
                     # we do not check if it exist as anyway it will
                     # replace the latest schema with this url
-                    self._dirs_cache[key] = BCDBVFS_Schema(self, key=key, item=s)
-        return path_added
+                    self._dirs_cache[key_url] = BCDBVFS_Schema(self, key=key_url, item=s_obj)
+                    self._dirs_cache[key_sid] = BCDBVFS_Schema(self, key=key_sid, item=s_obj)
+                    self._dirs_cache[key_hash] = BCDBVFS_Schema(self, key=key_hash, item=s_obj)
+        return added_schemas
 
     def delete(self, path):
         if self._split_clean_path(path) == []:
@@ -696,6 +701,12 @@ class BCDBVFS_Data_Dir:
     def len(self):
         raise Exception("Can't do a len on a directory")
 
+    def is_read_only(self):
+        if self._get_model():
+            # if we have a model it means that we can add data item
+            return False
+        return True
+
     def is_dir(self):
         return True
 
@@ -721,6 +732,9 @@ class BCDBVFS_Schema_Dir:
     def len(self):
         raise Exception("Can't do a len on a directory")
 
+    def is_read_only(self):
+        return True
+
     def is_dir(self):
         return True
 
@@ -742,8 +756,14 @@ class BCDBVFS_Schema:
         else:
             raise Exception("Schema is not present for key:%s" % self.key)
 
+    def new(self, schema_text):
+        return self.vfs.add_schemas(schema_text)
+
     def set(self, schema_text):
-        raise Exception("Schemas can't be overwritten but you can create a new one check add_schemas()")
+        raise Exception("Schemas can't be overwritten but you can create a new one via add_schemas()")
+
+    def is_read_only(self):
+        return True
 
     def delete(self):
         raise Exception("Schemas can't be deleted")
@@ -785,6 +805,9 @@ class BCDBVFS_Data:
         else:
             raise Exception("Data has been deleted")
 
+    def new(self, item_data):
+        return self.vfs._insert_data_and_update_cache(self.key, item_data, self._get_model())
+
     def set(self, item_data):
         """replace the item with the new data
             if item_data contains an id it will not be taken into account
@@ -798,6 +821,9 @@ class BCDBVFS_Data:
 
     def len(self):
         return len(self.vfs.serializer.dumps(self.item))
+
+    def is_read_only(self):
+        return False
 
     def is_dir(self):
         return False
@@ -948,6 +974,9 @@ class BCDBVFS_Info:
         """
         C = j.core.text.strip(C)
         return self.vfs.serializer.dumps(C)
+
+    def is_read_only(self):
+        return True
 
     def is_dir(self):
         return False
