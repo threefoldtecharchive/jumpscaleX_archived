@@ -122,7 +122,7 @@ def get_completions(self, document, complete_event):
 def get_doc_string(tbc, locals_, globals_):
     obj = eval_code(tbc, locals_=locals_, globals_=globals_)
     if not obj:
-        return
+        raise ValueError("cannot get docstring of %s, not an object" % tbc)
 
     signature = ""
     try:
@@ -335,11 +335,15 @@ def ptconfig(repl):
     def _docevent(event):
         b = event.cli.current_buffer
         tbc = b.document.current_line_before_cursor.rstrip("(")
-        d = get_doc_string(tbc, repl.get_locals(), repl.get_globals())
-        if d:
-            repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
-        else:
-            repl.docstring_buffer.reset()
+
+        try:
+            d = get_doc_string(tbc, repl.get_locals(), repl.get_globals())
+        except Exception as exc:
+            j.tools.logger._log_error(exc)
+            return
+
+        repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
+        repl.docstring_buffer.reset()
 
     sidebar_visible = Condition(lambda: repl.show_sidebar)
 
