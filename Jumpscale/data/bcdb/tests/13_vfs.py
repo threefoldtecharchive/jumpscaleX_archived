@@ -137,6 +137,12 @@ def main(self):
     assert str(obj["url"]) == "threefoldtoken.wallet.test"
     assert "ipaddr = (ipaddr)" in str(obj["text"])
 
+    # get the same schema via md5 hash
+    r = vfs.get("schemas/hash/%s" % obj["md5"])
+    schema = r.get()
+    obj = j.data.serializers.json.loads(schema)
+    assert str(obj["url"]) == "threefoldtoken.wallet.test"
+    assert "ipaddr = (ipaddr)" in str(obj["text"])
     self._log_info("TEST GET SCHEMA DONE")
 
     r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
