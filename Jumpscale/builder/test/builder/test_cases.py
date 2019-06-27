@@ -8,8 +8,8 @@ from loguru import logger
 class TestCases(BaseTest):
     @classmethod
     def setUpClass(cls):
-        logger.add("sandbox_tests.log")
-        logger.debug("Starting of sandbox testcases.")
+        logger.add("builder_tests_{time}.log")
+        logger.debug("Starting of builder testcases  which test main methods:build,install,start and stop.")
 
     def test001_zbd(self):
         logger.debug("Zdb builder: run build method.")
@@ -25,23 +25,37 @@ class TestCases(BaseTest):
         logger.debug("check that zdb server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("zdb")))
 
-    @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/654")
     def test002_caddy(self):
+        logger.debug("caddy builder: run build method.")
         j.builders.web.caddy.build(reset=True)
+        logger.debug("caddy builder: run build method.")
         j.builders.web.caddy.install()
+        logger.debug("caddy builder: run build method.")
         j.builders.web.caddy.start()
+        logger.debug("check that caddy server started successfully.")
         self.assertEqual(1, len(j.sal.process.getProcessPid("caddy")))
+        logger.debug("caddy builder: run build method.")
         j.builders.web.caddy.stop()
+        logger.debug("check that caddy server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("caddy")))
 
     def test003_nginx(self):
+        logger.debug("nginx builder: run build method.")
         j.builders.web.nginx.build(reset=True)
+        logger.debug("nginx builder: run build method.")
         j.builders.web.nginx.install()
+        logger.debug("nginx builder: run build method.")
         j.builders.web.nginx.start()
+        logger.debug("check that nginx server started successfully.")
         self.assertTrue(len(j.sal.process.getProcessPid("nginx")))
+        logger.debug("nginx builder: run build method.")
         j.builders.web.nginx.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("nginx")))
+        logger.debug("check that nginx server stopped successfully.")
+        time.sleep(10)
+        self.assertFalse(len(j.sal.process.getProcessPid("nginx")))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/656")
     def test004_traefik(self):
         logger.debug("traefik builder: run build method.")
         j.builders.web.traefik.build(reset=True)
@@ -56,12 +70,19 @@ class TestCases(BaseTest):
         logger.debug("check that traefik server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("traefik")))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/657")
     def test005_minio(self):
+        logger.debug("minio builder: run build method.")
         j.builders.storage.minio.build(reset=True)
+        logger.debug("minio builder: run build method.")
         j.builders.storage.minio.install()
+        logger.debug("minio builder: run build method.")
         j.builders.storage.minio.start()
+        logger.debug("check that minio server started successfully.")
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("minio")))
+        logger.debug("minio builder: run build method.")
         j.builders.storage.minio.stop()
+        logger.debug("check that minio server started successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("minio")))
 
     def test006_golang(self):
@@ -325,6 +346,7 @@ class TestCases(BaseTest):
         logger.debug("mongodb builder: run stop method.")
         j.builders.db.mongodb.stop()
         logger.debug("check that mongodb stopped successfully.")
+<<<<<<< HEAD
         self.assertFalse(j.sal.process.getProcessPid("mongod")) 
 
     def test029_hub(self):
@@ -332,3 +354,15 @@ class TestCases(BaseTest):
         j.builders.apps.hub.in_docker(127.0.0.1:5555)
         logger.debug("hub builder: run install method.")
         j.builders.db.mongodb.install()
+=======
+        self.assertFalse(j.sal.process.getProcessPid("mongod"))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/652")
+    def test028_mariadb(self):
+        j.builders.db.mariadb.build(reset=True)
+        j.builders.db.mariadb.install()
+        j.builders.db.mariadb.start()
+        self.assertTrue(j.sal.process.getProcessPid("mysql"))
+        j.builders.db.mariadb.stop()
+        self.assertFalse(j.sal.process.getProcessPid("mysql"))
+>>>>>>> 7c7d9d1698ae3a183d15ebac71bbbc9abc5fbbd6
