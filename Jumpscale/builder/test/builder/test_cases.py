@@ -146,12 +146,15 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid("etcd")))
 
     def test014_capnp(self):
+        logger.debug("capnp builder: run build method. ")
         j.builders.libs.capnp.build(reset=True)
+        logger.debug("capnp builder: run install method. ")
         j.builders.libs.capnp.install()
-        j.builders.libs.capnp.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("capnp")))
-        j.builders.libs.capnp.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("capnp")))
+        logger.debug("check that capnp builder is installed successfully. ")
+        try:
+            j.sal.process.execute("which capnp")
+        except:
+            self.assertTrue(False)
 
     def test015_coredns(self):
         j.builders.network.coredns.build(reset=True)
@@ -203,11 +206,17 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid("syncthing")))
 
     def test020_freeflow(self):
+        logger.debug("freeflow builder: run build method. ")
         j.builders.apps.freeflow.build(reset=True)
+        logger.debug("freeflow builder: run install method. ")
         j.builders.apps.freeflow.install(reset=True)
+        logger.debug("freeflow builder: run start method. ")
         j.builders.apps.freeflow.start()
+        logger.debug("check that freeflow builder is started successfully")
         self.assertTrue(len(j.sal.process.getProcessPid("apache2")))
+        logger.debug("freeflow builder: run stop method. ")
         j.builders.apps.freeflow.stop()
+        logger.debug("check that freeflow builder is stopped successfully")
         self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
 
     def test021_cmake(self):
@@ -222,9 +231,12 @@ class TestCases(BaseTest):
             self.assertTrue(False)
 
     def test022_libffi(self):
+        logger.debug("libffi builder: run build method.")
         j.builders.libs.libffi.build(reset=True)
+        logger.debug("libffi builder: run install method.")
         j.builders.libs.libffi.install()
         try:
+            logger.debug("check that libffi is installed successfully")
             j.sal.process.execute("which libtoolize")
         except:
             self.assertTrue(False)
@@ -315,3 +327,8 @@ class TestCases(BaseTest):
         logger.debug("check that mongodb stopped successfully.")
         self.assertFalse(j.sal.process.getProcessPid("mongod")) 
 
+    def test029_hub(self):
+        logger.debug("hub builder: run build method.")
+        j.builders.apps.hub.in_docker(127.0.0.1:5555)
+        logger.debug("hub builder: run install method.")
+        j.builders.db.mongodb.install()
