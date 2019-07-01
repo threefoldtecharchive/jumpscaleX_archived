@@ -225,7 +225,9 @@ class BCDBVFS(j.application.JSBaseClass):
                     # third element must be the in the list e.g. /data/5/hash
                     key = "%s_data_%s_hash" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
-                        self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=j.data.schema.url_to_md5.values())
+                        self._dirs_cache[key] = BCDBVFS_Data_Dir(
+                            self, key=key, items=[i[0] for i in j.data.schema.url_to_md5.values()]
+                        )
                 else:
                     hsh = splitted[3]
                     schema = j.data.schema.get_from_md5(hsh)
@@ -463,12 +465,12 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    self._bcdb.model_get_from_schema(s)
-                    r = self._bcdb.meta._schema_set(s)
+                    r = self._bcdb.meta._schema_set(s) # add the schema to the bcdb meta 
+                    self._bcdb.model_get_from_schema(s) #should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
                     key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)
-                    key_hash = "%s_schemas_hash_%s" % (self.current_bcbd_name, s_obj.md5) 
+                    key_hash = "%s_schemas_hash_%s" % (self.current_bcbd_name, s_obj.md5)
                     added_schemas.append(s_obj)
                     # we do not check if it exist as anyway it will
                     # replace the latest schema with this url
@@ -483,12 +485,15 @@ class BCDBVFS(j.application.JSBaseClass):
             # it means we are trying to remove everything on the current bcdb
             self._log_info("WARNING bcdb:%s reset" % self.current_bcbd_name)
             self._bcdb.reset()
-            for o in self._dirs_cache.keys():
+            cached_keys = list(self._dirs_cache.keys())
+            for o in cached_keys:
                 try:
                     self._log_info("deleting:%s" % o)
-                    self._dirs_cache[o].delete()
+                    if o in self._dirs_cache:
+                        self._dirs_cache[o].delete()
                 except:
                     pass
+            del cached_keys
             self._dirs_cache = {}
         else:
             return self.get(path).delete()
@@ -595,12 +600,98 @@ class BCDBVFS(j.application.JSBaseClass):
             else:
                 self._dirs_cache[key].item = obj
 
+    def _get_all_data_keys_linked(self, key, obj_id=None, info=None):
+        """return all the data key related to the specified key
+        will return 3 tuples for sid url and hash and each tuple 
+        is composed by the data key and its directory key
+        Arguments:
+            key {[type]} -- [description]
+        """
+        if info == None:
+            info = self._extract_info_from_key(key)
+        o_id = None
+        if "obj_id" in info:  # it means we are going to update an object
+            o_id = info["obj_id"]
+        else:
+            assert obj_id
+            o_id = obj_id
+        if info["type"] == self.directories_under_root[0]:  # must be a data key
+            keybase = "%s_data_%s_" % (info["bcdb_name"], info["nid"])
+            if info["identifier_type"] == self.directories_under_data_namespace[0]:  # sid
+                keybase_with_sid = "%ssid_%s" % (keybase, info["identifier"])
+                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
+                # get hash and url corresponding to that id
+                conv = self._get_sid_to_url_and_hash()
+                url_for_sid = conv[int(info["identifier"])][0]
+                keybase_with_url = "%surl_%s" % (keybase, url_for_sid)
+                key_with_url = "%s_%s" % (keybase_with_url, o_id)
+                hash_for_sid = conv[int(info["identifier"])][1]
+                keybase_with_hash = "%shash_%s" % (keybase, hash_for_sid)
+                key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
+            elif info["identifier_type"] == self.directories_under_data_namespace[1]:  # hash
+                keybase_with_hash = "%shash_%s" % (keybase, info["identifier"])
+                key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
+                # get sid and url corresponding to that id
+                conv = self._get_hash_to_sid_and_url()
+                sid_for_hash = conv[info["identifier"]][0]
+                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_hash)
+                key_with_sid = "%s_%s" % (sid_for_hash, o_id)
+                url_for_hash = conv[info["identifier"]][1]
+                keybase_with_url = "%surl_%s" % (keybase, url_for_hash)
+                key_with_url = "%s_%s" % (keybase_with_url, o_id)
+            elif info["identifier_type"] == self.directories_under_data_namespace[2]:  # url
+                keybase_with_url = "%surl_%s" % (keybase, info["identifier"])
+                key_with_url = "%s_%s" % (keybase_with_url, o_id)
+                # get hash and sid corresponding to that id
+                conv = self._get_url_to_sid_and_hash()
+                sid_for_url = conv[info["identifier"]][0]
+                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_url)
+                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
+                hash_for_url = conv[info["identifier"]][1]
+                keybase_with_hash = "%shash_%s" % (keybase, hash_for_url)
+                key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
+            return [
+                (key_with_sid, keybase_with_sid),
+                (key_with_url, keybase_with_url),
+                (key_with_hash, keybase_with_hash),
+            ]
+        else:
+            raise Exception("key:%s is not a data key. Update cache data can only work with data keys" % key)
+
     def _insert_obj(self, model, obj_data, nid, obj_id=None):
         if obj_id:  # it means we are going to update the object
             obj = model.set_dynamic(obj_data, obj_id=int(obj_id), nid=int(nid))
         else:  # it means we are going to create an object
             obj = model.set_dynamic(obj_data, nid=int(nid))
         return obj
+
+    def _remove_all_data_related(self, key, item, model):
+        """will remove all the keys that points to the data identified by the key
+        First delete the specified item with the model and link to the key provided
+        then it will remove the others related data 
+        
+        Arguments:
+            key {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        info = self._extract_info_from_key(key)
+        if "obj_id" in info:  # it means we are going to update an object
+            obj_id = info["obj_id"]
+        else:
+            raise Exception("key:%s should include the object id" % key)
+
+        if info["type"] == self.directories_under_root[0]:  # must be a data key
+            model.delete(item)  # removing from db
+            keys = self._get_all_data_keys_linked(key, obj_id, info)
+            # removing from cache
+            removed_obj_by_sid = self._dirs_cache.pop(keys[0][0], None)
+            removed_obj_by_url = self._dirs_cache.pop(keys[1][0], None)
+            removed_obj_by_hash = self._dirs_cache.pop(keys[2][0], None)
+            return [removed_obj_by_sid, removed_obj_by_url, removed_obj_by_hash]
+        else:
+            raise Exception("key:%s is not a data key. Update cache data can only work with data keys" % key)
 
     def _insert_data_and_update_cache(self, key, obj_data, model):
         """will change or add the data objects item based on its key 
@@ -616,54 +707,16 @@ class BCDBVFS(j.application.JSBaseClass):
         Returns:
             obj {JSX_Obj} -- the added or inserted obj
         """
-        info = self._extract_info_from_key(key)
-        if info["type"] == self.directories_under_root[0]:  # must be a data key
-            keybase = "%s_data_%s_" % (info["bcdb_name"], info["nid"])
-            obj_id = None
-            if "obj_id" in info:  # it means we are going to update an object
-                obj_id = info["obj_id"]
-            obj = self._insert_obj(model, obj_data, info["nid"], obj_id)
 
-            if info["identifier_type"] == self.directories_under_data_namespace[0]:  # sid
-                keybase_with_sid = "%ssid_%s" % (keybase, info["identifier"])
-                key_with_sid = "%s_%s" % (keybase_with_sid, obj.id)
-                # get hash and url corresponding to that id
-                conv = self._get_sid_to_url_and_hash()
-                url_for_sid = conv[int(info["identifier"])][0]
-                keybase_with_url = "%surl_%s" % (keybase, url_for_sid)
-                key_with_url = "%s_%s" % (keybase_with_url, obj.id)
-                hash_for_sid = conv[int(info["identifier"])][1]
-                keybase_with_hash = "%shash_%s" % (keybase, hash_for_sid)
-                key_with_hash = "%s_%s" % (keybase_with_hash, obj.id)
-            elif info["identifier_type"] == self.directories_under_data_namespace[1]:  # hash
-                keybase_with_hash = "%shash_%s" % (keybase, info["identifier"])
-                key_with_hash = "%s_%s" % (keybase_with_hash, obj.id)
-                # get sid and url corresponding to that id
-                conv = self._get_hash_to_sid_and_url()
-                sid_for_hash = conv[info["identifier"]][0]
-                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_hash)
-                key_with_sid = "%s_%s" % (sid_for_hash, obj.id)
-                url_for_hash = conv[info["identifier"]][1]
-                keybase_with_url = "%surl_%s" % (keybase, url_for_hash)
-                key_with_url = "%s_%s" % (keybase_with_url, obj.id)
-            elif info["identifier_type"] == self.directories_under_data_namespace[2]:  # url
-                keybase_with_url = "%surl_%s" % (keybase, info["identifier"])
-                key_with_url = "%s_%s" % (keybase_with_url, obj.id)
-                # get hash and sid corresponding to that id
-                conv = self._get_url_to_sid_and_hash()
-                sid_for_url = conv[info["identifier"]][0]
-                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_url)
-                key_with_sid = "%s_%s" % (keybase_with_sid, obj.id)
-                hash_for_url = conv[info["identifier"]][1]
-                keybase_with_hash = "%shash_%s" % (keybase, hash_for_url)
-                key_with_hash = "%s_%s" % (keybase_with_hash, obj.id)
+        info = self._extract_info_from_key(key)
+        obj_id = None
+        if "obj_id" in info:  # it means we are going to update an object
+            obj_id = info["obj_id"]
+        if info["type"] == self.directories_under_root[0]:  # must be a data key
+            obj = self._insert_obj(model, obj_data, info["nid"], obj_id)
+            keys = self._get_all_data_keys_linked(key, obj.id, info)
             self._update_cache_for_object_keys(
-                [
-                    (key_with_sid, keybase_with_sid),
-                    (key_with_url, keybase_with_url),
-                    (key_with_hash, keybase_with_hash),
-                ],
-                obj,
+                [(keys[0][0], keys[0][1]), (keys[1][0], keys[1][1]), (keys[2][0], keys[2][1])], obj
             )
             return obj
         else:
@@ -723,12 +776,18 @@ class BCDBVFS_Data_Dir:
     def len(self):
         raise Exception("Can't do a len on a directory")
 
+    @property
+    def element_type(self):
+        return "data_dir"
+
+    @property
     def is_read_only(self):
         if self._get_model():
             # if we have a model it means that we can add data item
             return False
         return True
 
+    @property
     def is_dir(self):
         return True
 
@@ -754,9 +813,15 @@ class BCDBVFS_Schema_Dir:
     def len(self):
         raise Exception("Can't do a len on a directory")
 
+    @property
+    def element_type(self):
+        return "schema_dir"
+
+    @property
     def is_read_only(self):
         return True
 
+    @property
     def is_dir(self):
         return True
 
@@ -784,15 +849,21 @@ class BCDBVFS_Schema:
     def set(self, schema_text):
         raise Exception("Schemas can't be overwritten but you can create a new one via add_schemas()")
 
+    @property
     def is_read_only(self):
         return True
 
     def delete(self):
         raise Exception("Schemas can't be deleted")
 
+    @property
+    def element_type(self):
+        return "schema"
+
     def len(self):
         return len(self.vfs.serializer.dumps(self.item))
 
+    @property
     def is_dir(self):
         return False
 
@@ -816,10 +887,7 @@ class BCDBVFS_Data:
         return self._model
 
     def delete(self):
-        self._get_model().delete(self.item)  # removing from db
-        self.item = None  # removing from obj memory
-        removed_obj = self.vfs._dirs_cache.pop(self.key, None)  # removing from cache
-        return removed_obj
+        return self.vfs._remove_all_data_related(self.key, self.item, self._get_model())
 
     def get(self):
         if self.item:
@@ -844,9 +912,15 @@ class BCDBVFS_Data:
     def len(self):
         return len(self.vfs.serializer.dumps(self.item))
 
+    @property
+    def element_type(self):
+        return "data"
+
+    @property
     def is_read_only(self):
         return False
 
+    @property
     def is_dir(self):
         return False
 
@@ -997,8 +1071,14 @@ class BCDBVFS_Info:
         C = j.core.text.strip(C)
         return self.vfs.serializer.dumps(C)
 
+    @property
     def is_read_only(self):
         return True
 
+    @property
+    def element_type(self):
+        return "info"
+
+    @property
     def is_dir(self):
         return False
