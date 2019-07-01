@@ -21,5 +21,6 @@ class Virtualization_TestCases(BaseTest):
         self.deploy_flist_container("docker")
 
         logger.debug("Check that docker flist works.")
-        data = self.cont_client.system("/bin/sandbx/dockerd -h").get()
-        self.assertIn("Usage: /sandbox/bin/dockerd", data.stdout)
+        data = self.cont_client.system("/sandbox/bin/dockerd-ce -h").get()
+        logger.debug("Data %s." % data)
+        self.assertIn("Usage:", data.stdout)

@@ -13,6 +13,7 @@ class Virtualization_TestCases(BaseTest):
             "Starting of  virtualization builder testcases  which test main methods:build,install,start and stop."
         )
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/664")
     def test001_docker(self):
         """ BLD-013
         *Test docker builer sandbox*
