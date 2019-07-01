@@ -1,6 +1,8 @@
 import decimal
 import nacl
 import time
+
+from datetime import date
 from Jumpscale import j
 
 from . import schemas
@@ -213,7 +215,7 @@ class TFChainCapacity:
         :type threebot_id: string
         :param size: size of the namespace in GB, defaults to 1
         :type size: int, optional
-        :param duration: number of duration the reservation should be valid for
+        :param duration: number of months the reservation should be valid for
         :type duration: int
         :param disk_type: type of disk used for the 0-db
                           can be or 'ssd' or 'hdd'
@@ -292,7 +294,8 @@ class TFChainCapacity:
 
         # validate bot id exists
         bot = self._wallet.client.threebot.record_get(threebot_id)
-        if j.tools.time.extend(time.time(), reservation.duration) > bot.expiration:
+        reservation_expiry = j.tools.time.extend(time.time(), reservation.duration)
+        if date.fromtimestamp(reservation_expiry) > date.fromtimestamp(bot.expiration):
             raise ValueError("Capacity expiration time exceeds threebot's expiration")
 
         signature = self._sign_reservation(threebot_id, reservation)
