@@ -1,25 +1,54 @@
 import os
-
-# import sys
 import atexit
-import struct
-from collections import namedtuple
 import psutil
 import traceback
+
+### the base ones
 from .BASECLASSES.JSBase import JSBase
-from .BASECLASSES.JSFactoryBase import JSFactoryBase
-from .BASECLASSES.JSBaseConfig import JSBaseConfig
-from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
-from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
-from .BASECLASSES.JSBaseDataObj import JSBaseDataObj
+from .BASECLASSES.JSBaseFactory import JSBaseFactory
+
+####
+
+from .BASECLASSES.JSConfig import JSConfig
+from .BASECLASSES.JSConfigs import JSConfigs
+from .BASECLASSES.JSConfigsFactory import JSConfigsFactory
+
 import gc
 import sys
-import types
-import time
 
 
 class JSGroup:
     pass
+
+
+class JSFactoryConfigsBaseClass(JSBaseFactory, JSConfigs):
+    """
+    as used for j.... factory classes will has constructor for 1 type of Config children
+
+    class myclass(j.application.JSFactoryConfigsBaseClass):
+        def _init(self):
+            ...
+
+    """
+
+
+class JSBaseConfigsClass(JSBase, JSConfigs):
+    """
+    is not for a factory (doesn't have the test or __location__ inside
+    has support for 1 type of children
+    """
+
+
+class JSBaseConfigClass(JSBase, JSConfig):
+    """
+    no children, only 1 data object
+    """
+
+
+class JSBaseConfigsFactoryClass(JSBase, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
 
 
 class Application(object):
@@ -51,7 +80,15 @@ class Application(object):
 
         self._in_autocomplete = False
 
-        self.JSBaseDataObjClass = JSBaseDataObj
+        # self.JSConfigClass = JSConfig
+        self.JSFactoryConfigsBaseClass = JSFactoryConfigsBaseClass  # for e.g. clients, factory for 1 type of children
+        self.JSBaseClass = JSBase  # the most low level one
+        self.JSBaseFactoryClass = JSBaseFactory  # has tests handling on top of JSBase
+        self.JSBaseConfigClass = JSBaseConfigClass  # 1 config obj, childre from configs
+        self.JSBaseConfigsClass = JSBaseConfigsClass  # multiple config children
+        self.JSConfigsFactory = JSConfigsFactory
+        # factory on j... level for multipl JSConfigs children
+        self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
 
     @property
     def appname(self):
@@ -111,61 +148,6 @@ class Application(object):
             # self.report_errors()
             raise RuntimeError(msg)
         return "%s:%s:%s" % (cat, obj, error)
-
-    @property
-    def JSBaseClass(self):
-        """
-        JSBASE = j.application.JSBaseClass
-        class myclass(j.application.JSBaseClass):
-            def __init__(self):
-                JSBASE.__init__(self)
-
-        """
-        return JSBase
-
-    @property
-    def JSFactoryBaseClass(self):
-        """
-        JSFactoryBase = j.application.JSFactoryBaseClass
-        class myclass(JSFactoryBase):
-            def __init__(self):
-                JSFactoryBase.__init__(self)
-
-        """
-        return JSFactoryBase
-
-    @property
-    def JSBaseConfigClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfig
-
-    @property
-    def JSBaseConfigParentClass(self):
-        """
-        JSBase = j.application.JSBaseConfigParentClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigParent
-
-    @property
-    def JSBaseConfigsClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigs
 
     def reset(self):
         """

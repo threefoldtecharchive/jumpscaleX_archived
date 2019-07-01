@@ -74,38 +74,56 @@ sshclientparamiko
 
 ```python
 
-class JSBaseConfigs(JSBase):
+class JSBaseConfigs(j.application.): TODO:
 
     def __init__(self):
-        self._model = IS THE JSMODEL
-        self._children = ARE THE CHILDREN LINKED TO THIS CONFIGS OBJ, US ALWAYS OF 1 JSOBJECT TYPE
+        self._model = #IS THE JSMODEL, gets created automatically
+        self._children = #ARE THE CHILDREN LINKED TO THIS CONFIGS OBJ, US ALWAYS OF 1 JSOBJECT TYPE
 
-    def _childclass_selector(self):
+    def _bcdb_selector(self):
+        """
+        always uses the system BCDB, unless if this one implements something else
+        """
+        return j.application.bcdb_system
+
+    def _childclass_selector(self),jsxobject:
         """
         allow custom implementation of which child class to use
         :return:
         """
         return self.__class__._CHILDCLASS
 
-
-    def new(self,name,**kwargs):
+    def _trigger_add(self, method):
         """
-        :param name: for the service
-        :param kwargs: the data elements
-        :param childclass_name, if different typen of childclass, specify its name
+
+        triggers are called with (jsconfigs, jsconfig, action)
+
+        can register any method you want to respond on some change
+
+        - jsconfigs: the obj coming from this class, the collection of jsconfigs
+        - jsconfig: the jsconfig object
+        - action: e.g. new, delete, get,stop, ...
+        """
+
+    def new(self, name, jsxobject=None, **kwargs):
+        """
+        :param name: for the CONFIG item (is a unique name for the service, client, ...)
+        :param jsxobject: you can right away specify the jsxobject
+        :param kwargs: the data elements which will be given to JSXObject underneith (given to constructor)
         :return: the service
         """
+            if not jsxobject:
+            jsxobject = self._model.new(data=kwargs)
+            jsxobject.name = name
+        jsxobject = self._childclass_selector(jsxobject)
+        jsconfig = kl(parent=self, jsxobject=jsxobject)
+        self._triggers_call(jsconfig, "new")
+        self._children[name] = jsconfig
+        return self._children[name]
 
-
-    def get(self,name=None,id=None,die=True ,create_new=True,**kwargs):
+    def get(self,name):
         """
-        :param id: id of the obj to find, is a unique id
-        :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
-        :param search criteria (if name not used) or data elements for the new one being created
-        :param die, means will give error when object not found
-        :param create_new, if True it will automatically create a new one
-        :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
-        :return: the service
+        :param name: of the object
         """
 
     def reset(self):
@@ -117,6 +135,7 @@ class JSBaseConfigs(JSBase):
     def find(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
+                    e.g. id=...
         :return: list of the config objects
         """
 
@@ -147,9 +166,7 @@ class JSBaseConfigs(JSBase):
 ## Custom name
 
 Should your `JSBaseConfigsClass` not be bound to a `__jslocation__` but be
-one of the `__CHILDCLASSES` of a `JSBaseConfigParentClass`, you can define the name under
-which it will appear (within the space of that `JSBaseConfigParentClass`
-by overriding the `_name` class property of the `JSBaseConfigsClass` in question.
+one of the `__CHILDCLASSES` by overriding the `_name` class property of the `JSBaseConfigsClass` in question.
 
 For example:
 

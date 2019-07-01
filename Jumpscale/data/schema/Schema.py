@@ -306,7 +306,7 @@ class Schema(j.application.JSBaseClass):
 
     def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
-        get schema_object using data and capnpbin
+        new schema_object using data and capnpbin
 
         :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
         :param capnpdata is data in capnpdata

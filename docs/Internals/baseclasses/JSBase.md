@@ -1,6 +1,10 @@
 ## JS Base Class
 
-This is the baseclass used by most of the advanced baseclasses.
+This is the baseclass used by all other base classes, its the lowest level one.
+Implements
+
+- logging
+- 
 
 ```
 class JSBase:
@@ -12,9 +16,7 @@ class JSBase:
         self._parent = parent
         self._class_init()  # is needed to init class properties
 
-        if topclass:
-            self._init2(**kwargs)
-            self._init()
+        ...
 
         self._obj_cache_reset()
 ```

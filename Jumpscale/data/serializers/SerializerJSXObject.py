@@ -2,7 +2,7 @@ from Jumpscale import j
 from .SerializerBase import SerializerBase
 
 
-class SerializerJSXDataObj(SerializerBase):
+class SerializerJSXObject(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 

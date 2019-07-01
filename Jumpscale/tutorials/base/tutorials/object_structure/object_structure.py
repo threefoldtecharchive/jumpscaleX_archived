@@ -1,28 +1,21 @@
-
-## Factory Base Class
-
-Can have a `__jslocation__`, meaning it will be attached somewhere in the `Jumpscale` namespace.
-
-It can optionally be a container for one or more config classes,
-that is why it is not `_CHILDCLASS `here but `_CHILDCLASSES`.
-
-```python
 from Jumpscale import j
 
-class World(j.application.JSFactoryBaseClass):
+
+class World(j.application.JSBaseConfigsFactoryClass):
     """
     some text explaining what the class does
     """
 
-    __jslocation__ = 'j.data.world'
+    __jslocation__ = "j.data.world"
 
-    _CHILDCLASSES = [Cars,Ships]
+    _CHILDCLASSES = [Cars, Ships]
 
 
 class Cars(j.application.JSBaseConfigsClass):
     """
     ...
     """
+
     _CHILDCLASS = Car
 
 
@@ -37,15 +30,15 @@ class Car(j.application.JSBaseConfigClass):
         city = ""
         """
 
-    def _init(self):    
+    def _init(self):
         pass
-
 
 
 class Ships(j.application.JSBaseConfigsClass):
     """
     ...
     """
+
     _CHILDCLASS = Ship
 
 
@@ -61,12 +54,13 @@ class Ship(j.application.JSBaseConfigClass):
         onsea = true (b)
         """
 
-    def _init(self):    
+    def _init(self):
         pass
 
 
-```
+def main(self):
+    """
+    to run:
 
-The `_CHILDCLASSES` are one or more config(s) classes, always defined as a (Python) List.
-
-A `childclass` can be a singleton.
+    kosmos 'j.tutorials._code_run(name="object_structure")'
+    """

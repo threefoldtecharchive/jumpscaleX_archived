@@ -35,19 +35,19 @@ class JSXObject(j.application.JSBaseClass):
         return self._readonly
 
     @property
-    def _readonly:
+    def _readonly(self):
         return self._model.readonly
 
     @property
     def _capnp_schema(self):
         return self._schema._capnp_schema
 
-    def _data_update(self, data):
-        if not isinstance(data, dict):
-            raise RuntimeError("need to be dict, was:\n%s" % data)
+    def _data_update(self, datadict):
+        if not isinstance(datadict, dict):
+            raise RuntimeError("need to be dict, was:\n%s" % datadict)
         if self._model is not None:
-            data = self._model._dict_process_in(data)
-        for key, val in data.items():
+            data = self._model._dict_process_in(datadict)
+        for key, val in datadict.items():
             try:
                 setattr(self, key, val)
             except Exception as e:

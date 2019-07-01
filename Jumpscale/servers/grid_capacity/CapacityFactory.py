@@ -5,7 +5,7 @@ from Jumpscale import j
 
 from .CapacityServer import CapacityServer
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class CapacityFactory(JSConfigBase):

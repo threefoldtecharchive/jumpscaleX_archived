@@ -3,7 +3,7 @@ from Jumpscale import j
 from .DocSite import DocSite
 
 
-class DocsFactory(j.application.JSFactoryBaseClass):
+class DocsFactory(j.application.JSFactoryConfigsBaseClass):
 
     __jslocation__ = "j.data.docs"
 

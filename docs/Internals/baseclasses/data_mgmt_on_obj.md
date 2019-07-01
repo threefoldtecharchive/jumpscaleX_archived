@@ -55,42 +55,6 @@ def mymethod(model,obj,kosmosinstance=None, action=None, propertyname=None):
 kosmosobj._model.trigger_add(mymethod)
 ```
 
-### actions
-
-- new is called when object created from model.new() method, not related to DB action, is only in mem
-- change gets called when a property of the obj gets changed
-- get is called after the model is populated from data from DB
-- set_pre is called when object ready to be stored in DB but before
-- set_post once indexing & storing in DB was succesful
-- delete is called before removing from DB, when error in this step, deletion will not happen !
-
-
-### example how to use
-
-```python
-
-class SomeClass(...):
-
-    def _init(self,**kwargs):
-
-        self._model.trigger_add(self._data_update_color)
-
-    @staticmethod
-    def _data_update_color(model,obj,kosmosinstance=None, action=None, propertyname=None):
-        self = kosmosinstance  #this way code is same and can manipulate self like in other methods
-        if propertyname=="color":
-            j.shell()
-
-
-o = SomeClass()
-o.color = "red"
-#this will now triger the _data_update_color method & because propertyname matches it will get in shell
-
-easiest to add as staticmethod, that way its part of the class
-
-
-```
-
 
 
 

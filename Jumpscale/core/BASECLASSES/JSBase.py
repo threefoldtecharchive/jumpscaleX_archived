@@ -5,7 +5,18 @@ import os
 # import sys
 import inspect
 import types
+"""
+the lowest level class, every object in Jumpscale inherits from this one
 
+functions
+
+- logging
+- initialization of the class level stuff
+- caching logic
+- logic for auto completion in shell
+- state on execution of methods (the _done methods)
+
+"""
 
 class JSBase:
     def __init__(self, parent=None, topclass=True, **kwargs):
@@ -13,6 +24,7 @@ class JSBase:
         :param parent: parent is object calling us
         :param topclass: if True means no-one inherits from us
         """
+        self.__class__.__protected = False
         self._parent = parent
         self.__children = []
         self.__dataprops = []
@@ -42,9 +54,13 @@ class JSBase:
             self.__class__._test_runs = {}
             self.__class__._test_runs_error = {}
 
+            self.__class__.__names_methods_ = []
+            self.__class__.__names_properties_ = []
+
             if not hasattr(self.__class__, "_name"):
                 self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
             # short location name:
+
             if "__jslocation__" in self.__dict__:
                 self.__class__._location = self.__jslocation__
             elif "__jslocation__" in self.__class__.__dict__:
@@ -434,9 +450,12 @@ class JSBase:
         else:
             return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
 
-    ###################
+    ################### mechanisms for autocompletion in kosmos
 
     def __name_get(self, item):
+        """
+        helper mechanism to come to name
+        """
         if isinstance(item, str) or isinstance(item, int):
             name = str(item)
         elif hasattr(item.name):
@@ -577,43 +596,14 @@ class JSBase:
         return None
 
     def __dataprops_names_get(self, filter=None):
-        return self.__filter(filter=filter, llist=self.__dataprops_get(filter=filter))
-
-    def __dataprops_get(self, filter=None):
         """
-        normally coming from a database e.g. BCDB
-        e.g. disks in a server, or clients in SSHClientFactory
-        if nothing then is self.__dataprops which is then normally = []
+        e.g. in a JSConfig object would be the names of properties of the jsxobject = data
+        e.g. in a JSXObject would be the names of the properties of the data itself
 
-        :param filter: is '' then will show all, if None will ignore _
-                when * at end it will be considered a prefix
-                when * at start it will be considered a end of line filter (endswith)
-                when R as first char its considered to be a regex
-                everything else is a full match
-
-        :return:
+        :return: list of the names
         """
-        return self.__filter(filter=filter, llist=self.__dataprops, nameonly=False)
-
-    def __dataprop_get(self, name=None, id=None):
-        """
-        finds a dataprop coming from e.g. a database
-        :param name:
-        :param id:
-        :return:
-        """
-        for item in self.__dataprops_get():
-            if name:
-                assert isinstance(name, str)
-                if self.__name_get(item) == name:
-                    return item
-            elif id:
-                id = int(id)
-                if item.id == id:
-                    return item
-            else:
-                raise RuntimeError("need to specify name or id")
-        return None
+        # return self.__filter(filter=filter, llist=self.__names_methods_)
+        return []
 
     def __methods_names_get(self, filter=None):
         """
@@ -645,8 +635,6 @@ class JSBase:
             others.append(pname)
         res = [i for i in self.__filter(filter=filter, llist=self.__names_properties_) if i not in others]
         return res
-
-    ###################
 
     def __props_all_names(self):
         l = (
@@ -684,16 +672,9 @@ class JSBase:
         else:
             return True
 
-    def __dir__(self):
-        l = (
-            self.__children_names_get()
-            + self.__properties_names_get()
-            + self.__dataprops_names_get()
-            + self.__members_names_get()
-            + self.__methods_names_get()
-        )
+    ###################
 
-        return l
+d
 
     def __getattr__(self, attr):
         if not self.__prop_exist(attr):
