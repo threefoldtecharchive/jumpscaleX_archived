@@ -43,6 +43,7 @@ def main(self):
 
     r = vfs.get("/")
     bcdb_names = [i for i in r.list()]
+
     assert "test" in bcdb_names
     r = vfs.get("/test")
     indentifiers = [i for i in r.list()]
@@ -92,14 +93,20 @@ def main(self):
     assert len(objs_from_test_wallet) == 10
     for o in objs_from_test_wallet:
         obj = j.data.serializers.json.loads(o)
+        if obj["addr"] == "something:5":
+            assert obj["name"] == "myuser_5"
+            obj_id_5 = obj["id"]
+        if obj["addr"] == "something:4":
+            assert obj["name"] == "myuser_4"
+            obj_id_4 = obj["id"]
         if obj["addr"] == "something:3":
             assert obj["name"] == "myuser_3"
             obj_id_3 = obj["id"]
         if obj["addr"] == "something:2":
             assert obj["name"] == "myuser_2"
             obj_id_2 = obj["id"]
-        if obj["addr"] == "something:5":
-            assert obj["name"] == "myuser_5"
+        if obj["addr"] == "something:1":
+            assert obj["name"] == "myuser_1"
             obj_id = obj["id"]
 
     r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/%s" % obj_id)
@@ -151,27 +158,63 @@ def main(self):
     r.delete()
 
     schema_wallet_obj = j.data.serializers.json.loads(schema)
-    with test_case.assertRaises(Exception):  # can't delete an already deleted data
+    schema_wallet_md5 = schema_wallet_obj["md5"]
+    schema_wallet_sid = schema_wallet_obj["sid"]
+    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
         r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
-        r_should_also_be_deleted = vfs.get("/data/1/hash/%s/%s" % (schema_wallet_obj["md5"], obj_id))
-        r_should_be_deleted_too = vfs.get("/data/1/sid/%s/%s" % (schema_wallet_obj["sid"], obj_id))
+    ex = cm.exception
+    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
+    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
+        r_should_also_be_deleted = vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
+    ex = cm.exception
+    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
 
+    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
+        r_should_be_deleted_too = vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
+    ex = cm.exception
+    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
+
+    # test delete all data form a url get
     r2 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id_2)
     obj2raw = r2.get()
     obj2 = j.data.serializers.json.loads(obj2raw)
     assert obj2["name"] == "myuser_2"
     assert obj2["id"] == obj_id_2
 
-    with test_case.assertRaises(Exception):
-        obj = r_deleted.get()  # can't get deleted data
-
+    r2_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_2))
+    r2_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_2))
     removed_obj = r2.delete()
     for ro in removed_obj:
-        if ro != None:
-            if ro.key == r2.key:
-                obj_key_removed_found = True
-    assert obj_key_removed_found
+        print("comparing key:%s with keys:%s" % (ro.key, [r2.key, r2_by_sid.key, r2_by_hash.key]))
+        assert ro.key == r2.key or ro.key == r2_by_sid.key or ro.key == r2_by_hash.key
 
+    # test delete all data form a sid get
+    r4_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_4))
+    obj4raw = r4_by_sid.get()
+    obj4 = j.data.serializers.json.loads(obj4raw)
+    assert obj4["name"] == "myuser_4"
+    assert obj4["id"] == obj_id_4
+
+    r4_by_url = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % (obj_id_4))
+    r4_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_4))
+    removed_obj = r4_by_sid.delete()
+    for ro in removed_obj:
+        print("comparing key:%s with keys:%s" % (ro.key, [r4_by_url.key, r4_by_sid.key, r4_by_hash.key]))
+        assert ro.key == r4_by_url.key or ro.key == r4_by_sid.key or ro.key == r4_by_hash.key
+
+    # test delete all data form a hash get
+    r5_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_5))
+    obj5raw = r5_by_hash.get()
+    obj5 = j.data.serializers.json.loads(obj5raw)
+    assert obj5["name"] == "myuser_5"
+    assert obj5["id"] == obj_id_5
+
+    r5_by_url = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % (obj_id_5))
+    r5_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_5))
+    removed_obj = r5_by_hash.delete()
+    for ro in removed_obj:
+        print("comparing key:%s with keys:%s" % (ro.key, [r5_by_url.key, r5_by_sid.key, r5_by_hash.key]))
+        assert ro.key == r5_by_url.key or ro.key == r5_by_sid.key or ro.key == r5_by_hash.key
     self._log_info("TEST DELETE DATA DONE")
 
     SCHEMAS = """
