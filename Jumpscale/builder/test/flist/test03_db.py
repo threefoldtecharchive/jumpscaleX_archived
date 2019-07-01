@@ -10,6 +10,7 @@ class Db_TestCases(BaseTest):
         logger.add("db_sandbox_tests_{time}.log")
         logger.debug("Starting of db sandbox testcases.")
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test001_etcd(self):
         """ SAN-006
         *Test etcd builer sandbox*
@@ -22,6 +23,7 @@ class Db_TestCases(BaseTest):
         data = self.cont_client.system("/sandbox/bin/etcd -h")
         self.assertIn("--snapshot-count", data.stdout)
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test002_zdb(self):
         """ SAN-007
         *Test zdb builer sandbox*
@@ -36,6 +38,7 @@ class Db_TestCases(BaseTest):
         data = self.cont_client.system("/bin/sandbx/zdb -h").get()
         self.assertIn("Usage: /sandbox/bin/zdb", data.stdout)
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test003_postgresql(self):
         """ SAN-008
         *Test postgresql builer sandbox*
@@ -47,6 +50,7 @@ class Db_TestCases(BaseTest):
         logger.debug("Check that postgres flist works by run postgres command, should succeed. ")
         self.assertIn("PostgreSQL server", self.check_container_flist("/sandbox/bin/postgres -h"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test004_redis(self):
         """ SAN-009
         *Test redis builer sandbox*
@@ -64,12 +68,12 @@ class Db_TestCases(BaseTest):
         """
         logger.debug("run influxdb sandbox, should succeed and upload flist on hub.")
         j.builders.db.influxdb.sandbox(**self.sandbox_args)
-
         logger.debug("deploy container with uploaded influxdb builder flist.")
         self.deploy_flist_container("influxdb")
         logger.debug("Check that influx flist works by run influxd command, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/influxd -h"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test006_mongodb(self):
         """ SAN-011
         *Test mongodb builer sandbox*
@@ -81,6 +85,7 @@ class Db_TestCases(BaseTest):
         logger.debug("Check that mongodb flist works by run mongodb command, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/mongod -h"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test007_ardb(self):
         """ SAN-012
         *Test ardb builer sandbox*
