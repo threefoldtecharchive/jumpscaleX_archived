@@ -2120,6 +2120,12 @@ class MyEnv:
         :param sshagent_use: needs to be True if sshkey used
         :return:
         """
+
+        if not os.path.exists(MyEnv.config_file_path):
+            MyEnv.config = MyEnv.config_default_get(config=config)
+        else:
+            MyEnv._config_load()
+
         if interactive not in [True, False]:
             raise RuntimeError("interactive is True or False")
         MyEnv.interactive = interactive
@@ -2190,11 +2196,6 @@ class MyEnv:
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
-
-        if not os.path.exists(MyEnv.config_file_path):
-            MyEnv.config = MyEnv.config_default_get(config=config)
-        else:
-            MyEnv._config_load()
 
         if not "DIR_TEMP" in MyEnv.config:
             config.update(MyEnv.config)
