@@ -318,7 +318,6 @@ class BCDB(j.application.JSBaseClass):
             yield model
 
     def model_get_from_sid(self, sid, namespaceid=1):
-        md5 = None
         if sid in self.meta._sid_to_model:
             return self.meta._sid_to_model[sid]
         else:

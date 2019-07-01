@@ -395,10 +395,19 @@ class BCDBVFS(j.application.JSBaseClass):
             res[md5_to_url[k]] = (v, k)
         return res
 
+    def _force_schema_add(self, schema_hash):
+        if j.data.schema.exists(schema_hash):
+            self._bcdb.meta._schema_set(j.data.schema.get_from_md5(schema_hash))
+        else:
+            raise Exception("Can't find schema with hash:%s" % ( schema_hash),5)
+
+
     def _get_hash_to_sid_and_url(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
         for k, v in md5_to_url.items():
+            if not  k  in self._bcdb.meta._schema_md5_to_sid:
+                self._force_schema_add(k)
             res[k] = (self._bcdb.meta._schema_md5_to_sid[k], v)
         return res
 
@@ -635,7 +644,7 @@ class BCDBVFS(j.application.JSBaseClass):
                 conv = self._get_hash_to_sid_and_url()
                 sid_for_hash = conv[info["identifier"]][0]
                 keybase_with_sid = "%ssid_%s" % (keybase, sid_for_hash)
-                key_with_sid = "%s_%s" % (sid_for_hash, o_id)
+                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
                 url_for_hash = conv[info["identifier"]][1]
                 keybase_with_url = "%surl_%s" % (keybase, url_for_hash)
                 key_with_url = "%s_%s" % (keybase_with_url, o_id)
