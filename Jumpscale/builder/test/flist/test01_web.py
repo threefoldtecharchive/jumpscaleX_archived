@@ -51,12 +51,15 @@ class Web_TestCases(BaseTest):
         data = self.cont_client.system("/sandbox/bin/nginx -h").get()
         self.assertIn("Usage: nginx", data.stderr)
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/186")
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/661")
     def test004_openresty(self):
         """ SAN-004
         *Test openresty builer sandbox*
         """
+        logger.debug("run openresty sandbox.")
         j.builders.web.openresty.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded openresty builder flist.")
         self.deploy_flist_container("openresty")
-        data = self.cont_client.system("/sandbox/bin/resty -h")
+        logger.debug("Check that openresty flist works.")
+        data = self.cont_client.system("/sandbox/bin/resty -h").get()
         self.assertIn("Usage: /sandbox/bin/resty", data.stdout)
