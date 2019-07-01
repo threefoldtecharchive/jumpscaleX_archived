@@ -66,9 +66,9 @@ class Web_TestCases(BaseTest):
         logger.debug("check that traefik server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("traefik")))
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues")
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/661")
     def test004_openresty(self):
-        """ BLD-00
+        """ BLD-031
         *Test OpenResty builer sandbox*
         """
         logger.debug("OpenResty builder: run build method.")

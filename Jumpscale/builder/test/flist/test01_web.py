@@ -51,7 +51,7 @@ class Web_TestCases(BaseTest):
         data = self.cont_client.system("/sandbox/bin/nginx -h").get()
         self.assertIn("Usage: nginx", data.stderr)
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/")
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/661")
     def test004_openresty(self):
         """ SAN-004
         *Test openresty builer sandbox*
