@@ -10,7 +10,6 @@ class Network_TestCases(BaseTest):
         logger.add("network_sandbox_tests_{time}.log")
         logger.debug("Starting of network sandbox testcases.")
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/201")
     def test001_coredns(self):
         """ SAN-013
         *Test coredns builer sandbox*

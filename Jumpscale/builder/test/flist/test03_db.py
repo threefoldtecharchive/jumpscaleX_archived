@@ -10,7 +10,6 @@ class Db_TestCases(BaseTest):
         logger.add("db_sandbox_tests_{time}.log")
         logger.debug("Starting of db sandbox testcases.")
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/299")
     def test001_etcd(self):
         """ SAN-006
         *Test etcd builer sandbox*

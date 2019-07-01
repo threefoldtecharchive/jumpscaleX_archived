@@ -4,7 +4,7 @@ from loguru import logger
 import unittest, time
 
 
-class db_TestCases(BaseTest):
+class DB_TestCases(BaseTest):
     @classmethod
     def setUpClass(cls):
         logger.add("db_tests_{time}.log")

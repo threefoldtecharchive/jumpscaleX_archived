@@ -20,3 +20,15 @@ class Apps_TestCases(BaseTest):
         self.deploy_flist_container("digitalme")
         logger.debug("Check that digitalme flist works by run openresty command, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/openresty -h"))
+
+    def test002_freeflow(self):
+        """ SAN-031
+        *Test freeflow builer sandbox*
+        """
+        logger.debug("Run  freeflow sandbox, should succeed and upload flist on hub.")
+        j.builders.apps.freeflow.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded freeflow builder flist.")
+        self.deploy_flist_container("freeflow")
+        logger.debug("Check that freeflow flist works by run apache2 binary, should succeed. ")
+        self.assertIn("Usage: apache2", self.check_container_flist("/sandbox/bin/apache2 -h"))
+

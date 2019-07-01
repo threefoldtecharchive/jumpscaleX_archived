@@ -39,9 +39,12 @@ class Libs_TestCases(BaseTest):
         """ BLD-028
         *Test libffi builer sandbox*
         """
+        logger.debug("libffi builder: run build method.")
         j.builders.libs.libffi.build(reset=True)
+        logger.debug("libffi builder: run install method.")
         j.builders.libs.libffi.install()
         try:
+            logger.debug("check that libffi is installed successfully")
             j.sal.process.execute("which libtoolize")
         except:
             self.assertTrue(False)
@@ -50,9 +53,28 @@ class Libs_TestCases(BaseTest):
         """ BLD-029
         *Test brotli builer sandbox*
         """
+        logger.debug("brotli builder: run build method.")
         j.builders.libs.brotli.build(reset=True)
+        logger.debug("brotli builder: run install method.")
         j.builders.libs.brotli.install()
         try:
+            logger.debug("check that brotli is installed successfully")
             j.sal.process.execute("which brotli")
         except:
             self.assertTrue(False)
+
+    def test005_openssl(self):
+        """ BLD-032
+        *Test openssl builer sandbox*
+        """
+        logger.debug("openssl builder: run build method.")
+        j.builders.libs.openssl.build(reset=True)
+        logger.debug("openssl builder: run install method.")
+        j.builders.libs.openssl.install() 
+        try:
+            logger.debug("check that openssl is installed successfully")
+            j.sal.process.execute("which openssl")
+        except:
+            self.assertTrue(False)
+    
+    
