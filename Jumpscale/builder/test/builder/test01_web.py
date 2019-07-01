@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 from .base_test import BaseTest
 import unittest
 import time
@@ -64,3 +65,21 @@ class Web_TestCases(BaseTest):
         j.builders.web.traefik.stop()
         logger.debug("check that traefik server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("traefik")))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues")
+    def test004_openresty(self):
+        """ BLD-00
+        *Test OpenResty builer sandbox*
+        """
+        logger.debug("OpenResty builder: run build method.")
+        j.builders.web.openresty.build(reset=True)
+        logger.debug("OpenResty builder: run install method.")
+        j.builders.web.openresty.install()
+        logger.debug("OpenResty builder: run start method.")
+        j.builders.web.openresty.start()
+        logger.debug("check that OpenResty server started successfully.")
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("resty")))
+        logger.debug("openresty builder: run stop method.")
+        j.builders.web.openresty.stop()
+        logger.debug("check that resty server stopped successfully.")
+        self.assertEqual(0, len(j.sal.process.getProcessPid("resty")))
