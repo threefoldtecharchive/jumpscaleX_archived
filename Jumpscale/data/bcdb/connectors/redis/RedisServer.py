@@ -283,33 +283,7 @@ class RedisServer(j.application.JSBaseClass):
         response._array(["0", res])
 
     def hset(self, response, key, id, val):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-        if id == "new":
-            o = model.set_dynamic(val)
-        else:
-            id = int(id)
-            if id == 0:
-                response.error("trying to overwrite first metadata entry, not allowed")
-                return
-            try:
-                o = model.set_dynamic(val, obj_id=id)
-            except Exception as e:
-                if str(e).find("cannot update object") != -1:
-                    response.error("cannot update object with id:%s, it does not exist" % id)
-                    return
-                response.error(str(e))
-                return
-
-        response.encode("%s" % o.id)
+        raise RuntimeError("not implemented")
 
     def hget(self, response, key, id):
         parse_key = key.replace(":", "/")
@@ -325,33 +299,17 @@ class RedisServer(j.application.JSBaseClass):
             response.error("cannot get, key:'%s' not found" % key)
 
     def hdel(self, response, key, id):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-
-        if id == "":
-            nr_deleted = model.destroy()
-        else:
-            nr_deleted = 1
-            # FIXME: what happens if the id doesn't exist ?
-            # there is no exist method on the model for now
-            model.delete(int(id))
-        response.encode(nr_deleted)
+        raise RuntimeError("not implemented")
 
     def hlen(self, response, key):
-
-        if "schemas" in key:
-            response.encode(0)
+        parse_key = key.replace(":", "/")
+        vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
+        if isinstance(vfs_objs.get(), str):
+            response.encode("1")
             return
-
-        response.encode(len(self.bcdb.get_all()))
+        else:
+            objs = list(self.vfs.list(parse_key))
+        response.encode(len(objs))
         return
 
     def ttl(self, response, key):
