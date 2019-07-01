@@ -71,7 +71,7 @@ class Db_TestCases(BaseTest):
         logger.debug("deploy container with uploaded influxdb builder flist.")
         self.deploy_flist_container("influxdb")
         logger.debug("Check that influx flist works by run influxd command, should succeed. ")
-        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/influxd -h"))
+        self.assertIn("Influx", self.check_container_flist("/sandbox/bin/influx help"))
 
     @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/658")
     def test006_mongodb(self):
