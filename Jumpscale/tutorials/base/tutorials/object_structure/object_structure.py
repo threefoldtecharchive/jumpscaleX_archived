@@ -12,7 +12,7 @@ class Car(j.application.JSBaseConfigClass):
         city = ""
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
 
@@ -36,7 +36,7 @@ class Ship(j.application.JSBaseConfigClass):
         onsea = true (b)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
 

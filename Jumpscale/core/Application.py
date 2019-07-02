@@ -93,6 +93,7 @@ class Application(object):
         # factory on j... level for multipl JSConfigs children
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
         self.JSBaseFactoryClass = JSBaseFactoryClass
+        self.JSConfigClass = JSConfig
 
     @property
     def appname(self):

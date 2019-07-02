@@ -7,6 +7,7 @@ class JSConfigs(JSBase):
         print("JSCONFIGS:%s" % self._name)
         self._children = {}
         self._model_ = None
+        self._triggers = []
 
     def __init_class_post(self):
 
@@ -61,9 +62,9 @@ class JSConfigs(JSBase):
         """
         assert isinstance(jsconfig, j.application.JSConfigClass)
         for method in self._triggers:
-            obj = method(jsconfigs=self, jsconfig=jsconfig, action=action)
+            jsconfig = method(jsconfigs=self, jsconfig=jsconfig, action=action)
             assert isinstance(jsconfig, j.application.JSConfigClass)
-        return obj
+        return jsconfig
 
     def new(self, name, jsxobject=None, **kwargs):
         """
