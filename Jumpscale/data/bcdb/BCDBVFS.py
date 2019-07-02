@@ -378,14 +378,13 @@ class BCDBVFS(j.application.JSBaseClass):
         if j.data.schema.exists(schema_hash):
             self._bcdb.meta._schema_set(j.data.schema.get_from_md5(schema_hash))
         else:
-            raise Exception("Can't find schema with hash:%s" % ( schema_hash),5)
-
+            raise Exception("Can't find schema with hash:%s" % (schema_hash), 5)
 
     def _get_hash_to_sid_and_url(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
         for k, v in md5_to_url.items():
-            if not  k  in self._bcdb.meta._schema_md5_to_sid:
+            if not k in self._bcdb.meta._schema_md5_to_sid:
                 self._force_schema_add(k)
             res[k] = (self._bcdb.meta._schema_md5_to_sid[k], v)
         return res
@@ -453,8 +452,8 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    r = self._bcdb.meta._schema_set(s) # add the schema to the bcdb meta 
-                    self._bcdb.model_get_from_schema(s) #should create the model based on the schema
+                    r = self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta
+                    self._bcdb.model_get_from_schema(s)  # should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
                     key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)

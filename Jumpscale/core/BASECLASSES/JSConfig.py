@@ -1,11 +1,12 @@
 from Jumpscale import j
+from .JSBase import JSBase
 
 """
 classes who use JSXObject for data storage but provide nice interface to enduser
 """
 
 
-class JSConfig:
+class JSConfig(JSBase):
     def _init_pre(self, parent=None, jsxobject=None, datadict={}):
 
         self._parent = parent

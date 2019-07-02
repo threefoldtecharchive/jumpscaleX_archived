@@ -309,7 +309,7 @@ class TfChainClient:
         self._wallet_addresses = res["addresses"]
         return self._wallet_addresses
 
-    def wallet_init(self):
+    def wallet_init(self, **kwargs):
         """ Initialize wallet """
         r = self._curl.post("wallet/init", data={"passphrase": self._wallet_password})
         res = r.json()

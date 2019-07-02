@@ -19,8 +19,7 @@ class SystemProps:
 
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text, md5=None, url=None):
-        j.application.JSBaseClass.__init__(self)
+    def _init(self, text, md5=None, url=None):
         self.properties = []
         self._systemprops = {}
         self._obj_class = None

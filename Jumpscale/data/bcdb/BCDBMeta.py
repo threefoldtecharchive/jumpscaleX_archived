@@ -36,7 +36,7 @@ class BCDBMeta(j.application.JSBaseClass):
         if reset:
             self.reset()
         else:
-            self._load()b
+            self._load()
 
     def reset(self):
         # make everything in metadata stor empty

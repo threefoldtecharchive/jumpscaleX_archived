@@ -26,7 +26,7 @@ class Ubuntu(JSBaseClass):
             uptime, _ = data.split(" ")
             return float(uptime)
 
-    def apt_init(self):
+    def apt_init(self, **kwargs):
         """shorthand for doing init_config() and init_system()
 
         """

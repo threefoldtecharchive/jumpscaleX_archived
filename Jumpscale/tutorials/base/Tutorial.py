@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Tutorial(j.application.JSBaseFactory):
+class Tutorial(j.application.JSBaseFactoryClass):
     """
     """
 
@@ -32,7 +32,7 @@ class Tutorial(j.application.JSBaseFactory):
 
 
         """
-        self._code_run("tutorials/baseclass/example", obj_key="dothis", name="aname") == "aname"
+        self._code_run("tutorials", name="baseclass")
 
     def object_structure(self):
         """
@@ -42,4 +42,4 @@ class Tutorial(j.application.JSBaseFactory):
 
 
         """
-        self._code_run("object_structure")
+        self._code_run("tutorials", name="object_structure")

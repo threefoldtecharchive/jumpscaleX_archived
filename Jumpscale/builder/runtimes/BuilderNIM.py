@@ -7,7 +7,7 @@ builder_method = j.builders.system.builder_method
 class BuilderNIM(j.builders.system._BaseClass):
     NAME = "nim"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/nimlang")
 

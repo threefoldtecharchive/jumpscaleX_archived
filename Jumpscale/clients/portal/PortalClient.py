@@ -98,7 +98,7 @@ class PortalClient(JSConfigBase, Resource):
     iyoinstance = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         ip = self.ip
         port = self.port

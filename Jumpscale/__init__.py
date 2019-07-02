@@ -64,7 +64,7 @@ def my_excepthook(exception_type, exception_obj, tb):
     Tools.log(msg=exception_obj, tb=tb, level=40)
     if MyEnv.debug:
         pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+    Tools.pprint("{RED}CANNOT CONTINUE in __init__{RESET}")
     sys.exit(1)
 
 
@@ -117,14 +117,14 @@ class Jumpscale:
                 locals_[name] = obj
             return locals_
 
-        try:
-            locals_ = add(locals_, "ssh", j.clients.ssh)
-        except:
-            pass
-        try:
-            locals_ = add(locals_, "iyo", j.clients.itsyouonline)
-        except:
-            pass
+        # try:
+        #     locals_ = add(locals_, "ssh", j.clients.ssh)
+        # except:
+        #     pass
+        # try:
+        #     locals_ = add(locals_, "iyo", j.clients.itsyouonline)
+        # except:
+        #     pass
 
         # locals_ = add(locals_,"zos",j.kosmos.zos)
 

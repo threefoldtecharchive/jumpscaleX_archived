@@ -44,7 +44,7 @@ class zero_bootClient(JSConfigClient):
     network_id = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.sshclient = j.clients.ssh.get(name=self.sshclient_instance)
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.zerotier_instance

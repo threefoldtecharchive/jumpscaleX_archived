@@ -1,8 +1,10 @@
 from Jumpscale import j
+from .JSBase import JSBase
 
 
-class JSConfigs:
+class JSConfigs(JSBase):
     def _init_pre(self, **kwargs):
+        print("JSCONFIGS:%s" % self._name)
         self._children = {}
         self._model_ = None
 
@@ -238,10 +240,14 @@ class JSConfigs:
         return self.__filter(filter=filter, llist=x, nameonly=False)
 
     def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self.__names_methods() or name in self.__members_names_get():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
+        # if private or non child then just return
+        if (
+            name.startswith("_")
+            or name in self.__methods_names_get()
+            or name in self.__properties_names_get()
+            or name in self.__dataprops_names_get()
+        ):
+            return self.__getattribute__(name)  # else see if we can from the factory find the child object
         r = self.get(name=name, die=False)
         # if none means does not exist yet will have to create a new one
         if r is None:

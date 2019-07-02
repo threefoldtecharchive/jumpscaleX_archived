@@ -13,7 +13,7 @@ class KrakenClient(JSConfigClient):
         private_key_ = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         kraken_api = krakenex.API()
         kraken_api.key = self.api_key_
         kraken_api.secret = self.private_key_

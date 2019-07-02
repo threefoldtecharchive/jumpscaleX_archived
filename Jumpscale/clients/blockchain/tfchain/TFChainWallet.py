@@ -43,7 +43,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         key_scan_count = -1 (I)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # stores all key pairs of this wallet in memory
         self._key_pairs = {}
         # the primary address is kept as a seperate property,

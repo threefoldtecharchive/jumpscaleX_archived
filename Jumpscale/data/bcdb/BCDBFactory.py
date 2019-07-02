@@ -12,7 +12,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.bcdb"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._log_debug("bcdb starts")
         self._bcdb_instances = {}  # key is the name

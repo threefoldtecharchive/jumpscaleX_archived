@@ -1,12 +1,13 @@
 # is a factory for multiple JSConfig baseclasses
 from Jumpscale import j
+from .JSBase import JSBase
 
 """
 factory for JSConfig & JSConfigs objects
 """
 
 
-class JSConfigsFactory:
+class JSConfigsFactory(JSBase):
     def __init_class_post(self):
 
         if not hasattr(self.__class__, "_CHILDCLASSES"):
@@ -80,6 +81,7 @@ class JSConfigsFactory:
 
         :return:
         """
+        j.shell()
         x = []
         for key, item in self._children.items():
             x.append(item)
@@ -90,13 +92,15 @@ class JSConfigsFactory:
 
     def __getattr__(self, name):
         # if private then just return
-        if name.startswith("_") or name in self.__names_methods() or name in self.__members_names_get():
+        if (
+            name.startswith("_")
+            or name in self.__methods_names_get()
+            or name in self.__properties_names_get()
+            or name in self.__dataprops_names_get()
+        ):
             return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name, die=False)
-        # if none means does not exist yet will have to create a new one
-        if r is None:
-            r = self.new(name=name)
+        j.shell()
+        w
         return r
 
     def __setattr__(self, key, value):

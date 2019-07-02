@@ -1,24 +1,6 @@
 from Jumpscale import j
 
 
-class World(j.application.JSBaseConfigsFactoryClass):
-    """
-    some text explaining what the class does
-    """
-
-    __jslocation__ = "j.data.world"
-
-    _CHILDCLASSES = [Cars, Ships]
-
-
-class Cars(j.application.JSBaseConfigsClass):
-    """
-    ...
-    """
-
-    _CHILDCLASS = Car
-
-
 class Car(j.application.JSBaseConfigClass):
     """
     one car instance
@@ -34,12 +16,12 @@ class Car(j.application.JSBaseConfigClass):
         pass
 
 
-class Ships(j.application.JSBaseConfigsClass):
+class Cars(j.application.JSBaseConfigsClass):
     """
     ...
     """
 
-    _CHILDCLASS = Ship
+    _CHILDCLASS = Car
 
 
 class Ship(j.application.JSBaseConfigClass):
@@ -58,9 +40,41 @@ class Ship(j.application.JSBaseConfigClass):
         pass
 
 
+class Ships(j.application.JSBaseConfigsClass):
+    """
+    ...
+    """
+
+    _CHILDCLASS = Ship
+
+
+class World(j.application.JSBaseConfigsFactoryClass):
+    """
+    some text explaining what the class does
+    """
+
+    _CHILDCLASSES = [Cars, Ships, Ship]
+
+
 def main(self):
     """
     to run:
 
-    kosmos 'j.tutorials._code_run(name="object_structure")'
+    kosmos 'j.tutorials.base._code_run("tutorials",name="object_structure")'
     """
+
+    ships = Ships()
+    ship1 = ships.new(name="ibizaboat")
+    assert ship1.name == "ibizaboat"
+
+    j.shell()
+
+    w = World()
+    car = w.cars.new()
+    assert w.ship.onsea
+    w.ship.onsea = False
+    assert w.ship.onsea == False
+    j.shell()
+
+
+main(1)

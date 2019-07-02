@@ -31,4 +31,3 @@ class Apps_TestCases(BaseTest):
         self.deploy_flist_container("freeflow")
         logger.debug("Check that freeflow flist works by run apache2 binary, should succeed. ")
         self.assertIn("Usage: apache2", self.check_container_flist("/sandbox/bin/apache2 -h"))
-

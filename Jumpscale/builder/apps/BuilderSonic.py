@@ -8,7 +8,7 @@ class BuilderSonic(j.builders.system._BaseClass):
     NAME = "sonic"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @builder_method()

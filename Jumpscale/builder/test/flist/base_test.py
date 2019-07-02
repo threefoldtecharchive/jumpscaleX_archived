@@ -48,4 +48,3 @@ class BaseTest(TestCase):
     def check_container_flist(self, command):
         data = self.cont_client.system(command).get()
         return data.stdout
-

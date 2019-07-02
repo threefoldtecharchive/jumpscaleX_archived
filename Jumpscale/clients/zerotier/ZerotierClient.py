@@ -296,7 +296,7 @@ class ZerotierClient(JSConfigClient):
     nodeids = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         if not self.token_:
             raise RuntimeError("Missing auth token in config instance {}".format(self.instance))

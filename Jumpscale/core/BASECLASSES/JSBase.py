@@ -21,46 +21,40 @@ functions
 
 
 class JSBase:
-    def __init__(self, parent=None, topclass=True, **kwargs):
+
+    __init_class_done = False
+    _protected = False
+    _dirpath_ = ""
+    # _objcat_name = ""
+    _cache_expiration = 3600
+    _test_runs = {}
+    _test_runs_error = {}
+    _name = ""
+    _location = ""
+    _logger_min_level = 100
+    _protected = False
+    _class_children = []
+
+    def __init__(self, parent=None, **kwargs):
         """
         :param parent: parent is object calling us
         :param topclass: if True means no-one inherits from us
         """
-        self.__class__.__protected = False
+
         self._parent = parent
         self.__children = []
         self.__dataprops = []
         self.__members = []
-        self.__init_class(topclass=topclass)  # is needed to init class properties
-
-        self._obj_cache_reset()
-        assert self._key
-
         self._init_pre(**kwargs)
+        self.__init_class()
+        self._obj_cache_reset()
         self._init(**kwargs)
         self._init_post(**kwargs)
 
-    def __init_class(self, topclass=True):
+    def __init_class(self):
 
-        if not hasattr(self.__class__, "__init_class_done"):
-
-            # if not topclass:
-            #     return
-
-            # print("_class init:%s"%self.__class__.__name__)
-            # only needed to execute once, needs to be done at init time, class inheritance does not exist
-            self.__class__._dirpath_ = ""  # path of the directory hosting this class
-            self.__class__.__objcat_name = ""
-
-            self.__class__._cache_expiration = 3600  # expiration of the cache
-            self.__class__._test_runs = {}
-            self.__class__._test_runs_error = {}
-
-            self.__class__.__names_methods_ = []
-            self.__class__.__names_properties_ = []
-
-            if not hasattr(self.__class__, "_name"):
-                self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
+        if not self.__class__.__init_class_done:
+            self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
             # short location name:
 
             if "__jslocation__" in self.__dict__:
@@ -80,26 +74,25 @@ class JSBase:
                 if self.__class__._location is None:
                     self.__class__._location = self.__class__._name
 
-            # walk to all parents, let them know that there are child classes
-            self.__class__._class_children = []
-            parent = self._parent
-            while parent is not None:
-                if parent.__class__ not in parent._class_children:
-                    parent._class_children.append(parent.__class__)
-                parent = parent._parent
+            # # walk to all parents, let them know that there are child classes
+            # self.__class__._class_children = []
+            # parent = self._parent
+            # while parent is not None:
+            #     if parent.__class__ not in parent._class_children:
+            #         parent._class_children.append(parent.__class__)
+            #     parent = parent._parent
 
-            self.__inspect()
-
-            self.__class__._logger_min_level = 100
-
-            self.__class__._key = "%s:%s" % (self.__class__._location, self.__class__._name)
+            # if self.__class__._location.lower() != self.__class__._name.lower():
+            #     self.__class__._key = "%s:%s" % (self.__class__._location, self.__class__._name)
+            # else:
+            #     self.__class__._key = self.__class__._name.lower()
 
             self.__init_class_post()
 
             self.__class__.__init_class_done = True
-            self.__class__.__protected = True
+            # self.__class__._protected = True
 
-            print("***CLASS INIT: %s" % self.__class__._key)
+            print("***CLASS INIT 1: %s" % self.__class__._name)
 
             # lets make sure the initial loglevel gets set
             self._logger_set(children=False, parents=False)
@@ -107,31 +100,48 @@ class JSBase:
     def __init_class_post(self):
         pass
 
-    def __inspect(self):
-        # print("INSPECT:%s"%self.__class__)
-        assert self.__class__.__names_methods_ == []
-        assert self.__class__.__names_properties_ == []
+    def __inspect(self, include_prefix=None, exclude_prefix=None):
+        """
+
+        returns properties and methods of the class/object
+
+        properties,methods = self.__inspect()
+
+        :return: (properties,methods)
+        """
+        print("INSPECT:%s" % self.__class__)
+        properties = []
+        methods = []
         for name, obj in inspect.getmembers(self.__class__):
+            if include_prefix and not name.startswith(include_prefix):
+                continue
+            if exclude_prefix and name.startswith(exclude_prefix):
+                continue
             if inspect.ismethod(obj):
-                self.__class__.__names_methods_.append(name)
-            # elif name.startswith("_"):
-            #     continue
+                methods.append(name)
             elif inspect.ismethoddescriptor(obj):
                 continue
             elif inspect.isfunction(obj):
-                self.__class__.__names_methods_.append(name)
+                methods.append(name)
             elif inspect.isclass(obj):
-                self.__class__.__names_properties_.append(name)
+                properties.append(name)
             elif inspect.isgetsetdescriptor(obj):
                 continue
             else:
-                self.__class__.__names_properties_.append(name)
+                properties.append(name)
 
         for item in self.__dict__.keys():
-            if item.startswith("_"):
+            if include_prefix and not name.startswith(include_prefix):
                 continue
-            if item not in self._methods_:
-                self.__class__.__names_properties_.append(item)
+            if exclude_prefix and name.startswith(exclude_prefix):
+                continue
+            if item not in properties:
+                properties.append(item)
+        return properties, methods
+
+    @property
+    def _key(self):
+        return self._name
 
     def _logging_enable_check(self):
         """
@@ -148,7 +158,6 @@ class JSBase:
         """
         if j.core.myenv.config.get("DEBUG", False):
             return True
-        self._key = self._key.lower()
 
         def check(checkitems):
             for finditem in checkitems:
@@ -223,7 +232,7 @@ class JSBase:
                         # print("%s:minlevel:%s"%(kl,minlevel))
                         kl._logger_min_level = minlevel
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def _init_pre(self, **kwargs):
@@ -256,6 +265,7 @@ class JSBase:
     @property
     def _dirpath(self):
         if self.__class__._dirpath_ == "":
+            print("DIRPATH")
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
 
             if not self.__class__._dirpath_:
@@ -311,7 +321,7 @@ class JSBase:
 
     def __check(self):
         for key in self.__dict__.keys():
-            if key not in self.__class__.__names_properties_:
+            if key not in self.__class__._names_properties_:
                 raise RuntimeError("a property was inserted which should not be there")
 
     ################
@@ -359,10 +369,6 @@ class JSBase:
         # if j.application._in_autocomplete:
         #     return None
 
-        try:
-            self.__class__._logger_min_level
-        except:
-            j.shell()
         if j.application.debug or self.__class__._logger_min_level - 1 < level:
             # now we will log
 
@@ -489,7 +495,7 @@ class JSBase:
             name = self.__name_get(item)
             if not name:
                 continue
-            if filter == "":
+            if not filter:
                 pass
             elif name.startswith("_"):
                 continue
@@ -523,10 +529,9 @@ class JSBase:
         return res
 
     def __parent_name_get(self):
-        from pudb import set_trace
-
-        set_trace()
-        return self.__name_get(self.parent)
+        if self._parent:
+            return self.__name_get(self._parent)
+        return ""
 
     def __children_names_get(self, filter=None):
         return self.__filter(filter=filter, llist=self.__children_get(filter=filter))
@@ -611,7 +616,7 @@ class JSBase:
 
         :return: list of the names
         """
-        # return self.__filter(filter=filter, llist=self.__names_methods_)
+        # return self.__filter(filter=filter, llist=self._names_methods_)
         return []
 
     def __methods_names_get(self, filter=None):
@@ -625,7 +630,8 @@ class JSBase:
                 everything else is a full match
 
         """
-        return self.__filter(filter=filter, llist=self.__names_methods_)
+        properties, methods = self.__inspect()
+        return self.__filter(filter=filter, llist=methods)
 
     def __properties_names_get(self, filter=None):
         """
@@ -639,10 +645,11 @@ class JSBase:
 
         """
         others = self.__children_names_get(filter=filter)
-        pname = self.__name_parent()
+        pname = self.__parent_name_get()
         if pname not in others:
             others.append(pname)
-        res = [i for i in self.__filter(filter=filter, llist=self.__names_properties_) if i not in others]
+        properties, methods = self.__inspect()
+        res = [i for i in self.__filter(filter=filter, llist=properties) if i not in others]
         return res
 
     def __props_all_names(self):
@@ -661,10 +668,10 @@ class JSBase:
         :param name:
         :return:
         """
-        if self.__class__.__protected:
-            if name in self.__names_properties_:
+        if self.__class__._protected:
+            if name in self._names_properties_:
                 return True
-            if name in self.__names_methods_:
+            if name in self._names_methods_:
                 return True
             if self.__members_get(filter=name):
                 return True
@@ -711,8 +718,8 @@ class JSBase:
 
     def __str__(self):
 
-        out = "## {GRAY}%s {RED}%s{BLUE} %s{RESET}\n\n" % (
-            self.__objcat_name,
+        out = "## {GRAY}{RED}%s{BLUE} %s{RESET}\n\n" % (
+            # self._objcat_name,
             self.__class__._location,
             self.__class__.__name__,
         )

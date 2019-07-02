@@ -20,17 +20,17 @@ class Apps_TestCases(BaseTest):
         self.deploy_flist_container("cmake")
         logger.debug("Check that cmake flist works by run cmake command, should succeed. ")
         self.assertIn("Usage", self.check_container_flist("/sandbox/bin/cmake"))
-    
+
     def test002_capnp(self):
         """ SAN-020
         *Test capnp builer sandbox*
         """
         logger.debug("Run  capnp sandbox, should succeed and upload flist on hub.")
-        j.builders.libs.capnp.sandbox(**self.sandbox_args) 
+        j.builders.libs.capnp.sandbox(**self.sandbox_args)
         logger.debug("Deploy container with uploaded capnp builder flist.")
         self.deploy_flist_container("capnp")
         logger.debug("Check that capnp flist works by checking capnp file existing, should succeed. ")
-        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/capnp --help")) 
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/capnp --help"))
 
     @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/660")
     def test003_libffi(self):
@@ -59,13 +59,10 @@ class Apps_TestCases(BaseTest):
     def test005_openssl(self):
         """ SAN-023
         *Test openssl builer sandbox*
-        """ 
+        """
         logger.debug("Run  openssl sandbox, should succeed and upload flist on hub.")
         j.builders.libs.openssl.sandbox(**self.sandbox_args)
         logger.debug("Deploy container with uploaded openssl builder flist.")
         self.deploy_flist_container("openssl")
         logger.debug("Check that openssl flist works by checking openssl file existing, should succeed. ")
-        self.assertIn("Standard commands", self.check_container_flist("/sandbox/bin/openssl help"))     
-
-
-
+        self.assertIn("Standard commands", self.check_container_flist("/sandbox/bin/openssl help"))

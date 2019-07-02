@@ -4,8 +4,8 @@ JSBASE = j.application.JSBaseClass
 
 
 class SchemaProperty(j.application.JSBaseClass):
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self):
+
         self.name = ""
         self.jumpscaletype = None
         self.comment = ""

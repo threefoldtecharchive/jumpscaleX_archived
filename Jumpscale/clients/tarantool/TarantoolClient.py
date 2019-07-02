@@ -21,7 +21,7 @@ class TarantoolClient(JSBASE):
     password_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         ip = self.ip
         port = self.port

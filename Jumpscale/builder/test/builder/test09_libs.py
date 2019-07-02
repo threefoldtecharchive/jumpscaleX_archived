@@ -70,11 +70,9 @@ class Libs_TestCases(BaseTest):
         logger.debug("openssl builder: run build method.")
         j.builders.libs.openssl.build(reset=True)
         logger.debug("openssl builder: run install method.")
-        j.builders.libs.openssl.install() 
+        j.builders.libs.openssl.install()
         try:
             logger.debug("check that openssl is installed successfully")
             j.sal.process.execute("which openssl")
         except:
             self.assertTrue(False)
-    
-    

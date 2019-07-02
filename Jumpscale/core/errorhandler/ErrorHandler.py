@@ -74,6 +74,7 @@ class ErrorHandler:
         if die:
             if self._j.core.myenv.debug:
                 pudb.post_mortem(tb)
+            self._j.shell()
             self._j.core.tools.pprint("{RED}CANNOT CONTINUE{RESET}")
             sys.exit(1)
         else:

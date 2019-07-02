@@ -18,7 +18,7 @@ class PeeweeClient(JSConfigClient):
     cache = true (B)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.passwd = self.passwd_
         self._model = None
 

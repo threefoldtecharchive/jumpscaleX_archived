@@ -6,7 +6,7 @@ adds test management to JSBASE
 """
 
 
-class JSBaseFactory(JSBase):
+class JSFactoryTools:
 
     #### TESTING FUNCTIONALITY
 

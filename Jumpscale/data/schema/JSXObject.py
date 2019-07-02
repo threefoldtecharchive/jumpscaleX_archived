@@ -2,15 +2,17 @@ from Jumpscale import j
 
 
 class JSXObject(j.application.JSBaseClass):
-    def __init__(self, capnpdata=None, datadict={}, schema=None, model=None):
-
+    def _init_pre(self, capnpdata=None, datadict={}, schema=None, model=None):
         self._capnp_obj_ = None
         self.id = None
-        self.nid = 1
+        assert schema
         self._schema = schema
         self._model = model
         if model:
             assert self._schema == self._model.schema  # they need to be the same
+
+        self.nid = 1
+
         self._deserialized_items = {}
         self._autosave = False
         self.acl_id = None
@@ -20,19 +22,14 @@ class JSXObject(j.application.JSBaseClass):
         if datadict:
             self._data_update(datadict)
 
-        j.application.JSBaseClass.__init__(self)
-
-        if self.id:
-            self._key = "%s:%s" % (self._schema.url, self.id)
-        else:
-            self._key = self._schema.url
         self._logger_enable()
-        self._log_debug("1")
 
     @property
-    def _readonly(self):
-        return False
-        return self._readonly
+    def _key(self):
+        if hasattr(self, "id") and self.id:
+            return "%s:%s" % (self._schema.url, self.id)
+        else:
+            return self._schema.url
 
     @property
     def _readonly(self):

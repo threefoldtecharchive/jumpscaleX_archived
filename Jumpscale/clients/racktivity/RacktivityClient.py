@@ -21,5 +21,5 @@ class RacktivityClient(JSConfigClient, RackSal):
     port = 80 (ipport)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         RackSal.__init__(self, self.username, self.password_, self.hostname, self.port, rtf=None, moduleinfo=None)

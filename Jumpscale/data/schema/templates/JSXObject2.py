@@ -162,7 +162,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             d=self._model._dict_process_out(d)
         return d
 
-    def _ddict_hr_get(self,exclude=[]):
+    def _ddict_hr_get(self,exclude=[],ansi=False):
         """
         human readable dict
         """

@@ -50,7 +50,7 @@ class TutorialCacheClass(j.application.JSBaseClass):
         self._log_info(j.tools.dnstools._dirpath)
 
 
-def dothis():
+def main():
 
     c = TutorialCacheClass()
     c.cache.reset()

@@ -5,7 +5,7 @@ import traceback
 
 ### the base ones
 from .BASECLASSES.JSBase import JSBase
-from .BASECLASSES.JSBaseFactory import JSBaseFactory
+from .BASECLASSES.JSFactoryTools import JSFactoryTools
 
 ####
 
@@ -21,34 +21,38 @@ class JSGroup:
     pass
 
 
-class JSFactoryConfigsBaseClass(JSBaseFactory, JSConfigs):
+class JSFactoryConfigsBaseClass(JSFactoryTools, JSConfigs):
     """
     as used for j.... factory classes will has constructor for 1 type of Config children
 
     class myclass(j.application.JSFactoryConfigsBaseClass):
-        def _init(self):
+        def _init(self,**kwargs):
             ...
 
     """
 
 
-class JSBaseConfigsClass(JSBase, JSConfigs):
+class JSBaseConfigsClass(JSConfigs):
     """
     is not for a factory (doesn't have the test or __location__ inside
     has support for 1 type of children
     """
 
 
-class JSBaseConfigClass(JSBase, JSConfig):
+class JSBaseConfigClass(JSConfig):
     """
     no children, only 1 data object
     """
 
 
-class JSBaseConfigsFactoryClass(JSBase, JSConfigsFactory):
+class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
     """
     no children, only 1 data object
     """
+
+
+class JSBaseFactoryClass(JSBase, JSFactoryTools):
+    pass
 
 
 class Application(object):
@@ -83,12 +87,12 @@ class Application(object):
         # self.JSConfigClass = JSConfig
         self.JSFactoryConfigsBaseClass = JSFactoryConfigsBaseClass  # for e.g. clients, factory for 1 type of children
         self.JSBaseClass = JSBase  # the most low level one
-        self.JSBaseFactoryClass = JSBaseFactory  # has tests handling on top of JSBase
         self.JSBaseConfigClass = JSBaseConfigClass  # 1 config obj, childre from configs
         self.JSBaseConfigsClass = JSBaseConfigsClass  # multiple config children
         self.JSConfigsFactory = JSConfigsFactory
         # factory on j... level for multipl JSConfigs children
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
+        self.JSBaseFactoryClass = JSBaseFactoryClass
 
     @property
     def appname(self):
