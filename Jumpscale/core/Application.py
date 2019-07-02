@@ -49,8 +49,6 @@ class Application(object):
 
         self.appname = "unknown"
 
-        self._in_autocomplete = False
-
         self.JSBaseDataObjClass = JSBaseDataObj
 
     @property
