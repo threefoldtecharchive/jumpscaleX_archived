@@ -46,3 +46,37 @@ class Storage_TestCases(BaseTest):
         time.sleep(10)
         logger.debug("check that syncthing server stopped successfully.")
         self.assertEqual(0, len(j.sal.process.getProcessPid("syncthing")))
+
+    def test003_restic(self):
+        """ BLD-033
+        *Test restic builer sandbox*
+        """
+        logger.debug("restic builder: run build method.")
+        j.builders.storage.restic.build(reset=True)
+        logger.debug("restic builder: run install method.")
+        j.builders.storage.restic.install()
+        try:
+            logger.debug("check that libffi is installed successfully")
+            j.sal.process.execute("which restic")
+        except:
+            self.assertTrue(False)
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/671")
+    def test004_s3scality(self):
+        """ BLD-034
+        *Test s3scality builer sandbox*
+        """
+        logger.debug("s3scality builder: run build method.")
+        j.builders.storage.s3scality.build(reset=True)
+        logger.debug("s3scality builder: run install method.")
+        j.builders.storage.s3scality.install()
+        logger.debug("s3scality builder: run start method.")
+        j.builders.storage.s3scality.start()
+        logger.debug("check that s3scality  server started successfully.")
+        time.sleep(10)
+        self.assertTrue(len(j.sal.process.getProcessPid("s3scality")))
+        logger.debug("s3scality builder: run stop method.")
+        j.builders.storage.s3scality.stop()
+        time.sleep(10)
+        logger.debug("check that s3scality server stopped successfully.")
+        self.assertEqual(0, len(j.sal.process.getProcessPid("s3scality")))
