@@ -2,19 +2,17 @@ from Jumpscale import j
 from random import randint
 from unittest import TestCase
 import requests
-import configparser
+from testconfig import config
 
 
 class BaseTest(TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.config = configparser.ConfigParser()
-        self.config.read("config.ini")
-        self.client_id = self.config["itsyou"]["client_id"]
-        self.client_secret = self.config["itsyou"]["client_secret"]
-        self.username = self.config["itsyou"]["username"]
-        self.node_ip = self.config["zos_node"]["node_ip"]
-        self.node_jwt = self.config["zos_node"]["node_jwt"]
+        self.client_id = config["itsyou"]["client_id"]
+        self.client_secret = config["itsyou"]["client_secret"]
+        self.username = config["itsyou"]["username"]
+        self.node_ip = config["zos_node"]["node_ip"]
+        self.node_jwt = config["zos_node"]["node_jwt"]
 
     def setUp(self):
         self.iyo_instance = "iyo_instance_{}".format(randint(1, 1000))
@@ -29,6 +27,12 @@ class BaseTest(TestCase):
 
         self.node_instance = "node_instance_{}".format(randint(1, 1000))
         self.node = j.clients.zos.get(name=self.node_instance, password=self.node_jwt, host=self.node_ip)
+        self.sandbox_args = dict(
+            zhub_client=self.zhub,
+            reset=True,
+            flist_create=True,
+            merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+        )
 
     def tearDown(self):
         pass
@@ -42,4 +46,6 @@ class BaseTest(TestCase):
         self.cont_client = self.node.client.container.client(self.cont.get())
 
     def check_container_flist(self, command):
-        return self.cont_client.system(command).get()
+        data = self.cont_client.system(command).get()
+        return data.stdout
+
