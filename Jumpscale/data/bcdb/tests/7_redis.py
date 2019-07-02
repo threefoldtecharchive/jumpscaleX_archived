@@ -19,7 +19,7 @@ def main(self):
     def do(zdb=False):
         cmd = """
         . /sandbox/env.sh;
-        kosmos 'j.data.bcdb.new("test").redis_server_start(port=6380)'
+        kosmos 'j.data.bcdb.get("test").redis_server_start(port=6380)'
         """
         j.servers.tmux.execute(cmd)
         j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=15)
