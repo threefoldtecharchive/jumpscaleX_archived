@@ -11,9 +11,8 @@ class JSXObject(j.application.JSBaseClass):
         if model:
             assert self._schema == self._model.schema  # they need to be the same
 
-        self.nid = 1
-
         self._deserialized_items = {}
+
         self._autosave = False
         self.acl_id = None
         self._acl = None
@@ -21,6 +20,8 @@ class JSXObject(j.application.JSBaseClass):
         self._load_from_data(capnpdata=capnpdata)  # ONLY LOADS THE self._capnp_obj_
         if datadict:
             self._data_update(datadict)
+
+        # self.nid = 1
 
         self._logger_enable()
 

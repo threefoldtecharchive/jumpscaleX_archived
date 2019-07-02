@@ -17,7 +17,7 @@ class JSConfigs(JSBase):
     def _model(self):
         if self._model_ is None:
             # self._log_debug("Get model for %s"%self.__class__._location)
-            bcbd = self._bcdb_selector()
+            bcdb = self._bcdb_selector()
             self._model_ = bcdb.model_get_from_schema(self.__class__._CHILDCLASS._SCHEMATEXT)
         return self._model_
 

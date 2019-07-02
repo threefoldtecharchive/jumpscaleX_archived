@@ -90,9 +90,6 @@ class BCDBMeta(j.application.JSBaseClass):
             r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
             r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
 
-        assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
-        assert self._sid_to_model[s.sid].schema._md5 == s.md5
-
         if initial:
             assert self._sid_to_model[s.sid].schema._md5  # make sure its not empty
             assert self._sid_to_model[s.sid].schema._md5 == s.md5
