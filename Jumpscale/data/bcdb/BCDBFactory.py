@@ -294,14 +294,6 @@ class BCDBFactory(j.application.JSBaseClass):
         # print(items)
         return items
 
-    def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self.__names_methods() or name in self.__names_properties():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name)
-        return r
-
     def __setattr__(self, key, value):
         if key in ["system", "test"]:
             raise RuntimeError("no system or test allowed")

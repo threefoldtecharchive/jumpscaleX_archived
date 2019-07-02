@@ -139,6 +139,27 @@ class BCDBVFS(j.application.JSBaseClass):
         else:
             return []
 
+        """return the bcdb name or root directory of the path
+        if the path begins by data or schemas we will return the 
+        current bcdb name
+        
+        Arguments:
+            path {sting} -- path
+
+        Returns:
+             string -- bcdb name
+        """
+        """  def _get_bcdb_name_from_path(self, path):
+        splitted = path.lower().split("/")
+        # make sure that the first and last element are not empty and not the bcdb name
+        while splitted[0] == "":
+            splitted.pop(0)
+        if splitted[0] == self.root_dir or splitted[0] in self.directories_under_root:
+            return self.root_dir
+        elif len(splitted) == 1:
+            return splitted[0]
+        elif  len(splitted) >= 1: """
+
     def get(self, path):
         splitted = self._split_clean_path(path)
         self._log_info("vfs get path:%s " % path)
@@ -378,14 +399,13 @@ class BCDBVFS(j.application.JSBaseClass):
         if j.data.schema.exists(schema_hash):
             self._bcdb.meta._schema_set(j.data.schema.get_from_md5(schema_hash))
         else:
-            raise Exception("Can't find schema with hash:%s" % ( schema_hash),5)
-
+            raise Exception("Can't find schema with hash:%s" % (schema_hash), 5)
 
     def _get_hash_to_sid_and_url(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
         for k, v in md5_to_url.items():
-            if not  k  in self._bcdb.meta._schema_md5_to_sid:
+            if not k in self._bcdb.meta._schema_md5_to_sid:
                 self._force_schema_add(k)
             res[k] = (self._bcdb.meta._schema_md5_to_sid[k], v)
         return res
@@ -453,8 +473,8 @@ class BCDBVFS(j.application.JSBaseClass):
             schemas = j.data.schema.add_from_text(schemas_text)
             if schemas:
                 for s in schemas:
-                    r = self._bcdb.meta._schema_set(s) # add the schema to the bcdb meta 
-                    self._bcdb.model_get_from_schema(s) #should create the model based on the schema
+                    r = self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta
+                    self._bcdb.model_get_from_schema(s)  # should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
                     key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)
@@ -675,8 +695,19 @@ class BCDBVFS(j.application.JSBaseClass):
             keys = self._get_all_data_keys_linked(key, obj_id, info)
             # removing from cache
             removed_obj_by_sid = self._dirs_cache.pop(keys[0][0], None)
+            self._dirs_cache.pop(keys[0][1], None)
             removed_obj_by_url = self._dirs_cache.pop(keys[1][0], None)
+            self._dirs_cache.pop(keys[1][1], None)
             removed_obj_by_hash = self._dirs_cache.pop(keys[2][0], None)
+            self._dirs_cache.pop(keys[2][1], None)
+            # update data dir after delete
+            key_sid=keys[0][1].replace("_","/")
+            key_url=keys[1][1].replace("_","/")
+            key_hash=keys[2][1].replace("_","/")
+            self._get_data_items(self._split_clean_path(key_sid), self._get_nid_from_data_key(keys[0][1]), key_sid)
+            self._get_data_items(self._split_clean_path(key_url), self._get_nid_from_data_key(keys[1][1]), key_url)
+            self._get_data_items(self._split_clean_path(key_hash), self._get_nid_from_data_key(keys[2][1]),key_hash)
+
             return [removed_obj_by_sid, removed_obj_by_url, removed_obj_by_hash]
         else:
             raise Exception("key:%s is not a data key. Update cache data can only work with data keys" % key)
