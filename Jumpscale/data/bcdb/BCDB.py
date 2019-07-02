@@ -319,7 +319,6 @@ class BCDB(j.application.JSBaseClass):
             yield model
 
     def model_get_from_sid(self, sid, namespaceid=1):
-        md5 = None
         if sid in self.meta._sid_to_model:
             return self.meta._sid_to_model[sid]
         else:
@@ -403,6 +402,7 @@ class BCDB(j.application.JSBaseClass):
                 # means we already know the schema
             else:
                 sid = self._schema_add(schema)  # this will make sure the schema is registered on the metadata level
+                self.meta._schema_md5_to_sid[schema._md5] = sid
 
         if sid in self.meta._sid_to_model:
             return self.meta._sid_to_model[sid]

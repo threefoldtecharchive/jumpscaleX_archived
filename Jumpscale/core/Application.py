@@ -78,7 +78,7 @@ class Application(object):
 
         self.appname = "unknown"
 
-        self._in_autocomplete = False
+        # self._in_autocomplete = False
 
         # self.JSConfigClass = JSConfig
         self.JSFactoryConfigsBaseClass = JSFactoryConfigsBaseClass  # for e.g. clients, factory for 1 type of children

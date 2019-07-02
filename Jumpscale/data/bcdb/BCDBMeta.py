@@ -127,11 +127,11 @@ class BCDBMeta(j.application.JSBaseClass):
         for s in self._data.schemas:
             self._load_schema_obj(s, initial=True)
 
-        for n in self._data.namespaces:
-            if n.nid > self._namespace_last_id:
-                self._namespace_last_id = n.nid
-
-            r.hset(self._redis_key_lookup_nid2meta, n._json)
+        # Probably not used anywhere
+        # for n in self._data.namespaces:
+        #    if n.nid > self._namespace_last_id:
+        #        self._namespace_last_id = n.nid
+        #    r.hset(self._redis_key_lookup_nid2meta, n._json)
 
     def _save(self):
 

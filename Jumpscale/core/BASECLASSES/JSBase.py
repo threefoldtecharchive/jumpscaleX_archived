@@ -354,11 +354,10 @@ class JSBase:
         - DEBUG 	10
 
         """
-        if j.application._in_autocomplete == 2:
-            raise RuntimeError("s")
-        if j.application._in_autocomplete:
-            return None
-        from pudb import set_trace
+        # if j.application._in_autocomplete == 2:
+        #     raise RuntimeError("s")
+        # if j.application._in_autocomplete:
+        #     return None
 
         try:
             self.__class__._logger_min_level

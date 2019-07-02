@@ -25,7 +25,6 @@ def main(self):
     assert model.bcdb.queue.empty() is True
 
     model.set_dynamic(model_obj)
-
     model_obj2 = model.get(model_obj.id)
     assert model_obj2._data == model_obj._data
 
