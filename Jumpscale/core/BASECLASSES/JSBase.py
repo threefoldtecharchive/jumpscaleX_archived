@@ -5,6 +5,7 @@ import os
 # import sys
 import inspect
 import types
+
 """
 the lowest level class, every object in Jumpscale inherits from this one
 
@@ -17,6 +18,7 @@ functions
 - state on execution of methods (the _done methods)
 
 """
+
 
 class JSBase:
     def __init__(self, parent=None, topclass=True, **kwargs):
@@ -673,8 +675,6 @@ class JSBase:
             return True
 
     ###################
-
-d
 
     def __getattr__(self, attr):
         if not self.__prop_exist(attr):
