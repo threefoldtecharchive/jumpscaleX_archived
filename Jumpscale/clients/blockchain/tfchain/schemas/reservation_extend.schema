@@ -2,3 +2,4 @@
 type = "extension" (S)
 duration = (I)
 transaction_id = (S)
+email = (email)

@@ -95,12 +95,14 @@ class TFChainCapacity:
             self._wallet.save()
         return self._wallet.reservations_transactions
 
-    def reservation_extend(self, transaction_id, duration=1, source=None, refund=None):
+    def reservation_extend(self, transaction_id, email, duration=1, source=None, refund=None):
         """
         extend the expiry of an existing reservation
 
         :param transaction_id: id of the transaction that was created for the reservation you want to extend
         :type transaction_id: string
+        :param email: email address on which to send the result of the extension
+        :type email: string
         :param duration: number of months to extend the expiry by
         :type duration: int
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
@@ -132,7 +134,7 @@ class TFChainCapacity:
         reservation =  j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
 
         amount = reservation_amount(reservation)
-        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(data={"duration": duration, "transaction_id": transaction.id})
+        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(data={"duration": duration, "transaction_id": transaction.id, "email": email})
 
         signature = self._sign_reservation(threebot_id, extension)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
