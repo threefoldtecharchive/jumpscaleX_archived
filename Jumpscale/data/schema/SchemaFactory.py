@@ -7,7 +7,7 @@ from .JSXObject import JSXObject
 JSBASE = j.application.JSBaseClass
 
 
-class SchemaFactory(j.application.JSBaseClass):
+class SchemaFactory(j.application.JSBaseFactoryClass):
     __jslocation__ = "j.data.schema"
 
     def _init(self):

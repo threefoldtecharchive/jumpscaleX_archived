@@ -44,8 +44,8 @@ class JSBase:
 
         if not hasattr(self.__class__, "__init_class_done"):
 
-            if not topclass:
-                return
+            # if not topclass:
+            #     return
 
             # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
@@ -358,7 +358,12 @@ class JSBase:
             raise RuntimeError("s")
         if j.application._in_autocomplete:
             return None
+        from pudb import set_trace
 
+        try:
+            self.__class__._logger_min_level
+        except:
+            j.shell()
         if j.application.debug or self.__class__._logger_min_level - 1 < level:
             # now we will log
 
@@ -519,6 +524,9 @@ class JSBase:
         return res
 
     def __parent_name_get(self):
+        from pudb import set_trace
+
+        set_trace()
         return self.__name_get(self.parent)
 
     def __children_names_get(self, filter=None):
@@ -676,20 +684,20 @@ class JSBase:
 
     ###################
 
-    def __getattr__(self, attr):
-        if not self.__prop_exist(attr):
-            raise RuntimeError("did not find attr:%s" % attr)
+    # def __getattr__(self, attr):
+    #     if not self.__prop_exist(attr):
+    #         raise RuntimeError("did not find attr:%s" % attr)
+    #
+    #     # if attr.startswith("_"):
+    #     return self.__getattribute__(attr)
+    #
+    # def __setattr__(self, attr, value):
+    #     if not self.__prop_exist(attr):
+    #         raise RuntimeError("did not find attr:%s" % attr)
+    #
+    #     self.__dict__[attr] = value
 
-        # if attr.startswith("_"):
-        return self.__getattribute__(attr)
-
-    def __setattr__(self, attr, value):
-        if not self.__prop_exist(attr):
-            raise RuntimeError("did not find attr:%s" % attr)
-
-        self.__dict__[attr] = value
-
-        # return self.__setattribute__(attr)
+    # return self.__setattribute__(attr)
 
     # if key.startswith("_") or key == "data":
     #     self.__dict__[key] = value

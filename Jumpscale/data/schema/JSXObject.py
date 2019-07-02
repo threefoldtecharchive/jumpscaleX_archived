@@ -36,7 +36,9 @@ class JSXObject(j.application.JSBaseClass):
 
     @property
     def _readonly(self):
-        return self._model.readonly
+        if self._model:
+            return self._model.readonly
+        return False
 
     @property
     def _capnp_schema(self):

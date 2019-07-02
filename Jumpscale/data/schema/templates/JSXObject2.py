@@ -204,7 +204,14 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% if prop.is_jsxobject %}
         out+= j.core.text.indent(self.{{prop.name}}._str_get(ansi=ansi).rstrip(),4)+"\n"
         {% elif prop.is_list %}
-        out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}}).rstrip()
+
+        items = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
+        if items:
+            out+= "{{prop.name_str}}:\n"
+            for item in items:
+                out+= "    - %s\n"%item.rstrip()
+        else:
+            out+= "{{prop.name_str}}: []\n"
         {% else %}
         out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}}).rstrip()
         {% endif %}

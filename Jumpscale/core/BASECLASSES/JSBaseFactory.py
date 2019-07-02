@@ -1,4 +1,5 @@
 from .JSBase import JSBase
+from Jumpscale import j
 
 """
 adds test management to JSBASE
@@ -38,12 +39,12 @@ class JSBaseFactory(JSBase):
             self._log_info("ALL TESTS OK")
         return res
 
-    def _code_run(self, path, obj_key="main", die=True, **kwargs):
+    def _code_run(self, path, name=None, obj_key="main", die=True, **kwargs):
         if not path.startswith("/"):
             path = self._dirpath + "/" + path
         assert j.sal.fs.exists(path)
-        method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
-        self._log_debug("##:LOAD: path: %s\n\n" % tpath)
+        method = j.tools.codeloader.load(obj_key=obj_key, path=path)
+        self._log_debug("##:LOAD: path: %s\n\n" % path)
         if die or j.application.debug:
             res = method(self=self, **kwargs)
         else:
@@ -54,9 +55,9 @@ class JSBaseFactory(JSBase):
                     raise e
                 else:
                     j.errorhandler.try_except_error_process(e, die=False)
-                self.__class__._test_runs_error[name] = e
+                # self.__class__._test_runs_error[name] = e
                 return e
-            self.__class__._test_runs[name] = res
+            # self.__class__._test_runs[name] = res
         return res
 
     def __find_code(self, name, path="tests", recursive=True):
@@ -85,7 +86,7 @@ class JSBaseFactory(JSBase):
 
         if name is not None:
             tpath = self.__find_code(name=name)
-            self._code_run(path=tpath, obj_key=obj_key, die=die, **kwargs)
+            self._code_run(name=name, path=tpath, obj_key=obj_key, die=die, **kwargs)
             self._log_debug("##: path: %s\n\n" % tpath)
         else:
             items = [
