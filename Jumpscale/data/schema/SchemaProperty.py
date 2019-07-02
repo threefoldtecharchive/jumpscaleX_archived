@@ -16,6 +16,7 @@ class SchemaProperty(j.application.JSBaseClass):
         self._default = None
         self.index = False  # as used in sqlite
         self.index_key = False  # is for indexing the keys
+        self.index_text = False  # is for full text index
         self.unique = False  # to check if type is unique or not
         if self.name in ["schema"]:
             raise RuntimeError("cannot have property name:%s" % self.name)
@@ -29,6 +30,14 @@ class SchemaProperty(j.application.JSBaseClass):
         if self._default:
             return self._default
         return self.jumpscaletype.default_get()
+
+    @property
+    def has_jsxobject(self):
+        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "jsobject":
+            return True
+        if self.jumpscaletype.NAME == "jsobject":
+            return True
+        return False
 
     @property
     def default_as_python_code(self):

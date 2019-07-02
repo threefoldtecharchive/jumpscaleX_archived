@@ -80,7 +80,6 @@ def main(self):
                 raise RuntimeError("the id should not be in the redis index")
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
-    assert m2.schema.sid == m.schema.sid
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
@@ -125,9 +124,9 @@ def main(self):
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
     a = j.servers.zdb.client_admin_get()
-    zdbclient2 = a.namespace_new("test2", secret="12345")
+    storclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.get("test2", zdbclient2)
+    bcdb2 = j.data.bcdb.new("test2", storclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()

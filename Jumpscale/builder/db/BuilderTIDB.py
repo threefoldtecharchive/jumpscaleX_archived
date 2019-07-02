@@ -35,15 +35,15 @@ class BuilderTIDB(j.builders.system._BaseClass):
         data_dir = j.sal.fs.joinPaths(self.DIR_VAR, "pd")
         self.tools.dir_ensure(data_dir)
         pd_cmd = "pd-server --data-dir={data_dir}".format(data_dir=data_dir)
-        cmds.append(j.tools.startupcmd.get(name="pd", cmd=pd_cmd))
+        cmds.append(j.servers.startupcmd.get(name="pd", cmd=pd_cmd))
 
         store_dir = j.sal.fs.joinPaths(self.DIR_VAR, "tikv")
         self.tools.dir_ensure(store_dir)
         kv_cmd = "tikv-server --pd='127.0.0.1:2379' --store={store_dir}".format(store_dir=store_dir)
-        cmds.append(j.tools.startupcmd.get(name="kv", cmd=kv_cmd))
+        cmds.append(j.servers.startupcmd.get(name="kv", cmd=kv_cmd))
 
         ti_cmd = "tidb-server --path='127.0.0.1:2379' --store=tikv"
-        cmds.append(j.tools.startupcmd.get(name="ti", cmd=ti_cmd))
+        cmds.append(j.servers.startupcmd.get(name="ti", cmd=ti_cmd))
         return cmds
 
     @builder_method()

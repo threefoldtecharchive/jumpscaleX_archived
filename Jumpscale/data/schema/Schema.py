@@ -155,6 +155,9 @@ class Schema(j.application.JSBaseClass):
             p = SchemaProperty()
 
             name = propname + ""  # make sure there is copy
+            if name.endswith("***"):
+                name = name[:-3]
+                p.index_text = True
             if name.endswith("**"):
                 name = name[:-2]
                 p.index = True
@@ -293,20 +296,29 @@ class Schema(j.application.JSBaseClass):
 
         return self._obj_class
 
-    def get(self, data=None, model=None):
+    def get(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
         get schema_object using data and capnpbin
-        :param data dict, bytes or json(dict)
+
+        :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
+        :param capnpdata is data in capnpdata
+        :param datadict is dict of arguments
+
         :param model: will make sure we save in the model
         :return:
         """
-        if isinstance(data, bytes):
-            return j.data.serializers.jsxdata.loads(data)
-        return self._get(data=data, model=model)
-
-    def _get(self, data=None, model=None):
-        obj = self.objclass(schema=self, data=data, model=model)
-        return obj
+        if isinstance(serializeddata, bytes):
+            return j.data.serializers.jsxdata.loads(serializeddata, model=model)
+        elif isinstance(capnpdata, bytes):
+            obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
+            return obj
+        elif datadict:
+            obj = self.objclass(schema=self, datadict=datadict, model=model)
+            return obj
+        elif capnpdata is None and serializeddata is None and datadict == None:
+            return self.objclass(schema=self, model=model)
+        else:
+            raise RuntimeError("only support binary data or dict as kwargs")
 
     def new(self, model=None, data=None):
         """
@@ -314,7 +326,10 @@ class Schema(j.application.JSBaseClass):
         """
         if isinstance(data, bytes):
             raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        r = self.get(data=data, model=model)
+        if data and isinstance(data, dict):
+            r = self.get(model=model, datadict=data)
+        else:
+            r = self.get(model=model)
         if model is not None:
             model.triggers_call(r, "new")
         return r
@@ -376,9 +391,21 @@ class Schema(j.application.JSBaseClass):
         res = [item.name for item in self.properties]
         return res
 
+    @property
+    def _json(self):
+        out = "{"
+        out += '"url":"%s",' % self.url
+        for item in self.propertynames:
+            prop = self.__getattribute__("property_%s" % item)
+            out += '"%s":"%s",' % (str(prop.name), str(prop.jumpscaletype.NAME))
+        out = out.rstrip(",")
+        out += "}"
+        return out
+
     def __str__(self):
         out = "## SCHEMA: %s\n\n" % self.url
         for item in self.properties:
+
             out += str(item) + "\n"
         out += str(self.systemprops)
         return out

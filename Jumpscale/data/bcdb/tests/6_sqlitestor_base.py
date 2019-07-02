@@ -10,7 +10,7 @@ def main(self):
     use a bcdb which is using sqlite
 
     """
-    bcdb, _ = self._load_test_model(reset=True, sqlitestor=True)
+    bcdb, _ = self._load_test_model(reset=True, type="sqlite")
 
     mpath = self._dirpath + "/tests/models"
     assert j.sal.fs.exists(mpath)
@@ -23,7 +23,7 @@ def main(self):
     model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
     assert model.find() == []
 
-    assert model.bcdb.zdbclient is None
+    assert model.bcdb.storclient is None
 
     model_obj = model.new()
     model_obj.cost = "10 USD"

@@ -76,6 +76,7 @@ class BuilderGitea(BuilderGolangTools):
         """
 
         config = textwrap.dedent(config)
+        self.tools.dir_ensure(j.sal.fs.getDirName(path))
         self._write(path, config)
 
     @builder_method()
@@ -84,18 +85,17 @@ class BuilderGitea(BuilderGolangTools):
         self.write_ini_config(self.INIPATH)
 
         try:
-            j.sal.process.killProcessByName("postgres")
-            j.sal.process.killProcessByName("gitea")
             self.stop()
         except j.exceptions.RuntimeError:
             # not started
             pass
 
-        self.start()
+        j.builders.db.postgres.start()
 
         _, out, _ = self._execute("sudo -u postgres {DIR_BIN}/psql -l")
         if "gitea" not in out:
             self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
+        self.start()
 
         # TODO:*3 would have been cleaner to use std postgresql client & do the query, this is super cumbersome
         cfg = """
@@ -124,7 +124,7 @@ class BuilderGitea(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
         return j.builders.db.postgres.startup_cmds + [cmd]
 
     @builder_method()
@@ -151,5 +151,4 @@ class BuilderGitea(BuilderGolangTools):
 
         # init config
         custom_dir = self._replace("{DIR_SANDBOX}/sandbox/bin/custom/conf")
-        self.tools.dir_ensure(custom_dir)
         self.write_ini_config("%s/app.ini" % custom_dir)

@@ -1077,6 +1077,8 @@ class Tools:
             logdict["context"] = ""
 
         p = print
+        if MyEnv.config['DEBUG'] and MyEnv.config.get('log_printer'):
+            p = MyEnv.config['log_printer']
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
@@ -1435,19 +1437,28 @@ class Tools:
     #
 
     @staticmethod
-    def process_pids_get_by_filter(filterstr):
+    def process_pids_get_by_filter(filterstr, excludes=[]):
         cmd = "ps ax | grep '%s'" % filterstr
         rcode, out, err = Tools.execute(cmd)
         # print out
         found = []
+
+        def checkexclude(c, excludes):
+            for item in excludes:
+                c = c.lower()
+                if c.find(item.lower()) != -1:
+                    return True
+            return False
+
         for line in out.split("\n"):
             if line.find("grep") != -1 or line.strip() == "":
                 continue
             if line.strip() != "":
                 if line.find(filterstr) != -1:
                     line = line.strip()
-                    # print "found pidline:%s"%line
-                    found.append(int(line.split(" ")[0]))
+                    if not checkexclude(line, excludes):
+                        # print "found pidline:%s"%line
+                        found.append(int(line.split(" ")[0]))
         return found
 
     @staticmethod
@@ -2580,6 +2591,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
                 "dnslib",
@@ -2773,9 +2785,9 @@ class UbuntuInstaller:
         apt-get update
         apt-get install -y curl rsync unzip
         locale-gen --purge en_US.UTF-8
-        
+
         apt-get install python3-pip -y
-        apt-get install locales -y        
+        apt-get install locales -y
 
         """
         Tools.execute(script, interactive=True)
@@ -2822,7 +2834,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "graphviz", "iputils-ping"]
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -3464,7 +3476,9 @@ class DockerContainer:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P {} -o StrictHostKeyChecking=no \
                     -o UserKnownHostsFile=/dev/null \
-                    -r {} root@localhost:/tmp/".format(self.config.sshport, src1)
+                    -r {} root@localhost:/tmp/".format(
+                    self.config.sshport, src1
+                )
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
@@ -3488,9 +3502,9 @@ class DockerContainer:
 
         # if you use a container do:
         jsx container-kosmos
-        
+
         or
-        
+
         kosmos
 
         """

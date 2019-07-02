@@ -37,8 +37,8 @@ def load_install_tools():
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
     IT.MyEnv.init()
-    if path.find("/code/") != -1:  # means we are getting the installtools from code dir
-        check_branch(IT)
+    # if path.find("/code/") != -1:  # means we are getting the installtools from code dir
+    #     check_branch(IT)
     return IT
 
 

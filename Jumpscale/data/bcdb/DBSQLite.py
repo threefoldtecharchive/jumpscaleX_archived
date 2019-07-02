@@ -7,8 +7,9 @@ JSBASE = j.application.JSBaseClass
 class DBSQLite(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
-        if bcdb.zdbclient and bcdb.zdbclient.type == "RDB":
+        if bcdb.storclient and bcdb.storclient.type == "RDB":
             raise RuntimeError("cannot use sqlite for RDB")
+
         self.bcdb = bcdb
 
         self._dbpath = j.sal.fs.joinPaths(bcdb._data_dir, "sqlite.db")

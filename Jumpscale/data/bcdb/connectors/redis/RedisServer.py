@@ -41,6 +41,7 @@ class RedisServer(j.application.JSBaseClass):
             )
         else:
             self.redis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handle_redis)
+        self.vfs = j.data.bcdb._get_vfs()
 
     def start(self):
         print("RUNNING")
@@ -149,113 +150,105 @@ class RedisServer(j.application.JSBaseClass):
         """
         split function used in the "normal" methods
         (len, set, get, del)
-
         split the key into 3 composant:
         - category: objects or schema
         - url: url of the schema
         - key: actual key of the object
-
         :param key: full encoded key of an object. e.g: object:schema.url:key
         :type key: str
         :return: tuple of (category, url, key, model)
         :rtype: tuple
         """
+        url = ""
+        cat = ""
         if key.strip() == "":
             raise RuntimeError("key cannot be empty")
         splitted = key.split(":")
         len_splitted = len(splitted)
         m = ""
-        if len_splitted == 1:
-            cat = splitted[0]
+        if len_splitted == 3:
+            cat = splitted[1]
             url = ""
             key = ""
-        elif len_splitted == 2:
-            cat = splitted[0]
-            url = splitted[1]
+        elif len_splitted == 4:
+            cat = splitted[1]
+            url = splitted[3]
             key = ""
-        elif len_splitted == 3:
-            cat = splitted[0]
-            url = splitted[1]
-            key = splitted[2]
+        elif len_splitted == 5:
+            cat = splitted[1]
+            url = splitted[3]
+            key = splitted[4]
         if url != "":
             # If we have a url we should be able to get the corresponding model if we already have seen that model
             # otherwise we leave the model to an empty string because it is tested further on to know that we have to set
             # this schema
+            for i in list(self.bcdb.meta._data.schemas):
 
-            if url in self.bcdb.models:
-                m = self.bcdb.model_get_from_url(url)
+                if url == i.url:
+                    m = self.bcdb.model_get_from_url(i.url)
+                elif url == i.md5:
+                    m = self.bcdb.model_get_from_url(i.url)
+                elif url == str(i.sid):
+                    m = self.bcdb.model_get_from_url(i.url)
+
         return (cat, url, key, m)
 
     def set(self, response, key, val):
-        cat, url, key, model = self._split(key)
-        if cat == "objects":
-            if url == "":
-                response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-                return
-            if key == "":
-                response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-                return
 
-        if cat == "schemas":
-            s = j.data.schema.get_from_text(val)
-            self.bcdb.model_get_from_schema(s)
-            response.encode("OK")
-            return
+        parse_key = key.replace(":", "/")
+        if "schemas" in parse_key:
+            try:
+                self.vfs.add_schemas(val)
+                response.encode("OK")
+                return
+            except:
+                response.error("cannot set, key:'%s' not supported" % key)
 
-        response.error("cannot set, cat:'%s' not supported" % cat)
+        else:
+            try:
+                key = parse_key.split("/")
+                type_of_set = key[2]  # url ,hash or sid
+                if type_of_set == "url":
+                    schema = self.vfs._find_schema_by_url(key[3])
+                    self.vfs.add_datas(val, int(key[1]), schema.sid)
+                elif type_of_set == "hash":
+                    schema = self.vfs._find_schema_by_hash(key[3])
+                    self.vfs.add_datas(val, int(key[1]), schema.sid)
+
+                else:
+                    self.vfs.add_datas(val, int(key[1]), int(key[3]))
+                response.encode("OK")
+                return
+            except:
+                response.error("cannot set, key:'%s' not supported" % key)
+        return
 
     def get(self, response, key):
-        """
-        Get schemas and info only from redis the value of the corresponding key
-        the key can represent a schema e.g: schemas:schema.url or an object objects:schema.url:key
+        parse_key = key.replace(":", "/")
+        parse_key = parse_key.replace("_", ".")
 
-        :key: full encoded key of an object or schema. e.g: objects:schema.url:key
-        :response: the response that will be returned 
-        """
-        cat, url, key, model = self._split(key)
-        if model is "":
-            raise RuntimeError("did not find model from key, maybe models not loaded:%s" % key)
+        try:
+            vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
+            if not isinstance(vfs_objs.get(), str):
+                objs = [i for i in vfs_objs.list()]
+                response._array(["0", objs])
+            else:
+                objs = vfs_objs.get()
 
-        if url == "":
-            response.encode("ok")
+                response.encode(objs)
             return
-        if cat == "info":
-            response.encode(self.info())
-            return
-        elif cat == "schemas":
-            if url == "":
-                response.encode("")
-                return
-            if key == "":
-                # get content from schema
-                response.encode(model.schema.text)
-                return
-            response.encode(model.schema.text)
-        response.error("cannot get, cat:'%s' not found" % cat)
+        except:
+            response.error("cannot get, key:'%s' not found" % parse_key)
 
     def delete(self, response, key):
-        cat, url, key, model = self._split(key)
-        if url == "" or cat == "schemas" or model == "":
-            # DO NOT DELETE SCHEMAS
-            response.encode("0")
-            return
 
-        if cat == "objects":
-            if key == "" and url != "":
-                # cannot delete !!! data stays there
-                if model.bcdb.zdbclient is None:
-                    model.destroy()
-                nr_deleted = 0
-            else:
-                nr_deleted = 1
-                # FIXME: what happens if the key doesn't exist ?
-                # there is no exist method on the model for now
-                j.shell()
-                model.delete(key)
-            response.encode(nr_deleted)
+        parse_key = key.replace(":", "/")
+        try:
+            self.vfs.delete(self.bcdb.name + "/" + parse_key)
+            response.encode(1)
             return
-
-        response.error("cannot delete, cat:'%s' not found" % cat)
+        except:
+            response.error("cannot delete, key:'%s'" % key)
 
     def scan(self, response, startid, match="*", count=10000, *args):
         """
@@ -267,96 +260,56 @@ class RedisServer(j.application.JSBaseClass):
         """
         # in first version will only do 1 page, so ignore scan
         res = []
+        for i in self.vfs._bcdb_names:
+            bcdb_instance = j.data.bcdb.get(i)
 
-        if len(self.bcdb._schema_url_to_model) > 0:
-            for url, model in self.bcdb._schema_url_to_model.items():
-                res.append("schemas:%s" % url)
-                res.append("objects:%s" % url)
-        else:
-            res.append("schemas")
-            res.append("objects")
-        res.append("info")
+            if len([bcdb_instance.meta._data.schemas]) > 0:
+                for url in list(bcdb_instance.meta._data.schemas):
+                    res.append("{}:schemas:url:{}".format(i, url.url))
+                    res.append("{}:schemas:sid:{}".format(i, url.sid))
+                    res.append("{}:schemas:hash:{}".format(i, url.md5))
+
+                    res.append("{}:data:1:url:{}".format(i, url.url))
+                    res.append("{}:data:1:sid:{}".format(i, url.sid))
+                    res.append("{}:data:1:hash:{}".format(i, url.md5))
+
+            else:
+                res.append("%s:schemas:url" % i)
+                res.append("%s:data:url" % i)
+                res.append("%s:schemas:sid" % i)
+                res.append("%s:data:sid" % i)
+                res.append("%s:schemas:hash" % i)
+                res.append("%s:data:hash" % i)
         response._array(["0", res])
 
-    def hset(self, response, key, id, val, nid=1):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-        if id == "new":
-            o = model.set_dynamic(val, nid=nid)
-        else:
-            id = int(id)
-            if id == 0:
-                response.error("trying to overwrite first metadata entry, not allowed")
-                return
-            try:
-                o = model.set_dynamic(val, obj_id=id, nid=nid)
-            except Exception as e:
-                if str(e).find("cannot update object") != -1:
-                    response.error("cannot update object with id:%s, it does not exist" % id)
-                    return
-                response.error(str(e))
-                return
-
-        response.encode("%s" % o.id)
+    def hset(self, response, key, id, val):
+        raise RuntimeError("not implemented")
 
     def hget(self, response, key, id):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
+        parse_key = key.replace(":", "/")
+        try:
+            vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
+            if not isinstance(vfs_objs.get(), str):
+                objs = [i for i in vfs_objs.list()]
+                response.encode(objs)
+            else:
+                response.encode(vfs_objs.get())
             return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-
-        obj = model.get(int(id))
-        if obj is not None:
-            response.encode(obj._json)
-        else:
-            response.encode(None)
+        except:
+            response.error("cannot get, key:'%s' not found" % key)
 
     def hdel(self, response, key, id):
-        cat, url, _, model = self._split(key)
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
-            return
-        if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
-            return
-
-        if id == "":
-            nr_deleted = model.destroy()
-        else:
-            nr_deleted = 1
-            # FIXME: what happens if the id doesn't exist ?
-            # there is no exist method on the model for now
-            model.get(int(id)).delete()
-        response.encode(nr_deleted)
+        raise RuntimeError("not implemented")
 
     def hlen(self, response, key):
-        cat, url, _, model = self._split(key)
-
-        if cat == "schemas" or model == "":
-            response.encode(0)
+        parse_key = key.replace(":", "/")
+        vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
+        if isinstance(vfs_objs.get(), str):
+            response.encode("1")
             return
-
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
-            return
-        response.encode(len(model.find()))
+        else:
+            objs = list(self.vfs.list(parse_key))
+        response.encode(len(objs))
         return
 
     def ttl(self, response, key):
@@ -367,31 +320,32 @@ class RedisServer(j.application.JSBaseClass):
         :param type: is the key we need to give type for
         :return:
         """
-        cat, url, key, model = self._split(type)
-        if key == "" and url != "":
-            # then its hset
+        try:
             response.encode("hash")
-        else:
+        except:
             response.encode("string")
 
     def _urls(self):
-        urls = [i for i in self.bcdb._schema_url_to_model.keys()]
+        urls = [i for i in self.bcdb.models]
         return urls
 
     def hscan(self, response, key, startid, count=10000):
 
         cat, url, _, model = self._split(key)
-        objs = model.find()
+        # objs = model.get_all()
         res = []
-        if cat == "schemas":
-            res.append(self.bcdb._schema_url_to_model[url].schema.sid)
-            res.append(self.bcdb._schema_url_to_model[url].schema.text)
+        if "schemas" in key:
+            res.append(model.sid)
+            res.append(model.schema.text)
             response._array(["0", res])
             return
-
-        for obj in objs:
-            res.append(obj.id)
-            res.append(obj._json)
+        else:
+            key = key.replace(":", "/")
+            objs = self.vfs.get(key)
+            for obj in objs.list():
+                schema = j.data.serializers.json.loads(obj)
+                res.append(schema["id"])
+                res.append(obj)
 
         response._array(["0", res])
 

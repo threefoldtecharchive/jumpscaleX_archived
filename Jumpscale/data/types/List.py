@@ -43,10 +43,10 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         return self._inner_list
 
     @property
-    def _dictdata(self):
+    def _datadict(self):
         res = []
         for item in self._inner_list:
-            if isinstance(item, j.data.schema.DataObjBase):
+            if isinstance(item, j.data.schema._JSXObjectClass):
                 res.append(item._ddict)
             else:
                 res.append(item)
@@ -100,7 +100,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         res = []
         for item in self._inner_list:
 
-            if isinstance(item, j.data.schema.DataObjBase):
+            if isinstance(item, j.data.schema._JSXObjectClass):
                 if subobj_format == "J":
                     res.append(item._ddict_json)
                 elif subobj_format == "D":
@@ -222,10 +222,10 @@ class List(TypeBaseObjFactory):
         val2 = self.clean(val)
         return val2.pylist(subobj_format="H")
 
-    def toData(self, val=None):
+    def toData(self, val=None, model=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "OBJ":
-            return [j.data.serializers.jsxdata.dumps(i) for i in val2]
+            return [j.data.serializers.jsxdata.dumps(i, model=model) for i in val2]
         else:
             return val2._inner_list
 
@@ -237,7 +237,10 @@ class List(TypeBaseObjFactory):
         if ttype is None:
             ttype = self.SUBTYPE
 
-        if j.data.types.string.check(val):
+        if j.data.types.int.check(val):
+            val = [val]
+
+        elif j.data.types.string.check(val):
             if val.strip("'\" []") in [None, ""]:
                 return ListObject(self, [], ttype)
             val = [i.strip("[").strip("]") for i in val.split(",")]
@@ -246,7 +249,6 @@ class List(TypeBaseObjFactory):
             val = [i for i in val]  # get binary data
 
         if not self.check(val):
-            # j.shell()
             raise j.exceptions.Input("need list or set as input for clean on list")
 
         if len(val) == 0:

@@ -2,7 +2,7 @@ import sys
 
 from .Schema import *
 from Jumpscale import j
-from .DataObjBase import DataObjBase
+from .JSXObject import JSXObject
 
 JSBASE = j.application.JSBaseClass
 
@@ -15,7 +15,7 @@ class SchemaFactory(j.application.JSBaseClass):
         self.__code_generation_dir = None
         # self.db = j.clients.redis.core_get()
         self.reset()
-        self.DataObjBase = DataObjBase
+        self._JSXObjectClass = JSXObject
 
     @property
     def SCHEMA_CLASS(self):
