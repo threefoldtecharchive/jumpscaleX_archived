@@ -38,3 +38,21 @@ class Apps_TestCases(BaseTest):
         self.assertTrue(len(j.sal.process.getProcessPid("apache2")))
         j.builders.apps.freeflow.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/669")
+    def test003_hub(self):
+        """ BLD-000
+        *Test hub builer sandbox*
+        """
+        logger.debug("Hub builder: run build method. ")
+        j.builders.apps.hub.build(reset=True)
+        logger.debug("Hub builder: run install method. ")
+        j.builders.apps.hub.install(reset=True)
+        logger.debug("Hub builder: run start method. ")
+        j.builders.apps.hub.start()
+        logger.debug("check that Hub builder is started successfully ")
+        self.assertTrue(len(j.sal.process.getProcessPid("hub")))
+        logger.debug("Hub builder: run stop method. ")
+        j.builders.apps.hub.stop()
+        logger.debug("check that Hub builder is stopped successfully ")
+        self.assertEqual(0, len(j.sal.process.getProcessPid("hub")))

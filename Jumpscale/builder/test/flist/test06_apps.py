@@ -32,3 +32,15 @@ class Apps_TestCases(BaseTest):
         logger.debug("Check that freeflow flist works by run apache2 binary, should succeed. ")
         self.assertIn("Usage: apache2", self.check_container_flist("/sandbox/bin/apache2 -h"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/669")
+    def test003_hub(self):
+        """ SAN-000
+        *Test hub builer sandbox*
+        """
+        logger.debug("Run hub sandbox, should succeed and upload flist on hub.")
+        j.builders.apps.hub.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded hub builder flist.")
+        self.deploy_flist_container("zerohub")
+        logger.debug("Check that zerohub flist works by run apache2 binary, should succeed. ")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/zerohub -h"))
+
