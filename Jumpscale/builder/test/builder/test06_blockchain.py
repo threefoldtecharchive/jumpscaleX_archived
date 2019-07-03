@@ -32,7 +32,7 @@ class Blockchain_TestCases(BaseTest):
         j.builders.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("ethereum")))
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/677"):
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/677")
     def test003_ripple(self):
         """ BLD-035
         *Test ripple builer sandbox*
