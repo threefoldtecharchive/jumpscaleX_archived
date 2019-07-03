@@ -118,4 +118,3 @@ def main(self):
     schema_obj3.save()
 
     self.admin_zdb.namespace_delete("unique")
-    j.servers.zdb.stop()

@@ -233,7 +233,7 @@ class BCDB(j.application.JSBaseClass):
     def redis_server_start(self, port=6380, secret="123456"):
 
         self.redis_server = RedisServer(bcdb=self, port=port, secret=secret, addr="0.0.0.0")
-        self.redis_server.init()
+        self.redis_server._init2(bcdb=self, port=port, secret=secret, addr="0.0.0.0")
         self.redis_server.start()
 
     def _data_process(self):

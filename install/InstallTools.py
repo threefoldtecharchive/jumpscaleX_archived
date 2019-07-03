@@ -2642,6 +2642,7 @@ class BaseInstaller:
                 "pbkdf2",
                 "ptpython",
                 "pygments-markdown-lexer",
+                "wsgidav",
             ],
             # level 1: in the middle
             1: [

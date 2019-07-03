@@ -71,6 +71,8 @@ def main(self):
         r = vfs.get("test/data/md5")
         r = vfs.get("test/data/2/md6")
 
+    self._log_info("TEST DELETE DATA DONE")
+
     r = vfs.get("test/data/1")
     identifier_folders = [i for i in r.list()]
     assert (
