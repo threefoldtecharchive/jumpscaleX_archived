@@ -64,7 +64,7 @@ class JSFactoryTools:
         if not path.startswith("/"):
             path = self._dirpath + "/" + path
         assert j.sal.fs.exists(path)
-        name_test = name.split("_")[1]
+        name_test = "_".join(name.split("_", 1)[1:])
         name_test = name_test.split(".")[0]
         for item in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py"):
             bname = j.sal.fs.getBaseName(item)
