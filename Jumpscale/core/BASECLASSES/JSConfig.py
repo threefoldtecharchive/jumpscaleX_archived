@@ -22,7 +22,11 @@ class JSConfig(JSBase):
         if jsxobject:
             self._data = jsxobject
         else:
-            self._data = self._model.new()  # create an empty object
+            if name:
+                jsxobject = self._model.find(name=name)[0]
+                self._data = jsxobject
+            else:
+                self._data = self._model.new()  # create an empty object
 
         if datadict:
             self._data_update(datadict)
@@ -97,7 +101,10 @@ class JSConfig(JSBase):
     def save(self):
         assert self._model
         self._triggers_call(self, "save")
-        self._data.save()
+        try:
+            self._data.save()
+        except:
+            j.shell()
         self._triggers_call(self, "save_post")
 
     def edit(self):

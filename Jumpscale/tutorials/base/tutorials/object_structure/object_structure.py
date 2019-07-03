@@ -79,12 +79,10 @@ def main(self):
 
     w = World()
 
-    j.shell()
-
     car = w.cars.get("rabbit")
     car2 = w.cars.get("bobby")
+
     assert car.name == "rabbit"
-    assert w.ship.onsea
     w.ship.onsea = False
     assert w.ship.onsea == False
 
