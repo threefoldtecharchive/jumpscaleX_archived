@@ -111,7 +111,7 @@ class JSBase:
 
         :return: (properties,methods)
         """
-        self._log("INSPECT:%s" % self.__class__)
+        # self._log("INSPECT:%s" % self.__class__)
         properties = []
         methods = []
         for name, obj in inspect.getmembers(self.__class__):
