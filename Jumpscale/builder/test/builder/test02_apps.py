@@ -56,3 +56,21 @@ class Apps_TestCases(BaseTest):
         j.builders.apps.hub.stop()
         logger.debug("check that Hub builder is stopped successfully ")
         self.assertEqual(0, len(j.sal.process.getProcessPid("hub")))
+
+    def test004_odoo(self):
+        """ BLD-000
+
+        *Test odoo builer sandbox*
+        """
+        logger.debug("Odoo builder: run build method. ")
+        j.builders.apps.odoo.build(reset=True)
+        logger.debug("Odoo builder: run install method. ")
+        j.builders.apps.odoo.install()
+        logger.debug("Odoo builder: run start method. ")
+        j.builders.apps.odoo.start()
+        logger.debug("check that Odoo builder is started successfully ")
+        self.assertTrue(len(j.sal.process.getProcessPid("openresty")))
+        logger.debug("Odoo builder: run stop method. ")
+        j.builders.apps.odoo.stop()
+        logger.debug("check that Odoo builder is stopped successfully ")
+        self.assertEqual(0, len(j.sal.process.getProcessPid("openresty")))
