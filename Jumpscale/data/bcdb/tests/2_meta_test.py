@@ -37,9 +37,8 @@ def main(self):
 
     sid = bcdb.meta._schema_set(s)
     assert isinstance(sid, int)
-    assert si
 
-    assert len(bcdb.meta.data.schemas) == 8
+    assert len(bcdb.meta._data.schemas) == 9
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5

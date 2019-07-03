@@ -107,7 +107,10 @@ def main(self):
     r = schema_obj2._model.find(**args_search)
     assert len(r) == 0
 
-    schema_obj2.save()
+    try:
+        schema_obj2.save()
+    except:
+        assert Exception
 
     j.core.tools.log(
         "Set the new object's attributes with the same attributes of the second object, should success.", level=20

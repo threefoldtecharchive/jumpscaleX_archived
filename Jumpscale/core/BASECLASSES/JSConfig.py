@@ -104,7 +104,9 @@ class JSConfig(JSBase):
         try:
             self._data.save()
         except:
-            j.shell()
+
+            self._triggers_call(self, "save_post")
+
         self._triggers_call(self, "save_post")
 
     def edit(self):

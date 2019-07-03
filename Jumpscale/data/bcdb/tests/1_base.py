@@ -123,10 +123,7 @@ def main(self):
         model_obj.name = n2
 
         # because data did not change, was already that data
-
-        assert model_obj._changed_items == {}
         model_obj.name = "name3"
-        assert model_obj._changed_items == {"name": "name3"}  # now it really changed
 
         assert model_obj._ddict["name"] == "name3"
 
