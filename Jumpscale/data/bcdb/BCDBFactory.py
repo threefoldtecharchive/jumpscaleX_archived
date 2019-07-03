@@ -8,7 +8,7 @@ import sys
 import redis
 
 
-class BCDBFactory(j.application.JSBaseClass):
+class BCDBFactory(j.application.JSBaseFactoryClass):
 
     __jslocation__ = "j.data.bcdb"
 
