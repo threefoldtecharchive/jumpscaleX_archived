@@ -1,11 +1,11 @@
 from Jumpscale import j
-from Jumpscale.data.schema.DataObjBase import DataObjBase
+
 from capnp import KjException
 
-class ModelOBJ(DataObjBase):
+class ModelOBJ(j.data.schema._JSXObjectClass):
 
-    __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
-                        {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
+    # __slots__ = ["id","_schema","_model","_autosave","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
+    #                     {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
         pass
@@ -27,9 +27,9 @@ class ModelOBJ(DataObjBase):
         self._schema_{{prop.name}} = j.data.schema.get_from_md5(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
             data = self._cobj_.{{prop.name_camel}}
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data)
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data,model=self)
         else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self)
         {% endif %}
         {% endfor %}
 
@@ -110,8 +110,12 @@ class ModelOBJ(DataObjBase):
         {% for prop in obj.properties %}
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            tt =  {{prop.js_typelocation}}
+            {% if prop.has_jsxobject %}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"],model=self._model)
+            {% else %}
             data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            {% endif %}
+
             ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 
@@ -150,7 +154,7 @@ class ModelOBJ(DataObjBase):
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
-            d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+            d["{{prop.name}}"] = self.{{prop.name}}._datadict
         else:
             d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}

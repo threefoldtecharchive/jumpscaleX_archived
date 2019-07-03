@@ -8,26 +8,13 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="base")'
 
     """
-    j.servers.zdb.start_test_instance()
 
-    def test(name):
-        if name == "RDB":
-            sqlitestor = False
-            rdbstor = True
-        elif name == "ZDB":
-            sqlitestor = False
-            rdbstor = False
-        elif name == "SQLITE":
-            sqlitestor = True
-            rdbstor = False
-        else:
-            raise RuntimeError("not supported type")
-
+    def test(name, sqlite=True):
         def load():
 
             # don't forget the record 0 is always a systems record
 
-            if not rdbstor:
+            if sqlite:
                 schema = """
                 @url = despiegk.test
                 llist2 = "" (LS)
@@ -64,13 +51,7 @@ def main(self):
                 pool_type = "managed,unmanaged" (E)
                 """
 
-            db, model = self._load_test_model(sqlitestor=sqlitestor, rdbstor=rdbstor, reset=True, schema=schema)
-
-            if not sqlitestor and not rdbstor:
-                print(model.zdbclient.nsinfo["entries"])
-                assert model.zdbclient.nsinfo["entries"] == 1
-            else:
-                assert len(model.find()) == 0
+            db, model = self._load_test_model(type=name, reset=True, schema=schema)
 
             for i in range(10):
                 model_obj = model.new()
@@ -101,7 +82,7 @@ def main(self):
         db = load()
         db_model = db.model_get_from_url(url="despiegk.test")
 
-        if not rdbstor:
+        if sqlite:
             query = db_model.index.sql.select()
             qres = [(item.name, item.nr) for item in query]
 
@@ -135,7 +116,9 @@ def main(self):
 
             first_id = res.first().id
 
-        model_obj = db_model.get(3)
+        # see that the change of data does not set the _changed_items
+        model_obj3 = db_model.find()[2]
+        model_obj = db_model.get(model_obj3.id)
         n2 = model_obj.name + ""
         model_obj.name = n2
 
@@ -153,7 +136,7 @@ def main(self):
         model_obj2 = db_model.get(model_obj.id)
         assert model_obj2.token_price_usd == 10
 
-        if not rdbstor:
+        if sqlite:
             assert db_model.index.sql.select().where(db_model.index.sql.id == model_obj.id).first().token_price == 10
         else:
             o = db_model.get_by_name("name1")[0]
@@ -186,7 +169,7 @@ def main(self):
 
         self._log_info("TEST DONE: %s" % name)
 
-    test("RDB")
+    test("RDB", sqlite=False)
     test("ZDB")
     test("SQLITE")
 

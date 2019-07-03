@@ -66,7 +66,10 @@ class ZDBAdminClient(ZDBClientBase):
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         assert ns.ping()
-        assert ns.nsinfo["public"] == "no"
+        if secret:
+            assert ns.nsinfo["public"] == "no"
+        else:
+            assert ns.nsinfo["public"] == "yes"
 
         return ns
 

@@ -31,7 +31,7 @@ class BuilderEtcd(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        return [j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)]
+        return [j.servers.startupcmd.get(name=self.NAME, cmd=self.NAME)]
 
     @builder_method()
     def sandbox(

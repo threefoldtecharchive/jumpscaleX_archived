@@ -15,6 +15,7 @@ class BuildDBFactory(j.builders.system._BaseFactoryClass):
         self._postgres = None
         self._zdb = None
         self._influxdb = None
+        self._mongodb = None
 
     @property
     def etcd(self):
@@ -87,3 +88,11 @@ class BuildDBFactory(j.builders.system._BaseFactoryClass):
 
             self._influxdb = BuilderInfluxdb()
         return self._influxdb
+
+    @property
+    def mongodb(self):
+        if self._mongodb is None:
+            from .BuilderMongodb import BuilderMongodb
+
+            self._mongodb = BuilderMongodb()
+        return self._mongodb

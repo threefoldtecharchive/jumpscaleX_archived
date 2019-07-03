@@ -73,11 +73,13 @@ class BuilderOdoo(j.builders.system._BaseClass):
         # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
-        postgres_cmd = j.tools.startupcmd.get("postgres-custom", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
+        postgres_cmd = j.servers.startupcmd.get(
+            "postgres-custom", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin"
+        )
         odoo_start = self._replace(
             "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
         )
-        odoo_cmd = j.tools.startupcmd.get(
+        odoo_cmd = j.servers.startupcmd.get(
             "odoo", odoo_start, process_strings=["/sandbox/apps/odoo/odoo/odoo-bin -c"], path="/sandbox/bin"
         )
         return [postgres_cmd, odoo_cmd]

@@ -9,7 +9,7 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.bcdb.test(name="unique_data")' --debug
+    kosmos 'j.data.bcdb.test(name="unique_data")'
 
     #. Create schema with unique attributes and save it.
     #. Create another object and try to use same name for first one, should fail.
@@ -37,7 +37,7 @@ def main(self):
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique", secret="1234")
     self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901, secret="1234")
-    self.bcdb = j.data.bcdb.get("test", zdbclient=self.zdb)
+    self.bcdb = j.data.bcdb.new("test", storclient=self.zdb)
     self.bcdb.reset()
     schema = j.data.schema.get_from_text(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
@@ -118,4 +118,3 @@ def main(self):
     schema_obj3.save()
 
     self.admin_zdb.namespace_delete("unique")
-    j.servers.zdb.stop()

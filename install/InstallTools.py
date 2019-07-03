@@ -1077,6 +1077,8 @@ class Tools:
             logdict["context"] = ""
 
         p = print
+        if MyEnv.config['DEBUG'] and MyEnv.config.get('log_printer'):
+            p = MyEnv.config['log_printer']
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
@@ -1435,19 +1437,28 @@ class Tools:
     #
 
     @staticmethod
-    def process_pids_get_by_filter(filterstr):
+    def process_pids_get_by_filter(filterstr, excludes=[]):
         cmd = "ps ax | grep '%s'" % filterstr
         rcode, out, err = Tools.execute(cmd)
         # print out
         found = []
+
+        def checkexclude(c, excludes):
+            for item in excludes:
+                c = c.lower()
+                if c.find(item.lower()) != -1:
+                    return True
+            return False
+
         for line in out.split("\n"):
             if line.find("grep") != -1 or line.strip() == "":
                 continue
             if line.strip() != "":
                 if line.find(filterstr) != -1:
                     line = line.strip()
-                    # print "found pidline:%s"%line
-                    found.append(int(line.split(" ")[0]))
+                    if not checkexclude(line, excludes):
+                        # print "found pidline:%s"%line
+                        found.append(int(line.split(" ")[0]))
         return found
 
     @staticmethod
@@ -2120,6 +2131,12 @@ class MyEnv:
         :param sshagent_use: needs to be True if sshkey used
         :return:
         """
+
+        if not os.path.exists(MyEnv.config_file_path):
+            MyEnv.config = MyEnv.config_default_get(config=config)
+        else:
+            MyEnv._config_load()
+
         if interactive not in [True, False]:
             raise RuntimeError("interactive is True or False")
         MyEnv.interactive = interactive
@@ -2190,11 +2207,6 @@ class MyEnv:
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
-
-        if not os.path.exists(MyEnv.config_file_path):
-            MyEnv.config = MyEnv.config_default_get(config=config)
-        else:
-            MyEnv._config_load()
 
         if not "DIR_TEMP" in MyEnv.config:
             config.update(MyEnv.config)
@@ -2579,6 +2591,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
                 "dnslib",
@@ -2629,6 +2642,7 @@ class BaseInstaller:
                 "pbkdf2",
                 "ptpython",
                 "pygments-markdown-lexer",
+                "wsgidav",
             ],
             # level 1: in the middle
             1: [
@@ -2772,9 +2786,9 @@ class UbuntuInstaller:
         apt-get update
         apt-get install -y curl rsync unzip
         locale-gen --purge en_US.UTF-8
-        
+
         apt-get install python3-pip -y
-        apt-get install locales -y        
+        apt-get install locales -y
 
         """
         Tools.execute(script, interactive=True)
@@ -2791,7 +2805,7 @@ class UbuntuInstaller:
         script = """
         apt update
         apt upgrade -y
-        apt install python3-pip  -y
+        apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
         add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
@@ -2821,7 +2835,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "graphviz", "iputils-ping"]
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -3461,12 +3475,16 @@ class DockerContainer:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
-                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.config.sshport, src1)
+                cmd = "scp -P {} -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -r {} root@localhost:/tmp/".format(
+                    self.config.sshport, src1
+                )
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
-        self.sshexec("sudo apt install python3-click -y")
+        self.sshexec("apt install python3-click -y")
         self.sshexec(cmd)
 
         cmd = """
@@ -3485,9 +3503,9 @@ class DockerContainer:
 
         # if you use a container do:
         jsx container-kosmos
-        
+
         or
-        
+
         kosmos
 
         """

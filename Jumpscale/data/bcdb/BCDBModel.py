@@ -12,7 +12,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, schema=None, reset=False):
+    def __init__(self, bcdb, sid=None, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -29,21 +29,25 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        bcdb, schema, reset = self._init_load(bcdb, schema, reset)
+        if not schema:
+            if hasattr(self, "_SCHEMA"):
+                j.data.schema.get_from_text(self._SCHEMA)
+            else:
+                schema = self._schema_get()
+                assert schema
 
-        assert bcdb
-        assert schema
-        assert schema.sid > 0
+            bcdb.meta._schema_set(schema)
 
         self.schema = schema
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
         self.bcdb = bcdb
-        self.zdbclient = bcdb.zdbclient
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
-        if self.zdbclient and self.zdbclient.type == "ZDB":
-            # is unique id for a bcdbmodel (unique per zdbclient !)
-            self.key = "%s_%s" % (self.zdbclient.nsname, self.schema.url)
+        if self.storclient and self.storclient.type == "ZDB":
+            # is unique id for a bcdbmodel (unique per storclient !)
+            self.key = "%s_%s" % (self.storclient.nsname, self.schema.url)
         else:
             self.key = self.schema.url
         self.key = self.key.replace(".", "_")
@@ -63,8 +67,12 @@ class BCDBModel(j.application.JSBaseClass):
         if reset:
             self.reset()
 
-    def _init_load(self, bcdb, schema, reset):
-        return bcdb, schema, reset
+    def _schema_get(self):
+        return None
+
+    @property
+    def storclient(self):
+        return self.bcdb.storclient
 
     def trigger_add(self, method):
         """
@@ -90,7 +98,7 @@ class BCDBModel(j.application.JSBaseClass):
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
             obj2 = method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
-            if isinstance(obj2, j.data.schema.DataObjBase):
+            if isinstance(obj2, j.data.schema._JSXObjectClass):
                 # only replace if right one returned, otherwise ignore
                 obj = obj2
             else:
@@ -142,7 +150,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def delete(self, obj):
-        if not isinstance(obj, j.data.schema.DataObjBase):
+        if not isinstance(obj, j.data.schema._JSXObjectClass):
             if isinstance(obj, int):
                 obj = self.get(obj)
             else:
@@ -152,14 +160,14 @@ class BCDBModel(j.application.JSBaseClass):
             self.triggers_call(obj=obj, action="delete")
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
-            if not self.zdbclient:
+            if not self.storclient:
                 self.bcdb.sqlclient.delete(key=obj.id)
             else:
-                self.zdbclient.delete(obj.id)
+                self.storclient.delete(obj.id)
             self.index.delete(obj)
 
     def check(self, obj):
-        if not isinstance(obj, j.data.schema.DataObjBase):
+        if not isinstance(obj, j.data.schema._JSXObjectClass):
             raise RuntimeError("argument needs to be a jsx data obj")
         assert obj.nid
 
@@ -181,10 +189,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(data=data, model=self)
+            obj = self.schema.get(datadict=data, model=self)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(data=data, model=self)
+            obj = self.schema.get(serializeddata=data, model=self)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
             if not obj.nid:
@@ -192,7 +200,7 @@ class BCDBModel(j.application.JSBaseClass):
                     obj.nid = nid
                 else:
                     raise RuntimeError("need to specify nid")
-        elif isinstance(data, j.data.schema.DataObjBase):
+        elif isinstance(data, j.data.schema._JSXObjectClass):
             obj = data
             if obj_id is None and obj.id is not None:
                 obj_id = obj.id
@@ -209,7 +217,7 @@ class BCDBModel(j.application.JSBaseClass):
                     data["nid"] = nid
                 else:
                     raise RuntimeError("need to specify nid")
-            obj = self.schema.get(data)
+            obj = self.schema.get(datadict=data)
             obj.nid = nid
         else:
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
@@ -305,8 +313,8 @@ class BCDBModel(j.application.JSBaseClass):
                     raise e
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
-
-            l = [obj.nid, self.schema.sid, obj.acl_id, bdata_encrypted]
+            assert obj.nid > 0
+            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self.triggers_call(obj, action="set_pre")
@@ -314,19 +322,19 @@ class BCDBModel(j.application.JSBaseClass):
             # PUT DATA IN DB
             if obj.id is None:
                 # means a new one
-                if not self.zdbclient:
+                if not self.storclient:
                     obj.id = self.bcdb.sqlclient.set(key=None, val=data)
                 else:
-                    obj.id = self.zdbclient.set(data)
+                    obj.id = self.storclient.set(data)
                 if self.readonly:
                     obj.readonly = True
                 self._log_debug("NEW:\n%s" % obj)
             else:
-                if not self.zdbclient:
+                if not self.storclient:
                     self.bcdb.sqlclient.set(key=obj.id, val=data)
                 else:
                     try:
-                        self.zdbclient.set(data, key=obj.id)
+                        self.storclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
                             raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
@@ -361,7 +369,10 @@ class BCDBModel(j.application.JSBaseClass):
         elif j.data.types.json.check(str(data)):
             data = j.data.serializers.json.loads(data)
         if data:
-            obj = self.schema.get(data=data, model=self)
+            if isinstance(data, dict):
+                obj = self.schema.get(datadict=data, model=self)
+            else:
+                raise RuntimeError("need dict")
         else:
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
@@ -395,10 +406,10 @@ class BCDBModel(j.application.JSBaseClass):
         #             # print("cache hit")
         #             return obj
 
-        if not self.zdbclient:
+        if not self.storclient:
             data = self.bcdb.sqlclient.get(key=obj_id)
         else:
-            data = self.zdbclient.get(obj_id)
+            data = self.storclient.get(obj_id)
 
         if not data:
             if die:
@@ -431,14 +442,6 @@ class BCDBModel(j.application.JSBaseClass):
             o = self.get(obj_id, die=False)
             if not o:
                 continue
-            # try:
-            #     o = self.get(obj_id)
-            # except Exception as e:
-            #     if str(e).find("could not find obj") != -1:
-            #         self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
-            #         continue
-            #     else:
-            #         raise e
             yield o
 
     def __str__(self):

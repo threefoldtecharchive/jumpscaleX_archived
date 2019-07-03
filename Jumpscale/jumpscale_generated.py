@@ -122,8 +122,6 @@ class group_tools(JSGroup):
         self._jinja2 = None
         self._logger = None
         self._dash = None
-        self._tmux = None
-        self._startupcmd = None
         self._expect = None
         self._cython = None
         self._markdowndocs = None
@@ -225,18 +223,6 @@ class group_tools(JSGroup):
             from Jumpscale.tools.dash.DASH import DASH
             self._dash =  DASH()
         return self._dash
-    @property
-    def tmux(self):
-        if self._tmux is None:
-            from Jumpscale.tools.tmux.Tmux import Tmux
-            self._tmux =  Tmux()
-        return self._tmux
-    @property
-    def startupcmd(self):
-        if self._startupcmd is None:
-            from Jumpscale.tools.startupcmd.StartupCMDFactory import StartupCMDFactory
-            self._startupcmd =  StartupCMDFactory()
-        return self._startupcmd
     @property
     def expect(self):
         if self._expect is None:
@@ -504,7 +490,6 @@ class group_data(JSGroup):
         self._types = None
         self._time = None
         self._timeinterval = None
-        self._corex_process = None
 
     
     @property
@@ -657,12 +642,6 @@ class group_data(JSGroup):
             from Jumpscale.data.time.TimeInterval import TimeInterval
             self._timeinterval =  TimeInterval()
         return self._timeinterval
-    @property
-    def corex_process(self):
-        if self._corex_process is None:
-            from Jumpscale.clients.corex.CoreXProcess import CoreXProcessFactory
-            self._corex_process =  CoreXProcessFactory()
-        return self._corex_process
 
 j.data = group_data()
 j.core._groups["data"] = j.data
@@ -676,7 +655,6 @@ class group_clients(JSGroup):
         self._gedis = None
         self._git = None
         self._traefik = None
-        self._zdb = None
         self._gitea = None
         self._oauth = None
         self.__template = None
@@ -699,6 +677,7 @@ class group_clients(JSGroup):
         self._openvcloud = None
         self._portal = None
         self._digitalocean = None
+        self._rdb = None
         self._zerotier = None
         self._etcd = None
         self._sonic = None
@@ -706,8 +685,10 @@ class group_clients(JSGroup):
         self._mongodb = None
         self._mongoengine = None
         self._packetnet = None
+        self._sqlitestor = None
         self._kraken = None
         self._zos = None
+        self._zdb = None
         self._ssh = None
         self._email = None
         self._sendgrid = None
@@ -738,7 +719,6 @@ class group_clients(JSGroup):
         self._zerostor = None
         self._zstor = None
         self._virtualbox = None
-        self._rdb = None
         self._webgateway = None
 
     
@@ -772,12 +752,6 @@ class group_clients(JSGroup):
             from Jumpscale.clients.traefik.TraefikFactory import TraefikFactory
             self._traefik =  TraefikFactory()
         return self._traefik
-    @property
-    def zdb(self):
-        if self._zdb is None:
-            from Jumpscale.clients.zdb.ZDBFactory import ZDBFactory
-            self._zdb =  ZDBFactory()
-        return self._zdb
     @property
     def gitea(self):
         if self._gitea is None:
@@ -911,6 +885,12 @@ class group_clients(JSGroup):
             self._digitalocean =  PacketNetFactory()
         return self._digitalocean
     @property
+    def rdb(self):
+        if self._rdb is None:
+            from Jumpscale.clients.stor_rdb.RDBFactory import RDBFactory
+            self._rdb =  RDBFactory()
+        return self._rdb
+    @property
     def zerotier(self):
         if self._zerotier is None:
             from Jumpscale.clients.zerotier.ZerotierFactory import ZerotierFactory
@@ -953,6 +933,12 @@ class group_clients(JSGroup):
             self._packetnet =  PacketNetFactory()
         return self._packetnet
     @property
+    def sqlitestor(self):
+        if self._sqlitestor is None:
+            from Jumpscale.clients.stor_sqlite.RDBFactory import RDBFactory
+            self._sqlitestor =  RDBFactory()
+        return self._sqlitestor
+    @property
     def kraken(self):
         if self._kraken is None:
             from Jumpscale.clients.kraken.KrakenFactory import KrakenFactory
@@ -964,6 +950,12 @@ class group_clients(JSGroup):
             from Jumpscale.clients.zero_os.ZeroOSClientFactory import ZeroOSFactory
             self._zos =  ZeroOSFactory()
         return self._zos
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            from Jumpscale.clients.stor_zdb.ZDBFactory import ZDBFactory
+            self._zdb =  ZDBFactory()
+        return self._zdb
     @property
     def ssh(self):
         if self._ssh is None:
@@ -1145,12 +1137,6 @@ class group_clients(JSGroup):
             self._virtualbox =  VirtualboxFactory()
         return self._virtualbox
     @property
-    def rdb(self):
-        if self._rdb is None:
-            from Jumpscale.clients.rdb.RDBFactory import RDBFactory
-            self._rdb =  RDBFactory()
-        return self._rdb
-    @property
     def webgateway(self):
         if self._webgateway is None:
             from Jumpscale.clients.webgateway.WebGatewayFactory import WebGatewayFactory
@@ -1172,7 +1158,11 @@ class group_servers(JSGroup):
         self._errbot = None
         self._zdb = None
         self._openresty = None
+        self._corex = None
         self._jsrun = None
+        self._tmux = None
+        self._startupcmd = None
+        self._sockexec = None
         self._web = None
         self._etcd = None
         self._sonic = None
@@ -1229,11 +1219,35 @@ class group_servers(JSGroup):
             self._openresty =  OpenRestyFactory()
         return self._openresty
     @property
+    def corex(self):
+        if self._corex is None:
+            from Jumpscale.servers.corex.CorexFactory import CorexFactory
+            self._corex =  CorexFactory()
+        return self._corex
+    @property
     def jsrun(self):
         if self._jsrun is None:
             from Jumpscale.servers.jsrun.JSRun import JSRun
             self._jsrun =  JSRun()
         return self._jsrun
+    @property
+    def tmux(self):
+        if self._tmux is None:
+            from Jumpscale.servers.tmux.Tmux import Tmux
+            self._tmux =  Tmux()
+        return self._tmux
+    @property
+    def startupcmd(self):
+        if self._startupcmd is None:
+            from Jumpscale.servers.startupcmd.StartupCMDFactory import StartupCMDFactory
+            self._startupcmd =  StartupCMDFactory()
+        return self._startupcmd
+    @property
+    def sockexec(self):
+        if self._sockexec is None:
+            from Jumpscale.servers.sockexec.SockExec import SockExec
+            self._sockexec =  SockExec()
+        return self._sockexec
     @property
     def web(self):
         if self._web is None:

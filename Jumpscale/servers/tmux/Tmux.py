@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 class Tmux(j.application.JSBaseClass):
     def __init__(self):
-        self.__jslocation__ = "j.tools.tmux"
+        self.__jslocation__ = "j.servers.tmux"
         JSBASE.__init__(self)
 
         self._server = None
@@ -79,6 +79,7 @@ class Tmux(j.application.JSBaseClass):
 
             self._server = tmuxp.Server()
             time.sleep(1)
+
             self._log_info("tmux server is running")
 
         return self._server
@@ -156,7 +157,7 @@ class Tmux(j.application.JSBaseClass):
 
         pane = window.pane_get(pane_name)
 
-        startup_cmd = j.tools.startupcmd.get(
+        startup_cmd = j.servers.startupcmd.get(
             name=name,
             cmd=cmd,
             path=path,

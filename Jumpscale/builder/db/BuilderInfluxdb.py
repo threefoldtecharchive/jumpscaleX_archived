@@ -75,7 +75,7 @@ class BuilderInfluxdb(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmds = j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)
+        cmds = j.servers.startupcmd.get(name=self.NAME, cmd=self.NAME)
         return [cmds]
 
     @builder_method()

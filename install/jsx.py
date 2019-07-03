@@ -37,8 +37,8 @@ def load_install_tools():
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
     IT.MyEnv.init()
-    if path.find("/code/") != -1:  # means we are getting the installtools from code dir
-        check_branch(IT)
+    # if path.find("/code/") != -1:  # means we are getting the installtools from code dir
+    #     check_branch(IT)
     return IT
 
 
@@ -207,7 +207,7 @@ def container_install(
     wiki=False,
     portrange=1,
     image=None,
-    branch=None,
+    branch=DEFAULT_BRANCH,
     reinstall=False,
     no_interactive=False,
     pull=False,
@@ -523,7 +523,7 @@ def check():
 
 def _generate(path=None):
     j = jumpscale_get(die=True)
-    j.application.generate()
+    j.application.generate(path)
 
 
 if __name__ == "__main__":
