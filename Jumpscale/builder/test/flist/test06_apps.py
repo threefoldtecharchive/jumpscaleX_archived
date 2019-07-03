@@ -44,3 +44,13 @@ class Apps_TestCases(BaseTest):
         logger.debug("Check that zerohub flist works by run apache2 binary, should succeed. ")
         self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/zerohub -h"))
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/676")
+    def test004_odoo(self):
+        """ SAN-000
+
+        *Test odoo builer sandbox*
+        """
+        j.builders.apps.odoo.sandbox(**self.sandbox_args)
+        self.deploy_flist_container("zerohub")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/odoo -h"))
+

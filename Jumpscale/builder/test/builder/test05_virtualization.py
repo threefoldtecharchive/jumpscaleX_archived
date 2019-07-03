@@ -3,6 +3,7 @@ from .base_test import BaseTest
 import unittest
 import time
 from loguru import logger
+from parameterized import parameterized
 
 
 class Virtualization_TestCases(BaseTest):
@@ -13,20 +14,26 @@ class Virtualization_TestCases(BaseTest):
             "Starting of  virtualization builder testcases  which test main methods:build,install,start and stop."
         )
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/664")
-    def test001_docker(self):
-        """ BLD-013
-        *Test docker builer sandbox*
+    @parameterized.expand([("docker", "containerd")])
+    def test_virtualization_builders(self, builder, process):
+        """ BLD-001
+        *Test virtualization builers sandbox*
         """
-        logger.debug("docker builder: run build method.")
-        j.builders.virtualization.docker.build(reset=True)
-        logger.debug("docker builder: run install method.")
-        j.builders.virtualization.docker.install()
-        logger.debug("docker builder: run start method.")
-        j.builders.virtualization.docker.start()
-        logger.debug("check that docker server started successfully.")
-        self.assertTrue(j.sal.process.getProcessPid("containerd"))
-        logger.debug("docker builder: run stop method.")
-        j.builders.virtualization.docker.stop()
-        logger.debug("check that docker server stopped successfully.")
-        self.assertFalse(j.sal.process.getProcessPid("containerd"))
+        skipped_builders = {"docker": "https://github.com/threefoldtech/jumpscaleX/issues/664"}
+        if builder in skipped_builders:
+            self.skipTest(skipped_builders[builder])
+        logger.info("%s builder: run build method." % builder)
+        getattr(j.builders.virtualization, builder).build()
+        logger.info("%s builder: run install  method." % builder)
+        getattr(j.builders.virtualization, builder).install()
+        logger.info("%s builder: run start method." % builder)
+        getattr(j.builders.virtualization, builder).start()
+        logger.info("check that %s server started successfully." % builder)
+        time.sleep(10)
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        logger.info("%s builder: run stop method." % builder)
+        getattr(j.builders.virtualization, builder).stop()
+        logger.info("check that %s server stopped successfully." % builder)
+        time.sleep(10)
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))
+
