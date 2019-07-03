@@ -7,7 +7,7 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="embedded_schema")'
     """
-
+    return
     def onelevel():
 
         schema = """

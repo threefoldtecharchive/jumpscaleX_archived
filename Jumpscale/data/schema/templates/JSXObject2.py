@@ -52,7 +52,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% endif %}
         # self._log_debug("set:{{prop.name}}='%s'"%(val))
         if val != self.{{prop.name}}:
-            self._log_debug("change:{{prop.name}} %s"%(val))
+            self._log_debug("change:{{prop.name}}" + str(val))
             self._deserialized_items["{{prop.name}}"] = val
             if self._model:
                 self._model._triggers_call(obj=self, action="change", propertyname="{{prop.name}}")

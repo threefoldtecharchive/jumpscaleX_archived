@@ -116,14 +116,12 @@ def main(self):
 
     schema_test._data
     schema_test._json
-
-    schema_test2 = schema_object.get(data=schema_test._data)
-
-    assert schema_test._ddict == schema_test1
+    schema_test2 = schema_object.new(serializeddata=schema_test._data)
+    # j.shell()
+    assert schema_test._ddict == schema_test2._ddict
     assert schema_test._data == schema_test2._data
 
     assert schema_test._readonly == False
-    schema_test._readonly = True
 
     # test we cannot change a subobj
     try:
