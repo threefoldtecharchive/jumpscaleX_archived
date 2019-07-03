@@ -12,7 +12,7 @@ class Apps_TestCases(BaseTest):
         logger.add("Apps_builders_tests_{time}.log")
         logger.debug("Starting of  apps builder testcases  which test main methods:build,install,start and stop.")
 
-    @parameterized.expand([("digitalme", "openresty"), ("freeflow", "apache2"), ("hub", "hub")])
+    @parameterized.expand([("digitalme", "openresty"), ("freeflow", "apache2"), ("hub", "hub"), ("odoo", "odoo")])
     def test_apps_builders(self, builder, process):
         """ BLD-001
         *Test web builers sandbox*
