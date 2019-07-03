@@ -1,40 +1,26 @@
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
-
+from parameterized import parameterized
 
 class Runtimes_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("runtimes_sandbox_tests_{time}.log")
-        logger.debug("Starting of runtimes sandbox testcases.")
-
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/665")
-    def test001_lua(self):
-        """ SAN-005
-        *Test lua builer sandbox*
+    @parameterized.expand([("lua", "lua"), ("golang", "golang")])
+    def test_runtimes_flists(self, flist, binary):
+        """ SAN-002
+        *Test runtimes builers sandbox*
         """
-        logger.debug("run lua sandbox.")
-        j.builders.runtimes.lua.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded lua builder flist.")
-        self.deploy_flist_container("lua")
-        logger.debug("Check that lua flist works.")
-        data = self.cont_client.system("/sandbox/bin/lua -h").get()
-        self.assertIn("Usage: lua", data.stdout)
+        skipped_flists = {
+            "lua": "https://github.com/threefoldtech/jumpscaleX/issues/665",
+            "golang": "https://github.com/threefoldtech/jumpscaleX/issues/678",
+        }
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/678")
-    def test002_golang(self):
-        """ SAN-027
-        *Test golang builer sandbox*
-        """        
-        logger.debug("Run  golang sandbox, should succeed and upload flist on hub.")
-        j.builders.runtimes.golang.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded golang builder flist.")
-        self.deploy_flist_container("golang")
-        logger.debug("Check that golang flist works by checking openssl file existing, should succeed. ")
-<<<<<<< HEAD
-        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/golang help"))
-=======
-        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/golang help"))
->>>>>>> 67b1c532553631b69c24663a389ad14053663b58
+        if flist in skipped_flists:
+            self.skipTest(skipped_flists[flist])
+        self.info("Run {} sandbox".format(flist))
+        getattr(j.builders.runtimes, flist).sandbox(**self.sandbox_args)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
+
+

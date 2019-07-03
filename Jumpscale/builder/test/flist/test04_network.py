@@ -1,35 +1,19 @@
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
-
+from parameterized import parameterized
 
 class Network_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("network_sandbox_tests_{time}.log")
-        logger.debug("Starting of network sandbox testcases.")
-
-    def test001_coredns(self):
-        """ SAN-013
-        *Test coredns builer sandbox*
+    @parameterized.expand([("coredns", "coredns"), ("zerotier", "zerotier-one")])
+    def test_network_flists(self, flist, binary):
+        """ SAN-004
+        *Test network builers sandbox*
         """
-        logger.debug("run coredns sandbox.")
-        j.builders.network.coredns.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded coredns builder flist.")
-        self.deploy_flist_container("coredns")
-        logger.debug("Check that coredns flist works.")
-        data = self.cont_client.system("/sandbox/bin/coredns -h").get()
-        self.assertIn("Usage: ", data.stdout)
 
-    def test002_zerotier(self):
-        """ SAN-019
-        *Test zerotier builer sandbox*
-        """
-        logger.debug("run zerotier sandbox.")
-        j.builders.network.zerotier.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded zerotier builder flist.")
-        self.deploy_flist_container("zerotier")
-        logger.debug("Check that zerotier flist works.")
-        data = self.cont_client.system("/sandbox/bin/zerotier-one -h").get()
-        self.assertIn("Usage: ", data.stdout)
+        self.info("run {} sandbox.".format(flist))
+        getattr(j.builders.network, flist).sandbox(**self.sandbox_args)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
+

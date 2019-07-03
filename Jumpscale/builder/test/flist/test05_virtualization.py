@@ -1,26 +1,17 @@
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
-
+from parameterized import parameterized
 
 class Virtualization_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("virtualization_sandbox_tests_{time}.log")
-        logger.debug("Starting of virtualization sandbox testcases.")
-
-    def test001_docker(self):
-        """ SAN-014
-        *Test docker builer sandbox*
+    @parameterized.expand([("docker", "dockerd-ce")])
+    def test_network_flists(self, flist, binary):
+        """ SAN-005
+        *Test Virtualization builers sandbox*
         """
-        logger.debug("Run docker sandbox, should succeed and upload flist on hub.")
-        j.builders.virtualization.docker.sandbox(**self.sandbox_args)
-
-        logger.debug("Deploy container with uploaded docker builder flist.")
-        self.deploy_flist_container("docker")
-
-        logger.debug("Check that docker flist works.")
-        data = self.cont_client.system("/sandbox/bin/dockerd-ce -h").get()
-        logger.debug("Data %s." % data)
-        self.assertIn("Usage:", data.stdout)
+        self.info("run {} sandbox.".format(flist))
+        getattr(j.builders.virtualization, flist).sandbox(**self.sandbox_args)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
