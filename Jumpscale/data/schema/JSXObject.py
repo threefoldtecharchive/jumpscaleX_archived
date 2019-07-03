@@ -146,7 +146,7 @@ class JSXObject(j.application.JSBaseClass):
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
             return self
-        j.shell()
+
         raise RuntimeError("cannot save, model not known")
 
     def delete(self):
@@ -197,7 +197,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def __eq__(self, val):
         if not isinstance(val, JSXObject):
-            tt = j.data.types.get("obj", self._schema.url)
+            tt = j.data.types.get("jsxobject", self._schema.url)
             val = tt.clean(val)
         return self._data == val._data
 

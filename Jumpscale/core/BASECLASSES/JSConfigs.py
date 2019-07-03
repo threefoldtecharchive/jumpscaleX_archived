@@ -55,12 +55,17 @@ class JSConfigs(JSBase):
         self._children[name] = jsconfig
         return self._children[name]
 
-    def get(self, name="main"):
+    def get(self, name="main", **kwargs):
         """
         :param name: of the object
         """
-        jsconfig = self._get(name=name)
-        jsconfig = self._triggers_call(jsconfig, "get")
+        jsconfig = self._get(name=name, die=False)
+        if not jsconfig:
+            self._log_debug("NEW OBJ:%s:%s" % (name, self.name))
+            jsconfig = self.new(name=name)
+        jsconfig._triggers_call(jsconfig, "get")
+        if kwargs:
+            jsconfig._data_update(kwargs)
         return jsconfig
 
     def exists(self, name="main"):

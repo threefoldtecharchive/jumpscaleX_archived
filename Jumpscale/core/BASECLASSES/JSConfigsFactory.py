@@ -51,6 +51,12 @@ class JSConfigsFactory(JSBase):
         """
         return j.application.bcdb_system
 
+    def delete(self):
+        for item in self._children_recursive_get():
+            if isinstance(item, j.application.JSBaseConfigClass):
+                self._log("delete:%s" % item.name)
+                item.delete()
+
     def save(self):
         for item in self._children_recursive_get():
             if isinstance(item, j.application.JSBaseConfigClass):

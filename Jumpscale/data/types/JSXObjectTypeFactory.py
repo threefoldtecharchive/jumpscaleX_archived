@@ -85,6 +85,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
             return obj
         elif isinstance(value, dict):
             return self._schema.new(datadict=value, model=model)
+        elif isinstance(value, j.application.JSConfigClass):
+            return value._data
         else:
             raise j.exceptions.Input("can only accept dataobj, bytes (capnp) or dict as input for jsxobj")
 

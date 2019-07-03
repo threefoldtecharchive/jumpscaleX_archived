@@ -71,15 +71,18 @@ def main(self):
     """
 
     ships = Ships()
-    ship1 = ships.new(name="ibizaboat")
+    ship1 = ships.get(name="ibizaboat")
     assert ship1.name == "ibizaboat"
 
     # small test to see that the dataprops are visible
     assert len(ship1._dataprops_names_get()) == 3
 
     w = World()
-    car = w.cars.new("rabbit")
-    car2 = w.cars.new("bobby")
+
+    j.shell()
+
+    car = w.cars.get("rabbit")
+    car2 = w.cars.get("bobby")
     assert car.name == "rabbit"
     assert w.ship.onsea
     w.ship.onsea = False
@@ -92,7 +95,6 @@ def main(self):
     allchildren = w._children_recursive_get()
     assert len(allchildren) == 5
 
-    assert len(w.cars._model.find()) == 0
     w.save()
     assert len(w.cars._model.find()) == 2  # proves that the data has been saved in the DB
 
