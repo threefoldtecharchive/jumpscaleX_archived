@@ -1,7 +1,6 @@
 from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
-import time
 
 
 class WebTestCases(BaseTest):
