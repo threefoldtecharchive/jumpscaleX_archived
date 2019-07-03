@@ -32,8 +32,8 @@ class JSBase:
     _name = ""
     _location = ""
     _logger_min_level = 10
-    _protected = False
     _class_children = []
+    _properties = []
 
     def __init__(self, parent=None, **kwargs):
         """
@@ -41,14 +41,17 @@ class JSBase:
         :param topclass: if True means no-one inherits from us
         """
 
+        self._protected = False
         self._parent = parent
-        self._children = []
-        self._dataprops = []
-        self._members = []
+        self._children = {}
+        if "parent" in kwargs:
+            kwargs.pop("parent")
         self._init_pre(**kwargs)
         self.__init_class()
         self._obj_cache_reset()
         self._init(**kwargs)
+        props, methods = self._inspect()
+        self._properties = props
         self._init_post(**kwargs)
 
     def __init_class(self):
@@ -90,7 +93,6 @@ class JSBase:
             self.__init_class_post()
 
             self.__class__.__init_class_done = True
-            # self.__class__._protected = True
 
             self._log_debug("***CLASS INIT 1: %s" % self.__class__._name)
 
@@ -100,12 +102,12 @@ class JSBase:
     def __init_class_post(self):
         pass
 
-    def __inspect(self, include_prefix=None, exclude_prefix=None):
+    def _inspect(self, include_prefix=None, exclude_prefix=None):
         """
 
         returns properties and methods of the class/object
 
-        properties,methods = self.__inspect()
+        properties,methods = self._inspect()
 
         :return: (properties,methods)
         """
@@ -469,7 +471,7 @@ class JSBase:
         """
         if isinstance(item, str) or isinstance(item, int):
             name = str(item)
-        elif hasattr(item.name):
+        elif hasattr(item, "name"):
             name = item.name
         else:
             name = item._objid
@@ -551,7 +553,8 @@ class JSBase:
 
         :return:
         """
-        return self._filter(filter=filter, llist=self._children, nameonly=False)
+        children = self._children.values()
+        return self._filter(filter=filter, llist=children, nameonly=False)
 
     def _child_get(self, name=None, id=None):
         """
@@ -561,45 +564,6 @@ class JSBase:
         :return:
         """
         for item in self._children_get():
-            if name:
-                assert isinstance(name, str)
-                if self.__name_get(item) == name:
-                    return item
-            elif id:
-                id = int(id)
-                if item.id == id:
-                    return item
-            else:
-                raise RuntimeError("need to specify name or id")
-        return None
-
-    def _members_names_get(self, filter=None):
-        return self._filter(filter=filter, llist=self._members_get(filter=filter))
-
-    def _members_get(self, filter=None):
-        """
-        normally coming from a database e.g. BCDB
-        e.g. disks in a server, or clients in SSHClientFactory
-        if nothing then is self._members which is then normally = []
-
-        :param filter: is '' then will show all, if None will ignore _
-                when * at end it will be considered a prefix
-                when * at start it will be considered a end of line filter (endswith)
-                when R as first char its considered to be a regex
-                everything else is a full match
-
-        :return:
-        """
-        return self._filter(filter=filter, llist=self._members, nameonly=False)
-
-    def _member_get(self, name=None, id=None):
-        """
-        finds a member coming from e.g. a database
-        :param name:
-        :param id:
-        :return:
-        """
-        for item in self._members_get():
             if name:
                 assert isinstance(name, str)
                 if self.__name_get(item) == name:
@@ -633,7 +597,7 @@ class JSBase:
                 everything else is a full match
 
         """
-        properties, methods = self.__inspect()
+        properties, methods = self._inspect()
         return self._filter(filter=filter, llist=methods)
 
     def _properties_names_get(self, filter=None):
@@ -651,16 +615,19 @@ class JSBase:
         pname = self._parent_name_get()
         if pname not in others:
             others.append(pname)
-        properties, methods = self.__inspect()
-        res = [i for i in self._filter(filter=filter, llist=properties) if i not in others]
+        res = [i for i in self._filter(filter=filter, llist=self._properties) if i not in others]
         return res
+
+    def _properties_methods_names_get(self):
+        properties, methods = self._inspect()
+        return properties + methods
 
     def _props_all_names(self):
         l = (
             self._children_names_get()
             + self._properties_names_get()
             + self._dataprops_names_get()
-            + self._members_names_get()
+            + self._children_names_get()
             + self._methods_names_get()
         )
         return l
@@ -676,7 +643,7 @@ class JSBase:
                 return True
             if name in self._names_methods_:
                 return True
-            if self._members_get(filter=name):
+            if self._children_get(filter=name):
                 return True
             if name == self._parent_name_get():
                 return True
@@ -690,6 +657,13 @@ class JSBase:
                 return True
         else:
             return True
+
+    def _children_recursive_get(self):
+        res = []
+        for child in self._children.values():
+            res.append(child)
+            res += child._children_recursive_get()
+        return res
 
     ###################
 
@@ -732,7 +706,10 @@ class JSBase:
                 out += "{%s}### %s:\n" % (color, name)
                 if len(items) < 20:
                     for item in items:
-                        out += " - %s\n" % item
+                        if name in ["data", "properties"]:
+                            out += " - %-20s : %s\n" % (item, getattr(self, item))
+                        else:
+                            out += " - %s\n" % item
                 else:
                     out += " - ...\n"
             out += "\n"
@@ -740,8 +717,7 @@ class JSBase:
 
         out = add("children", "GREEN", self._children_names_get(), out)
         out = add("properties", "YELLOW", self._properties_names_get(), out)
-        out = add("data", "BLUE", self._dataprops_names_get(), out)
-        out = add("members", "GRAY", self._members_names_get(), out)
+        out = add("data", "GRAY", self._dataprops_names_get(), out)
 
         out += "{RESET}"
 

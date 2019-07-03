@@ -37,6 +37,7 @@ class Ship(j.application.JSBaseConfigClass):
         """
 
     def _init(self, **kwargs):
+        self.a = "some"
         pass
 
 
@@ -47,7 +48,7 @@ class Ships(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = Ship
 
-    def _init_post(self, **kwargs):
+    def _init(self, **kwargs):
         self.a = "a"
 
     def test(self):
@@ -77,11 +78,25 @@ def main(self):
     assert len(ship1._dataprops_names_get()) == 3
 
     w = World()
-    car = w.cars.new()
+    car = w.cars.new("rabbit")
+    car2 = w.cars.new("bobby")
+    assert car.name == "rabbit"
     assert w.ship.onsea
     w.ship.onsea = False
     assert w.ship.onsea == False
-    j.shell()
+
+    assert len(w.cars.find()) == 2
+
+    assert len(w.cars.find(name="rabbit")) == 1
+
+    allchildren = w._children_recursive_get()
+    assert len(allchildren) == 5
+
+    assert len(w.cars._model.find()) == 0
+    w.save()
+    assert len(w.cars._model.find()) == 2  # proves that the data has been saved in the DB
+
+    print("TEST OK")
 
 
 main(1)

@@ -146,6 +146,7 @@ class JSXObject(j.application.JSBaseClass):
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
             return self
+        j.shell()
         raise RuntimeError("cannot save, model not known")
 
     def delete(self):

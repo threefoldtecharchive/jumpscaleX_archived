@@ -7,11 +7,11 @@ classes who use JSXObject for data storage but provide nice interface to enduser
 
 
 class JSConfig(JSBase):
-    def _init_pre(self, parent=None, jsxobject=None, datadict={}):
+    def _init_pre(self, jsxobject=None, datadict={}, name=None):
 
-        self._parent = parent
+        self._triggers = []
 
-        if self._parent:
+        if self._parent and hasattr(self._parent, "_model"):
             self._model = self._parent._model
         else:
             # is a fall back for situation we want to use a JSConfig class without factory JSConfigs
@@ -22,12 +22,18 @@ class JSConfig(JSBase):
         if jsxobject:
             self._data = jsxobject
         else:
-            self._data = self._model.schema.new()  # create an empty object
+            self._data = self._model.new()  # create an empty object
 
         if datadict:
             self._data_update(datadict)
 
-        assert self._data.name  # need to make sure name exists
+        if name:
+            self._data.name = name
+        else:
+            assert self._data.name  # need to make sure name exists
+
+    def _init_post(self, **kwargs):
+        self._protected = True
 
     # def _obj_cache_reset(self):
     #     """
@@ -36,6 +42,34 @@ class JSConfig(JSBase):
     #     """
     #     JSBase._obj_cache_reset(self)
     #     self.__dict__["_data"] = None
+
+    def _trigger_add(self, method):
+        """
+
+        triggers are called with (jsconfigs, jsconfig, action)
+
+        can register any method you want to respond on some change
+
+        - jsconfigs: the obj coming from this class, the collection of jsconfigs = jsxconfig_object
+        - jsconfig: the jsconfig object
+        - action: e.g. new, delete, get,stop, ...
+
+        return: jsconfig object
+        """
+        if method not in self._triggers:
+            self._triggers.append(method)
+
+    def _triggers_call(self, jsconfig, action=None):
+        """
+        will go over all triggers and call them with arguments given
+
+        """
+        assert isinstance(jsconfig, j.application.JSConfigClass)
+        self._log_debug("trigger: %s:%s" % (jsconfig.name, action))
+        for method in self._triggers:
+            jsconfig = method(jsconfigs=self, jsconfig=jsconfig, action=action)
+            assert isinstance(jsconfig, j.application.JSConfigClass)
+        return jsconfig
 
     @property
     def _id(self):
@@ -56,13 +90,13 @@ class JSConfig(JSBase):
         assert self._model
         self._model.delete(self._data)
         if self._parent:
-            if self._data.name in self._parent._members:
-                del self._parent._members[self._data.name]
+            if self._data.name in self._parent._children:
+                del self._parent._children[self._data.name]
         self._triggers_call(self, "delete_post")
 
     def save(self):
         assert self._model
-        self._triggers_call(self, "delete")
+        self._triggers_call(self, "save")
         self._data.save()
         self._triggers_call(self, "save_post")
 
@@ -117,27 +151,34 @@ class JSConfig(JSBase):
         if key.startswith("_") or key == "data":
             self.__dict__[key] = value
 
-        elif "data" in self.__dict__ and key in self._model.schema.propertynames:
+        assert "data" not in self.__dict__
+
+        if "_data" in self.__dict__ and key in self._model.schema.propertynames:
             # if value != self._data.__getattribute__(key):
             self._log_debug("SET:%s:%s" % (key, value))
-            self._update_trigger(key, value)
-            self.__dict__["data"].__setattr__(key, value)
+            # self._update_trigger(key, value)
+            self._data.__setattr__(key, value)
         else:
-            self.__dict__[key] = value
+            if key in ["_protected"]:
+                self.__dict__[key] = value
+            elif not self._protected or key in self._properties:
+                self.__dict__[key] = value
+            else:
+                raise RuntimeError("protected property:%s" % key)
 
-    def __str__(self):
-        out = "## "
-        out += "{BLUE}%s{RESET} " % self.__class__._location
-        out += "{GRAY}Instance: "
-        out += "{RED}'%s'{RESET} " % self.name
-        out += "{GRAY}\n"
-        out += self._data._hr_get()  # .replace("{","[").replace("}","]")
-        out += "{RESET}\n\n"
-        out = j.core.tools.text_strip(out)
-        # out = out.replace("[","{").replace("]","}")
-
-        # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
-        print(out)
-        return ""
-
-    __repr__ = __str__
+    # def __str__(self):
+    #     out = "## "
+    #     out += "{BLUE}%s{RESET} " % self.__class__._location
+    #     out += "{GRAY}Instance: "
+    #     out += "{RED}'%s'{RESET} " % self.name
+    #     out += "{GRAY}\n"
+    #     out += self._data._hr_get()  # .replace("{","[").replace("}","]")
+    #     out += "{RESET}\n\n"
+    #     out = j.core.tools.text_strip(out)
+    #     # out = out.replace("[","{").replace("]","}")
+    #
+    #     # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+    #     print(out)
+    #     return ""
+    #
+    # __repr__ = __str__

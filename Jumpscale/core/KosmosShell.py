@@ -100,7 +100,7 @@ def eval_code(stmts, locals_=None, globals_=None):
     return eval(code, globals_, locals_)
 
 
-def sort_members_key(name):
+def sort_children_key(name):
     """Sort members of an object
 
     :param name: name
@@ -172,18 +172,14 @@ def get_completions(self, document, complete_event):
                 prefix += "*"  # to make it a real prefix
 
             dataprops = obj._dataprops_names_get(filter=prefix)
-            members = obj._members_names_get(filter=prefix)
             props = obj._properties_names_get(filter=prefix)
-            # props = [i for i in obj._properties_names_get(filter=prefix) if i not in dataprops]
-            # props = [i for i in props if i not in members]
             yield from colored_completions(dataprops, "ansigray")
-            yield from colored_completions(obj._children_names_get(filter=prefix), "ansigreen")
-            yield from colored_completions(members, "ansiyellow")
+            yield from colored_completions(obj._children_names_get(filter=prefix), "ansiyellow")
             yield from colored_completions(props, "ansigreen")
             yield from colored_completions(obj._methods_names_get(filter=prefix), "ansired")
         else:
             # try dir()
-            members = sorted(dir(obj), key=sort_members_key)
+            members = sorted(dir(obj), key=sort_children_key)
             yield from colored_completions(members, "ansigray")
 
     j.application._in_autocomplete = False

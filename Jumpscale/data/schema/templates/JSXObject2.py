@@ -213,7 +213,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         else:
             out+= "{{prop.name_str}}: []\n"
         {% else %}
-        out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}}).rstrip()
+        out+= "{{prop.name_str}}: %s\n"%{{prop.js_typelocation}}.toHR(self.{{prop.name}})
         {% endif %}
         {% endif %}
         {% endfor %}

@@ -4,10 +4,10 @@ from .JSBase import JSBase
 
 class JSConfigs(JSBase):
     def _init_pre(self, **kwargs):
-        print("JSCONFIGS:%s" % self._name)
-        self._members = {}
+
         self._model_ = None
-        self._triggers = []
+        if "name" in kwargs:
+            self.name = kwargs["name"]
 
     def __init_class_post(self):
 
@@ -39,33 +39,6 @@ class JSConfigs(JSBase):
         """
         return self.__class__._CHILDCLASS
 
-    def _trigger_add(self, method):
-        """
-
-        triggers are called with (jsconfigs, jsconfig, action)
-
-        can register any method you want to respond on some change
-
-        - jsconfigs: the obj coming from this class, the collection of jsconfigs = jsxconfig_object
-        - jsconfig: the jsconfig object
-        - action: e.g. new, delete, get,stop, ...
-
-        return: jsconfig object
-        """
-        if method not in self._triggers:
-            self._triggers.append(method)
-
-    def _triggers_call(self, jsconfig, action=None):
-        """
-        will go over all triggers and call them with arguments given
-
-        """
-        assert isinstance(jsconfig, j.application.JSConfigClass)
-        for method in self._triggers:
-            jsconfig = method(jsconfigs=self, jsconfig=jsconfig, action=action)
-            assert isinstance(jsconfig, j.application.JSConfigClass)
-        return jsconfig
-
     def new(self, name, jsxobject=None, **kwargs):
         """
         :param name: for the CONFIG item (is a unique name for the service, client, ...)
@@ -78,9 +51,9 @@ class JSConfigs(JSBase):
             jsxobject.name = name
         jsconfig_klass = self._childclass_selector(jsxobject)
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
-        self._triggers_call(jsconfig, "new")
-        self._members[name] = jsconfig
-        return self._members[name]
+        jsconfig._triggers_call(jsconfig, "new")
+        self._children[name] = jsconfig
+        return self._children[name]
 
     def get(self, name="main"):
         """
@@ -101,8 +74,8 @@ class JSConfigs(JSBase):
 
     def _get(self, name="main", die=True):
 
-        if name is not None and name in self._members:
-            return self._members[name]
+        if name is not None and name in self._children:
+            return self._children[name]
 
         self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name))
 
@@ -132,7 +105,7 @@ class JSConfigs(JSBase):
         self._log_debug("reset all data")
         for item in self.find():
             item.delete()
-        self._members = {}
+        self._children = {}
 
     def find(self, **kwargs):
         """
@@ -140,12 +113,24 @@ class JSConfigs(JSBase):
         :return: list of the config objects
         """
         res = []
+        for key, item in self._children.items():
+            match = True
+            for key, val in kwargs.items():
+                if hasattr(item, key):
+                    if val != getattr(item, key):
+                        match = False
+                else:
+                    raise ValueError("could not find for prop:%s, did not exist in %s" % (key, self._key))
+            if match:
+                res.append(item)
         for jsxobject in self._findData(**kwargs):
             name = jsxobject.name
-            if name in self._members:
-                res.append(self._members[name])
-            r = self.new(name=name, jsxobject=jsxobject)
-            res.append(r)
+            if name in self._children:
+                if jsxobject not in res:
+                    raise RuntimeError("should always be there")
+            else:
+                r = self.new(name=name, jsxobject=jsxobject)
+                res.append(r)
         return res
 
     def count(self, **kwargs):
@@ -193,12 +178,12 @@ class JSConfigs(JSBase):
 
     def _obj_cache_reset(self):
         JSBase._obj_cache_reset(self)
-        for key, obj in self._members.items():
+        for key, obj in self._children.items():
             obj._obj_cache_reset()
-            del self._members[key]
-            self._members.pop(key)
+            del self._children[key]
+            self._children.pop(key)
 
-    def _members_names_get(self, filter=None):
+    def _children_names_get(self, filter=None):
         """
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -213,17 +198,17 @@ class JSConfigs(JSBase):
 
         def do():
             x = []
-            for key, item in self._members.items():
+            for key, item in self._children.items():
                 x.append(key)
             for item in self._findData():
                 if item.name not in x:
                     x.append(item.name)
             return x
 
-        x = self._cache.get(key="_members_names_get", method=do, expire=10)  # will redo every 10 sec
+        x = self._cache.get(key="_children_names_get", method=do, expire=10)  # will redo every 10 sec
         return self._filter(filter=filter, llist=x, nameonly=True)
 
-    def _members_get(self, filter=None):
+    def _children_get(self, filter=None):
         """
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -234,7 +219,7 @@ class JSConfigs(JSBase):
         :return:
         """
         x = []
-        for key, item in self._members.items():
+        for key, item in self._children.items():
             x.append(item)
         for item in self.findData():
             if item not in x:
@@ -255,6 +240,3 @@ class JSConfigs(JSBase):
         if r is None:
             r = self.new(name=name)
         return r
-
-    def __setattr__(self, key, value):
-        self.__dict__[key] = value

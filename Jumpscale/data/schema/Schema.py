@@ -60,10 +60,11 @@ class Schema(j.application.JSBaseClass):
     @property
     def url_str(self):
         u = self.url_noversion + ""
+        # self._log_debug(u)
         if "schema" in u:
             u = u.split("schema", 1)[1]
         if "jumpscale" in u:
-            u = u.split("schema", 1)[1]
+            u = u.split("jumpscale", 1)[1]
         return u
 
     @property
