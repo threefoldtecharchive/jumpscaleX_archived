@@ -15,8 +15,11 @@ class Runtimes_TestCases(BaseTest):
         """ BLD-007
         *Test golang builer sandbox*
         """
+        logger.debug("Go builder: run build method.")
         j.builders.runtimes.golang.build(reset=True)
+        logger.debug("libffi builder: run install method.")
         j.builders.runtimes.golang.install()
+        logger.debug("check that cmake is installed successfully")
         self.assertTrue(j.builders.runtimes.golang.is_installed)
 
     def test002_lua(self):

@@ -31,3 +31,21 @@ class Blockchain_TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("ethereum")))
         j.builders.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("ethereum")))
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/677"):
+    def test003_ripple(self):
+        """ BLD-035
+        *Test ripple builer sandbox*
+        """
+        logger.debug("Ripple builder: run build method.")
+        j.builders.blockchain.ripple.build(reset=True)
+        logger.debug("libffi builder: run install method.")
+        j.builders.blockchain.ripple.install(reset=True)
+        logger.debug("ripple builder: run start method.")
+        j.builders.blockchain.ripple.start()
+        logger.debug("check that ripple server started successfully.")
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("ripple")))
+        logger.debug("ripple builder: run stop method.")
+        j.builders.blockchain.ripple.stop()
+        logger.debug("check that ripple server started successfully.")
+        self.assertGreaterEqual(0, len(j.sal.process.getProcessPid("ripple")  
