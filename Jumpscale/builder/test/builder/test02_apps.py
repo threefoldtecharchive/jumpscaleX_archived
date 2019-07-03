@@ -32,6 +32,8 @@ class Apps_TestCases(BaseTest):
         logger.info("check that %s server started successfully." % builder)
         time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        logger.info("%s builder: run stop method." % builder)
+        getattr(j.builders.apps, builder).stop()
         logger.info("check that %s server stopped successfully." % builder)
         time.sleep(10)
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
