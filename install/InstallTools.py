@@ -821,7 +821,7 @@ class Tools:
         if "darwin" in MyEnv.platform():
 
             script = """
-            pip3 install ipython==6.5.0
+            pip3 install ipython>=6.5.0
             """
             Tools.execute(script, interactive=True)
 
@@ -838,7 +838,7 @@ class Tools:
                 sudo apt-get install -y locales
                 sudo apt-get install -y curl rsync
                 sudo apt-get install -y unzip
-                pip3 install ipython==6.5.0
+                pip3 install ipython>=6.5.0
                 pip3 install pudb
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
@@ -2606,7 +2606,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython==6.5",
+                "ipython>=6.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
