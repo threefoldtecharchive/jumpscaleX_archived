@@ -22,6 +22,7 @@ class JSConfig(JSBase):
         if jsxobject:
             self._data = jsxobject
         else:
+            jsxobjects = []
             if name:
                 jsxobjects = self._model.find(name=name)
             if len(jsxobjects) > 0:
