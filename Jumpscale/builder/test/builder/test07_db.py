@@ -1,16 +1,9 @@
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest, time
 from parameterized import parameterized
 
 
-class DB_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("db_tests_{time}.log")
-        logger.debug("Starting of db testcases.")
-
+class DBTestCases(BaseTest):
     @parameterized.expand(
         [
             ("zdb", "zdb"),
@@ -30,17 +23,17 @@ class DB_TestCases(BaseTest):
         skipped_builders = {"mariadb": "https://github.com/threefoldtech/jumpscaleX/issues/652"}
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
-        logger.info("%s builder: run build method." % builder)
+        self.info(" %s builder: run build method.".format(builder))
         getattr(j.builders.db, builder).build()
-        logger.info("%s builder: run install  method." % builder)
+        self.info(" %s builder: run install  method.".format(builder))
         getattr(j.builders.db, builder).install()
-        logger.info("%s builder: run start method." % builder)
+        self.info(" %s builder: run start method.".format(builder))
         getattr(j.builders.db, builder).start()
-        logger.info("check that %s server started successfully." % builder)
-        time.sleep(10)
+        self.info(" check that %s server started successfully.".format(builder))
+        self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
-        logger.info("%s builder: run stop method." % builder)
+        self.info(" %s builder: run stop method.".format(builder))
         getattr(j.builders.db, builder).stop()
-        logger.info("check that %s server stopped successfully." % builder)
-        time.sleep(10)
+        self.info(" check that %s server stopped successfully.".format(builder))
+        self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))

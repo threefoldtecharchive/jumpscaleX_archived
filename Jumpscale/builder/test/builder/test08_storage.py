@@ -5,12 +5,7 @@ import unittest, time
 from parameterized import parameterized
 
 
-class Storage_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("storage_tests_{time}.log")
-        logger.debug("Starting of db builders testcases.")
-
+class StorageTestCases(BaseTest):
     @parameterized.expand([("minio", "minio"), ("syncthing", "syncthing"), ("s3scality", "s3scality")])
     def test001_storage_builders(self, builder, process):
         """ BLD-001
@@ -22,31 +17,31 @@ class Storage_TestCases(BaseTest):
         }
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
-        logger.info("%s builder: run build method." % builder)
+        self.info(" %s builder: run build method.".format(builder))
         getattr(j.builders.storage, builder).build()
-        logger.info("%s builder: run install  method." % builder)
+        self.info(" %s builder: run install  method.".format(builder))
         getattr(j.builders.storage, builder).install()
-        logger.info("%s builder: run start method." % builder)
+        self.info(" %s builder: run start method.".format(builder))
         getattr(j.builders.storage, builder).start()
-        logger.info("check that %s server started successfully." % builder)
-        time.sleep(10)
+        self.info(" check that %s server started successfully.".format(builder))
+        self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
-        logger.info("%s builder: run stop method." % builder)
+        self.info(" %s builder: run stop method.".format(builder))
         getattr(j.builders.storage, builder).stop()
-        logger.info("check that %s server stopped successfully." % builder)
-        time.sleep(10)
+        self.info(" check that %s server stopped successfully.".format(builder))
+        self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
 
     def test002_restic(self):
         """ BLD-033
         *Test restic builer sandbox*
         """
-        logger.debug("restic builder: run build method.")
+        self.info(" restic builder: run build method.")
         j.builders.storage.restic.build(reset=True)
-        logger.debug("restic builder: run install method.")
+        self.info(" restic builder: run install method.")
         j.builders.storage.restic.install()
         try:
-            logger.debug("check that libffi is installed successfully")
+            self.info(" check that libffi is installed successfully")
             j.sal.process.execute("which restic")
         except:
             self.assertTrue(False)

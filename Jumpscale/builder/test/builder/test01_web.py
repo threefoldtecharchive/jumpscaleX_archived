@@ -1,18 +1,10 @@
 from Jumpscale import j
-
 from .base_test import BaseTest
-import unittest
-import time
-from loguru import logger
 from parameterized import parameterized
+import time
 
 
-class Web_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("web_builder_tests_{time}.log")
-        logger.debug("Starting of  web builder testcases  which test main methods:build,install,start and stop.")
-
+class WebTestCases(BaseTest):
     @parameterized.expand([("caddy", "caddy"), ("traefik", "traefik"), ("nginx", "nginx"), ("openresty", "resty")])
     def test_web_builders(self, builder, process):
         """ BLD-001
@@ -25,17 +17,18 @@ class Web_TestCases(BaseTest):
         }
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
-        logger.info("%s builder: run build method." % builder)
+            
+        self.info(" * {} builder: run build method.".format(builder))
         getattr(j.builders.web, builder).build()
-        logger.info("%s builder: run install  method." % builder)
+        self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.web, builder).install()
-        logger.info("%s builder: run start method." % builder)
+        self.info(" * {} builder: run start method.".format(builder))
         getattr(j.builders.web, builder).start()
-        logger.info("check that %s server started successfully." % builder)
-        time.sleep(10)
+        self.info(" * check that {} server started successfully.".format(builder))
+        self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
-        logger.info("%s builder: run stop method." % builder)
+        self.info(" * {} builder: run stop method.".format(builder))
         getattr(j.builders.web, builder).stop()
-        logger.info("check that %s server stopped successfully." % builder)
-        time.sleep(10)
+        self.info(" * check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
