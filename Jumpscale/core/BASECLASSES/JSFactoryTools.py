@@ -67,6 +67,7 @@ class JSFactoryTools:
         name_test = "_".join(name.split("_", 1)[1:])
         name_test = name_test.split(".")[0]
         for item in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py"):
+
             bname = j.sal.fs.getBaseName(item)
             if "_" in bname:
                 bname2 = "_".join(bname.split("_", 1)[1:])  # remove part before first '_'
@@ -76,7 +77,7 @@ class JSFactoryTools:
                 bname2 = bname2[:-3]
             if bname2.strip().lower() == name_test:
                 return item
-        return self._test_error(name, RuntimeError("Could not find code: '%s' in %s" % (name, path)))
+        raise RuntimeError("Could not find code: '%s' in %s" % (name, path))
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 
