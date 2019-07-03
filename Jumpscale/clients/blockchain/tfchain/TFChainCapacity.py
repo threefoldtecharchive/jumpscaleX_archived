@@ -1,6 +1,9 @@
-import nacl
-from Jumpscale import j
 import decimal
+import nacl
+import time
+
+from datetime import date
+from Jumpscale import j
 
 from . import schemas
 
@@ -63,7 +66,81 @@ class TFChainCapacity:
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
-    def reserve_s3(self, email, threebot_id, location, size=1, source=None, refund=None):
+    def _notary_data_get(self, hash_key):
+        data = self._notary_client.get(hash_key)
+        sk = self._threebot_singing_key(data.threebot_id)
+        pk = _signing_key_to_private_key(sk)
+        box = nacl.public.Box(pk, self._grid_broker_pub_key)
+        data_dict = j.data.serializers.msgpack.loads(box.decrypt(data.content))
+
+        return data.threebot_id, data_dict
+
+    def reservations_transactions_list(self):
+        """
+        list ids of all transactions that happened due to a reservation
+        """
+        if not self._wallet.reservations_transactions:
+            transactions = list()
+            for transaction in self._wallet.transactions:
+                if not transaction.data:
+                    continue
+                try:
+                    _, data_dict = self._notary_data_get(transaction.data.value.decode())
+                    if data_dict.get("type") in ["vm", "reverse_proxy", "namespace", "s3"]:
+                        transactions.append(transaction.id)
+                except Exception as e:
+                    if "reservation not found" not in str(e):
+                        raise e
+            self._wallet.reservations_transactions = transactions
+            self._wallet.save()
+        return self._wallet.reservations_transactions
+
+    def reservation_extend(self, transaction_id, email, duration=1, source=None, refund=None):
+        """
+        extend the expiry of an existing reservation
+
+        :param transaction_id: id of the transaction that was created for the reservation you want to extend
+        :type transaction_id: string
+        :param email: email address on which to send the result of the extension
+        :type email: string
+        :param duration: number of months to extend the expiry by
+        :type duration: int
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :type source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :type refund: string, optional
+
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
+
+        """
+        transaction = self._wallet.client.transaction_get(transaction_id)
+        try:
+            threebot_id, reservation = self._notary_data_get(transaction.data.value.decode())
+            if reservation.get("type") not in ["vm", "reverse_proxy", "namespace", "s3"]:
+                raise ValueError("Invalid reservation transaction")
+        except Exception as e:
+            if "reservation not found" in str(e):
+                raise ValueError("Invalid reservation transaction")
+            raise e
+
+        templates = {
+            "vm": "tfchain.reservation.zos_vm",
+            "s3": "tfchain.reservation.s3",
+            "namespace": "tfchain.reservation.zdb_namespace",
+            "reverse_proxy": "tfchain.reservation.reverse_proxy",
+        }
+        reservation["duration"] = duration
+        reservation =  j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
+
+        amount = reservation_amount(reservation)
+        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(data={"duration": duration, "transaction_id": transaction.id, "email": email})
+
+        signature = self._sign_reservation(threebot_id, extension)
+        response = self._notary_client.register(threebot_id, signature.message, signature.signature)
+        return self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
+
+    def reserve_s3(self, email, threebot_id, location, size=1, duration=1, source=None, refund=None):
         """
         reserve an S3 archive
 
@@ -76,6 +153,8 @@ class TFChainCapacity:
                     - 1 => 500 GiB of storage
                     - 2 => 1000 GiB of storage
         :type size: int, optional
+        :param duration: number of months the reservation should be valid for
+        :type duration: int
         :param location: farm name where to deploy the archive
                          based on the size requests, a certain number of different node will be use to provide the required
                          0-db namespaces
@@ -89,12 +168,12 @@ class TFChainCapacity:
         """
 
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.s3").new(
-            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "s3", "location": location}
+            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "s3", "location": location, "duration": duration}
         )
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, location, size=1, source=None, refund=None):
+    def reserve_zos_vm(self, email, threebot_id, location, size=1, duration=1, source=None, refund=None):
         """
         reserve an virtual 0-OS
 
@@ -107,6 +186,8 @@ class TFChainCapacity:
                     - 1 => 1 CPU 2 GiB of memory  10 GiB of storage
                     - 2 => 2 CPU 4 GiB of memory  40 GiB of storage
         :type size: int, optional
+        :param duration: number of months the reservation should be valid for
+        :type duration: int
         :param location: node id or farm name where to deploy the virtual 0-OS
                         if location is a node id, the node is used
                         if location is a farm id, a node is automatically chosen in the farm and used.
@@ -119,13 +200,13 @@ class TFChainCapacity:
         :rtype: tuple
         """
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
-            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location}
+            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location, "duration": duration}
         )
         _validate_reservation_vm(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def reserve_zdb_namespace(
-        self, email, threebot_id, location, size=1, disk_type="ssd", mode="seq", password=None, source=None, refund=None
+        self, email, threebot_id, location, size=1, duration=1, disk_type="ssd", mode="seq", password=None, source=None, refund=None
     ):
         """
         reserve an 0-DB namespace
@@ -136,6 +217,8 @@ class TFChainCapacity:
         :type threebot_id: string
         :param size: size of the namespace in GB, defaults to 1
         :type size: int, optional
+        :param duration: number of months the reservation should be valid for
+        :type duration: int
         :param disk_type: type of disk used for the 0-db
                           can be or 'ssd' or 'hdd'
         :type disk_type: string
@@ -161,12 +244,13 @@ class TFChainCapacity:
                 "disk_type": disk_type,
                 "mode": mode,
                 "password": password,
+                "duration": duration,
             }
         )
         _validate_reservation_namespace(reservation)
-        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
+        return self._process_reservation(reservation, threebot_id,source=source, refund=refund)
 
-    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls, source=None, refund=None):
+    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls, duration=1, source=None, refund=None):
         """
         reserve a HTTP reverse proxy
 
@@ -183,6 +267,8 @@ class TFChainCapacity:
                              Format of the url should be a full url with port.
                              example: http://10.244.1.10:8080
         :type backend_urls: list
+        :param duration: number of months the reservation should be valid for
+        :type duration: int
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
@@ -198,6 +284,7 @@ class TFChainCapacity:
                 # 'location': location,
                 "domain": domain,
                 "backend_urls": backend_urls,
+                "duration": duration,
             }
         )
         _validate_reverse_proxy(reservation)
@@ -208,8 +295,19 @@ class TFChainCapacity:
         amount = reservation_amount(reservation)
 
         # validate bot id exists
-        self._wallet.client.threebot.record_get(threebot_id)
+        bot = self._wallet.client.threebot.record_get(threebot_id)
+        reservation_expiry = j.tools.time.extend(time.time(), reservation.duration)
+        if date.fromtimestamp(reservation_expiry) > date.fromtimestamp(bot.expiration):
+            raise ValueError("Capacity expiration time exceeds threebot's expiration")
 
+        signature = self._sign_reservation(threebot_id, reservation)
+        response = self._notary_client.register(threebot_id, signature.message, signature.signature)
+        transaction_result =  self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
+        self._wallet.reservations_transactions.append(transaction_result.transaction.id)
+        self._wallet.save()
+        return transaction_result
+
+    def _sign_reservation(self, threebot_id, reservation):
         # get binary representation
         b = encode_reservation(reservation)
 
@@ -221,15 +319,15 @@ class TFChainCapacity:
         pk = _signing_key_to_private_key(sk)
         box = nacl.public.Box(pk, self._grid_broker_pub_key)
         encrypted = bytes(box.encrypt(b))
-        signature = sk.sign(encrypted, nacl.encoding.RawEncoder)
-        response = self._notary_client.register(threebot_id, signature.message, signature.signature)
-        return self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
-
+        return sk.sign(encrypted, nacl.encoding.RawEncoder)
 
 def _validate_reservation_base(reservation):
     for field in ["email"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
+
+    if reservation.duration < 1:
+        raise ValueError("reservation duration has to be 1 month or more")
 
 
 def _validate_reservation_s3(reservation):
@@ -289,16 +387,17 @@ def _signing_key_to_private_key(sk):
 def reservation_amount(reservation):
     # https://github.com/threefoldfoundation/info_grid/tree/development/docs/capacity_reservation#amount-of-tft-for-each-type-of-reservation
     if reservation.type == "s3":
-        return s3_price(reservation.size)
+        price = s3_price(reservation.size)
     elif reservation.type == "vm":
-        return vm_price(reservation.size)
+        price = vm_price(reservation.size)
     elif reservation.type == "namespace":
-        return namespace_price(reservation.size)
+        price = namespace_price(reservation.size)
     elif reservation.type == "reverse_proxy":
-        return proxy_price()
+        price = proxy_price()
     else:
         raise ValueError("unsupported reservation type")
 
+    return price * reservation.duration
 
 def s3_price(size):
     if size == 1:
