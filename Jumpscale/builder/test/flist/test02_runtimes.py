@@ -22,3 +22,15 @@ class Runtimes_TestCases(BaseTest):
         logger.debug("Check that lua flist works.")
         data = self.cont_client.system("/sandbox/bin/lua -h").get()
         self.assertIn("Usage: lua", data.stdout)
+
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/678")
+    def test002_golang(self):
+        """ SAN-027
+        *Test golang builer sandbox*
+        """        
+        logger.debug("Run  golang sandbox, should succeed and upload flist on hub.")
+        j.builders.runtimes.golang.sandbox(**self.sandbox_args)
+        logger.debug("Deploy container with uploaded golang builder flist.")
+        self.deploy_flist_container("golang")
+        logger.debug("Check that golang flist works by checking openssl file existing, should succeed. ")
+        self.assertIn("Usage:", self.check_container_flist("/sandbox/bin/golang help"))
