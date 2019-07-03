@@ -54,16 +54,16 @@ class JSConfig(JSBase):
     def delete(self):
         self._triggers_call(self, "delete")
         assert self._model
-        self._model.delete(self.data)
+        self._model.delete(self._data)
         if self._parent:
-            if self.data.name in self._parent._children:
-                del self._parent._children[self.data.name]
+            if self._data.name in self._parent._members:
+                del self._parent._members[self._data.name]
         self._triggers_call(self, "delete_post")
 
     def save(self):
         assert self._model
         self._triggers_call(self, "delete")
-        self.data.save()
+        self._data.save()
         self._triggers_call(self, "save_post")
 
     def edit(self):
@@ -88,18 +88,18 @@ class JSConfig(JSBase):
             self._data.data_update(data2)
         j.sal.fs.remove(path)
 
-    def __dataprops_names_get(self, filter=None):
+    def _dataprops_names_get(self, filter=None):
         """
         e.g. in a JSConfig object would be the names of properties of the jsxobject = data
         e.g. in a JSXObject would be the names of the properties of the data itself
 
         :return: list of the names
         """
-        # return self.__filter(filter=filter, llist=self.__names_methods_)
+        return self._filter(filter=filter, llist=self._model.schema.propertynames)
 
     # def __dir__(self):
     #     items = [key for key in self.__dict__.keys() if not key.startswith("_")]
-    #     for item in self._schema.propertynames:
+    #     for item in self._model.schema.propertynames:
     #         if item not in items:
     #             items.append(item)
     #     items.sort()
@@ -108,7 +108,7 @@ class JSConfig(JSBase):
     def __getattr__(self, attr):
         if attr.startswith("_"):
             return self.__getattribute__(attr)
-        if attr in self._schema.propertynames:
+        if attr in self._model.schema.propertynames:
             return self._data.__getattribute__(attr)
 
         return self.__getattribute__(attr)
@@ -117,7 +117,7 @@ class JSConfig(JSBase):
         if key.startswith("_") or key == "data":
             self.__dict__[key] = value
 
-        elif "data" in self.__dict__ and key in self._schema.propertynames:
+        elif "data" in self.__dict__ and key in self._model.schema.propertynames:
             # if value != self._data.__getattribute__(key):
             self._log_debug("SET:%s:%s" % (key, value))
             self._update_trigger(key, value)

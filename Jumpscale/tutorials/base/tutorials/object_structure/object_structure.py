@@ -47,6 +47,12 @@ class Ships(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = Ship
 
+    def _init_post(self, **kwargs):
+        self.a = "a"
+
+    def test(self):
+        pass
+
 
 class World(j.application.JSBaseConfigsFactoryClass):
     """
@@ -67,7 +73,8 @@ def main(self):
     ship1 = ships.new(name="ibizaboat")
     assert ship1.name == "ibizaboat"
 
-    j.shell()
+    # small test to see that the dataprops are visible
+    assert len(ship1._dataprops_names_get()) == 3
 
     w = World()
     car = w.cars.new()

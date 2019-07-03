@@ -147,6 +147,8 @@ def get_completions(self, document, complete_event):
 
     :rtype: `Completion` generator
     """
+    j = KosmosShellConfig.j
+    j.application._in_autocomplete = True
 
     def colored_completions(names, color):
         for name in names:
@@ -165,17 +167,26 @@ def get_completions(self, document, complete_event):
 
     obj = eval_code(parent, self.get_locals(), self.get_globals())
     if obj:
-        if hasattr(obj.__class__, "_methods_"):
-            yield from colored_completions(obj._properties_children(), "ansigreen")
-            yield from colored_completions(obj._properties_model(), "ansiyellow")
-            yield from colored_completions(obj.__names_methods(prefix=prefix), "ansiblue")
-            yield from colored_completions(obj.__names_properties(prefix=prefix), "ansigray")
-            if hasattr(obj.__class__, "_instance_names"):
-                yield from colored_completions(obj._instance_names(prefix=prefix), "ansired")
+        if isinstance(obj, j.application.JSBaseClass):
+            if not prefix.endswith("*"):
+                prefix += "*"  # to make it a real prefix
+
+            dataprops = obj._dataprops_names_get(filter=prefix)
+            members = obj._members_names_get(filter=prefix)
+            props = obj._properties_names_get(filter=prefix)
+            # props = [i for i in obj._properties_names_get(filter=prefix) if i not in dataprops]
+            # props = [i for i in props if i not in members]
+            yield from colored_completions(dataprops, "ansigray")
+            yield from colored_completions(obj._children_names_get(filter=prefix), "ansigreen")
+            yield from colored_completions(members, "ansiyellow")
+            yield from colored_completions(props, "ansigreen")
+            yield from colored_completions(obj._methods_names_get(filter=prefix), "ansired")
         else:
             # try dir()
             members = sorted(dir(obj), key=sort_members_key)
             yield from colored_completions(members, "ansigray")
+
+    j.application._in_autocomplete = False
 
 
 def get_doc_string(tbc, locals_, globals_):

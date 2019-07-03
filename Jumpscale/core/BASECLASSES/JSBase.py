@@ -31,7 +31,7 @@ class JSBase:
     _test_runs_error = {}
     _name = ""
     _location = ""
-    _logger_min_level = 100
+    _logger_min_level = 10
     _protected = False
     _class_children = []
 
@@ -42,9 +42,9 @@ class JSBase:
         """
 
         self._parent = parent
-        self.__children = []
-        self.__dataprops = []
-        self.__members = []
+        self._children = []
+        self._dataprops = []
+        self._members = []
         self._init_pre(**kwargs)
         self.__init_class()
         self._obj_cache_reset()
@@ -92,7 +92,7 @@ class JSBase:
             self.__class__.__init_class_done = True
             # self.__class__._protected = True
 
-            print("***CLASS INIT 1: %s" % self.__class__._name)
+            self._log_debug("***CLASS INIT 1: %s" % self.__class__._name)
 
             # lets make sure the initial loglevel gets set
             self._logger_set(children=False, parents=False)
@@ -109,7 +109,7 @@ class JSBase:
 
         :return: (properties,methods)
         """
-        print("INSPECT:%s" % self.__class__)
+        self._log("INSPECT:%s" % self.__class__)
         properties = []
         methods = []
         for name, obj in inspect.getmembers(self.__class__):
@@ -265,7 +265,6 @@ class JSBase:
     @property
     def _dirpath(self):
         if self.__class__._dirpath_ == "":
-            print("DIRPATH")
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
 
             if not self.__class__._dirpath_:
@@ -278,16 +277,17 @@ class JSBase:
         if self._objid_ is None:
             id = self.__class__._location
             id2 = ""
-            try:
-                id2 = self.data.name
-            except:
-                pass
-            if id2 == "":
+            if hasattr(self, "_data"):
                 try:
-                    if self.data.id is not None:
-                        id2 = self.data.id
+                    id2 = self._data.name
                 except:
                     pass
+                if id2 == "":
+                    try:
+                        if self._data.id is not None:
+                            id2 = self._data.id
+                    except:
+                        pass
             if id2 == "":
                 for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
                     if item in self.__dict__ and self.__dict__[item]:
@@ -364,10 +364,9 @@ class JSBase:
         - DEBUG 	10
 
         """
-        # if j.application._in_autocomplete == 2:
-        #     raise RuntimeError("s")
-        # if j.application._in_autocomplete:
-        #     return None
+
+        if j.application._in_autocomplete:
+            return None
 
         if j.application.debug or self.__class__._logger_min_level - 1 < level:
             # now we will log
@@ -476,7 +475,7 @@ class JSBase:
             name = item._objid
         return name
 
-    def __filter(self, filter=None, llist=[], nameonly=True, unique=True, sort=True):
+    def _filter(self, filter=None, llist=[], nameonly=True, unique=True, sort=True):
         """
 
         :param filter: is '' then will show all, if None will ignore _
@@ -495,26 +494,30 @@ class JSBase:
             name = self.__name_get(item)
             if not name:
                 continue
-            if not filter:
-                pass
-            elif name.startswith("_"):
+            if name.startswith("_JSBase"):
                 continue
-            else:
-                if filter.startswith("*"):
-                    filter = filter[1:]
-                    if not name.startswith(filter):
+            if filter:
+                if not filter.startswith("_") and name.startswith("_"):
+                    continue
+                if filter.endswith("*"):
+                    filter2 = filter[:-1]
+                    if not name.startswith(filter2):
                         continue
-                elif filter.endswith("*"):
-                    filter = filter[:-1]
-                    if not name.endswith(filter):
+                elif filter.startswith("*"):
+                    filter2 = filter[1:]
+                    if not name.endswith(filter2):
                         continue
                 elif filter.startswith("R"):
                     j.shell()
-                    filter = filter[1:]
+                    filter3 = filter[1:]
                     w
                 else:
                     if not name == filter:
                         continue
+            else:
+                if name.startswith("_"):
+                    continue
+
             if nameonly:
                 item = name
             if unique:
@@ -528,17 +531,17 @@ class JSBase:
 
         return res
 
-    def __parent_name_get(self):
+    def _parent_name_get(self):
         if self._parent:
             return self.__name_get(self._parent)
         return ""
 
-    def __children_names_get(self, filter=None):
-        return self.__filter(filter=filter, llist=self.__children_get(filter=filter))
+    def _children_names_get(self, filter=None):
+        return self._filter(filter=filter, llist=self._children_get(filter=filter))
 
-    def __children_get(self, filter=None):
+    def _children_get(self, filter=None):
         """
-        if nothing then is self.__children
+        if nothing then is self._children
 
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -548,16 +551,16 @@ class JSBase:
 
         :return:
         """
-        return self.__filter(filter=filter, llist=self.__children, nameonly=False)
+        return self._filter(filter=filter, llist=self._children, nameonly=False)
 
-    def __child_get(self, name=None, id=None):
+    def _child_get(self, name=None, id=None):
         """
         finds a child based on name or id
         :param name:
         :param id:
         :return:
         """
-        for item in self.__children_get():
+        for item in self._children_get():
             if name:
                 assert isinstance(name, str)
                 if self.__name_get(item) == name:
@@ -570,14 +573,14 @@ class JSBase:
                 raise RuntimeError("need to specify name or id")
         return None
 
-    def __members_names_get(self, filter=None):
-        return self.__filter(filter=filter, llist=self.__members_get(filter=filter))
+    def _members_names_get(self, filter=None):
+        return self._filter(filter=filter, llist=self._members_get(filter=filter))
 
-    def __members_get(self, filter=None):
+    def _members_get(self, filter=None):
         """
         normally coming from a database e.g. BCDB
         e.g. disks in a server, or clients in SSHClientFactory
-        if nothing then is self.__members which is then normally = []
+        if nothing then is self._members which is then normally = []
 
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -587,16 +590,16 @@ class JSBase:
 
         :return:
         """
-        return self.__filter(filter=filter, llist=self.__members, nameonly=False)
+        return self._filter(filter=filter, llist=self._members, nameonly=False)
 
-    def __member_get(self, name=None, id=None):
+    def _member_get(self, name=None, id=None):
         """
         finds a member coming from e.g. a database
         :param name:
         :param id:
         :return:
         """
-        for item in self.__members_get():
+        for item in self._members_get():
             if name:
                 assert isinstance(name, str)
                 if self.__name_get(item) == name:
@@ -609,17 +612,17 @@ class JSBase:
                 raise RuntimeError("need to specify name or id")
         return None
 
-    def __dataprops_names_get(self, filter=None):
+    def _dataprops_names_get(self, filter=None):
         """
         e.g. in a JSConfig object would be the names of properties of the jsxobject = data
         e.g. in a JSXObject would be the names of the properties of the data itself
 
         :return: list of the names
         """
-        # return self.__filter(filter=filter, llist=self._names_methods_)
+        # return self._filter(filter=filter, llist=self._names_methods_)
         return []
 
-    def __methods_names_get(self, filter=None):
+    def _methods_names_get(self, filter=None):
         """
         return the names of the methods which were defined at __init__ level by the developer
 
@@ -631,9 +634,9 @@ class JSBase:
 
         """
         properties, methods = self.__inspect()
-        return self.__filter(filter=filter, llist=methods)
+        return self._filter(filter=filter, llist=methods)
 
-    def __properties_names_get(self, filter=None):
+    def _properties_names_get(self, filter=None):
         """
         return the names of the properties which were defined at __init__ level by the developer
 
@@ -644,25 +647,25 @@ class JSBase:
                 everything else is a full match
 
         """
-        others = self.__children_names_get(filter=filter)
-        pname = self.__parent_name_get()
+        others = self._children_names_get(filter=filter)
+        pname = self._parent_name_get()
         if pname not in others:
             others.append(pname)
         properties, methods = self.__inspect()
-        res = [i for i in self.__filter(filter=filter, llist=properties) if i not in others]
+        res = [i for i in self._filter(filter=filter, llist=properties) if i not in others]
         return res
 
-    def __props_all_names(self):
+    def _props_all_names(self):
         l = (
-            self.__children_names_get()
-            + self.__properties_names_get()
-            + self.__dataprops_names_get()
-            + self.__members_names_get()
-            + self.__methods_names_get()
+            self._children_names_get()
+            + self._properties_names_get()
+            + self._dataprops_names_get()
+            + self._members_names_get()
+            + self._methods_names_get()
         )
         return l
 
-    def __prop_exist(self, name):
+    def _prop_exist(self, name):
         """
         only returns in protected mode otherwise always True
         :param name:
@@ -673,17 +676,17 @@ class JSBase:
                 return True
             if name in self._names_methods_:
                 return True
-            if self.__members_get(filter=name):
+            if self._members_get(filter=name):
                 return True
-            if name == self.__parent_name_get():
+            if name == self._parent_name_get():
                 return True
             if self._children_get(filter=name):
                 return True
-            if self.__dataprops_get(filter=name):
+            if self._dataprops_get(filter=name):
                 return True
-            if self.__methods_names_get(filter=name):
+            if self._methods_names_get(filter=name):
                 return True
-            if self.__properties_names_get(filter=name):
+            if self._properties_names_get(filter=name):
                 return True
         else:
             return True
@@ -691,14 +694,14 @@ class JSBase:
     ###################
 
     # def __getattr__(self, attr):
-    #     if not self.__prop_exist(attr):
+    #     if not self._prop_exist(attr):
     #         raise RuntimeError("did not find attr:%s" % attr)
     #
     #     # if attr.startswith("_"):
     #     return self.__getattribute__(attr)
     #
     # def __setattr__(self, attr, value):
-    #     if not self.__prop_exist(attr):
+    #     if not self._prop_exist(attr):
     #         raise RuntimeError("did not find attr:%s" % attr)
     #
     #     self.__dict__[attr] = value
@@ -709,7 +712,7 @@ class JSBase:
     #     self.__dict__[key] = value
     #
     # elif "data" in self.__dict__ and key in self._schema.propertynames:
-    #     # if value != self.data.__getattribute__(key):
+    #     # if value != self._data.__getattribute__(key):
     #     self._log_debug("SET:%s:%s" % (key, value))
     #     self._update_trigger(key, value)
     #     self.__dict__["data"].__setattr__(key, value)
@@ -735,10 +738,10 @@ class JSBase:
             out += "\n"
             return out
 
-        out = add("children", "GREEN", self.__children_names_get(), out)
-        out = add("properties", "YELLOW", self.__properties_names_get(), out)
-        out = add("data", "BLUE", self.__dataprops_names_get(), out)
-        out = add("members", "GRAY", self.__members_names_get(), out)
+        out = add("children", "GREEN", self._children_names_get(), out)
+        out = add("properties", "YELLOW", self._properties_names_get(), out)
+        out = add("data", "BLUE", self._dataprops_names_get(), out)
+        out = add("members", "GRAY", self._members_names_get(), out)
 
         out += "{RESET}"
 

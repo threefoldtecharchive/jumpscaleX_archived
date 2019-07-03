@@ -47,7 +47,7 @@ class JSConfigsFactory(JSBase):
         """
         return j.application.bcdb_system
 
-    def __members_names_get(self, filter=None):
+    def _members_names_get(self, filter=None):
         """
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -62,16 +62,16 @@ class JSConfigsFactory(JSBase):
 
         def do():
             x = []
-            for key, item in self._children.items():
+            for key, item in self._members.items():
                 x.append(key)
             for item in self.findData():
                 if item.name not in x:
                     x.append(item.name)
 
-        x = self._cache.get(key="__members_names_get", method=do, expire=10)  # will redo every 10 sec
-        return self.__filter(filter=filter, llist=x, nameonly=True)
+        x = self._cache.get(key="_members_names_get", method=do, expire=10)  # will redo every 10 sec
+        return self._filter(filter=filter, llist=x, nameonly=True)
 
-    def __members_get(self, filter=None):
+    def _members_get(self, filter=None):
         """
         :param filter: is '' then will show all, if None will ignore _
                 when * at end it will be considered a prefix
@@ -83,20 +83,20 @@ class JSConfigsFactory(JSBase):
         """
         j.shell()
         x = []
-        for key, item in self._children.items():
+        for key, item in self._members.items():
             x.append(item)
         for item in self.findData():
             if item not in x:
                 x.append(item)
-        return self.__filter(filter=filter, llist=x, nameonly=False)
+        return self._filter(filter=filter, llist=x, nameonly=False)
 
     def __getattr__(self, name):
         # if private then just return
         if (
             name.startswith("_")
-            or name in self.__methods_names_get()
-            or name in self.__properties_names_get()
-            or name in self.__dataprops_names_get()
+            or name in self._methods_names_get()
+            or name in self._properties_names_get()
+            or name in self._dataprops_names_get()
         ):
             return self.__getattribute__(name)
         j.shell()

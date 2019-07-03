@@ -518,7 +518,8 @@ class BCDB(j.application.JSBaseClass):
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
-            raise RuntimeError()
+            j.shell()
+            raise RuntimeError("should never be stored as only 3 parts in msgpack")
         elif len(res) == 4:
             nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)

@@ -73,7 +73,7 @@ class JSBaseService(j.application.JSBaseClass):
 
             self._key = key
 
-        self.data  # will fetch the key
+        self._data  # will fetch the key
 
         self._redis_key_state = self.key.encode() + b":state"
         self._redis_key_actions_now = b"actions:last"
@@ -114,7 +114,7 @@ class JSBaseService(j.application.JSBaseClass):
         if self._key is None:
             if self._id is None:
                 return None
-            self.data
+            self._data
         return self._key
 
     @property
@@ -158,7 +158,7 @@ class JSBaseService(j.application.JSBaseClass):
         return self._state
 
     def data_save(self):
-        self.data.save()
+        self._data.save()
 
     def service_unmanage(self):
 
@@ -207,10 +207,10 @@ class JSBaseService(j.application.JSBaseClass):
             event.set()
 
     def _stateobj_get(self, key):
-        for item in self.data.stateobj.actions:
+        for item in self._data.stateobj.actions:
             if item.key == key:
                 return item
-        a = self.data.stateobj.actions.new()
+        a = self._data.stateobj.actions.new()
         a.key = key
 
     def _coordinator_action_ask(self, key):
@@ -222,7 +222,7 @@ class JSBaseService(j.application.JSBaseClass):
 
     @property
     def _instance(self):
-        return self.data.instance
+        return self._data.instance
 
     #
     #
@@ -248,7 +248,7 @@ class JSBaseService(j.application.JSBaseClass):
     #
     def __str__(self):
         out = "service:%s (%s)\n\n" % (self.key, self.id)
-        out += str(self.data)
+        out += str(self._data)
         out += "\n"
         return out
 
