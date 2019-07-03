@@ -6,6 +6,7 @@ from .BCDBVFS import BCDBVFS
 import os
 import sys
 import redis
+from .connectors.webdav.BCDBResourceProvider import BCDBResourceProvider
 
 
 class BCDBFactory(j.application.JSBaseFactoryClass):
@@ -62,6 +63,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
     @property
     def _BCDBModelClass(self):
         return BCDBModel
+
+    @property
+    def WebDavProvider(self):
+        return BCDBResourceProvider()
 
     @property
     def instances(self):
@@ -290,14 +295,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         items.sort()
         # print(items)
         return items
-
-    def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self.__names_methods() or name in self.__names_properties():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name)
-        return r
 
     def __setattr__(self, key, value):
         if key in ["system", "test"]:
