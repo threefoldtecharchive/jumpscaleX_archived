@@ -17,7 +17,7 @@ class AppsTestCases(BaseTest):
             self.skipTest(skipped_builders[builder])
 
         self.info(" * {} builder: run build method.".format(builder))
-        getattr(j.builders.apps, builder).build()
+        getattr(j.builders.apps, builder).build(reset=True)
         self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.apps, builder).install()
         self.info(" * {} builder: run start method.".format(builder))

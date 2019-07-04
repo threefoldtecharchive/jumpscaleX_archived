@@ -10,7 +10,7 @@ class Network_TestCases(BaseTest):
         *Test network builers sandbox*
         """
         self.info(" * {} builder: run build method.".format(builder))
-        getattr(j.builders.network, builder).build()
+        getattr(j.builders.network, builder).build(reset=True)
         self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.network, builder).install()
         self.info(" * {} builder: run start method.".format(builder))

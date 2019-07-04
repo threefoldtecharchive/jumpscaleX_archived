@@ -18,7 +18,7 @@ class WebTestCases(BaseTest):
             self.skipTest(skipped_builders[builder])
 
         self.info(" * {} builder: run build method.".format(builder))
-        getattr(j.builders.web, builder).build()
+        getattr(j.builders.web, builder).build(reset=True)
         self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.web, builder).install()
         self.info(" * {} builder: run start method.".format(builder))
