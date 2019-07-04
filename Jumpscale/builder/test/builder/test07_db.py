@@ -28,12 +28,18 @@ class DBTestCases(BaseTest):
         self.info(" %s builder: run install  method.".format(builder))
         getattr(j.builders.db, builder).install()
         self.info(" %s builder: run start method.".format(builder))
-        getattr(j.builders.db, builder).start()
+        try:
+            getattr(j.builders.db, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
         self.info(" check that %s server started successfully.".format(builder))
         self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
         self.info(" %s builder: run stop method.".format(builder))
-        getattr(j.builders.db, builder).stop()
+        try:
+            getattr(j.builders.db, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
         self.info(" check that %s server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))

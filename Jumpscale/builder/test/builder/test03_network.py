@@ -14,12 +14,20 @@ class Network_TestCases(BaseTest):
         self.info(" %s builder: run install  method.".format(builder))
         getattr(j.builders.network, builder).install()
         self.info(" %s builder: run start method.".format(builder))
-        getattr(j.builders.network, builder).start()
+        try:
+            getattr(j.builders.network, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+
         self.info(" check that %s server started successfully.".format(builder))
         self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
         self.info(" %s builder: run stop method.".format(builder))
-        getattr(j.builders.network, builder).stop()
+        try:
+            getattr(j.builders.network, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+
         self.info(" check that %s server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
