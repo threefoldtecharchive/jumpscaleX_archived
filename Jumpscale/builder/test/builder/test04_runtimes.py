@@ -19,7 +19,7 @@ class Runtimes_TestCases(BaseTest):
             getattr(j.builders.runtimes, builder).start()
         except RuntimeError as e:
             self.fail(e)
-        self.info(" Check that {} server started successfully.".format(builder))
+        self.info(" * Check that {} server started successfully.".format(builder))
         self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
         self.info(" * {} builder: run stop method.".format(builder))
@@ -27,6 +27,6 @@ class Runtimes_TestCases(BaseTest):
             getattr(j.builders.runtimes, builder).stop()
         except RuntimeError as e:
             self.fail(e)
-        self.info(" Check that {} server stopped successfully.".foramt(builder))
+        self.info(" * Check that {} server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
