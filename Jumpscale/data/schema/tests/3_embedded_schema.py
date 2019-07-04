@@ -7,7 +7,6 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="embedded_schema")'
     """
-    return
     def onelevel():
 
         schema = """
@@ -25,7 +24,6 @@ def main(self):
         so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
         so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
-        assert o._changed == False
         o.x = "2"
         assert o._changed
         assert o.x == "2"
@@ -33,7 +31,6 @@ def main(self):
         assert o.cmd._changed == False
         o.cmd.name = "a"
         assert o.cmd._changed
-        j.shell()
         assert o.cmd.name == "a"
         assert o.cmd.comment == ""
 
@@ -48,18 +45,14 @@ def main(self):
         o2 = j.data.serializers.jsxdata.loads(data)
 
         print(o2)  # TODO: does not serialize well
-
-        j.shell()
-
         assert o2.cmd.name == "a"
-
-        o3 = so.get(data=data)
+        o3 = so.new(serializeddata=data)
         assert o3.cmd.name == "a"
 
     def onelevellist():
 
         schema = """
-            @url = jumpscale.schema.test3.a
+            @url = jumpscale.schema.test3.c
             cmds = (LO) !jumpscale.schema.test3.b
     
             @url = jumpscale.schema.test3.b
@@ -69,7 +62,7 @@ def main(self):
             """
 
         j.data.schema.add_from_text(schema)
-        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
+        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.c")
         so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
 
@@ -91,7 +84,7 @@ def main(self):
 
         assert len(o.cmds) == 1
 
-        o2 = so.get(data=data)
+        o2 = so.new(serializeddata=data)
 
         assert o2.cmds[0].name == "a"
 
@@ -99,7 +92,7 @@ def main(self):
 
         assert len(o2.cmds) == 1
 
-        o3 = so.get(data=o._ddict)
+        o3 = so.new(datadict=o._ddict)
 
         assert o3.cmds[0].name == "a"
 
@@ -121,16 +114,16 @@ def main(self):
     # more deep embedded (2 levels)
 
     schema = """
-            @url = jumpscale.schema.test3.cmd
-            name = ""
-            comment = ""
-            schemacode = ""
-    
-            @url = jumpscale.schema.test3.serverschema
-            cmds = (LO) !jumpscale.schema.test3.cmdbox
-            cmd = (O) !jumpscale.schema.test3.cmd
-    
-            @url = jumpscale.schema.test3.cmdbox
+        @url = jumpscale.schema.test3.cmd
+        name = ""
+        comment = ""
+        schemacode = ""
+
+        @url = jumpscale.schema.test3.serverschema
+        cmds = (LO) !jumpscale.schema.test3.cmdbox
+        cmd = (O) !jumpscale.schema.test3.cmd
+
+        @url = jumpscale.schema.test3.cmdbox
         cmd = (O) !jumpscale.schema.test3.cmd
         cmd2 = (O) !jumpscale.schema.test3.cmd
         
@@ -160,7 +153,7 @@ def main(self):
     assert schema_test3.cmd2.name == "test"
 
     bdata = schema_test3._data
-    schema_test4 = schema_object3.get(data=bdata)
+    schema_test4 = schema_object3.new(serializeddata=bdata)
     assert schema_test4._ddict == schema_test3._ddict
 
     assert schema_test3._data == schema_test4._data
