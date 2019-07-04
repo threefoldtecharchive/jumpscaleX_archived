@@ -1,15 +1,9 @@
-from parameterized import parameterized
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
+from parameterized import parameterized
 
 class Web_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("web_sandbox_tests_{time}.log")
-        logger.debug("Starting of web sandbox testcases.")
-
     @parameterized.expand([("caddy", "caddy"), ("traefik", "traefik"), ("nginx", "nginx"), ("openresty", "openresty")])
     def test_web_flists(self, flist, binary):
         """ SAN-001
@@ -23,10 +17,10 @@ class Web_TestCases(BaseTest):
 
         if flist in skipped_flists:
             self.skipTest(skipped_flists[flist])
-        logger.info("run %s sandbox." % flist)
+        self.info("run {} sandbox.".format(flist))
         getattr(j.builders.web, flist).sandbox(**self.sandbox_args)
-        logger.info("Deploy container with uploaded %s flist." % flist)
-        self.deploy_flist_container("%s" % flist)
-        logger.info("Check that %s flist works." % flist)
-        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/%s -h") % flist)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
 

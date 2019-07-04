@@ -1,11 +1,13 @@
-from Jumpscale import j
-from random import randint
-from unittest import TestCase
+import time
 import requests
+from loguru import logger
+from random import randint
 from testconfig import config
-
+from unittest import TestCase
 
 class BaseTest(TestCase):
+    LOGGER = logger.add('flist_{time}.log')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client_id = config["itsyou"]["client_id"]
@@ -33,19 +35,23 @@ class BaseTest(TestCase):
             flist_create=True,
             merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
         )
+        self.info('* Test case : {}'.format(self._testMethodName))
 
     def tearDown(self):
-        pass
+        self.info(' * Tear_down!')
+
+    def info(self, message):
+        self.LOGGER.info(message)
 
     def deploy_flist_container(self, builder):
         self.cont = self.node.client.container.create(
-            "https://hub.grid.tf/{}/{}_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist".format(
-                self.username, builder
-            )
+        "https://hub.grid.tf/{}/{}_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist".format(
+            self.username, builder)
         )
         self.cont_client = self.node.client.container.client(self.cont.get())
 
     def check_container_flist(self, command):
         data = self.cont_client.system(command).get()
         return data.stdout
+
 

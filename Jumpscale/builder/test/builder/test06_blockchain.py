@@ -1,0 +1,26 @@
+import time
+from Jumpscale import j
+from .base_test import BaseTest
+from parameterized import parameterized
+
+class Blockchain_TestCases(BaseTest):
+    @parameterized.expand([("bitcoin", "bitcoind"), ("ethereum", "ethereum")])
+    def test_blockchain_builders(self, builder, process):
+        """ BLD-014
+        *Test blockchain builers sandbox*
+        """
+
+        self.info(" * {} builder: run build method.".foramt(builder))
+        getattr(j.builders.blockchain, builder).build()
+        self.info(" * {} builder: run install  method.".format(builder))
+        getattr(j.builders.blockchain, builder).install()
+        self.info(" * {} builder: run start method.".foramt(builder))
+        getattr(j.builders.blockchain, builder).start()
+        self.info(" Check that {} server started successfully.".format(builder))
+        self.small_sleep()
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        self.info(" * {} builder: run stop method.".format(builder))
+        getattr(j.builders.blockchain, builder).stop()
+        self.info(" Check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))
