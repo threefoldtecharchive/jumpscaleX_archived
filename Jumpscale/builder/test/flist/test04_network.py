@@ -20,7 +20,7 @@ class Network_TestCases(BaseTest):
         self.deploy_flist_container("coredns")
         logger.debug("Check that coredns flist works.")
         data = self.cont_client.system("/sandbox/bin/coredns -h").get()
-        self.assertIn("Usage: ", data.stdout)
+        self.assertIn("Usage:", data.stdout)
 
     def test002_zerotier(self):
         """ SAN-019
