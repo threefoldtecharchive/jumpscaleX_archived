@@ -701,12 +701,12 @@ class BCDBVFS(j.application.JSBaseClass):
             removed_obj_by_hash = self._dirs_cache.pop(keys[2][0], None)
             self._dirs_cache.pop(keys[2][1], None)
             # update data dir after delete
-            key_sid=keys[0][1].replace("_","/")
-            key_url=keys[1][1].replace("_","/")
-            key_hash=keys[2][1].replace("_","/")
+            key_sid = keys[0][1].replace("_", "/")
+            key_url = keys[1][1].replace("_", "/")
+            key_hash = keys[2][1].replace("_", "/")
             self._get_data_items(self._split_clean_path(key_sid), self._get_nid_from_data_key(keys[0][1]), key_sid)
             self._get_data_items(self._split_clean_path(key_url), self._get_nid_from_data_key(keys[1][1]), key_url)
-            self._get_data_items(self._split_clean_path(key_hash), self._get_nid_from_data_key(keys[2][1]),key_hash)
+            self._get_data_items(self._split_clean_path(key_hash), self._get_nid_from_data_key(keys[2][1]), key_hash)
 
             return [removed_obj_by_sid, removed_obj_by_url, removed_obj_by_hash]
         else:

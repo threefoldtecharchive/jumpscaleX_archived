@@ -50,16 +50,15 @@ rack.start()
 
     # test get schema by url
     schema = session.get("http://0.0.0.0:4443/test/schemas/url/threefoldtoken.wallet.test").json()
-    assert schema['url'] == "threefoldtoken.wallet.test"
+    assert schema["url"] == "threefoldtoken.wallet.test"
 
     # test get schema by sid
     schema = session.get("http://0.0.0.0:4443/test/schemas/sid/7").json()
-    assert schema['url'] == "threefoldtoken.wallet.test"
+    assert schema["url"] == "threefoldtoken.wallet.test"
 
     # test get schema by hash
     schema = session.get("http://0.0.0.0:4443/test/schemas/hash/cbf134f55d0c7149ef188cf8a52db0eb").json()
-    assert schema['url'] == "threefoldtoken.wallet.test"
-
+    assert schema["url"] == "threefoldtoken.wallet.test"
 
     # test get data by url
     data = session.get("http://0.0.0.0:4443/test/data/1/url/threefoldtoken.wallet.test/1").json()
@@ -72,8 +71,3 @@ rack.start()
     # test get data by hash
     data = session.get("http://0.0.0.0:4443/test/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/1").json()
     assert data["name"] == "myuser_0"
-
-
-
-
-

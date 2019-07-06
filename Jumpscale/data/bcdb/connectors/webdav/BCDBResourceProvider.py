@@ -22,10 +22,10 @@ class DirCollection(DAVCollection):
         for name in names:
             try:
                 json_data = j.data.serializers.json.loads(name)
-                if 'id' in json_data:
-                    res.append(str(json_data['id']))
-                elif 'name' in json_data:
-                    res.append(json_data['name'])
+                if "id" in json_data:
+                    res.append(str(json_data["id"]))
+                elif "name" in json_data:
+                    res.append(json_data["name"])
                 else:
                     res.append(name)
             except:
@@ -56,6 +56,7 @@ class CorruptedResource(DAVNonCollection):
     """
     Represents a corrupted resource which could happen because of bcdb failure
     """
+
     def __init__(self, path, environ, error):
         DAVNonCollection.__init__(self, path, environ)
         self.path = path
@@ -93,12 +94,12 @@ class DocResource(DAVNonCollection):
         if not self._title:
             try:
                 json_data = j.data.serializers.json.loads(self.doc)
-                if 'name' in json_data.keys():
-                    self._title = json_data['name']
-                elif 'id' in json_data.keys():
-                    self._title = json_data['id']
-                elif 'url' in json_data.keys():
-                    self._title = json_data['url']
+                if "name" in json_data.keys():
+                    self._title = json_data["name"]
+                elif "id" in json_data.keys():
+                    self._title = json_data["id"]
+                elif "url" in json_data.keys():
+                    self._title = json_data["url"]
                 else:
                     self._title = self.doc[:15]
             except:
