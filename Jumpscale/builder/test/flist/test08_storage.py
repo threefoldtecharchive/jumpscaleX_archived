@@ -1,24 +1,25 @@
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
-
+from parameterized import parameterized
 
 class Storage_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("Storage_sandbox_tests_{time}.log")
-        logger.debug("Starting of storage sandbox testcases.")
-
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/657")
-    def test001_minio(self):
-        """ SAN-017
-        *Test minio builer sandbox*
+    @parameterized.expand([("minio", "minio"), ("restic", "restic"), ("syncthing", "syncthing", 
+                            ("s3scality", "s3scality"))
+    def test_storage_flists(self, flist, binary):
+        """ SAN-009
+        *Test storage builers sandbox*
         """
-        logger.debug("Run  minio sandbox, should succeed and upload flist on hub.")
-        j.builders.storage.minio.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded minio builder flist.")
-        self.deploy_flist_container("minio")
-
-        logger.debug("Check that minio flist works by run zdb binary, should succeed. ")
-        self.assertIn("Usage: minio", self.check_container_flist("/sandbox/bin/minio"))
+        skipped_flists = {
+            "minio": "https://github.com/threefoldtech/jumpscaleX/issues/657",
+            "syncthing": "https://github.com/threefoldtech/jumpscaleX/issues/670",
+            "s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/672", 
+        }
+        if flist in skipped_flists:
+            self.skipTest(skipped_flists[flist])
+        self.info("run {} sandbox.".format(flist))
+        getattr(j.builders.storage, flist).sandbox(**self.sandbox_args)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage", self.check_container_flist("/sandbox/bin/{} help".format(binary)))

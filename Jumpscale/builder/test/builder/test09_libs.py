@@ -1,78 +1,74 @@
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest, time
+from parameterized import parameterized
 
 
-class Libs_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("Libs_tests_{time}.log")
-        logger.debug("Starting of Libs builders testcases.")
-
-    def test001_capnp(self):
-        """ BLD-026
-        *Test capnp builer sandbox*
+class LibsTestCases(BaseTest):
+    @parameterized.expand([("capnp", "capnp"), ("syncthing", "syncthing")])
+    def test_libs_builders(self, builder, process):
+        """ BLD-001
+        *Test libs builers sandbox*
         """
-        j.builders.libs.capnp.build(reset=True)
-        j.builders.libs.capnp.install()
-        j.builders.libs.capnp.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("capnp")))
-        j.builders.libs.capnp.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("capnp")))
-
-    def test002_cmake(self):
-        """ BLD-027
-        *Test cmake builer sandbox*
-        """
-        logger.debug("cmake builder: run build method.")
-        j.builders.libs.cmake.build(reset=True)
-        logger.debug("cmake builder: run install method.")
-        j.builders.libs.cmake.install()
+        self.info(" * {} builder: run build method.".format(builder))
+        getattr(j.builders.libs, builder).build()
+        self.info(" * {} builder: run install  method.".format(builder))
+        getattr(j.builders.libs, builder).install()
+        self.info(" * {}  builder: run start method.".format(builder))
         try:
-            logger.debug("check that cmake is installed successfully")
-            j.sal.process.execute("which cmake")
-        except:
-            self.assertTrue(False)
+            getattr(j.builders.libs, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * check that {} server started successfully.".format(builder))
+        self.small_sleep()
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        self.info(" * {}  builder: run stop method.".format(builder))
+        try:
+            getattr(j.builders.libs, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))
 
-    def test003_libffi(self):
+    def test002_libffi(self):
         """ BLD-028
         *Test libffi builer sandbox*
         """
-        logger.debug("libffi builder: run build method.")
+        self.info(" * libffi builder: run build method.")
         j.builders.libs.libffi.build(reset=True)
-        logger.debug("libffi builder: run install method.")
+        self.info(" * libffi builder: run install method.")
         j.builders.libs.libffi.install()
         try:
-            logger.debug("check that libffi is installed successfully")
+            self.info(" * check that libffi is installed successfully")
             j.sal.process.execute("which libtoolize")
         except:
             self.assertTrue(False)
 
-    def test004_brotli(self):
+    def test003_brotli(self):
         """ BLD-029
         *Test brotli builer sandbox*
         """
-        logger.debug("brotli builder: run build method.")
+        self.info(" * brotli builder: run build method.")
         j.builders.libs.brotli.build(reset=True)
-        logger.debug("brotli builder: run install method.")
+        self.info(" * brotli builder: run install method.")
         j.builders.libs.brotli.install()
         try:
-            logger.debug("check that brotli is installed successfully")
+            self.info(" * check that brotli is installed successfully")
             j.sal.process.execute("which brotli")
         except:
             self.assertTrue(False)
 
-    def test005_openssl(self):
+    def test004_openssl(self):
         """ BLD-032
         *Test openssl builer sandbox*
         """
-        logger.debug("openssl builder: run build method.")
+        self.info(" * openssl builder: run build method.")
         j.builders.libs.openssl.build(reset=True)
-        logger.debug("openssl builder: run install method.")
+        self.info(" * openssl builder: run install method.")
         j.builders.libs.openssl.install()
         try:
-            logger.debug("check that openssl is installed successfully")
+            self.info(" * check that openssl is installed successfully")
             j.sal.process.execute("which openssl")
         except:
             self.assertTrue(False)
+

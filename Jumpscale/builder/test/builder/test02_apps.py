@@ -1,40 +1,38 @@
 from Jumpscale import j
 from .base_test import BaseTest
-import unittest
-import time
-from loguru import logger
+from parameterized import parameterized
 
 
-class Apps_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("Apps_builders_tests_{time}.log")
-        logger.debug("Starting of  apps builder testcases  which test main methods:build,install,start and stop.")
-
-    def test001_digitalme(self):
-        """ BLD-004
-        *Test digitalme builer sandbox*
+class AppsTestCases(BaseTest):
+    @parameterized.expand([("digitalme", "openresty"), ("freeflow", "apache2"), ("hub", "hub"), ("odoo", "odoo")])
+    def test_apps_builders(self, builder, process):
+        """ BLD-001
+        *Test web builers sandbox*
         """
-        logger.debug("DigitalMe builder: run build method. ")
-        j.builders.apps.digitalme.build(reset=True)
-        logger.debug("DigitalMe builder: run install method. ")
-        j.builders.apps.digitalme.install()
-        logger.debug("DigitalMe builder: run start method. ")
-        j.builders.apps.digitalme.start()
-        logger.debug("check that DigitalMe builder is started successfully ")
-        self.assertTrue(len(j.sal.process.getProcessPid("openresty")))
-        logger.debug("DigitalMe builder: run stop method. ")
-        j.builders.apps.digitalme.stop()
-        logger.debug("check that DigitalMe builder is stopped successfully ")
-        self.assertEqual(0, len(j.sal.process.getProcessPid("openresty")))
+        skipped_builders = {
+            "digitalme": "https://github.com/threefoldtech/jumpscaleX/issues/675",
+            "hub": "https://github.com/threefoldtech/jumpscaleX/issues/676",
+        }
+        if builder in skipped_builders:
+            self.skipTest(skipped_builders[builder])
 
-    def test002_freeflow(self):
-        """ BLD-005
-        *Test freeflow builer sandbox*
-        """
-        j.builders.apps.freeflow.build(reset=True)
-        j.builders.apps.freeflow.install(reset=True)
-        j.builders.apps.freeflow.start()
-        self.assertTrue(len(j.sal.process.getProcessPid("apache2")))
-        j.builders.apps.freeflow.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
+        self.info(" * {} builder: run build method.".format(builder))
+        getattr(j.builders.apps, builder).build(reset=True)
+        self.info(" * {} builder: run install  method.".format(builder))
+        getattr(j.builders.apps, builder).install()
+        self.info(" * {} builder: run start method.".format(builder))
+        try:
+            getattr(j.builders.apps, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * check that {} server started successfully.".format(builder))
+        self.small_sleep()
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        self.info(" * {} builder: run stop method.".format(builder))
+        try:
+            getattr(j.builders.apps, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))

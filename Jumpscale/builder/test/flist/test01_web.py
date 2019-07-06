@@ -1,65 +1,26 @@
+import unittest
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
-
+from parameterized import parameterized
 
 class Web_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("web_sandbox_tests_{time}.log")
-        logger.debug("Starting of web sandbox testcases.")
-
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/654")
-    def test001_caddy(self):
+    @parameterized.expand([("caddy", "caddy"), ("traefik", "traefik"), ("nginx", "nginx"), ("openresty", "openresty")])
+    def test_web_flists(self, flist, binary):
         """ SAN-001
-        *Test caddy builer sandbox*
+        *Test web builers sandbox*
         """
-        logger.debug("run caddy sandbox.")
-        j.builders.web.caddy.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded caddy builder flist.")
-        self.deploy_flist_container("caddy")
-        logger.debug("Check that caddy flist works.")
-        data = self.cont_client.system("/sandbox/bin/caddy -h")
-        self.assertIn("Usage of sandbox/bin/caddy", data.stdout)
+        skipped_flists = {
+            "caddy": "https://github.com/threefoldtech/jumpscaleX/issues/654",
+            "traefik": "https://github.com/threefoldtech/jumpscaleX/issues/656",
+            "openresty": "https://github.com/threefoldtech/jumpscaleX/issues/661",
+        }
 
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/656")
-    def test002_traefik(self):
-        """ SAN-002
-        *Test traefik builer sandbox*
-        """
-        logger.debug("run traefik sandbox.")
-        j.builders.web.traefik.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded traefik builder flist.")
-        self.deploy_flist_container("traefik")
+        if flist in skipped_flists:
+            self.skipTest(skipped_flists[flist])
+        self.info("run {} sandbox.".format(flist))
+        getattr(j.builders.web, flist).sandbox(**self.sandbox_args)
+        self.info("Deploy container with uploaded {} flist.".format(flist))
+        self.deploy_flist_container("{}".format(flist))
+        self.info("Check that {} flist works.".format(flist))
+        self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
 
-        logger.debug("Check that traefik flist works.")
-        data = self.cont_client.system("/sandbox/bin/traefik -h")
-        self.assertIn("--rancher.trace", data.get())
-
-    def test003_nginx(self):
-        """ SAN-003
-        *Test nginx builer sandbox*
-        """
-        logger.debug("run nginx sandbox.")
-        j.builders.web.nginx.sandbox(**self.sandbox_args)
-
-        logger.debug("Deploy container with uploaded nginx builder flist.")
-        self.deploy_flist_container("nginx")
-
-        logger.debug("Check that nginx flist works.")
-        data = self.cont_client.system("/sandbox/bin/nginx -h").get()
-        self.assertIn("Usage: nginx", data.stderr)
-
-    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/661")
-    def test004_openresty(self):
-        """ SAN-004
-        *Test openresty builer sandbox*
-        """
-        logger.debug("run openresty sandbox.")
-        j.builders.web.openresty.sandbox(**self.sandbox_args)
-        logger.debug("Deploy container with uploaded openresty builder flist.")
-        self.deploy_flist_container("openresty")
-        logger.debug("Check that openresty flist works.")
-        data = self.cont_client.system("/sandbox/bin/resty -h").get()
-        self.assertIn("Usage: /sandbox/bin/resty", data.stdout)

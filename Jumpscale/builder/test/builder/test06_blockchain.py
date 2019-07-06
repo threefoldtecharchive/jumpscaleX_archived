@@ -1,33 +1,33 @@
+import time
 from Jumpscale import j
 from .base_test import BaseTest
-from loguru import logger
-import unittest
+from parameterized import parameterized
 
 
 class Blockchain_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("blockchain_tests_{time}.log")
-        logger.debug("Starting of blockchain testcases.")
-
-    def test001_bitcoin(self):
+    @parameterized.expand([("bitcoin", "bitcoind"), ("ethereum", "ethereum")])
+    def test_blockchain_builders(self, builder, process):
         """ BLD-014
-        *Test bitcoin builer sandbox*
+        *Test blockchain builers sandbox*
         """
-        j.builders.blockchain.bitcoin.build(reset=True)
-        j.builders.blockchain.bitcoin.install()
-        j.builders.blockchain.bitcoin.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("bitcoind")))
-        j.builders.blockchain.bitcoin.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("bitcoind")))
 
-    def test002_ethereum(self):
-        """ BLD-015
-        *Test ethereum builer sandbox*
-        """
-        j.builders.blockchain.ethereum.build(reset=True)
-        j.builders.blockchain.ethereum.install()
-        j.builders.blockchain.ethereum.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("ethereum")))
-        j.builders.blockchain.ethereum.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid("ethereum")))
+        self.info(" * {} builder: run build method.".format(builder))
+        getattr(j.builders.blockchain, builder).build()
+        self.info(" * {} builder: run install  method.".format(builder))
+        getattr(j.builders.blockchain, builder).install()
+        self.info(" * {} builder: run start method.".format(builder))
+        try:
+            getattr(j.builders.blockchain, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" Check that {} server started successfully.".format(builder))
+        self.small_sleep()
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        self.info(" * {} builder: run stop method.".format(builder))
+        try:
+            getattr(j.builders.blockchain, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * Check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))

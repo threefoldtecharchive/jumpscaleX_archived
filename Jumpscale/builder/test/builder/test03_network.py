@@ -1,46 +1,33 @@
 from Jumpscale import j
 from .base_test import BaseTest
-import unittest
-import time
-from loguru import logger
+from parameterized import parameterized
 
 
 class Network_TestCases(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        logger.add("network_builders_tests_{time}.log")
-        logger.debug("Starting of  network builder testcases  which test main methods:build,install,start and stop.")
-
-    def test001_coredns(self):
-        """ BLD-006
-        *Test coredns builer sandbox*
+    @parameterized.expand([("coredns", "coredns"), ("zerotier", "zerotier-one")])
+    def test_network_builders(self, builder, process):
+        """ BLD-001
+        *Test network builers sandbox*
         """
-        logger.debug("coredns builder: run build method.")
-        j.builders.network.coredns.build(reset=True)
-        logger.debug("coredns builder: run install method.")
-        j.builders.network.coredns.install()
-        logger.debug("coredns builder: run start method.")
-        j.builders.network.coredns.start()
-        logger.debug("check that coredns builder is started successfully ")
-        self.assertTrue(j.sal.process.getProcessPid("coredns"))
-        logger.debug("coredns builder: run stop method.")
-        j.builders.network.coredns.stop()
-        time.sleep(10)
-        self.assertFalse(j.sal.process.getProcessPid("coredns"))
+        self.info(" * {} builder: run build method.".format(builder))
+        getattr(j.builders.network, builder).build(reset=True)
+        self.info(" * {} builder: run install  method.".format(builder))
+        getattr(j.builders.network, builder).install()
+        self.info(" * {} builder: run start method.".format(builder))
+        try:
+            getattr(j.builders.network, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
 
-    def test002_zerotier(self):
-        """ BLD-006
-        *Test zerotier builer sandbox*
-        """
-        logger.debug("zerotier builder: run build method.")
-        j.builders.network.zerotier.build(reset=True)
-        logger.debug("zerotier builder: run install method.")
-        j.builders.network.zerotier.install()
-        logger.debug("zerotier builder: run start method.")
-        j.builders.network.zerotier.start()
-        logger.debug("check that zerotier builder is started successfully ")
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid("zerotier-one")))
-        logger.debug("zerotier builder: run stop method.")
-        j.builders.network.zerotier.stop()
-        logger.debug("check that zerotier builder is stopped successfully ")
-        self.assertEqual(0, len(j.sal.process.getProcessPid("zerotier-one")))
+        self.info(" * check that {} server started successfully.".format(builder))
+        self.small_sleep()
+        self.assertTrue(len(j.sal.process.getProcessPid(process)))
+        self.info(" * {} builder: run stop method.".format(builder))
+        try:
+            getattr(j.builders.network, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+
+        self.info(" * check that {} server stopped successfully.".format(builder))
+        self.small_sleep()
+        self.assertFalse(len(j.sal.process.getProcessPid(process)))
