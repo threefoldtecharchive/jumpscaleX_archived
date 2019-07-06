@@ -55,6 +55,7 @@ MyEnv.init()
 from .core.InstallTools import BaseInstaller
 from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
+from .core.InstallTools import RedisTools
 
 import pudb
 
@@ -63,7 +64,7 @@ def my_excepthook(exception_type, exception_obj, tb):
     Tools.log(msg=exception_obj, tb=tb, level=40)
     if MyEnv.debug:
         pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+    Tools.pprint("{RED}CANNOT CONTINUE in __init__{RESET}")
     sys.exit(1)
 
 
@@ -72,37 +73,18 @@ sys.excepthook = my_excepthook
 
 class Core:
     def __init__(self, j):
-        self._db = MyEnv.db
         self._dir_home = None
         self._dir_jumpscaleX = None
         self._isSandbox = None
-        self._db_fakeredis = False
-
-    @property
-    def _db_fake(self):
-        # print("CORE_MEMREDIS")
-        import fakeredis
-
-        self._db = fakeredis.FakeStrictRedis()
-        self._db_fakeredis = True
-        return self._db
 
     @property
     def db(self):
-        if not self._db:
-            # check db is already there, if not try to do again
-            MyEnv.db = Tools.redis_client_get(die=False)
-            self._db = MyEnv.db
-
-            if not self._db:
-                self._db = self._db_fake
-
-        return self._db
+        return MyEnv.db
 
     def db_reset(self):
         if hasattr(j.data, "cache"):
             j.data.cache._cache = {}
-        self._db = None
+        self.db = None
 
     @property
     def dir_jumpscaleX(self):
@@ -135,14 +117,14 @@ class Jumpscale:
                 locals_[name] = obj
             return locals_
 
-        try:
-            locals_ = add(locals_, "ssh", j.clients.ssh)
-        except:
-            pass
-        try:
-            locals_ = add(locals_, "iyo", j.clients.itsyouonline)
-        except:
-            pass
+        # try:
+        #     locals_ = add(locals_, "ssh", j.clients.ssh)
+        # except:
+        #     pass
+        # try:
+        #     locals_ = add(locals_, "iyo", j.clients.itsyouonline)
+        # except:
+        #     pass
 
         # locals_ = add(locals_,"zos",j.kosmos.zos)
 
@@ -215,7 +197,7 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 
 
 j.core.myenv = MyEnv
-
+j.core.redistools = RedisTools
 
 j.core.installer_base = BaseInstaller
 j.core.installer_jumpscale = JumpscaleInstaller()

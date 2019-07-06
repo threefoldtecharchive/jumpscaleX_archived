@@ -53,14 +53,18 @@ class BuilderS3Scality(j.builders.system._BaseClass):
         if self.tools.profile.env_exists("NODE_PATH") and self.tools.profile.env_get("NODE_PATH") != node_path:
             self.tools.profile.env_set("NODE_PATH", node_path)
 
-        cmd = j.tools.startupcmd.get(
+        cmd = j.servers.startupcmd.get(
             self.NAME, cmd=self._replace("cd %s && npm run start_location" % self.path), env={"NODE_PATH": node_path}
         )
         return [cmd]
 
     def stop(self):
         # killing the daemon
-        j.tools.tmux.pane_get(self.NAME).kill()
+        pane = j.tools.tmux.pane_get(self.NAME)
+        processes = pane.process_obj.children(True)
+        for process in processes:
+            process.kill()
+        pane.kill()
 
     @builder_method()
     def test(self):

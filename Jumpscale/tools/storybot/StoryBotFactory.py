@@ -2,7 +2,7 @@ from .StoryBot import StoryBot
 
 from Jumpscale import j
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSFactoryConfigsBaseClass
 
 
 class StoryBotFactory(JSConfigBaseFactory):

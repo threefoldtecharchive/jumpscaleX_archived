@@ -8,7 +8,7 @@ PIPE = subprocess.PIPE
 j.core.platformtype
 
 
-if j.core.platformtype.myplatform.isWindows:
+if j.core.platformtype.myplatform.platform_is_windows:
     from win32file import ReadFile, WriteFile
     from win32pipe import PeekNamedPipe
     import msvcrt
@@ -26,7 +26,7 @@ if j.core.platformtype.myplatform.platform_is_linux:
         print("cannot find pxssh")
         pass
 
-if j.core.platformtype.myplatform.isUnix:
+if j.core.platformtype.myplatform.platform_is_unix:
     try:
         import pexpect
     except ImportError as e:
@@ -64,7 +64,7 @@ class Popen(subprocess.Popen, JSBASE):
         getattr(self, which).close()
         setattr(self, which, None)
 
-    if j.core.platformtype.myplatform.isWindows:
+    if j.core.platformtype.myplatform.platform_is_windows:
 
         def send(self, input):
             if not self.stdin:
@@ -185,14 +185,14 @@ class Expect(j.application.JSBaseClass):
         self._prompt = ""
 
         if not cmd:
-            if cmd == "" and j.core.platformtype.myplatform.isWindows:
+            if cmd == "" and j.core.platformtype.myplatform.platform_is_windows:
                 cmd = "cmd"
-            if cmd == "" and not j.core.platformtype.myplatform.isWindows:
+            if cmd == "" and not j.core.platformtype.myplatform.platform_is_windows:
                 cmd = "sh"
                 self._pxssh = pxssh.pxssh()
             self._p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-        elif cmd and cmd != "ssh" and not j.core.platformtype.myplatform.isWindows:
+        elif cmd and cmd != "ssh" and not j.core.platformtype.myplatform.platform_is_windows:
             self.pexpect = pexpect.spawn(cmd)
             if cmd == "sh":
                 self.expect("#")
@@ -361,7 +361,7 @@ class Expect(j.application.JSBaseClass):
         return stdout,stderror
         """
 
-        if j.core.platformtype.myplatform.isWindows:
+        if j.core.platformtype.myplatform.platform_is_windows:
             out = self.receiveOut()
             err = self.receiveError()
             return out, err
@@ -544,13 +544,13 @@ class Expect(j.application.JSBaseClass):
                 else:
                     return self.pexpect.send(data)
 
-        if j.core.platformtype.myplatform.isWindows:
+        if j.core.platformtype.myplatform.platform_is_windows:
             data = data + "\r\n"
 
         p = self._p
 
         if len(data) != 0:
-            if j.core.platformtype.myplatform.isWindows:
+            if j.core.platformtype.myplatform.platform_is_windows:
                 sent = p.send(data)
                 if sent is None:
                     raise Exception("ERROR: Data sent is none")

@@ -14,7 +14,7 @@ class PacketNet(JSConfigBase):
     project_name = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client = None
         self._plans = None
         self._facilities = None

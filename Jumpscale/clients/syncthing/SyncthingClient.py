@@ -22,7 +22,7 @@ class SyncthingClient(JSConfigClient):
     apikey = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._session = requests.session()
         addr = self.addr.lower()
         if addr == "127.0.0.1":

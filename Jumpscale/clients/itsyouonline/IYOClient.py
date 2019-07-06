@@ -36,7 +36,7 @@ class IYOClient(j.application.JSBaseConfigClass):
         refresh_token = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # self.delete()
         self.reset()
         if self.application_id is "" or self.secret is "":

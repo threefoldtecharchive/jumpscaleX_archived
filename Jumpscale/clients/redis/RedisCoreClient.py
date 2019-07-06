@@ -3,13 +3,11 @@ from Jumpscale import j
 # import gevent
 
 
-class RedisCoreClient_old(j.application.JSBaseClass):
+class RedisCoreClient(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.credis_core"
 
     def _init(self):
-
-        self._client_fallback = j.clients.redis.core_get()
 
         try:
             self._credis = True
@@ -20,6 +18,9 @@ class RedisCoreClient_old(j.application.JSBaseClass):
         except Exception as e:
             self._credis = False
             self._client = j.clients.redis.core_get()
+            from redis import ConnectionError
+
+            self._ConnectionError = ConnectionError
 
         if self._credis:
             assert self.execute("PING") == b"PONG"
@@ -58,3 +59,14 @@ class RedisCoreClient_old(j.application.JSBaseClass):
 
     def incr(self, *args):
         return self.execute("INCR", *args)
+
+    def lpush(self, *args):
+        return self.execute("LPUSH", *args)
+
+    @property
+    def client(self):
+        if not self._client:
+            import redis
+
+            self._client = redis.Redis(unix_socket_path=j.core.db.connection_pool.connection_kwargs["path"], db=1)
+        return self._client

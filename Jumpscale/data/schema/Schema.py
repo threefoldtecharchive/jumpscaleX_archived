@@ -19,8 +19,7 @@ class SystemProps:
 
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text, md5=None, url=None):
-        j.application.JSBaseClass.__init__(self)
+    def _init(self, text, md5=None, url=None):
         self.properties = []
         self._systemprops = {}
         self._obj_class = None
@@ -43,21 +42,30 @@ class Schema(j.application.JSBaseClass):
         urls = self.url.split(".")
         if len(urls) > 0:
             try:
-                # try if last one is version nr, if so pop it
-                j.data.types.int.clean(urls[-1])
-                self.version = urls.pop(len(urls) - 1)
-                # will remove the version from the url
-                self.url_noversion = ".".join(self.url.split(".")[:-1])
-                if self.url_noversion in j.data.schema.schemas_versionless:
-                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
-                        # version itself can be replaced as well, there could be an update
-                        j.data.schema.schemas_versionless[self.url_noversion] = self
-                else:
-                    j.data.schema.schemas_versionless[self.url_noversion] = self
+                v = int(urls[-1])
             except:
-                self.version = None
-                self.url_noversion = None
-            urls = ".".join(urls)
+                v = None
+                self.version = 1
+                self.url_noversion = self.url
+            if v is not None:
+                self.version = urls.pop(len(urls) - 1)
+                self.url_noversion = ".".join(urls)
+            # if self.url_noversion in j.data.schema.schemas_versionless:
+            #     if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
+            #         # version itself can be replaced as well, there could be an update
+            #         j.data.schema.schemas_versionless[self.url_noversion] = self
+            # else:
+            #     j.data.schema.schemas_versionless[self.url_noversion] = self
+
+    @property
+    def url_str(self):
+        u = self.url_noversion + ""
+        # self._log_debug(u)
+        if "schema" in u:
+            u = u.split("schema", 1)[1]
+        if "jumpscale" in u:
+            u = u.split("jumpscale", 1)[1]
+        return u
 
     @property
     def _path(self):
@@ -155,6 +163,9 @@ class Schema(j.application.JSBaseClass):
             p = SchemaProperty()
 
             name = propname + ""  # make sure there is copy
+            if name.endswith("***"):
+                name = name[:-3]
+                p.index_text = True
             if name.endswith("**"):
                 name = name[:-2]
                 p.index = True
@@ -169,6 +180,10 @@ class Schema(j.application.JSBaseClass):
 
             if name in ["id"]:
                 self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
+            elif name in ["name"]:
+                p.unique = True
+                # everything which is unique also needs to be indexed
+                p.index_key = True
 
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()  # in between the ()
@@ -275,7 +290,7 @@ class Schema(j.application.JSBaseClass):
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
-            tpath = "%s/templates/template_obj.py" % self._path
+            tpath = "%s/templates/JSXObject2.py" % self._path
 
             # lets do some tests to see if it will render well, jinja doesn't show errors propertly
             for prop in self.properties:
@@ -284,36 +299,38 @@ class Schema(j.application.JSBaseClass):
                 prop.js_typelocation
 
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
+                name="schema_%s" % self.key, obj_key="JSXObject2", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class
 
-    def get(self, data=None, model=None):
+    def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """
-        get schema_object using data and capnpbin
-        :param data dict, bytes or json(dict)
+        new schema_object using data and capnpbin
+
+        :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
+        :param capnpdata is data in capnpdata
+        :param datadict is dict of arguments
+
         :param model: will make sure we save in the model
         :return:
         """
-        if isinstance(data, bytes):
-            return j.data.serializers.jsxdata.loads(data)
-        return self._get(data=data, model=model)
-
-    def _get(self, data=None, model=None):
-        obj = self.objclass(schema=self, data=data, model=model)
-        return obj
-
-    def new(self, model=None, data=None):
-        """
-        data is dict or None
-        """
-        if isinstance(data, bytes):
-            raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        r = self.get(data=data, model=model)
+        if model:
+            assert isinstance(model, j.data.bcdb._BCDBModelClass)
+        if serializeddata and isinstance(serializeddata, bytes):
+            return j.data.serializers.jsxdata.loads(serializeddata, model=model)
+        elif capnpdata and isinstance(capnpdata, bytes):
+            obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
+            return obj
+        elif datadict and datadict != {}:
+            obj = self.objclass(schema=self, datadict=datadict, model=model)
+            return obj
+        elif capnpdata is None and serializeddata is None and datadict == None:
+            return self.objclass(schema=self, model=model)
+        else:
+            raise RuntimeError("wrong arguments to new on schema")
         if model is not None:
-            model.notify_new(r)
-        return r
+            model._triggers_call(r, "new")
 
     # @property
     # def propertynames_index_sql(self):
@@ -372,9 +389,21 @@ class Schema(j.application.JSBaseClass):
         res = [item.name for item in self.properties]
         return res
 
+    @property
+    def _json(self):
+        out = "{"
+        out += '"url":"%s",' % self.url
+        for item in self.propertynames:
+            prop = self.__getattribute__("property_%s" % item)
+            out += '"%s":"%s",' % (str(prop.name), str(prop.jumpscaletype.NAME))
+        out = out.rstrip(",")
+        out += "}"
+        return out
+
     def __str__(self):
         out = "## SCHEMA: %s\n\n" % self.url
         for item in self.properties:
+
             out += str(item) + "\n"
         out += str(self.systemprops)
         return out

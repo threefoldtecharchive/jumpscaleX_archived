@@ -5,7 +5,7 @@ class BuilderBlockchainFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.blockchain"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._tfchain = None
         self._ethereum = None
         self._bitcoin = None

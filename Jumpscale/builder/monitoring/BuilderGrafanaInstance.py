@@ -13,7 +13,7 @@ class GrafanaComponent(j.application.JSBaseConfigClass):
         secret = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def start(self):

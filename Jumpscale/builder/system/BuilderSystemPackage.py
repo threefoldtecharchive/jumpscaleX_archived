@@ -41,7 +41,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
     #     key = "upgrade_%s" % package
     #     if self._done_check(key, reset):
     #         return
-    #     if j.core.platformtype.myplatform.isUbuntu:
+    #     if j.core.platformtype.myplatform.platform_is_ubuntu:
     #         if package is None:
     #             return self._apt_get("-q --yes update")
     #         else:
@@ -185,7 +185,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
 
             package = packages[0]
 
-            if j.core.platformtype.myplatform.isUbuntu:
+            if j.core.platformtype.myplatform.platform_is_ubuntu:
 
                 if package is not None:
                     return self._apt_get("-y --purge remove %s" % package)
@@ -238,7 +238,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
 
     @builder_method()
     def remove(self, package, autoclean=False):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             self._apt_get("remove " + package)
             if autoclean:
                 self._apt_get("autoclean")

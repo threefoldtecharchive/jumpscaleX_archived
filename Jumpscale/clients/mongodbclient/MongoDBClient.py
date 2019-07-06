@@ -16,7 +16,7 @@ class MongoDBClient(JSConfigClient):
         replicaset = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         host = self.host
         port = self.port
         ssl = True if self.ssl else False

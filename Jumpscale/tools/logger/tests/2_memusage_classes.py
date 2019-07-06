@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class TestClass(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self._logger  # triggers logger
 
     def test_basic_log(self, nr):

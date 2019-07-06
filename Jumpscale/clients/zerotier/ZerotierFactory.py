@@ -17,7 +17,7 @@ from Jumpscale import j
 JSConfigs = j.application.JSBaseConfigsClass
 
 
-JSBASE = j.application.JSFactoryBaseClass
+JSBASE = j.application.JSFactoryConfigsBaseClass
 
 
 class ZerotierFactory(JSConfigs):

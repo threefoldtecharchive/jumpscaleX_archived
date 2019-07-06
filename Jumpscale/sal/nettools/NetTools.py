@@ -126,7 +126,7 @@ class NetTools(JSBASE):
                 if match:
                     return True
             return False
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             # We use the GetTcpTable function of the Windows IP Helper API (iphlpapi.dll)
             #
             # Parameters of GetTcpTable:
@@ -208,7 +208,7 @@ class NetTools(JSBASE):
 
             nameserverline = nameserverlines[0]
             return nameserverline.strip().split(" ")[-1]
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
 
             w = wmi.WMI()
@@ -266,7 +266,7 @@ class NetTools(JSBASE):
         #         else:
         #             nics.add(nic[0])
         #     return list(nics)
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
 
             w = wmi.WMI()
@@ -331,7 +331,7 @@ class NetTools(JSBASE):
                         return "VIRTUAL"
                     else:
                         return "ETHERNET_GB"
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             if j.sal.nettools.getVlanTagFromInterface(interface) > 0:
                 return "VLAN"
             else:
@@ -370,7 +370,7 @@ class NetTools(JSBASE):
                 if j.sal.fs.exists(vlanfile):
                     return j.sal.nettools.getVlanTagFromInterface(brif)
             return "0"
-        elif j.core.platformtype.myplatform.platform_is_osx or j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_osx or j.core.platformtype.myplatform.platform_is_windows:
             return j.sal.nettools.getVlanTagFromInterface(interface)
         else:
             raise j.exceptions.RuntimeError("Not supported on this platform!")
@@ -398,7 +398,7 @@ class NetTools(JSBASE):
             if not match:
                 raise ValueError("This is not a vlaninterface %s" % (interface))
             return int(match.group("interfaceid")) / 1000
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
 
             vir = wmi.WMI(namespace="virtualization")
@@ -581,7 +581,7 @@ class NetTools(JSBASE):
                     result["ip"].append(nic["ip"])
                     result["ip6"].append(nic["ip6"])
                     return result
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
 
             ipv4Pattern = "^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
@@ -632,7 +632,7 @@ class NetTools(JSBASE):
                 if match:
                     return self.pm_formatMacAddress(match.group("mac"))
             return None
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
 
             w = wmi.WMI()
@@ -797,7 +797,7 @@ class NetTools(JSBASE):
                 exitcode, output, err = j.sal.process.execute("ping -c 1 -W 1 -w 1 %s" % ip, False, True)
             elif j.core.platformtype.myplatform.platform_is_osx:
                 exitcode, output, err = j.sal.process.execute("ping -c 1 %s" % ip, False, True)
-            elif j.core.platformtype.myplatform.isWindows:
+            elif j.core.platformtype.myplatform.platform_is_windows:
                 exitcode, output, err = j.sal.process.execute("ping -w %d %s" % (pingtimeout, ip), False, True)
             else:
                 raise j.exceptions.RuntimeError("Platform is not supported")

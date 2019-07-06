@@ -19,7 +19,7 @@ class CoreDnsClient(JSConfigBase):
     secrets_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._etcd_client = None
         self._etcd_instance = self.etcd_instance
         self._zones = []

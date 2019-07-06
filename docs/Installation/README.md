@@ -1,38 +1,69 @@
 # Installation Instructions Jumpscale X
 
+## Prerequisites
+
+Before starting the installation to make sure to install the [prerequisites](/docs/Installation/install_prerequisites.md).
+
+## Install Jumpscale X using docker
 
 ```bash
-#get the installer
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx
-chmod 777 /tmp/jsx
-#install
+# TODO CHANGE BRANCH WITH MASTER (replace development_installer)
+# get the jsx command (installer)
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx ; \
+chmod +x /tmp/jsx; \
+# install
 /tmp/jsx container-install
-#get first time your kosmos shell
+```
+
+The installer will ask you to provide a secret (and a couple of yes/no questions to which you answer yes).
+If successfull, you will see something like:
+
+```bash
+install succesfull:
+# if you use a container do:
+jsx container-kosmos
+
+```
+
+The install script has built and started a docker container named `3bot` on your machine.
+
+## To use Jumpscale X
+
+To start JumpcaleX:
+
+```bash
+# get your kosmos shell (inside your 3bot container)
 /tmp/jsx container-kosmos
+```
+
+Once kosmos is launched you will see this line:
+
+```bash
+JSX>
+```
+
+Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library ! Follow these [steps](Installation/get_started.md) to go further in the use of Jumpscale.
+
+If jsx is missing from your `/tmp` folder:
+
+```bash
+# get the jsx command
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
+chmod +x /tmp/jsx; \
+# get your kosmos shell (inside your 3bot container)
+/tmp/jsx container-kosmos
+```
+
+## jsx command help
+
+```bash
 #get more help of jsx command
 /tmp/jsx --help
 ```
 
-before you can do this you need to make sure that docker has been installed on your system.
-
-## To use
-
-```bash
-#to get container kosmos shell (JSX)
-python3 /tmp/jsx.py container-kosmos
-#to get shell of the ubuntu base os underneath in the container
-python3 /tmp/jsx.py container-shell
-```
-
 ## OSX requirements
 
-```bash
-#to install brew:
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-# install requirements
-brew install curl python3 git rsync
-```
+[see here OSX requirements specifics](/docs/Installation/install_prerequisites.md#osx)
 
 ## JSX
 
@@ -70,6 +101,6 @@ git pull
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/jsx.py
 rm -f /tmp/InstallTools.py;
-ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py /tmp/jsx.py;
+ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```

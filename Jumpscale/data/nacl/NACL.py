@@ -174,7 +174,7 @@ class NACL:
             self._box = nacl.secret.SecretBox(key)  # used to decrypt the private key
         except nacl.exceptions.CryptoError as e:
             if die:
-                self._error_raise("could not use the secret key, maybe wrong one, please use 'kosmos --init' to fix.")
+                self._error_raise("could not use the secret key, maybe wrong one, please use 'jsx check'.")
             else:
                 return False
 
@@ -184,7 +184,7 @@ class NACL:
 
         if not j.sal.fs.exists(self._path_privatekey):
             if die:
-                self._error_raise("could not find the path of the private key, please use 'kosmos --init' to fix.")
+                self._error_raise("could not find the path of the private key, please use 'jsx check' to fix.")
             else:
                 return False
         priv_key = self._file_read_hex(self._path_privatekey)
@@ -193,9 +193,7 @@ class NACL:
             priv_key_decrypted = self.decryptSymmetric(priv_key)
         except nacl.exceptions.CryptoError as e:
             if die:
-                self._error_raise(
-                    "could not decrypt the private key, maybe wrong one, please use 'kosmos --init' to fix."
-                )
+                self._error_raise("could not decrypt the private key, maybe wrong one, please use 'jsx check' to fix.")
             else:
                 return False
 

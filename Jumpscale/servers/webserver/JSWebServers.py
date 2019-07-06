@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .JSWebServer import JSWebServer
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class JSWebServers(JSConfigBase):

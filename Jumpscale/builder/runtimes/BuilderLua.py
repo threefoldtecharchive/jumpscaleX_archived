@@ -14,7 +14,7 @@ class BuilderLua(j.builders.system._BaseClass):
         :param install:
         :return:
         """
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.install(["libsqlite3-dev"])
 
         j.builders.web.openresty.build(reset=True)
@@ -57,7 +57,7 @@ class BuilderLua(j.builders.system._BaseClass):
         :return:
         """
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             # j.builders.system.package.mdupdate()
             j.builders.system.package.ensure("geoip-database,libgeoip-dev")
 
@@ -122,7 +122,7 @@ class BuilderLua(j.builders.system._BaseClass):
                 continue
             self.lua_rock_install(line)
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             self.lua_rock_install("lua-geoip")
             self.lua_rock_install("lua-resty-jwt")
             self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
@@ -243,7 +243,7 @@ class BuilderLua(j.builders.system._BaseClass):
         # assert self.executor.type=="local"
         path = "/sandbox/openresty/lualib"
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_ubuntu.git"
             )

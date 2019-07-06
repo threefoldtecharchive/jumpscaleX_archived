@@ -25,7 +25,7 @@ class OauthClient(JSConfigClient):
         client_instance = "github" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.addr = self.addr
         self.accesstokenaddr = self.accesstokenaddr
         self.client_id = self.client_id
@@ -72,7 +72,7 @@ class OauthClient(JSConfigClient):
 
 
 class AuthError(Exception):
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
 

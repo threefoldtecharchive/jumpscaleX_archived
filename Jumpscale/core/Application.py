@@ -1,24 +1,57 @@
 import os
-
-# import sys
 import atexit
-import struct
-from collections import namedtuple
 import psutil
 import traceback
+
+### the base ones
 from .BASECLASSES.JSBase import JSBase
-from .BASECLASSES.JSFactoryBase import JSFactoryBase
-from .BASECLASSES.JSBaseConfig import JSBaseConfig
-from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
-from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
-from .BASECLASSES.JSBaseDataObj import JSBaseDataObj
+from .BASECLASSES.JSFactoryTools import JSFactoryTools
+
+####
+
+from .BASECLASSES.JSConfig import JSConfig
+from .BASECLASSES.JSConfigs import JSConfigs
+from .BASECLASSES.JSConfigsFactory import JSConfigsFactory
+
 import gc
 import sys
-import types
-import time
 
 
 class JSGroup:
+    pass
+
+
+class JSFactoryConfigsBaseClass(JSFactoryTools, JSConfigs):
+    """
+    as used for j.... factory classes will has constructor for 1 type of Config children
+
+    class myclass(j.application.JSFactoryConfigsBaseClass):
+        def _init(self,**kwargs):
+            ...
+
+    """
+
+
+class JSBaseConfigsClass(JSConfigs):
+    """
+    is not for a factory (doesn't have the test or __location__ inside
+    has support for 1 type of children
+    """
+
+
+class JSBaseConfigClass(JSConfig):
+    """
+    no children, only 1 data object
+    """
+
+
+class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
+
+
+class JSBaseFactoryClass(JSBase, JSFactoryTools):
     pass
 
 
@@ -51,7 +84,16 @@ class Application(object):
 
         self._in_autocomplete = False
 
-        self.JSBaseDataObjClass = JSBaseDataObj
+        # self.JSConfigClass = JSConfig
+        self.JSFactoryConfigsBaseClass = JSFactoryConfigsBaseClass  # for e.g. clients, factory for 1 type of children
+        self.JSBaseClass = JSBase  # the most low level one
+        self.JSBaseConfigClass = JSBaseConfigClass  # 1 config obj, childre from configs
+        self.JSBaseConfigsClass = JSBaseConfigsClass  # multiple config children
+        self.JSConfigsFactory = JSConfigsFactory
+        # factory on j... level for multipl JSConfigs children
+        self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
+        self.JSBaseFactoryClass = JSBaseFactoryClass
+        self.JSConfigClass = JSConfig
 
     @property
     def appname(self):
@@ -64,9 +106,7 @@ class Application(object):
     @property
     def bcdb_system(self):
         if self._bcdb_system is None:
-            bcdb = self._j.data.bcdb.get("system", die=False)
-            if bcdb is None:
-                bcdb = self._j.data.bcdb.new("system", None)
+            bcdb = self._j.data.bcdb.new("system")
             self._bcdb_system = bcdb
         return self._bcdb_system
 
@@ -113,61 +153,6 @@ class Application(object):
             # self.report_errors()
             raise RuntimeError(msg)
         return "%s:%s:%s" % (cat, obj, error)
-
-    @property
-    def JSBaseClass(self):
-        """
-        JSBASE = j.application.JSBaseClass
-        class myclass(j.application.JSBaseClass):
-            def __init__(self):
-                JSBASE.__init__(self)
-
-        """
-        return JSBase
-
-    @property
-    def JSFactoryBaseClass(self):
-        """
-        JSFactoryBase = j.application.JSFactoryBaseClass
-        class myclass(JSFactoryBase):
-            def __init__(self):
-                JSFactoryBase.__init__(self)
-
-        """
-        return JSFactoryBase
-
-    @property
-    def JSBaseConfigClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfig
-
-    @property
-    def JSBaseConfigParentClass(self):
-        """
-        JSBase = j.application.JSBaseConfigParentClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigParent
-
-    @property
-    def JSBaseConfigsClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigs
 
     def reset(self):
         """
@@ -284,7 +269,7 @@ class Application(object):
     #     """
     #     try:
     #         pid = os.getpid()
-    #         if self._j.core.platformtype.myplatform.isWindows:
+    #         if self._j.core.platformtype.myplatform.platform_is_windows:
     #             return 0
     #         if self._j.core.platformtype.myplatform.platform_is_linux:
     #             command = "ps -o pcpu %d | grep -E --regex=\"[0.9]\"" % pid
@@ -427,3 +412,53 @@ class Application(object):
     #
     #     self._j.shell()
     #
+
+    def check(self, generate=True):
+        j = self._j
+
+        if generate:
+            self.generate()
+
+        def decrypt():
+            try:
+                j.data.nacl.default.signingkey
+                j.data.nacl.default.privkey.public_key.encode()
+                return True
+            except Exception as e:
+                if str(e).find("jsx check") != -1:
+                    print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                    j.core.myenv.secret_set()
+                    return False
+                raise e
+            return False
+
+        while not decrypt():
+            pass
+
+        try:
+            j.application.bcdb_system
+        except Exception as e:
+            if str(e).find("Ciphertext failed") != -1:
+                print("COULD NOT GET DATA FROM BCDB, PROB ENCRYPTED WITH OTHER PRIVATE KEY AS WHAT IS NOW ON SYSTEM")
+                sys.exit(1)
+            if str(e).find("cannot be decrypted") != -1:
+                print("COULD NOT DECRYPT THE METADATA FOR BCDB, DIFFERENT ENCRYPTION KEY USED")
+                if j.tools.console.askYesNo("Ok to delete this metadata, will prob be rebuild"):
+                    j.sal.fs.remove(j.core.tools.text_replace("{DIR_CFG}/bcdb_config"))
+                    j.application.bcdb_system
+        j.data.bcdb.index_rebuild()
+
+    def generate(self, path=None):
+        j = self._j
+        j.sal.fs.remove("{DIR_VAR}/codegen")
+        j.sal.fs.remove("{DIR_VAR}/cmds")
+        from Jumpscale.core.generator.JSGenerator import JSGenerator
+        from Jumpscale import j
+
+        g = JSGenerator(j)
+
+        if path:
+            # means we need to link
+            g.lib_link(path)
+        g.generate(methods_find=True)
+        g.report()

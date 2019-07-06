@@ -6,7 +6,7 @@ import time
 class BuilderWordpress(j.builders.system._BaseClass):
     NAME = "wordpress"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.user = "wordpress"
 
     def build(self, reset=False):

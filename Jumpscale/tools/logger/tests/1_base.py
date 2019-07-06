@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class TestClass(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self._log_log("a message", level=20)
 
     @property

@@ -8,22 +8,30 @@ class BuilderSonic(j.builders.system._BaseClass):
     NAME = "sonic"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @builder_method()
     def build(self, reset=False):
-        j.builders.runtimes.rust.build(reset=reset)
+        """
+        kosmos  'j.builders.apps.sonic.build()'
+        :param reset:
+        :return:
+        """
+        j.builders.runtimes.rust.install()
         self.system.package.install("clang")
-        self.profile.env_set_part("PATH", j.builders.runtimes.rust.DIR_BUILD)
+        self.profile.env_set_part("PATH", j.builders.runtimes.rust.DIR_CARGOBIN)
         self._execute("rustup update")
-        self._execute("cargo install sonic-server --force")
+        if reset:
+            self._execute("cargo install sonic-server --force")
+        else:
+            self._execute("cargo install sonic-server")
 
     @builder_method()
     def install(self, reset=False):
-        j.builders.runtimes.rust.install(reset=reset)
-
-    @builder_method()
-    def sandbox(self):
-        #TODO: copy sonic bin from bin_dir to sandbox_dir
-        pass
+        """
+        kosmos  'j.builders.apps.sonic.install()'
+        :param reset:
+        :return:
+        """
+        self._execute("cp %s/sonic /sandbox/bin/" % j.builders.runtimes.rust.DIR_CARGOBIN)

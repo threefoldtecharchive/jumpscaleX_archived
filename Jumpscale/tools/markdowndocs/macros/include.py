@@ -93,6 +93,8 @@ def copy_links(main_doc, included_docs_root, included_doc_path, links):
     for _, source in links:
         if source.lower().strip().startswith("http"):
             continue
+        if "?" in source:
+            source, _, _ = source.partition("?")
         # source is either absolute (from docs_root) or relative to doc_path
         # so we get the real path of such source
         real_path = exapnd_doc_path(included_docs_root, included_doc_dir, source)

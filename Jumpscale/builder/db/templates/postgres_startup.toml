@@ -4,7 +4,7 @@ protected = true #set protected to true to respawn the container if it crashed
 
 [startup.postgres.args]
 script = """
-adduser --system --quiet --home /sandbox --no-create-home --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres || true
+adduser --system --quiet --home /sandbox --no-create-home --shell /bin/bash --group --gecos psql_admin postgres || true
 cd /sandbox
 mkdir -p log
 mkdir -p apps/psql/data

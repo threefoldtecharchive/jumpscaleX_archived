@@ -16,7 +16,7 @@ class Client(JSConfigClient):
     base_uri = "https://capacity.threefoldtoken.com" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         http_client = HTTPClient(self.base_uri)
         self.api = ApiService(http_client)
         self.close = http_client.close
@@ -26,7 +26,7 @@ class GridCapacityFactory(JSConfigs):
     __jslocation__ = "j.clients.threefold_directory"
     _CHILDCLASS = Client
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.connections = {}
         self._api = None
 

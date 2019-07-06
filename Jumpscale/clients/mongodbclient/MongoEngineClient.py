@@ -20,7 +20,7 @@ class MongoEngineClient(JSConfigClient):
         replicaset = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         kwargs = {}
         data = self.data
         for key, value in data._ddict.items():

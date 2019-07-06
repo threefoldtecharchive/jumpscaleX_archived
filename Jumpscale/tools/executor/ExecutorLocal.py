@@ -4,12 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 from .ExecutorBase import ExecutorBase
 
-import subprocess
-import os
-import pytoml
-import socket
-import sys
-
 
 class ExecutorLocal(ExecutorBase):
 
@@ -19,11 +13,62 @@ class ExecutorLocal(ExecutorBase):
         self._cache_expiration = 3600
         self.type = "local"
         self._id = "localhost"
+        self._config_msgpack_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_config.msgpack")
+        self._env_on_system_msgpack_path = j.core.tools.text_replace("{DIR_CFG}/executor_local_system.msgpack")
+
+    @property
+    def config_msgpack(self):
+        path = self._config_msgpack_path
+        if not j.sal.fs.exists(path):
+            return b""
+        else:
+            return j.sal.fs.readFile(path, binary=True)
+
+    @config_msgpack.setter
+    def config_msgpack(self, value):
+        path = self._config_msgpack_path
+        j.sal.fs.writeFile(path, value)
+
+    def config_save(self, onsystem=True):
+        data = j.data.serializers.msgpack.dumps(self.config)
+        if j.data.hash.md5_string(self.config_msgpack) != j.data.hash.md5_string(data):
+            # now we know the configuration has been changed
+            self._log_debug("config save on: %s" % self)
+            self.config_msgpack = data
+            self.save()
+
+    @property
+    def env_on_system_msgpack(self):
+        path = self._env_on_system_msgpack_path
+        if not j.sal.fs.exists(path):
+            return ""
+        else:
+            return j.sal.fs.readFile(path, binary=True)
+
+    @env_on_system_msgpack.setter
+    def env_on_system_msgpack(self, value):
+        path = self._env_on_system_msgpack_path
+        j.sal.fs.writeFile(path, value)
 
     def exists(self, path):
         return j.sal.fs.exists(path)
 
-    def execute(self, cmd, die=True, showout=False, timeout=1000, env=None, sudo=False, replace=True):
+    def shell(self, cmd=None):
+        if cmd:
+            j.shell()
+        if mosh:
+            cmd = "mosh {login}@{addr} -p {port}"
+        else:
+            cmd = "ssh {login}@{addr} -p {port}"
+        cmd = self._replace(cmd)
+        j.sal.process.executeWithoutPipe(cmd)
+
+    def kosmos(self, cmd=None):
+        j.shell()
+
+    def execute(
+        self, cmd, die=True, showout=False, timeout=1000, env=None, sudo=False, replace=True, interactive=False
+    ):
         """
         @RETURN rc, out, err
         """
@@ -32,19 +77,19 @@ class ExecutorLocal(ExecutorBase):
                 env = {}
             env.update(self.env)
             assert self.env != {}
-            cmd = self.replace(cmd, args=env)
+            cmd = self._replace(cmd, args=env)
 
         if sudo:
             raise RuntimeError("sudo not supported")
 
-        # self._log_debug(cmd)
+        self._log_debug(cmd)
 
-        rc, out, err = j.sal.process.execute(cmd, die=die, showout=showout, timeout=timeout, replace=replace)
+        return j.core.tools.execute(
+            cmd, die=die, showout=showout, timeout=timeout, replace=replace, interactive=interactive
+        )
 
-        return rc, out, err
-
-    def executeRaw(self, cmd, die=True, showout=False):
-        return self.execute(cmd, die=die, showout=showout)
+    # def executeRaw(self, cmd, die=True, showout=False):
+    #     return self.execute(cmd, die=die, showout=showout)
 
     # def executeInteractive(self, cmds, die=True, checkok=None):
     #     cmds = self.commands_transform(cmds, die, checkok=checkok)
@@ -113,50 +158,47 @@ class ExecutorLocal(ExecutorBase):
         if mode is not None:
             j.sal.fs.chmod(path, mode)
 
-    @property
-    def state_on_system(self):
-        """
-        is dict of all relevant param's on system
-        """
-        if self._state_on_system == None:
-
-            def getenv():
-                res = {}
-                for key, val in os.environ.items():
-                    res[key] = val
-                return res
-
-            homedir = j.core.myenv.config["DIR_HOME"]
-
-            # print ("INFO: stateonsystem for local")
-            res = {}
-            res["env"] = getenv()
-            res["uname"] = (
-                subprocess.Popen("uname -mnprs", stdout=subprocess.PIPE, shell=True).stdout.read().decode().strip()
-            )
-            res["hostname"] = socket.gethostname()
-
-            if "darwin" in sys.platform.lower():
-                res["os_type"] = "darwin"
-            elif "linux" in sys.platform.lower():
-                res["os_type"] = "ubuntu"  # dirty hack, will need to do something better, but keep fast
-            else:
-                print("need to fix for other types (check executorlocal")
-                sys.exit(1)
-
-            path = "%s/.profile_js" % (homedir)
-            if os.path.exists(path):
-                res["bashprofile"] = j.sal.fs.readFile(path)
-            else:
-                res["bashprofile"] = ""
-
-            # if os.path.exists("/root/.iscontainer"):
-            #     res["iscontainer"] = True
-            # else:
-            #     res["iscontainer"] = False
-
-            res["HOME"] = j.core.myenv.config["DIR_HOME"]
-
-            self._state_on_system = res
-
-        return self._state_on_system
+    # def systemenv_load(self):
+    #     """
+    #     is dict of all relevant param's on system
+    #     """
+    #
+    #     def getenv():
+    #         res = {}
+    #         for key, val in os.environ.items():
+    #             res[key].upper() = val
+    #         return res
+    #
+    #     homedir = j.core.myenv.config["DIR_HOME"]
+    #
+    #     # print ("INFO: stateonsystem for local")
+    #     res = {}
+    #     res["ENV"] = getenv()
+    #     res["UNAME"] = (
+    #         subprocess.Popen("uname -mnprs", stdout=subprocess.PIPE, shell=True).stdout.read().decode().strip()
+    #     )
+    #     res["HOSTNAME"] = socket.gethostname()
+    #
+    #     if "darwin" in sys.platform.lower():
+    #         res["OS_TYPE"] = "darwin"
+    #     elif "linux" in sys.platform.lower():
+    #         res["OS_TYPE"] = "ubuntu"  # dirty hack, will need to do something better, but keep fast
+    #     else:
+    #         print("need to fix for other types (check executorlocal")
+    #         sys.exit(1)
+    #
+    #     path = "%s/.profile_js" % (homedir)
+    #     if os.path.exists(path):
+    #         res["bashprofile"] = j.sal.fs.readFile(path)
+    #     else:
+    #         res["bashprofile"] = ""
+    #
+    #     if os.path.exists("/root/.iscontainer"):
+    #         res["iscontainer"] = True
+    #     else:
+    #         res["iscontainer"] = False
+    #
+    #     res["HOME"] = j.core.myenv.config["DIR_HOME"]
+    #
+    #     self.env_on_system_msgpack = j.data.serializers.msgpack.dumps(res)
+    #     self.save()

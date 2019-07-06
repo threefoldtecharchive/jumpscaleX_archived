@@ -16,7 +16,7 @@ class CoreDnsClient(JSConfigBase):
     etcd_instance = "main" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._etcd_client = None
         self._zones = []
 

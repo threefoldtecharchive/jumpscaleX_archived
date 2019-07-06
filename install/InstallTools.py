@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development"]
+DEFAULTBRANCH = ["development", "development_installer"]
 
 import socket
 import grp
@@ -21,6 +21,11 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 import inspect
+
+try:
+    import json
+except:
+    pass
 
 try:
     import traceback
@@ -91,6 +96,219 @@ except:
 
         def serializer(data):
             return str(data)
+
+
+class RedisTools:
+    @staticmethod
+    def client_core_get(
+        addr="localhost", port=6379, unix_socket_path="/sandbox/var/redis.sock", die=True, fake_ok=True
+    ):
+        """
+
+        :param addr:
+        :param port:
+        :param unix_socket_path:
+        :param die: if cannot find fake or real die
+        :param fake_ok: can return a fake redis connection which will go to memory only
+        :return:
+        """
+
+        RedisTools.unix_socket_path = unix_socket_path
+
+        try:
+            import redis
+        except ImportError:
+            if fake_ok:
+                try:
+                    import fakeredis
+
+                    res = fakeredis.FakeStrictRedis()
+                    res.fake = True
+                    return res
+                except ImportError:
+                    # dit not find fakeredis so can only return None
+                    if die:
+                        raise RuntimeError(
+                            "cannot connect to fakeredis, could not import the library, please install fakeredis"
+                        )
+                    return None
+            else:
+                if die:
+                    raise RuntimeError("redis python lib not installed, do pip3 install redis")
+                return None
+
+        try:
+            cl = Redis(unix_socket_path=unix_socket_path, db=0)
+            cl.fake = False
+            assert cl.ping()
+        except Exception as e:
+            cl = None
+            if addr == "" and die:
+                raise e
+        else:
+            return cl
+
+        try:
+            cl = Redis(host=addr, port=port, db=0)
+            cl.fake = False
+            assert cl.ping()
+        except Exception as e:
+            if die:
+                raise e
+            cl = None
+
+        return cl
+
+    @staticmethod
+    def core_get(reset=False, tcp=True):
+        """
+
+        kosmos 'j.clients.redis.core_get(reset=False)'
+
+        will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
+        if that doesn't work then will look for std redis port
+        if that does not work then will return None
+
+
+        :param tcp, if True then will also start tcp port on localhost on 6379
+
+
+        :param reset: stop redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis couldn't be started
+        :return: redis instance
+        :rtype: Redis
+        """
+
+        if reset:
+            RedisTools.core_stop()
+
+        MyEnv.init()
+
+        if MyEnv.db and MyEnv.db.ping() and MyEnv.db.fake is False:
+            return MyEnv.db
+
+        if not RedisTools.core_running(tcp=tcp):
+            RedisTools._core_start(tcp=tcp)
+
+        MyEnv.db = RedisTools.client_core_get()
+
+        try:
+            from Jumpscale import j
+
+            j.core.db = MyEnv.db
+        except:
+            pass
+
+        return MyEnv.db
+
+    @staticmethod
+    def core_stop():
+        """
+        kill core redis
+
+        :raises RuntimeError: redis wouldn't be stopped
+        :return: True if redis is not running
+        :rtype: bool
+        """
+        MyEnv.db = None
+        Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+        Tools.execute("redis-cli shutdown", die=False, showout=False)
+        nr = 0
+        while True:
+            if not RedisTools.core_running():
+                return True
+            if nr > 200:
+                raise RuntimeError("could not stop redis")
+            time.sleep(0.05)
+
+    def core_running(unixsocket=True, tcp=True):
+
+        """
+        Get status of redis whether it is currently running or not
+
+        :raises e: did not answer
+        :return: True if redis is running, False if redis is not running
+        :rtype: bool
+        """
+        if unixsocket:
+            r = RedisTools.client_core_get(fake_ok=False, die=False)
+            if r:
+                return True
+
+        if tcp and Tools.tcp_port_connection_test("localhost", 6379):
+            r = RedisTools.client_core_get(ipaddr="localhost", port=6379, fake_ok=False, die=False)
+            if r:
+                return True
+
+        return False
+
+    def _core_start(tcp=True, timeout=20, reset=False):
+
+        """
+        kosmos "j.clients.redis.core_get(reset=True)"
+
+        installs and starts a redis instance in separate ProcessLookupError
+        when not in sandbox:
+                standard on {DIR_TEMP}/redis.sock
+        in sandbox will run in:
+            /sandbox/var/redis.sock
+
+        :param timeout:  defaults to 20
+        :type timeout: int, optional
+        :param reset: reset redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis server not found after install
+        :raises RuntimeError: platform not supported for start redis
+        :raises j.exceptions.Timeout: Couldn't start redis server
+        :return: redis instance
+        :rtype: Redis
+        """
+
+        if reset == False:
+            if RedisTools.core_running(tcp=tcp):
+                return RedisTools.core_get()
+
+            if MyEnv.platform_is_osx:
+                if not Tools.cmd_installed("redis-server"):
+                    # prefab.system.package.install('redis')
+                    Tools.execute("brew unlink redis", die=False)
+                    Tools.execute("brew install redis")
+                    Tools.execute("brew link redis")
+                    if not Tools.cmd_installed("redis-server"):
+                        raise RuntimeError("Cannot find redis-server even after install")
+                Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
+                Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+                Tools.execute("redis-cli shutdown", die=False, showout=False)
+            elif MyEnv.platform_is_linux:
+                Tools.execute("apt install redis-server -y")
+            else:
+                raise RuntimeError("platform not supported for start redis")
+
+        if not MyEnv.platform_is_osx:
+            cmd = "sysctl vm.overcommit_memory=1"
+            os.system(cmd)
+
+        if reset:
+            RedisTools.core_stop()
+
+        cmd = (
+            "mkdir -p /sandbox/var;redis-server --unixsocket $UNIXSOCKET "
+            "--port 6379 "
+            "--maxmemory 100000000 --daemonize yes"
+        )
+        cmd = cmd.replace("$UNIXSOCKET", RedisTools.unix_socket_path)
+
+        Tools.log(cmd)
+        Tools.execute(cmd)
+        limit_timeout = time.time() + timeout
+        while time.time() < limit_timeout:
+            if RedisTools.core_running():
+                break
+            print(1)
+            time.sleep(0.1)
+        else:
+            raise RuntimeError("Couldn't start redis server")
 
 
 try:
@@ -194,7 +412,7 @@ if redis:
              - sha: ...
              - nrkeys: ...
 
-            there is also storedprocedures_sha -> sha without having to decode json
+            there is also storedprocedures:sha -> sha without having to decode json
 
             tips on lua in redis:
             https://redis.io/commands/eval
@@ -219,19 +437,16 @@ if redis:
 
             data = json.dumps(dd)
 
-            self.hset("storedprocedures", name, data)
-            self.hset("storedprocedures_sha", name, script.sha)
+            self.hset("storedprocedures:data", name, data)
+            self.hset("storedprocedures:sha", name, script.sha)
 
             self._storedprocedures_to_sha = {}
-
-            # sha = self._sp_data(name)["sha"]
-            # assert self.script_exists(sha)[0]
 
             return script
 
         def storedprocedure_delete(self, name):
-            self.hdel("storedprocedures", name)
-            self.hdel("storedprocedures_sha", name)
+            self.hdel("storedprocedures:data", name)
+            self.hdel("storedprocedures:sha", name)
             self._storedprocedures_to_sha = {}
 
         @property
@@ -268,7 +483,9 @@ if redis:
 
         def _sp_data(self, name):
             if name not in self._storedprocedures_to_sha:
-                data = self.hget("storedprocedures", name)
+                data = self.hget("storedprocedures:data", name)
+                if not data:
+                    raise RuntimeError("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
@@ -416,38 +633,6 @@ class Tools:
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
 
-    @staticmethod
-    def redis_client_get(addr="localhost", port=6379, unix_socket_path="/sandbox/var/redis.sock", die=True):
-
-        if not redis:
-            if die:
-                raise RuntimeError("redis python lib not installed, do pip3 install redis")
-            else:
-                return None
-        try:
-            cl = Redis(unix_socket_path=unix_socket_path, db=0)
-            cl.ping()
-        except Exception as e:
-            cl = None
-            if addr == "" and die:
-                raise e
-        else:
-            return cl
-
-        try:
-            cl = Redis(host=addr, port=port, db=0)
-            cl.ping()
-        except Exception as e:
-            if die:
-                raise e
-            cl = None
-
-        return cl
-
-    @staticmethod
-    def _isUnix():
-        return "posix" in sys.builtin_module_names
-
     # @staticmethod
     # def error_raise(msg, pythonerror=None):
     #     print ("** ERROR **")
@@ -486,8 +671,8 @@ class Tools:
                     raise RuntimeError(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" % (cmd, returncode)
                     )
-            return returncode
-        return returncode
+            return returncode, "", ""
+        return returncode, "", ""
 
     @staticmethod
     def file_touch(path):
@@ -636,24 +821,24 @@ class Tools:
         if "darwin" in MyEnv.platform():
 
             script = """
-            pip3 install ipython
+            pip3 install ipython==6.5.0
             """
             Tools.execute(script, interactive=True)
 
         else:
 
             script = """
-                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                    echo >> /etc/apt/sources.list
-                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                fi
-                apt-get update
-                apt-get install -y python3-pip
-                apt-get install -y locales
-                apt-get install -y curl rsync
-                apt-get install -y unzip
-                pip3 install ipython
+                #if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                #    echo >> /etc/apt/sources.list
+                #    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                #    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                #fi
+                sudo apt-get update
+                sudo apt-get install -y python3-pip
+                sudo apt-get install -y locales
+                sudo apt-get install -y curl rsync
+                sudo apt-get install -y unzip
+                pip3 install ipython==6.5.0
                 pip3 install pudb
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
@@ -823,10 +1008,14 @@ class Tools:
                     # raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
             if not ignore_error:
                 if "{" in content:
-                    content = content.format_map(replace_args)  # this to deal with nested {
-                    if "{" in content:
+                    try:
+                        content = content.format_map(replace_args)  # this to deal with nested {
+                    except ValueError as e:
                         sorted = [i for i in args.keys()]
-                        # raise RuntimeError("could not replace \n%s \nin \n%s, remaining {" % (sorted, content))
+                        raise RuntimeError(
+                            "could not replace \n%s \nin \n%s\n, remaining {, if you want to ignore the error use ignore_error=True"
+                            % (sorted, content)
+                        )
 
         if text_strip:
             content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
@@ -888,8 +1077,10 @@ class Tools:
             logdict["context"] = ""
 
         p = print
+        if MyEnv.config["DEBUG"] and MyEnv.config.get("log_printer"):
+            p = MyEnv.config["log_printer"]
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict)
+        msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
         p(msg)
 
@@ -1085,7 +1276,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._isUnix(),
+                    close_fds=MyEnv.platform_is_unix,
                     shell=True,
                     universal_newlines=False,
                     cwd=cwd,
@@ -1099,7 +1290,7 @@ class Tools:
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=MyEnv._isUnix(),
+                    close_fds=MyEnv.platform_is_unix,
                     shell=False,
                     env=env,
                     universal_newlines=False,
@@ -1120,7 +1311,7 @@ class Tools:
                 return p
 
             def readout(stream):
-                if MyEnv._isUnix():
+                if MyEnv.platform_is_unix:
                     # Store all intermediate data
                     data = list()
                     while True:
@@ -1161,6 +1352,8 @@ class Tools:
                 # if command already finished then read stdout, stderr
                 out = readout(p.stdout)
                 err = readout(p.stderr)
+                if (out is None or err is None) and p.poll() is None:
+                    raise RuntimeError("prob bug, needs to think this through, seen the while loop")
                 while p.poll() is None:
                     # means process is still running
 
@@ -1169,7 +1362,7 @@ class Tools:
                     # print("wait")
 
                     if timeout != 0 and now > end:
-                        if Tools._isUnix():
+                        if MyEnv.platform_is_unix:
                             # Soft and hard kill on Unix
                             try:
                                 p.terminate()
@@ -1244,19 +1437,28 @@ class Tools:
     #
 
     @staticmethod
-    def process_pids_get_by_filter(filterstr):
+    def process_pids_get_by_filter(filterstr, excludes=[]):
         cmd = "ps ax | grep '%s'" % filterstr
         rcode, out, err = Tools.execute(cmd)
         # print out
         found = []
+
+        def checkexclude(c, excludes):
+            for item in excludes:
+                c = c.lower()
+                if c.find(item.lower()) != -1:
+                    return True
+            return False
+
         for line in out.split("\n"):
             if line.find("grep") != -1 or line.strip() == "":
                 continue
             if line.strip() != "":
                 if line.find(filterstr) != -1:
                     line = line.strip()
-                    # print "found pidline:%s"%line
-                    found.append(int(line.split(" ")[0]))
+                    if not checkexclude(line, excludes):
+                        # print "found pidline:%s"%line
+                        found.append(int(line.split(" ")[0]))
         return found
 
     @staticmethod
@@ -1761,7 +1963,7 @@ class MyEnv:
         "CRITICAL": "{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
     }
 
-    db = Tools.redis_client_get(die=False)
+    db = RedisTools.client_core_get(die=False)
 
     @staticmethod
     def platform():
@@ -1772,9 +1974,9 @@ class MyEnv:
         """
         return sys.platform
 
-    @staticmethod
-    def _isUnix():
-        return "posix" in sys.builtin_module_names
+    # @staticmethod
+    # def platform_is_linux():
+    #     return "posix" in sys.builtin_module_names
 
     @staticmethod
     def check_platform():
@@ -1929,9 +2131,14 @@ class MyEnv:
         :param sshagent_use: needs to be True if sshkey used
         :return:
         """
+
+        if not os.path.exists(MyEnv.config_file_path):
+            MyEnv.config = MyEnv.config_default_get(config=config)
+        else:
+            MyEnv._config_load()
+
         if interactive not in [True, False]:
             raise RuntimeError("interactive is True or False")
-        MyEnv.interactive = interactive
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -1946,8 +2153,6 @@ class MyEnv:
         if readonly is None and "readonly" in args:
             readonly = True
 
-        if interactive and "no_interactive" in args:
-            interactive = False
         if sshagent_use is None or ("no_sshagent" in args and sshagent_use is False):
             sshagent_use = False
         else:
@@ -2005,14 +2210,19 @@ class MyEnv:
         else:
             MyEnv._config_load()
 
+        # merge interactive flags
+        MyEnv.interactive = interactive and MyEnv.config["INTERACTIVE"]
+        # enforce interactive flag consistency after having read the config file,
+        # arguments overrides config file behaviour
+        MyEnv.config["INTERACTIVE"] = MyEnv.interactive
+
         if not "DIR_TEMP" in MyEnv.config:
             config.update(MyEnv.config)
             MyEnv.config = MyEnv.config_default_get(config=config)
 
         if readonly:
             MyEnv.config["READONLY"] = readonly
-        if interactive:
-            MyEnv.config["INTERACTIVE"] = interactive
+
         if sshagent_use:
             MyEnv.config["SSH_AGENT"] = sshagent_use
         if sshkey:
@@ -2023,7 +2233,7 @@ class MyEnv:
         for key, val in config.items():
             MyEnv.config[key] = val
 
-        if not sshagent_use and interactive:  # just a warning when interactive
+        if not sshagent_use and MyEnv.interactive:  # just a warning when interactive
             T = """
             Is it ok to continue without SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
@@ -2033,7 +2243,7 @@ class MyEnv:
 
             """
             print(Tools.text_strip(T))
-            if interactive:
+            if MyEnv.interactive:
                 if not Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
 
@@ -2046,7 +2256,7 @@ class MyEnv:
         else:
             if secret is None:
                 if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    if interactive:
+                    if MyEnv.interactive:
                         while not secret:  # keep asking till the secret is not empty
                             secret = Tools.ask_password("provide secret to use for encrypting private key")
                     else:
@@ -2055,14 +2265,7 @@ class MyEnv:
                 else:
                     secret = MyEnv.config["SECRET"]
             if secret:
-                secret = secret.encode()
-
-                import hashlib
-
-                m = hashlib.sha256()
-                m.update(secret)
-
-                MyEnv.config["SECRET"] = m.hexdigest()
+                MyEnv.secret_set(secret)
                 # is same as what is used to read from ssh-agent in SSHAgent client
             else:
                 print("SECRET IS NEEDED")
@@ -2072,16 +2275,48 @@ class MyEnv:
         MyEnv.init(configdir=configdir)
 
     @staticmethod
-    def init(configdir=None):
+    def secret_set(secret=None):
+        while not secret:  # keep asking till the secret is not empty
+            secret = Tools.ask_password("provide secret to use for encrypting private key")
+        secret = secret.encode()
+
+        import hashlib
+
+        m = hashlib.sha256()
+        m.update(secret)
+
+        secret2 = m.hexdigest()
+
+        if MyEnv.config["SECRET"] != secret2:
+
+            MyEnv.config["SECRET"] = secret2
+
+            MyEnv.config_save()
+
+    @staticmethod
+    def init(configdir=None, reset=False):
         """
 
         :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
         :return:
         """
-        if MyEnv.__init:
+        if reset is False and MyEnv.__init:
             return
 
+        print("MYENV INIT")
+
         args = Tools.cmd_args_get()
+
+        if MyEnv.platform() == "linux":
+            MyEnv.platform_is_linux = True
+            MyEnv.platform_is_unix = True
+            MyEnv.platform_is_osx = False
+        elif "darwin" in MyEnv.platform():
+            MyEnv.platform_is_linux = False
+            MyEnv.platform_is_unix = True
+            MyEnv.platform_is_osx = True
+        else:
+            raise RuntimeError("platform not supported, only linux or osx for now.")
 
         if not configdir:
             if "JSX_DIR_CFG" in os.environ:
@@ -2318,6 +2553,7 @@ class BaseInstaller:
 
     @staticmethod
     def base():
+
         if MyEnv.state_get("generic_base"):
             return
 
@@ -2331,6 +2567,15 @@ class BaseInstaller:
 
         """
         Tools.execute(script, interactive=True)
+
+        if MyEnv.platform_is_osx:
+            OSXInstaller.base()
+        elif MyEnv.platform_is_linux:
+            UbuntuInstaller.base()
+        else:
+            print("Only ubuntu & osx supported")
+            os.exit(1)
+
         MyEnv.state_set("generic_base")
 
     @staticmethod
@@ -2353,6 +2598,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
                 "dnslib",
@@ -2367,7 +2613,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython",
+                "ipython==6.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -2403,6 +2649,7 @@ class BaseInstaller:
                 "pbkdf2",
                 "ptpython",
                 "pygments-markdown-lexer",
+                "wsgidav",
             ],
             # level 1: in the middle
             1: [
@@ -2448,11 +2695,12 @@ class BaseInstaller:
         return res
 
     @staticmethod
-    def pips_install():
-        for pip in BaseInstaller.pips_list(3):
-
+    def pips_install(items=None):
+        if not items:
+            items = BaseInstaller.pips_list(3)
+        for pip in items:
             if not MyEnv.state_get("pip_%s" % pip):
-                C = "pip3 install --user '%s'" % pip
+                C = "pip3 install '%s'" % pip  # --user
                 Tools.execute(C, die=True)
                 MyEnv.state_set("pip_%s" % pip)
 
@@ -2463,22 +2711,29 @@ class OSXInstaller:
         MyEnv._init()
         Tools.log("installing OSX version")
         OSXInstaller.base()
-        pass
+        BaseInstaller.pips_install()
 
     @staticmethod
     def base():
         MyEnv._init()
+        OSXInstaller.brew_install()
         if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
             script = """
             brew install curl unzip rsync
             """
             Tools.execute(script, replace=True)
-        BaseInstaller.pips_install()
+        BaseInstaller.pips_install(["click"])  # TODO: *1
+
+    @staticmethod
+    def brew_install():
+        if not Tools.cmd_installed("brew"):
+            cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+            Tools.execute(cmd, interactive=True)
 
     @staticmethod
     def brew_uninstall():
         MyEnv._init()
-        cmd = 'sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd, interactive=True)
         toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
@@ -2499,7 +2754,7 @@ class UbuntuInstaller:
 
         UbuntuInstaller.ensure_version()
         UbuntuInstaller.base()
-        UbuntuInstaller.ubuntu_base_install()
+        # UbuntuInstaller.ubuntu_base_install()
         UbuntuInstaller.python_redis_install()
         UbuntuInstaller.apts_install()
         BaseInstaller.pips_install()
@@ -2518,35 +2773,37 @@ class UbuntuInstaller:
         if MyEnv.state_get("base"):
             return
 
-        script = """
-        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-            echo >> /etc/apt/sources.list
-            echo "# Jumpscale Setup" >> /etc/apt/sources.list
-            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-        fi
-        apt-get update
+        rc, out, err = Tools.execute("lsb_release -a")
+        if out.find("Ubuntu 18.04") != -1:
+            bionic = True
+        else:
+            bionic = False
 
+        if bionic:
+            script = """
+            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                echo >> /etc/apt/sources.list
+                echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+            fi
+            """
+            Tools.execute(script, interactive=True)
+
+        script = """
+        apt-get update
         apt-get install -y curl rsync unzip
         locale-gen --purge en_US.UTF-8
 
-        """
-        Tools.execute(script, interactive=True)
-        MyEnv.state_set("base")
-
-    @staticmethod
-    def ubuntu_base_install():
-        if MyEnv.state_get("ubuntu_base_install"):
-            return
-
-        Tools.log("installing base system")
-
-        script = """
         apt-get install python3-pip -y
         apt-get install locales -y
-        pip3 install ipython
+
         """
         Tools.execute(script, interactive=True)
-        MyEnv.state_set("ubuntu_base_install")
+
+        if bionic and not DockerFactory.indocker():
+            UbuntuInstaller.docker_install()
+
+        MyEnv.state_set("base")
 
     @staticmethod
     def docker_install():
@@ -2555,7 +2812,7 @@ class UbuntuInstaller:
         script = """
         apt update
         apt upgrade -y
-        apt install python3-pip  -y
+        apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
         add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
@@ -2585,7 +2842,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "graphviz", "iputils-ping"]
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -3058,7 +3315,10 @@ class DockerContainer:
             self.dexec("rm -f /etc/service/sshd/down")
             if baseinstall:
                 print(" - Upgrade ubuntu")
-                self.dexec("apt update; apt upgrade -y; apt install mc git -y")
+                self.dexec("apt update")
+                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
+                print(" - Upgrade ubuntu ended")
+                self.dexec("apt install mc git -y")
 
             Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
 
@@ -3222,7 +3482,11 @@ class DockerContainer:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
-                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.config.sshport, src1)
+                cmd = "scp -P {} -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -r {} root@localhost:/tmp/".format(
+                    self.config.sshport, src1
+                )
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx install"
         cmd += args_txt
@@ -3231,9 +3495,9 @@ class DockerContainer:
         self.sshexec(cmd)
 
         cmd = """
-        apt-get autoclean
-        apt-get clean
-        apt-get autoremove
+        apt-get autoclean -y
+        apt-get clean -y
+        apt-get autoremove -y
         # rm -rf /tmp/*
         # rm -rf /var/log/*
         find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
@@ -3245,8 +3509,10 @@ class DockerContainer:
         install succesfull:
 
         # if you use a container do:
-        jsx container_kosmos
+        jsx container-kosmos
+
         or
+
         kosmos
 
         """

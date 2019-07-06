@@ -17,7 +17,7 @@ class IntercomClient(JSConfigClient):
         token_ = "dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA=" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.token = self.token_
         self.api = Client(personal_access_token=self.token)
 

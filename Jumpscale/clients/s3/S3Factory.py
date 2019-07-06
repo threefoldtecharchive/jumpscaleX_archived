@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .S3Client import S3Client
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class S3Factory(JSConfigBase):

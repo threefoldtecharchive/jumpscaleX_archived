@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
+import click
+from urllib.request import urlopen
+from importlib import util
+import sys
+import shutil
+import time
+import inspect
+import argparse
 import os
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
-import click
 
-import argparse
-import inspect
-import time
-import os
-import shutil
-import sys
-from importlib import util
-from urllib.request import urlopen
 
 DEFAULT_BRANCH = "development"
 
@@ -37,7 +36,9 @@ def load_install_tools():
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
-    check_branch(IT)
+    IT.MyEnv.init()
+    # if path.find("/code/") != -1:  # means we are getting the installtools from code dir
+    #     check_branch(IT)
     return IT
 
 
@@ -49,8 +50,12 @@ def check_branch(IT):
             cmd = "cd %s; git branch | grep \* | cut -d ' ' -f2" % path
             rc, out, err = IT.Tools.execute(cmd)
             if out.strip() != DEFAULT_BRANCH:
-                print("cannot install, the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
-                sys.exit(1)
+                print("WARNING the branch of jumpscale in %s needs to be %s" % (path, DEFAULT_BRANCH))
+                if not IT.Tools.ask_yes_no("OK to work with branch above?"):
+                    sys.exit(1)
+
+
+IT = load_install_tools()
 
 
 def jumpscale_get(die=True):
@@ -65,12 +70,57 @@ def jumpscale_get(die=True):
     return j
 
 
+# have to do like this, did not manage to call the click enabled function (don't know why)
+def _configure(
+    basedir=None,
+    codedir=None,
+    debug=False,
+    sshkey=None,
+    no_sshagent=False,
+    no_interactive=False,
+    privatekey_words=None,
+    secret=None,
+    configdir=None,
+):
+    interactive = not no_interactive
+    sshagent_use = not no_sshagent
+    IT.MyEnv.configure(
+        basedir=basedir,
+        readonly=None,
+        codedir=codedir,
+        sshkey=sshkey,
+        sshagent_use=sshagent_use,
+        debug_configure=debug,
+        interactive=interactive,
+        secret=secret,
+        configdir=configdir,
+    )
+    j = jumpscale_get(die=False)
+
+    if not j and privatekey_words:
+        print(
+            "cannot load jumpscale, \
+            can only configure private key when jumpscale is installed locally use jsx install..."
+        )
+        sys.exit(1)
+
+    if j and privatekey_words:
+        j.data.nacl.configure(privkey_words=privatekey_words)
+
+
+# if not IT.MyEnv.state:
+#     # this is needed to make sure we can
+#     _configure()
+#
+# IT.BaseInstaller.base()
+
+
 @click.group()
 def cli():
     pass
 
 
-### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
+# CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
 @click.option("--codedir", default=None, help="path where the github code will be checked out, default sandbox/code")
@@ -120,45 +170,7 @@ def configure(
     )
 
 
-# have to do like this, did not manage to call the click enabled function (don't know why)
-def _configure(
-    basedir=None,
-    codedir=None,
-    debug=False,
-    sshkey=None,
-    no_sshagent=False,
-    no_interactive=False,
-    privatekey_words=None,
-    secret=None,
-    configdir=None,
-):
-    interactive = not no_interactive
-    sshagent_use = not no_sshagent
-    IT.MyEnv.configure(
-        basedir=basedir,
-        readonly=None,
-        codedir=codedir,
-        sshkey=sshkey,
-        sshagent_use=sshagent_use,
-        debug_configure=debug,
-        interactive=interactive,
-        secret=secret,
-        configdir=configdir,
-    )
-    j = jumpscale_get(die=False)
-
-    if not j and privatekey_words:
-        print(
-            "cannot load jumpscale, \
-            can only configure private key when jumpscale is installed locally use jsx install..."
-        )
-        sys.exit(1)
-
-    if j:
-        j.data.nacl.configure(privkey_words=privatekey_words)
-
-
-### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+# INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
@@ -195,7 +207,7 @@ def container_install(
     wiki=False,
     portrange=1,
     image=None,
-    branch=None,
+    branch=DEFAULT_BRANCH,
     reinstall=False,
     no_interactive=False,
     pull=False,
@@ -240,7 +252,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     return docker
 
 
-### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+# INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
@@ -268,6 +280,7 @@ def install(wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=Fa
 
     """
 
+    print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)
     _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
@@ -481,61 +494,50 @@ def modules_install(url=None, configdir=None):
     _generate(path=path)
 
 
-@click.command()
-# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option("-n", "--name", default="3bot", help="name of container")
-def bcdb_indexrebuild(name=None, configdir=None):
-    """
-    rebuilds the index for all BCDB or a chosen one (with name),
-    use this to fix corruption issues with index
-    if name is not given then will walk over all known BCDB's and rebuild index
-    :return:
-    """
-    from Jumpscale import j
-
-    j.shell()
-    bcdb.index_rebuild()
+# @click.command()
+# # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# # @click.option("-n", "--name", default="3bot", help="name of container")
+# def bcdb_indexrebuild(configdir=None):
+#     """
+#     rebuilds the index for all BCDB or a chosen one (with name),
+#     use this to fix corruption issues with index
+#     if name is not given then will walk over all known BCDB's and rebuild index
+#     :return:
+#     """
+#     from Jumpscale import j
+#
+#     j.data.bcdb.index_rebuild()
 
 
 @click.command()
 def generate():
-    """
-    generate the loader file, important to do when new modules added
-    """
     _generate()
+
+
+@click.command()
+def check():
+    from Jumpscale import j
+
+    j.application.check()
 
 
 def _generate(path=None):
     j = jumpscale_get(die=True)
-    j.sal.fs.remove("{DIR_VAR}/codegen")
-    j.sal.fs.remove("{DIR_VAR}/cmds")
-    from Jumpscale.core.generator.JSGenerator import JSGenerator
-    from Jumpscale import j
-
-    g = JSGenerator(j)
-
-    if path:
-        # means we need to link
-        g.lib_link(path)
-    g.generate(methods_find=True)
-    g.report()
-    print("OK ALL DONE, GOOD LUCK (-:")
+    j.application.generate(path)
 
 
 if __name__ == "__main__":
 
     cli.add_command(configure)
+    cli.add_command(check)
     cli.add_command(install)
     cli.add_command(kosmos)
     cli.add_command(generate)
     cli.add_command(wireguard)
     cli.add_command(modules_install)
-    cli.add_command(bcdb_indexrebuild)
+    # cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
-    IT = load_install_tools()
-
-    IT.MyEnv.init()  # will take into consideration the --configdir
 
     if not IT.DockerFactory.indocker():
         cli.add_command(container_kosmos)

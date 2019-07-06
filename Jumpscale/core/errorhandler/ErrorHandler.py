@@ -70,6 +70,9 @@ class ErrorHandler:
             sys.exit(1)
             return
 
+        if isinstance(err, AttributeError):
+            err = "{RED}ATTRIBUTE ERROR (prob means cannot find):{RESET} %s" % err
+
         self._j.core.tools.log(msg=err, tb=tb, level=40)
         if die:
             if self._j.core.myenv.debug:
@@ -186,7 +189,7 @@ class ErrorHandler:
             if self._j.core.platformtype.myplatform.platform_is_linux:
                 # j.tools.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
                 editor = findEditorLinux()
-            elif self._j.core.platformtype.myplatform.isWindows:
+            elif self._j.core.platformtype.myplatform.platform_is_windows:
                 editorPath = self._j.sal.fs.joinPaths(self._j.dirs.JSBASEDIR, "apps", "wscite", "scite.exe")
                 if self._j.sal.fs.exists(editorPath):
                     editor = editorPath

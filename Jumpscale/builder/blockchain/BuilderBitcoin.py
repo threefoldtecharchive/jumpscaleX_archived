@@ -17,7 +17,7 @@ class BuilderBitcoin(j.builders.system._BaseClass):
         self.profile_builder_select()
 
         # dependancies
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             j.builders.system.package.ensure("g++")
             self.system.package.mdupdate()
             self.system.package.install(
@@ -123,7 +123,7 @@ class BuilderBitcoin(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         # bitcoin daemon
-        cmd = j.tools.startupcmd.get(self.NAME, cmd="bitcoind")
+        cmd = j.servers.startupcmd.get(self.NAME, cmd="bitcoind")
         return [cmd]
 
     @builder_method()

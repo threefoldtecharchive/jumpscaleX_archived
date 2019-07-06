@@ -14,11 +14,16 @@ class Dep(j.application.JSBaseClass):
 
     def copyTo(self, dest):
         dest = dest.replace("//", "/")
-        j.sal.fs.createDir(j.sal.fs.getDirName(dest))
-        if dest != self.path:  # don't copy to myself
-            # self._log_debug("DEPCOPY: %s %s" % (self.path, dest))
-            if not j.sal.fs.exists(dest):
-                j.sal.fs.copyFile(self.path, dest, follow_symlinks=True)
+        # don't copy self
+        if dest == self.path:
+            return
+
+        if not j.sal.fs.getFileExtension(dest):
+            # dest is a directory
+            dest = j.sal.fs.joinPaths(dest, self.name)
+
+        if not j.sal.fs.exists(dest):
+            j.sal.fs.copyFile(self.path, dest, createDirIfNeeded=True)
 
     def __str__(self):
         return "Dep(name='%s', path='%s')" % (self.name, self.path)

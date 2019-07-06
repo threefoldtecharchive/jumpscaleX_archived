@@ -7,7 +7,7 @@ class BuilderBtrfsProgs(BuilderApp):
 
     # depends of: pkg-config build-essential e2fslibs-dev libblkid-dev liblzo2-dev
 
-    def _init(self):
+    def _init(self, **kwargs):
         # if the module builds something, define BUILDDIR and CODEDIR folders.
         self.BUILDDIR = self._replace("{DIR_VAR}/build/btrfs-progs/")
         self.CODEDIR = self._replace("{DIR_CODE}")

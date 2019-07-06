@@ -40,7 +40,7 @@ class Capnp(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.capnp"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
         j.sal.fs.createDir(self._capnpVarDir)

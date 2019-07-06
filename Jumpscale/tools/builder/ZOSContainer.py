@@ -31,7 +31,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         self.name = name
         self.zosclient = zos.zosclient
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._container = None
         self._node_connected = False

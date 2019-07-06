@@ -3,7 +3,7 @@ from Jumpscale import j
 from .DocSite import DocSite
 
 
-class DocsFactory(j.application.JSFactoryBaseClass):
+class DocsFactory(j.application.JSFactoryConfigsBaseClass):
 
     __jslocation__ = "j.data.docs"
 
@@ -11,7 +11,7 @@ class DocsFactory(j.application.JSFactoryBaseClass):
 
     def _init(self):
 
-        self._bcdb = j.data.bcdb.new("docs")  # will be a BCDB custom for this one using sqlite
+        self._bcdb = j.data.bcdb.get("docs")  # will be a BCDB custom for this one using sqlite
         self._macros_modules = {}
         self._macros = {}
 

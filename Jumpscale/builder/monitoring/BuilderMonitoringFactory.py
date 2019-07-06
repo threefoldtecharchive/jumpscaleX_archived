@@ -5,7 +5,7 @@ class BuilderMonitoringFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.monitoring"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._smartmon = None
         self._grafana = None

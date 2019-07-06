@@ -14,6 +14,10 @@ class ExecutorFactory(j.application.JSBaseClass):
         self.__jslocation__ = "j.tools.executor"
         JSBASE.__init__(self)
 
+    @property
+    def local(self):
+        return self.local_get()
+
     def local_get(self):
         if "localhost" not in self._executors:
             self._executors["localhost"] = ExecutorLocal()
@@ -31,3 +35,19 @@ class ExecutorFactory(j.application.JSBaseClass):
         return ExecutorSerial(
             device, baudrate=baudrate, type=type, parity=parity, stopbits=stopbits, bytesize=bytesize, timeout=timeout
         )
+
+    def test(self):
+        """
+        kosmos 'j.tools.executor.test()'
+        :return:
+        """
+        e = j.clients.digitalocean.get_testvm_sshclient(delete=False).executor
+
+        e.state_set("test")
+
+        j.shell()
+        w
+
+        e.installer.base()
+
+        j.shell()

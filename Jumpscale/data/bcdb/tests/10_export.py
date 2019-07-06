@@ -7,6 +7,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="export")'
 
     """
+    j.servers.zdb.start_test_instance()
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test
@@ -17,10 +18,9 @@ def main(self):
     username = "" (S)           # User name
     
     """
-    bcdb = j.data.bcdb.get("test")
+    bcdb = j.data.bcdb.new("test_export")
+    bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
-    m.reset()
-
     for i in range(10):
         o = m.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -36,7 +36,6 @@ def main(self):
     """
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
-    m2.reset()
 
     for i in range(10):
         o = m2.new()
@@ -45,8 +44,9 @@ def main(self):
         o.name = "myuser_%s" % i
         o.save()
 
-    def export_import(encr=False, export=True):
-        p = "/tmp/bcdb_export"
+    p = "/tmp/bcdb_export"
+
+    def export_import(encr=False, export=True, remove=False):
         if export:
             j.sal.fs.remove(p)
             bcdb.export(path=p, encrypt=encr)
@@ -71,16 +71,18 @@ def main(self):
 
         assert obj._schema == obj2._schema
 
-    export_import()
-    return "OK"
+        if remove:
+            j.sal.fs.remove(p)
 
-    # test we can update data, so we overwrite
-    export_import(False, export=False)
+    export_import(encr=False, export=True, remove=False)
+    # will now test if we can import
+    export_import(False, export=False, remove=True)
+    # now do other test because there will be stuff changed
+    export_import(encr=False, export=True, remove=True)
 
     # now test with encryption
-    export_import(True)
-
-    # now get other BCDB with sqlite & import & do checks #TODO:*1
+    export_import(encr=True, export=True, remove=False)
+    export_import(encr=True, export=False, remove=True)
 
     self._log_info("TEST DONE")
     return "OK"

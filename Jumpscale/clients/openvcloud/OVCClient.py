@@ -35,7 +35,7 @@ class OVCClient(JSConfigBase):
     space = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._api = None
         self._config_check()
 

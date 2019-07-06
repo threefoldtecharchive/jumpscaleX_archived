@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderCmake(j.builders.system._BaseClass):
     NAME = "cmake"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.package_path = self._replace("{DIR_TEMP}/CMake")
 
     @builder_method()

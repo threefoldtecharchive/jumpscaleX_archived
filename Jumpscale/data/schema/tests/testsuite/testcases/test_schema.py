@@ -1056,7 +1056,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with binary type, should succeed.")
         binary = self.random_string().encode()
         schema_obj.binary = binary
-        schema_obj.init_bin ='this is binary'
+        schema_obj.init_bin = "this is binary"
         self.assertEqual(schema_obj.binary, binary)
         schema_obj.init_bin = "this is binary"
         self.assertEqual(schema_obj.init_bin, b"\xb6\x18\xac\x8a\xc6\xe2\x9d\xaa\xf2")

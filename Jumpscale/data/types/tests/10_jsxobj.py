@@ -28,7 +28,7 @@ def main(self):
 
     assert tt._schema._md5 == schema_object._md5
 
-    assert tt.BASETYPE == "OBJ"
+    assert tt.BASETYPE == "JSXOBJ"
 
     o = tt.clean({})
 
@@ -58,7 +58,7 @@ def main(self):
 
     assert ll[0].U == 1
 
-    assert ll._child_type.BASETYPE == "OBJ"
+    assert ll._child_type.BASETYPE == "JSXOBJ"
 
     print(o)
 

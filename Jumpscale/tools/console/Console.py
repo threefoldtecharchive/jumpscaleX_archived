@@ -12,7 +12,7 @@ import collections
 import sys
 import os
 
-if j.core.platformtype.myplatform.isWindows:
+if j.core.platformtype.myplatform.platform_is_windows:
     import msvcrt
 
     def clear():
@@ -58,8 +58,8 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
         when typing, char per char will be returned
         """
-        if not j.core.platformtype.myplatform.isWindows:
-            if j.core.platformtype.myplatform.isUnix:
+        if not j.core.platformtype.myplatform.platform_is_windows:
+            if j.core.platformtype.myplatform.platform_is_unix:
                 import termios
 
                 fd = sys.stdin.fileno()

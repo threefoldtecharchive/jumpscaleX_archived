@@ -11,7 +11,18 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._digitalme = None
         self._userbot = None
         self._odoo = None
+        self._corex = None
         self._sonic = None
+        self._hub = None
+        self._sockexec = None
+
+    @property
+    def sockexec(self):
+        if self._sockexec is None:
+            from .BuilderSockexec import BuilderSockexec
+
+            self._sockexec = BuilderSockexec()
+        return self._sockexec
 
     @property
     def gitea(self):
@@ -54,9 +65,24 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         return self._odoo
 
     @property
+    def corex(self):
+        if self._corex is None:
+            from .BuilderCoreX import BuilderCoreX
+
+            self._corex = BuilderCoreX()
+        return self._corex
+
+    @property
     def sonic(self):
         if self._sonic is None:
             from .BuilderSonic import BuilderSonic
 
             self._sonic = BuilderSonic()
         return self._sonic
+
+    def hub(self):
+        if self._hub is None:
+            from .BuilderHub import BuilderHub
+
+            self._hub = BuilderHub()
+        return self._hub

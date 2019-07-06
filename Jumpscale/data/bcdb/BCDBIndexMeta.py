@@ -21,7 +21,6 @@ class IndexField:
         elif self.jumpscaletype.NAME in ["float"]:
             self.type = "FloatField"
         else:
-            j.shell()
             raise RuntimeError("did not find required type for peewee:%s" % self)
 
     def __str__(self):

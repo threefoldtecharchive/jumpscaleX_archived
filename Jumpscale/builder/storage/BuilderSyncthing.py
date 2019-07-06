@@ -87,7 +87,7 @@ class BuilderSyncthing(BuilderGolangTools):
     @property
     def startup_cmds(self):
         cmd = self._replace("{DIR_BIN}/syncthing -home  {DIR_CFG}/syncthing")
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

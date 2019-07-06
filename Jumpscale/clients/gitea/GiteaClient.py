@@ -17,7 +17,7 @@ class GiteaClient(JSConfigBase):
     gitea_token_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._api = None
 
     def config_check(self):

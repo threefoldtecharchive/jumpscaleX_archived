@@ -48,7 +48,7 @@ class DM(DMBase):
         return "'%s'" % self._string
 
     @property
-    def _dictdata(self):
+    def _datadict(self):
         return self._data
 
     def _encode(self, ddict):

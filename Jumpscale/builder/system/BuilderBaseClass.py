@@ -132,6 +132,10 @@ class builder_method(object):
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
             reset = kwargs.get("reset", False)
+            reset_state = kwargs.get("reset_state", False)
+
+            if reset or reset_state:
+                builder.reset_state()
 
             if self.already_done(func, builder, done_key, reset):
                 return builder.ALREADY_DONE_VALUE
@@ -462,6 +466,15 @@ class BuilderBaseClass(BaseClass):
     def reset(self):
         """
         reset the state of your builder, important to let the state checking restart
+        and it removes build files (calls a self.clean)
+        :return:
+        """
+        self._done_reset()
+        self.clean()
+
+    def reset_state(self):
+        """
+        reset the state of your builder, all states of builder are gone that way
         :return:
         """
         self._done_reset()
@@ -491,7 +504,7 @@ class BuilderBaseClass(BaseClass):
     @property
     def startup_cmds(self):
         """
-        is list if j.tools.startupcmd...
+        is list if j.servers.startupcmd...
         :return:
         """
         return []
@@ -522,7 +535,7 @@ class BuilderBaseClass(BaseClass):
         :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
             j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)

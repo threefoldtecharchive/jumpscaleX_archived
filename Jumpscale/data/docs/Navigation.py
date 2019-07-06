@@ -7,5 +7,5 @@ class Navigation(Doc):
     is the navigation menu
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass

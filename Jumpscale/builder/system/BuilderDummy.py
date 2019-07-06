@@ -7,7 +7,7 @@ class BuilderDummy(j.builders.system._BaseClass):
     NAME = "dummy"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         self.variable = "value"
         self._log_debug("init_ called")
 

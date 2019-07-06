@@ -271,7 +271,7 @@ class BuilderTools(j.builders.system._BaseClass):
         if path.endswith(".tar.gz") or path.endswith(".tgz"):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
-            if self.isMac:
+            if self.platform_is_osx:
                 j.builders.system.package.ensure("xz")
             else:
                 j.builders.system.package.ensure("xz-utils")
@@ -370,7 +370,7 @@ class BuilderTools(j.builders.system._BaseClass):
         location = self._replace(location)
         location = location.replace("//", "/")
         if self.file_exists(location):
-            if self.isMac:
+            if self.platform_is_osx:
                 fs_check = self.execute("stat -f %s %s" % ('"%a %u %g"', location), showout=False)[1]
             else:
                 fs_check = self.execute("stat %s %s" % (location, '--format="%a %U %G"'), showout=False)[1]
@@ -403,7 +403,7 @@ class BuilderTools(j.builders.system._BaseClass):
         if val == self.hostname:
             return
         val = val.strip()
-        if self.isMac:
+        if self.platform_is_osx:
             hostfile = "/private/etc/hostname"
             self.file_write(hostfile, val)
         else:
@@ -425,7 +425,7 @@ class BuilderTools(j.builders.system._BaseClass):
     @property
     def hostfile(self):
         def get():
-            if self.isMac:
+            if self.platform_is_osx:
                 hostfile = "/private/etc/hosts"
             else:
                 hostfile = "/etc/hosts"
@@ -435,7 +435,7 @@ class BuilderTools(j.builders.system._BaseClass):
 
     @hostfile.setter
     def hostfile(self, val):
-        if self.isMac:
+        if self.platform_is_osx:
             hostfile = "/private/etc/hosts"
             self.file_write(hostfile)
         else:
@@ -842,11 +842,11 @@ class BuilderTools(j.builders.system._BaseClass):
     #         "Command was not installed, check for errors: %s" % (command)
 
     @property
-    def isUbuntu(self):
+    def platform_is_ubuntu(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu") != -1
 
     @property
-    def isLinux(self):
+    def platform_is_linux(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux") != -1
 
     @property
@@ -858,7 +858,7 @@ class BuilderTools(j.builders.system._BaseClass):
         return False
 
     @property
-    def isMac(self):
+    def platform_is_osx(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin") != -1
 
     @property

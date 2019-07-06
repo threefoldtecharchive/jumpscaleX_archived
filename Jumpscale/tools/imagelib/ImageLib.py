@@ -13,7 +13,7 @@ class ImageLib(j.application.JSBaseClass):
 
     #     self._initted=False
 
-    # def _init(self):
+    # def _init(self,**kwargs):
     #     if self._initted==False:
     #         from PIL import Image
     #         self._initted=True

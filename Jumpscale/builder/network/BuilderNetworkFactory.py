@@ -9,6 +9,8 @@ class BuilderNetworkFactory(j.builders.system._BaseFactoryClass):
 
         self._zerotier = None
         self._coredns = None
+        self._gateway = None
+        self._tcprouter = None
 
     @property
     def zerotier(self):
@@ -25,3 +27,19 @@ class BuilderNetworkFactory(j.builders.system._BaseFactoryClass):
 
             self._coredns = BuilderCoreDns()
         return self._coredns
+
+    @property
+    def gateway(self):
+        if self._gateway is None:
+            from .BuilderGateway import BuilderGateway
+
+            self._gateway = BuilderGateway()
+        return self._gateway
+
+    @property
+    def tcprouter(self):
+        if self._tcprouter is None:
+            from .BuilderTCPRouter import BuilderTCPRouter
+
+            self._tcprouter = BuilderTCPRouter()
+        return self._tcprouter

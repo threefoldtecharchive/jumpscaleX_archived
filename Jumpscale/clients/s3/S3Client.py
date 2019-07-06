@@ -28,7 +28,7 @@ class S3Client(JSConfigBase):
     bucket_ok = false (B)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # s3 = boto3.resource('s3',
         #                     endpoint_url='http://%s:%s' % (c["address"], c["port"]),
         #                     config=boto3.session.Config(signature_version='s3v4'),

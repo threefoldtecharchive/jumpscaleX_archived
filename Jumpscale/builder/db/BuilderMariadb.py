@@ -103,7 +103,7 @@ class BuilderMariadb(j.builders.system._BaseClass):
         """
         cmd_start = cmd
 
-        cmd = j.tools.startupcmd.get("mysqld", cmd=cmd_start)
+        cmd = j.servers.startupcmd.get("mysqld", cmd=cmd_start)
         return [cmd]
 
     @builder_method()

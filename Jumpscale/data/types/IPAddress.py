@@ -18,7 +18,14 @@ class IPAddress(String):
         self._default = default
 
     def check(self, value):
-        return self.is_valid_ipv4(value) or self.is_valid_ipv6(value)
+        if value in ["", None]:
+            return True
+        if isinstance(value, str):
+            if value.lower() == "localhost":
+                return True
+            return self.is_valid_ipv4(value) or self.is_valid_ipv6(value)
+        else:
+            return False
 
     def is_valid_ipv4(self, ip):
         """ Validates IPv4 addresses.
@@ -48,6 +55,8 @@ class IPAddress(String):
         if not self.check(value):
             raise ValueError("invalid ip address %s" % value)
         else:
+            if value.lower() == "localhost":
+                value = "127.0.0.1"
             return value
 
     def default_get(self):

@@ -27,6 +27,16 @@ class BuilderPostgresql(j.builders.system._BaseClass):
 
     @builder_method()
     def install(self, port=5432):
+        """
+        kosmos 'j.builders.db.postgres.install()'
+
+        :param port:
+        :return:
+        """
+        """
+        :param port: 
+        :return: 
+        """
         cmd = self._replace(
             """
             cd {DOWNLOAD_DIR}/postgresql-9.6.13
@@ -59,7 +69,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
         pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
-        cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
         return [cmd]
 
     def test(self):

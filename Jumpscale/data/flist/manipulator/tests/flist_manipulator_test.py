@@ -119,7 +119,7 @@ class FromExisting(TestCase):
         assert "test" in [x.name for x in self.manipulator.root.dirs()]
 
     @pytest.mark.skip(reason="Importing FlistManipulatorFactory is failing")
-    def test_copy_file(self):
+    def test_file_copy(self):
         b = os.urandom(4096)
         with open("/tmp/foo", "wb") as f:
             f.write(b)

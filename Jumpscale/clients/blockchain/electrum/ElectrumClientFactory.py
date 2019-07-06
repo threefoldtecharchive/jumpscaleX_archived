@@ -7,7 +7,7 @@ from Jumpscale import j
 from electrum.commands import Commands
 from .ElectrumClient import ElectrumClient
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSFactoryConfigsBaseClass
 
 
 class ElectrumClientFactory(JSConfigBaseFactory):

@@ -39,7 +39,7 @@ class IssueCollection(ModelBaseCollection):
 
         return Issue
 
-    def _init(self):
+    def _init(self, **kwargs):
         # init the index
         db = j.tools.issuemanager.indexDB
         Issue = self._getModel()

@@ -7,6 +7,6 @@ class BuilderSystemToolsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.systemtools"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.rsync = BuilderRsync()
         self.tfmux = BuildersTFMUX()

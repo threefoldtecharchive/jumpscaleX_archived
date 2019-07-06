@@ -9,16 +9,26 @@ from Jumpscale import j
 def get_test_nginx_site(www_path="/var/www/html"):
     return (
         """\
-    server {
+    user www-data;
+    worker_processes auto;
+    pid /run/nginx.pid;
+
+    events {
+        worker_connections 768;
+        # multi_accept on;
+    }
+
+    http {
+
+        server {
         listen 80 default_server;
         listen [::]:80 default_server;
 
         root %s;
 
-        # Add index.php to the list if you are using PHP
-        index index.html index.htm index.nginx-debian.html index.php;
+        index index.php index.html index.htm index.nginx-debian.html;
 
-        server_name _;
+        server_name localhost;
 
         location / {
             # First attempt to serve request as file, then
@@ -26,14 +36,26 @@ def get_test_nginx_site(www_path="/var/www/html"):
             try_files $uri $uri/ =404;
         }
 
-        location ~* \.php$ {
-            fastcgi_index   index.php;
-            fastcgi_pass    127.0.0.1:9000;
-            include         fastcgi_params;
-            fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
-            fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+        location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+
+        try_files $fastcgi_script_name =404;
+
+        set $path_info $fastcgi_path_info;
+        fastcgi_param PATH_INFO $path_info;
+
+        fastcgi_index index.php;
+        include fastcgi.conf;
+
+        fastcgi_pass unix:/var/run/php-fpm.sock;
+        }
+
+        location ~ /\.ht {
+            deny all;
+        }
         }
     }
+
     """
         % www_path
     )
@@ -47,36 +69,31 @@ def test_main(self=None):
     kosmos 'j.builders.runtime.php._test(name="php_in_nginx")'
 
     """
-    # check if nginx is installed, if not then install it
-    if not j.sal.process.checkInstalled(j.builders.web.nginx.NAME):
-        j.builders.web.nginx.build(install=True)
-    # check if php is installed, if not then install it
-    if not j.sal.process.checkInstalled(j.builders.runtimes.php.NAME):
-        j.builders.runtimes.php.build(install=True)
-    try:
-        www_path = self._replace("{DIR_TEMP}/www/html")
-        j.core.tools.dir_ensure(www_path)
-        default_enabled_sites_conf = get_test_nginx_site(www_path)
-        default_site_path = self._replace("{DIR_APPS}/nginx/conf/sites-enabled/default")
-        default_site_backup_path = self._replace("{DIR_TEMP}/default_nginx_site.bak")
-        j.sal.fs.moveFile(default_site_path, default_site_backup_path)
-        j.sal.fs.writeFile(default_site_path, contents=default_enabled_sites_conf)
-        j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, "index.php"), contents="<?php phpinfo(); ?>")
-        j.builders.runtimes.php.start()
-        j.builders.web.nginx.stop()
-        j.builders.web.nginx.start()
+    j.builders.web.nginx.install()
+    j.builders.runtimes.php.install()
 
-        # wait until port is ready
-        time.sleep(30)
+    www_path = self._replace("{DIR_TEMP}/www/")
+    j.builders.tools.dir_ensure(www_path)
+    nginx_conf = get_test_nginx_site(www_path)
+    default_site_path = "/sandbox/cfg/nginx-php.conf"
+    j.sal.fs.writeFile(default_site_path, contents=nginx_conf)
+    j.builders.tools.dir_ensure(j.builders.tools.joinpaths(www_path, "test"))
+    j.sal.fs.writeFile(j.builders.tools.joinpaths(www_path, "test", "index.php"), contents="<?php phpinfo(); ?>")
 
-        # test executing the php index file
-        res = requests.get("http://localhost")
-        assert res.status_code == 200, "Failed to retrieve deployed php page. Error: {}".format(res.text)
+    cmd = "/sandbox/sbin/php-fpm -F -y /sandbox/etc/php-fpm.d/www.conf"
+    php_cmd = j.tools.startupcmd.get(name="test_php", cmd=cmd, process_strings=["/sandbox/sbin/php-fpm"])
+    cmd = "nginx -c /sandbox/cfg/nginx-php.conf -g 'daemon off;'"
+    nginx_cmd = j.tools.startupcmd.get(name="test_nginx-php", cmd=cmd, cmd_stop="nginx -s stop")
 
-    finally:
-        j.sal.fs.remove(os.path.dirname(www_path))
-        if j.sal.fs.exists(default_site_backup_path):
-            j.sal.fs.moveFile(default_site_backup_path, default_site_path)
-        j.builders.web.nginx.stop()
-        j.builders.web.nginx.start()
-        j.builders.runtimes.php.start()
+    php_cmd.start()
+    nginx_cmd.start()
+
+    # wait until port is ready
+    time.sleep(10)
+
+    # test executing the php index file
+    res = requests.get("http://localhost/test")
+    assert res.status_code == 200, "Failed to retrieve deployed php page. Error: {}".format(res.text)
+
+    j.builders.runtimes.php.stop()
+    j.sal.process.killProcessByName("nginx")

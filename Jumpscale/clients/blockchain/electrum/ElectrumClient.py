@@ -30,7 +30,7 @@ class ElectrumClient(JSConfigBase):
         testnet = 0 (I)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         """
         Initializes new Rivine Client
         """

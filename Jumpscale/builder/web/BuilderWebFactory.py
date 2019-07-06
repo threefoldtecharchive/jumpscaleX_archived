@@ -5,7 +5,7 @@ class BuilderWebFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.web"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._nginx = None
         self._openresty = None
