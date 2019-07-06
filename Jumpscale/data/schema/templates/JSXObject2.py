@@ -8,13 +8,13 @@ class JSXObject2(j.data.schema._JSXObjectClass):
                         {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
-        pass
         {% for prop in obj.properties %}
         {% if not prop.is_jsxobject %}
         if {{prop.default_as_python_code}} not in [None,"","0.0",0,'0']:
             self.{{prop.name}} = {{prop.default_as_python_code}}
         {% endif %}
         {% endfor %}
+        pass
 
     {# generate the properties #}
     {% for prop in obj.properties %}
@@ -38,7 +38,8 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             {% endif %}
             if isinstance(v,j.data.types._TypeBaseObjClass):
                 self._deserialized_items["{{prop.name}}"] = v
-            return v
+            self._deserialized_items["{{prop.name}}"] = v
+        return self._deserialized_items["{{prop.name}}"]
 
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
@@ -52,7 +53,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% endif %}
         # self._log_debug("set:{{prop.name}}='%s'"%(val))
         if val != self.{{prop.name}}:
-            self._log_debug("change:{{prop.name}} %s"%(val))
+            self._log_debug("change:{{prop.name}}" + str(val))
             self._deserialized_items["{{prop.name}}"] = val
             if self._model:
                 self._model._triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
@@ -209,7 +210,11 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         if items:
             out+= "{{prop.name_str}}:\n"
             for item in items:
-                out+= "    - %s\n"%item.rstrip()
+                if isinstance(item, dict):
+                    for key, value in item.items():
+                        out += "    - {}: {}".format(key, value)
+                else:
+                    out+= "    - %s\n"%item.rstrip()
         else:
             out+= "{{prop.name_str}}: []\n"
         {% else %}

@@ -22,9 +22,11 @@ class JSConfig(JSBase):
         if jsxobject:
             self._data = jsxobject
         else:
+            jsxobjects = []
             if name:
-                jsxobject = self._model.find(name=name)[0]
-                self._data = jsxobject
+                jsxobjects = self._model.find(name=name)
+            if len(jsxobjects) > 0:
+                self._data = jsxobjects[0]
             else:
                 self._data = self._model.new()  # create an empty object
 
@@ -33,8 +35,6 @@ class JSConfig(JSBase):
 
         if name:
             self._data.name = name
-        else:
-            assert self._data.name  # need to make sure name exists
 
     def _init_post(self, **kwargs):
         self._protected = True
@@ -104,7 +104,9 @@ class JSConfig(JSBase):
         try:
             self._data.save()
         except:
-            j.shell()
+
+            self._triggers_call(self, "save_post")
+
         self._triggers_call(self, "save_post")
 
     def edit(self):
