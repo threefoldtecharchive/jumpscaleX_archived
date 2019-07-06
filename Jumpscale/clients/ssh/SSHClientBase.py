@@ -26,12 +26,12 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         forward_agent = True (B)
         allow_agent = True (B)
         client_type = "paramiko,pssh" (E)
-        timeout = 30
+        timeout = 60
         config_msgpack = "" (bytes)     
         env_on_system_msgpack = "" (bytes)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client_ = None
         self._env_on_system = None
         self._uid = None

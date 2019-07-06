@@ -8,7 +8,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
     VERSION = "1.7.9"  # latest
     URL = "https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.go_runtime = j.builders.runtimes.golang
 

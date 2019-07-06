@@ -18,7 +18,7 @@ class ElectrumClientFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.btc_electrum"
     _CHILDCLASS = ElectrumClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "electrum"
 
     def generate_seed(self, nbits=132):

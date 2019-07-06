@@ -21,7 +21,7 @@ class TarantoolFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.tarantool"
     _CHILDCLASS = TarantoolClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "tarantool"
 
         if j.core.platformtype.myplatform.platform_is_osx:

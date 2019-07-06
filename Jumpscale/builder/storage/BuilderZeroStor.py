@@ -28,7 +28,7 @@ metastor: # required
 class BuilderZeroStor(BuilderGolangTools):
     NAME = "zstor"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.datadir = ""
 

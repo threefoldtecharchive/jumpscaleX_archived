@@ -31,16 +31,25 @@ class BCDBModel(j.application.JSBaseClass):
 
         if not schema:
             if hasattr(self, "_SCHEMA"):
-                j.data.schema.get_from_text(self._SCHEMA)
+                schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
                 schema = self._schema_get()
                 assert schema
 
-            bcdb.meta._schema_set(schema)
-
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
-        self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
+
+        if not sid:
+            if schema._md5 in bcdb.meta._schema_md5_to_sid:
+                sid = bcdb.meta._schema_md5_to_sid[schema._md5]
+            else:
+                # means we create a model from code
+                sid = bcdb.meta._schema_set(self.schema)  # only if sid was not specified we need to register
+
+        self.sid = sid
+
+        assert schema._md5 in bcdb.meta._schema_md5_to_sid
+        assert bcdb.meta._schema_md5_to_sid[self.schema._md5] == self.sid
 
         self.bcdb = bcdb
         self.readonly = False

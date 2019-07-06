@@ -4,12 +4,12 @@ from .DigitalOcean import DigitalOcean
 JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
 
-class PacketNetFactory(JSConfigBaseFactory):
+class DigitalOceanFactory(JSConfigBaseFactory):
 
     __jslocation__ = "j.clients.digitalocean"
     _CHILDCLASS = DigitalOcean
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.connections = {}
 
     # def install(self):
@@ -38,15 +38,27 @@ class PacketNetFactory(JSConfigBaseFactory):
             droplet, sshclient = c.droplet_create(delete=delete)
         return sshclient
 
-    def test(self):
+    def test(self, reset=False):
         """
         do:
         kosmos 'j.clients.digitalocean.test()'
         """
+        s = j.data.bcdb.get_system()
+        # s.reset()
+
+        if not self.exists(name="main"):
+            self.new("main")
+        else:
+            if reset:
+                self.main.delete()
+                self.new("main")
+
         if not self.main.token_:
+            print("can get digital ocean token from: ")
             token = j.tools.console.askString("digital ocean token")
             self.main.token_ = token
             self.main.save()
+
         c = self.get(name="main")
 
         self._log_info(c.digitalocean_sizes)
@@ -55,6 +67,7 @@ class PacketNetFactory(JSConfigBaseFactory):
         # size="s-1vcpu-2gb"
 
         client = c.client
+
         droplet, sshclient = c.droplet_create(delete=True, size_slug=size)
 
         e = sshclient.executor

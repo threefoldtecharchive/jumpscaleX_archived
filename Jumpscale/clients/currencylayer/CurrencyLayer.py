@@ -20,7 +20,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}

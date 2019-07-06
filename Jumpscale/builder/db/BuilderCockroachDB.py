@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderCockroachDB(j.builders.system._BaseClass):
     NAME = "cockroach"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_BUILD = self._replace("{DIR_TEMP}/cockroachdb")
 
     @builder_method()

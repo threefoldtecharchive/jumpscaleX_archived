@@ -14,7 +14,7 @@ class NetTools(JSBASE):
 
     __jslocation__ = "j.sal.nettools"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._windowsNetworkInfo = None
 
     def tcpPortConnectionTest(self, ipaddr, port, timeout=None):

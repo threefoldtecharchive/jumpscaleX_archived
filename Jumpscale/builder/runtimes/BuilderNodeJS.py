@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderNodeJS(j.builders.system._BaseClass):
     NAME = "nodejs"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._version = "6.9.5"
 
     @property

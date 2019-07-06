@@ -7,7 +7,7 @@ builder_method = j.builders.system.builder_method
 class BuilderHub(j.builders.system._BaseClass):
     NAME = "zerohub"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_CODE = self.tools.joinpaths(self.DIR_BUILD, "code")
         self.MAKEOPTS = "-j 5"
         self.DEST_CURL = self.tools.joinpaths(self.DIR_CODE, "curl")

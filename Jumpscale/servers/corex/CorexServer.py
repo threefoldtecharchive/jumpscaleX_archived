@@ -16,7 +16,7 @@ class CorexServer(JSConfigClient):
            interface = ""
            """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._startupcmd = None
 
     def start(self):

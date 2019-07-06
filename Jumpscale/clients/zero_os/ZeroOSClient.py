@@ -18,7 +18,7 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     timeout = 120 (I)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         client = ProtocolClient(
             host=self.host,
             port=self.port,

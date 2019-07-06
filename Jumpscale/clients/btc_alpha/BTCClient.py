@@ -5,6 +5,10 @@ import requests
 from time import time
 from urllib.parse import urlencode
 
+
+# TODO:*1 FROM CLIENT import .... and put in client property
+# TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
+
 JSConfigBase = j.application.JSBaseConfigClass
 
 
@@ -18,7 +22,7 @@ class BTCClient(JSConfigBase):
     secret_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         if not self.key_ or not self.secret_:
             raise j.exceptions.Input("Need to specify both key and secret to use the client")
 

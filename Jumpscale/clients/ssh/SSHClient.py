@@ -19,10 +19,13 @@ class SSHClient(SSHClientBase):
     @property
     def _client(self):
         if self._client_ is None:
-            pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
+
             passwd = self.passwd
-            if pkey:
-                passwd = self.sshkey_obj.passphrase
+
+            if self.sshkey_name:
+                pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
+                if pkey:
+                    passwd = self.sshkey_obj.passphrase
 
             if self.allow_agent:
                 passwd = None

@@ -18,7 +18,7 @@ class BuilderDigitalME(j.builders.system._BaseClass):
     NAME = "digitalme"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @property

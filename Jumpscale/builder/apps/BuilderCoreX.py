@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderCoreX(j.builders.system._BaseClass):
     NAME = "corex"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.git_url = "https://github.com/threefoldtech/corex.git"
         self.dep_url = "https://github.com/warmcat/libwebsockets"
         self.DIR_BUILD = self._replace("{DIR_TEMP}/corex")

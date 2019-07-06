@@ -18,7 +18,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
     
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._logger_enable()
 
     @property

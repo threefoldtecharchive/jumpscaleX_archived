@@ -15,7 +15,7 @@ class SockExec(j.application.JSBaseDataObjClass):
            socketpath = "/sandbox/var/exec.sock"
            """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._startupcmd = None
 
     def start(self):

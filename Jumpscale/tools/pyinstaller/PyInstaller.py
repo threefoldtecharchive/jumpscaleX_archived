@@ -10,7 +10,7 @@ class PyInstaller(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.pyinstaller"
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def install(self):

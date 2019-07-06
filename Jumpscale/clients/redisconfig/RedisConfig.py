@@ -17,7 +17,7 @@ class RedisConfig(j.application.JSBaseConfigClass):
     # ssl_keypath = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._redis = None
 
     def _init3(self, **kwargs):

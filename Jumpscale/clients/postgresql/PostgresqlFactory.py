@@ -19,7 +19,7 @@ class PostgresqlFactory(JSConfigs):
     __jslocation__ = "j.clients.postgres"
     _CHILDCLASS = PostgresClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "sqlalchemy"
 
     def db_create(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):

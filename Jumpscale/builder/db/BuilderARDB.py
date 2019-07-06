@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderARDB(j.builders.system._BaseClass):
     NAME = "ardb-server"
 
-    def _init(self):
+    def _init(self, **kwargs):
         # forest db (backend engine) paths
         self.CODE_DIR_FDB = self._replace("{DIR_BUILD}/github/couchbase/forestdb")
         self.BUILD_DIR_FDB = self._replace("{DIR_BUILD}/forestdb/")

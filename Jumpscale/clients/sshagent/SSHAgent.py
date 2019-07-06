@@ -12,7 +12,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.sshagent"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         if MyEnv.sshagent:
 
@@ -27,6 +27,7 @@ class SSHAgent(j.application.JSBaseClass):
             self.profile_js_configure = MyEnv.sshagent.profile_js_configure
             self.kill = MyEnv.sshagent.kill
             self.start = MyEnv.sshagent.start
+            self.key_load = MyEnv.sshagent.key_load
 
         else:
             raise RuntimeError("cannot use sshagent, maybe not initted?")
@@ -221,50 +222,32 @@ class SSHAgent(j.application.JSBaseClass):
 
         """
 
-        self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
-        if self.available():
+        self._log_info("sshkeys:%s" % j.clients.sshkey._children_names_get())
+        if self.available:
             self._log_info("sshkeys:%s" % self.key_paths)
 
-        j.clients.sshagent.kill()  # goal is to kill & make sure it get's loaded automatically
-        j.clients.sshagent.start()
+        # BETTER NOT TO DO BECAUSE THEN STD KEYS GONE
+        # j.clients.sshagent.kill()  # goal is to kill & make sure it get's loaded automatically
+        # j.clients.sshagent.start()
+
+        j.sal.fs.createDir("/tmp/.ssh")
 
         # lets generate an sshkey with a passphrase
         passphrase = "12345"
-        path = "/root/.ssh/test_key"
+        path = "/tmp/.ssh/test_key"
         skey = j.clients.sshkey.get(name="test", path=path, passphrase=passphrase)
         skey.save()
 
         # this will reload the key from the db
         skey_loaded = j.clients.sshkey.get(name="test")
 
-        assert skey_loaded.data._ddict == skey.data._ddict
+        assert skey_loaded._data._ddict == skey._data._ddict
 
         skey.generate(reset=True)
         skey.load()
 
         assert skey.is_loaded()
 
-        if not j.core.platformtype.myplatform.platform_is_osx:
-            # on mac does not seem to work
-            skey.unload()
-            assert skey.is_loaded() is False
-
-        path = "/root/.ssh/test_key_2"
-        skey2 = j.clients.sshkey.get(name="test2", path=path)
-        skey2.generate(reset=True)
-        skey2.load()
-        assert skey2.is_loaded()
-        skey2.unload()
-        assert skey2.is_loaded() is False
-
-        assert self.available()
-        self.kill()
-        self.start()
-        assert self.available()
-
-        # Clean up after test
-        self.kill()
-        skey.delete_from_sshdir()
-        skey2.delete_from_sshdir()
-        skey.delete()
-        skey2.delete()
+        # on mac does not seem to work
+        skey.unload()
+        assert skey.is_loaded() is False

@@ -20,7 +20,7 @@ name* = ""                                      #give a unique name to an acl, n
 description = ""                                #can be set by an owner, is to make it easy to understand
 circles = (LO) !jumpscale.bcdb.acl.circle.2
 users = (LO) !jumpscale.bcdb.acl.user.2
-hash* = ""
+md5* = ""
 
 @url = jumpscale.bcdb.acl.circle.2
 @sub = true

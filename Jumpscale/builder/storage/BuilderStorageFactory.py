@@ -5,7 +5,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.storage"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._syncthing = None
         self._minio = None
         self._restic = None

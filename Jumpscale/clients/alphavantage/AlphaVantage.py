@@ -14,7 +14,7 @@ class AlphaVantageClient(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client = None
 
     @property

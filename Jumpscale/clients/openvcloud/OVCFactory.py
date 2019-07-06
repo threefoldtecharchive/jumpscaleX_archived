@@ -24,7 +24,7 @@ class OVCClientFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.openvcloud"
     _CHILDCLASS = OVCClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "ovc"
 
     def getFromParams(self, address, location="", port=443, instance="main"):

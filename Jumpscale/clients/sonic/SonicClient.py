@@ -38,7 +38,7 @@ class SonicClient(JSConfigClient):
         password = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cached_client_search = None
         self._cached_client_ingest = None
         self._bufsize = None

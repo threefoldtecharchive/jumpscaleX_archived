@@ -21,7 +21,7 @@ class DocSite(j.application.JSFactoryConfigsBaseClass, j.application.JSBaseConfi
         )
         j.application.JSFactoryConfigsBaseClass.__init__(self)
 
-    def _childclass_selector(self, childclass_name="doc"):
+    def _childclass_selector(self, childclass_name="doc", **kwargs):
         """
         childclass name is file or doc
         :return:
@@ -35,7 +35,7 @@ class DocSite(j.application.JSFactoryConfigsBaseClass, j.application.JSBaseConfi
         else:
             raise RuntimeError("did not find childclass type:%s" % childclass_name)
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._git = None
         self._loaded = False
 

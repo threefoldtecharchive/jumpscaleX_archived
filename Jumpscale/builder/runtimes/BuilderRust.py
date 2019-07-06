@@ -7,7 +7,7 @@ class BuilderRust(j.builders.system._BaseClass):
     NAME = "rust"
     DOWNLOAD_URL = "https://sh.rustup.rs"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_CARGOBIN = self._replace("{DIR_HOME}/.cargo/bin")
 
     @builder_method()

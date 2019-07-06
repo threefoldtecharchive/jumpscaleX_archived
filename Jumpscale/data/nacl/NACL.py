@@ -24,7 +24,7 @@ class NACL:
         self.__init = False
         self.reset()
 
-    def _init(self):
+    def _init(self, **kwargs):
         if not self.__init:
             if not Tools.exists(self._path):
                 Tools.dir_ensure(self._path)

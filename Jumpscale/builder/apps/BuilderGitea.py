@@ -9,7 +9,7 @@ builder_method = j.builders.system.builder_method
 class BuilderGitea(BuilderGolangTools):
     NAME = "gitea"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         # set needed paths
         self.GITEAPATH = self._replace("{DIR_GO_PATH}/src/code.gitea.io/gitea")

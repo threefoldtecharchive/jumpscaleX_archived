@@ -9,7 +9,7 @@ class ExecutorLocal(ExecutorBase):
 
     __jslocation__ = "j.tools.executorLocal"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cache_expiration = 3600
         self.type = "local"
         self._id = "localhost"

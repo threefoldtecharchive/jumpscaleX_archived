@@ -3717,36 +3717,39 @@ class SSHAgent:
         """
         """
         if self.__keys is None:
+            self._read_keys()
+        return self.__keys
+
+    def _read_keys(self):
+        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+        if return_code:
+            if return_code == 1 and out.find("The agent has no identities") != -1:
+                self.__keys = []
+                return []
+            else:
+                # Remove old socket if can't connect
+                if Tools.exists(self.ssh_socket_path):
+                    Tools.delete(self.ssh_socket_path)
+                    # did not work first time, lets try again
+                    return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+
+        if return_code and self.autostart:
+            # ok still issue, lets try to start the ssh-agent if that could be done
+            self.start()
             return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
-            if return_code:
-                if return_code == 1 and out.find("The agent has no identities") != -1:
-                    self.__keys = []
-                    return []
-                else:
-                    # Remove old socket if can't connect
-                    if Tools.exists(self.ssh_socket_path):
-                        Tools.delete(self.ssh_socket_path)
-                        # did not work first time, lets try again
-                        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+            if return_code == 1 and out.find("The agent has no identities") != -1:
+                self.__keys = []
+                return []
 
-            if return_code and self.autostart:
-                # ok still issue, lets try to start the ssh-agent if that could be done
-                self.start()
-                return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
-                if return_code == 1 and out.find("The agent has no identities") != -1:
-                    self.__keys = []
-                    return []
+        if return_code:
+            return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
+            if out.find("Error connecting to agent: No such file or directory"):
+                raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
+            else:
+                raise SSHAgentKeyError("Unknown error in ssh-agent, cannot find")
 
-            if return_code:
-                return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
-                if out.find("Error connecting to agent: No such file or directory"):
-                    raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
-                else:
-                    raise SSHAgentKeyError("Unknown error in ssh-agent, cannot find")
-
-            keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
-            self.__keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
-
+        keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
+        self.__keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
         return self.__keys
 
     def reset(self):

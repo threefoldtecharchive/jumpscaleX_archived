@@ -11,7 +11,7 @@ class BuilderTIDB(j.builders.system._BaseClass):
 
     NAME = "tidb"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/tidb")
 
     @builder_method()

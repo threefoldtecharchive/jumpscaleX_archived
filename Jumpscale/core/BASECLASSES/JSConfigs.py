@@ -32,7 +32,7 @@ class JSConfigs(JSBase):
         else:
             return j.application.bcdb_system
 
-    def _childclass_selector(self, jsxobject):
+    def _childclass_selector(self, jsxobject, **kwargs):
         """
         allow custom implementation of which child class to use
         :return:
@@ -49,7 +49,7 @@ class JSConfigs(JSBase):
         if not jsxobject:
             jsxobject = self._model.new(data=kwargs)
             jsxobject.name = name
-        jsconfig_klass = self._childclass_selector(jsxobject)
+        jsconfig_klass = self._childclass_selector(jsxobject=jsxobject)
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
         self._children[name] = jsconfig
@@ -61,7 +61,7 @@ class JSConfigs(JSBase):
         """
         jsconfig = self._get(name=name, die=False)
         if not jsconfig:
-            self._log_debug("NEW OBJ:%s:%s" % (name, self.name))
+            self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
             jsconfig = self.new(name=name)
         jsconfig._triggers_call(jsconfig, "get")
         if kwargs:
@@ -173,7 +173,7 @@ class JSConfigs(JSBase):
         o.delete()
 
     def exists(self, name):
-        res = self.findData(name=name)
+        res = self._findData(name=name)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" % (self.__class__.__name__, kwargs, res))
         elif len(res) == 1:
@@ -241,7 +241,9 @@ class JSConfigs(JSBase):
         ):
             return self.__getattribute__(name)  # else see if we can from the factory find the child object
         r = self._get(name=name, die=False)
-        # if none means does not exist yet will have to create a new one
-        if r is None:
-            r = self.new(name=name)
+        if not r:
+            raise RuntimeError(
+                "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
+                % (name, self._key)
+            )
         return r

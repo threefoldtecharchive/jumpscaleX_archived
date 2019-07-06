@@ -7,7 +7,7 @@ class RedisCoreClient(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.credis_core"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         try:
             self._credis = True

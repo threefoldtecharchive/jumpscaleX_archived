@@ -20,7 +20,7 @@ class BuilderTCPRouter(BuilderGolangTools):
     NAME = "tcprouter"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.DIR_TCPROUTER = self.package_path_get("xmonader/tcprouter")
 

@@ -71,7 +71,7 @@ class BuilderCaddy(BuilderGolangTools):
     PLUGINS = ["iyo", "filemanager"]  # PLEASE ADD MORE PLUGINS #TODO:*1
     VERSION = "master"  # make sure the way to build with plugin is ok
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.package_path = self.package_path_get("mholt/caddy")
 

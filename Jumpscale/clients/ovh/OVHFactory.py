@@ -12,7 +12,7 @@ class OVHFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.ovh"
     _CHILDCLASS = OVHClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "ovh"
 
     def get_manual(

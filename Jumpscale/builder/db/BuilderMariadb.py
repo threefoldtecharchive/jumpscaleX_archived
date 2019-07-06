@@ -8,7 +8,7 @@ class BuilderMariadb(j.builders.system._BaseClass):
     NAME = "mariadb"
     PORT = "3306"
 
-    def _init(self):
+    def _init(self, **kwargs):
         # code dir
         self.code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "code")
         # self.start_cmd = """

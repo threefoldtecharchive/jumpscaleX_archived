@@ -5,7 +5,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.apps"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._gitea = None
         self._freeflow = None
         self._digitalme = None

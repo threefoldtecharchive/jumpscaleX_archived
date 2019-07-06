@@ -21,7 +21,8 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         if "client_type" in kwargs and kwargs["client_type"] == "pssh":
             return SSHClient
         elif j.core.platformtype.myplatform.platform_is_osx:
-            return SSHClientParamiko
+            # return SSHClientParamiko
+            return SSHClient
         else:
             return SSHClient
 

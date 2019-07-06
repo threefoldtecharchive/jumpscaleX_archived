@@ -9,7 +9,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
     _CHILDCLASS = StartupCMD
     __jslocation__ = "j.servers.startupcmd"
 
-    def _init(self):
+    def _init(self, **kwargs):
         tdir = j.sal.fs.joinPaths(j.sal.fs.joinPaths(j.dirs.VARDIR, "cmds"))
         j.sal.fs.createDir(tdir)
 

@@ -18,7 +18,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
     """
     # _CHILDCLASS = DigitalOceanVM
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client = None
         self.reset()
 
@@ -157,11 +157,14 @@ class DigitalOcean(j.application.JSBaseConfigClass):
             if delete:
                 dr0.destroy()
             else:
-                sshcl = j.clients.ssh.get(name="do_%s" % name, addr=dr0.ip_address, client_type="pssh")
+                sshcl = j.clients.ssh.get(
+                    name="do_%s" % name, addr=dr0.ip_address, client_type="pssh", sshkey_name=sshkey.name
+                )
                 sshcl.save()
                 return dr0, sshcl
 
         sshkey = self.sshkey_get(sshkey)
+
         region = self.region_get(region)
 
         imagedo = self.image_get(image)
@@ -201,7 +204,9 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         actions_wait()
         droplet.load()
 
-        sshcl = j.clients.ssh.get(name="do_%s" % name, addr=droplet.ip_address, client_type="pssh")
+        sshcl = j.clients.ssh.get(
+            name="do_%s" % name, addr=droplet.ip_address, client_type="pssh", sshkey_name=sshkey.name
+        )
         sshcl.save()
 
         return droplet, sshcl

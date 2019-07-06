@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class BuilderFW(j.builders.system._BaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self._fw_enabled = None
         self._fw_type = None
 

@@ -15,7 +15,7 @@ class Types(j.application.JSBaseFactoryClass):
 
     __jslocation__ = "j.data.types"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._types_list = [
             List,
             Dictionary,

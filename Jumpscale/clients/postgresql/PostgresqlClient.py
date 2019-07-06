@@ -22,7 +22,7 @@ class PostgresClient(JSConfigClient):
     dbname = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         """
         # needs psycopg2 sqlalchemy libtmux to be installed
         """

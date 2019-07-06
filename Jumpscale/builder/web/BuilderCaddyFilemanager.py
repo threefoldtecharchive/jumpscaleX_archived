@@ -7,7 +7,7 @@ class BuilderCaddyFilemanager(j.builders.system._BaseClass):
     NAME = "filemanager"
     PLUGINS = ["iyo", "filemanager"]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.go_runtime = j.builders.runtimes.golang
         self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
         # self.root_dirs = {

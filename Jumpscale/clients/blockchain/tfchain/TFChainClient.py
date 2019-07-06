@@ -45,7 +45,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
     _CHILDCLASSES = [TFChainWalletFactory]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._threebot = TFChainThreeBotClient(self)
         self._minter = TFChainMinterClient(self)
         self._erc20 = TFChainERC20Client(self)

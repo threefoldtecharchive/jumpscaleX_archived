@@ -14,7 +14,7 @@ class SonicServer(JSConfigClient):
            timeout = 300
            """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "sonic_config.cfg")
         self._default_client = None
 

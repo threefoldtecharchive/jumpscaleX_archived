@@ -7,7 +7,7 @@ builder_method = j.builders.system.builder_method
 class BuilderMongodb(j.builders.system._BaseClass):
     NAME = "mongod"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.build_dir = self.tools.joinpaths(self.DIR_BUILD, "mongo_db/")
 
     @builder_method()

@@ -22,7 +22,7 @@ CONFIGTEMPLATE = """
 class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
     NAME = "coredns"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.package_path = self.package_path_get(self.NAME)
         self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")

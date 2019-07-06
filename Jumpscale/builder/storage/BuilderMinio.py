@@ -10,7 +10,7 @@ builder_method = j.builders.system.builder_method
 class BuilderMinio(BuilderGolangTools):
     NAME = "minio"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.datadir = ""
 

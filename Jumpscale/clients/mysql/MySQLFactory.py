@@ -14,7 +14,7 @@ class MySQLFactory(JSConfigs):
     __jslocation__ = "j.clients.mysql"
     _CHILDCLASS = MySQLClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.clients = {}
 
     def get(self, name=None, id=None, die=True, create_new=True, childclass_name=None, **kwargs):

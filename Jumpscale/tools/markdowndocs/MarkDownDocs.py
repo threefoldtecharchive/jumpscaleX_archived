@@ -133,7 +133,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             self._git_repos[path] = gc
         return self._git_repos[path]
 
-    # def _init(self):
+    # def _init(self,**kwargs):
     #     if not self._initOK:
     #         # self.install()
     #         j.clients.redis.core_get()

@@ -22,7 +22,7 @@ class EmailClient(JSConfigClient):
         Email_from = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._server = self.smtp_server
         self._port = self.smtp_port

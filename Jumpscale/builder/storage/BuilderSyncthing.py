@@ -9,7 +9,7 @@ class BuilderSyncthing(BuilderGolangTools):
 
     NAME = "syncthing"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         # isolate GOPATH, some dependences conflict with other builders
         self.DIR_GO_PATH = self._replace("{DIR_BUILD}/go_proj")

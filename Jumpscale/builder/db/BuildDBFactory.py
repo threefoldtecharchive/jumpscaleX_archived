@@ -5,7 +5,7 @@ class BuildDBFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.db"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._etcd = None
         self._mariadb = None
         self._ardb = None

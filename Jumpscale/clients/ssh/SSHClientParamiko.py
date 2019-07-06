@@ -18,8 +18,8 @@ class SSHClientParamiko(SSHClientBase):
     is an ssh client
     """
 
-    def _init(self):
-        SSHClientBase._init(self)
+    def _init(self, **kwargs):
+        SSHClientBase._init(self, **kwargs)
 
         if self.passwd:
             self._forward_agent = False

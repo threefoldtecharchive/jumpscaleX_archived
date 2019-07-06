@@ -15,7 +15,7 @@ db_user = odoouser"""
 class BuilderOdoo(j.builders.system._BaseClass):
     NAME = "odoo"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.VERSION = "12.0"
         self.APP_DIR = self._replace("{DIR_BASE}/apps/odoo")
 

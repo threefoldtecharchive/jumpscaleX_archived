@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class Test(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self.r = j.clients.redis.core
         self._ns = "tutorial"
         self.scripts = {}

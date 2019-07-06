@@ -18,7 +18,7 @@ class OVHClient(JSConfigBase):
     consumerkey_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         # id = "ovhclient_%s" % c["consumerkey_"]
 

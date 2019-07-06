@@ -16,7 +16,7 @@ class RedisFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.redis"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cache_clear()
         self._unix_socket_core = "/sandbox/var/redis.sock"
         self._core = None

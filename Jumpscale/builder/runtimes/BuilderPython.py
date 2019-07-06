@@ -12,7 +12,7 @@ class BuilderPython(j.builders.system._BaseClass):
     NAME = "python3"
     TAG = "v3.6.8"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.DIR_CODE_L = self.tools.joinpaths(self.DIR_BUILD, "code/")
         self.tools.dir_ensure(self.DIR_CODE_L)

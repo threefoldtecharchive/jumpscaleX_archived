@@ -12,7 +12,7 @@ class BuilderTools(j.builders.system._BaseClass):
 
     __jslocation__ = "j.builders.tools"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._cd = "/tmp"
 
