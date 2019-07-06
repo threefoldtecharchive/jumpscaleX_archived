@@ -3,6 +3,7 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
+
 class Virtualization_TestCases(BaseTest):
     @parameterized.expand([("docker", "dockerd-ce")])
     def test_network_flists(self, flist, binary):
