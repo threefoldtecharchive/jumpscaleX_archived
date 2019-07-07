@@ -2,11 +2,10 @@ from Jumpscale import j
 
 from .BCDB import BCDB
 from .BCDBModel import BCDBModel
-from .BCDBVFS import BCDBVFS
+
 import os
 import sys
 import redis
-from .connectors.webdav.BCDBResourceProvider import BCDBResourceProvider
 
 
 class BCDBFactory(j.application.JSBaseFactoryClass):
@@ -66,6 +65,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
     @property
     def WebDavProvider(self):
+        from .connectors.webdav.BCDBResourceProvider import BCDBResourceProvider
+
         return BCDBResourceProvider()
 
     @property
@@ -135,6 +136,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         return self._get(name=name, reset=reset)
 
     def _get_vfs(self):
+        from .BCDBVFS import BCDBVFS
+
         return BCDBVFS(self._bcdb_instances)
 
     def _get(self, name, reset=False, if_not_exist_die=True):

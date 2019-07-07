@@ -12,18 +12,6 @@ mysshclient.addr = ...
 
 ```
 
-## new vs existing data
-
-when new object is created then property _isnew is set:
-
-- kosmosobj._isnew = True
-
-when class is instantiated then the caller of the object will call
-
-- kosmosobj._init(**kwargs)
-- kwargs are optional arguments which can be used to populate the obj data obj
-
-above property can be used to check if data is new or not
 
 ## data_update method
 
@@ -53,6 +41,33 @@ def mymethod(model,obj,kosmosinstance=None, action=None, propertyname=None):
     #do something e.g. manipulate the data model before storing in DB
 
 kosmosobj._model.trigger_add(mymethod)
+```
+
+
+### example how to use
+
+```python
+
+class SomeClass(...):
+
+    def _init(self,**kwargs):
+
+        self._model.trigger_add(self._data_update_color)
+
+    @staticmethod
+    def _data_update_color(model,obj,kosmosinstance=None, action=None, propertyname=None):
+        self = kosmosinstance  #this way code is same and can manipulate self like in other methods
+        if propertyname=="color":
+            j.shell()
+
+
+o = SomeClass()
+o.color = "red"
+#this will now triger the _data_update_color method & because propertyname matches it will get in shell
+
+easiest to add as staticmethod, that way its part of the class
+
+
 ```
 
 
