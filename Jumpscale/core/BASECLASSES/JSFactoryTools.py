@@ -64,18 +64,21 @@ class JSFactoryTools:
         if not path.startswith("/"):
             path = self._dirpath + "/" + path
         assert j.sal.fs.exists(path)
-        name_test = "_".join(name.split("_", 1)[1:])
-        name_test = name_test.split(".")[0]
+
+        def get_shortname(name):
+            if "_" in name:
+                name = name.split("_", 1)[1]
+            if name.endswith(".py"):
+                name = name[:-3]
+            return name.lower()
+
+        name = get_shortname(name)
         for item in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py"):
 
             bname = j.sal.fs.getBaseName(item)
-            if "_" in bname:
-                bname2 = "_".join(bname.split("_", 1)[1:])  # remove part before first '_'
-            else:
-                bname2 = bname
-            if bname2.endswith(".py"):
-                bname2 = bname2[:-3]
-            if bname2.strip().lower() == name_test:
+            bname = get_shortname(bname)
+
+            if bname == name:
                 return item
         raise RuntimeError("Could not find code: '%s' in %s" % (name, path))
 
