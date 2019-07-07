@@ -48,7 +48,6 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         cd {}
         git clone https://github.com/coredns/coredns.git
         cd coredns
-        echo 'redis:github.com/arvancloud/redis' >> plugin.cfg
         make
         """.format(
             self.package_path
