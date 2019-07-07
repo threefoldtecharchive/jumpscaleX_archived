@@ -88,3 +88,5 @@ class Runtimes_TestCases(BaseTest):
         j.builders.runtimes.nodejs.install()
         self.info("check that nodejs installed successfully.")
         self.assertTrue(j.sal.process.execute("which nodejs"))
+
+        
