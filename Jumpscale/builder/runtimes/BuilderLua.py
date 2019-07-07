@@ -8,7 +8,7 @@ class BuilderLua(j.builders.system._BaseClass):
     NAME = "lua"
 
     @builder_method()
-    def build(self):
+    def build(self, reset=False):
         """
         kosmos 'j.builders.runtimes.lua.build()'
         :param install:
@@ -17,8 +17,8 @@ class BuilderLua(j.builders.system._BaseClass):
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.install(["libsqlite3-dev"])
 
-        j.builders.web.openresty.build(reset=True)
-        j.builders.libs.openssl.build(reset=True)
+        j.builders.web.openresty.build(reset=reset)
+        j.builders.libs.openssl.build(reset=reset)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
@@ -68,50 +68,50 @@ class BuilderLua(j.builders.system._BaseClass):
         moonscript
         lapis-console
         LuaFileSystem
-        luasocket
-        # lua-geoip
+        # luasocket
         lua-cjson
-        lua-term
-        penlight
-        lpeg
-        mediator_lua
-        # luajwt
-        # mooncrafts
-        inspect
+        # lua-term
+        # penlight
+        # lpeg
+        # mediator_lua
+
+        # inspect
 
         lua-resty-redis-connector
-        lua-resty-openidc
+        # lua-resty-openidc
 
         LuaRestyRedis
-        # lua-resty-qless
 
-        lua-capnproto
+        # lua-capnproto
         lua-toml
 
-        lua-resty-exec
+        # lua-resty-exec
 
-        lua-resty-influx
+        # lua-resty-influx
         lua-resty-repl
+        # 
+        # lua-resty-iputils
+        # 
+        # lsqlite3
+        # 
+        # bcrypt
+        # md5
 
-        lua-resty-iputils
+        # date
+        # uuid
+        # lua-resty-cookie
+        # lua-path
 
-        lsqlite3
+        # luazen
 
-        bcrypt
-        md5
-
-        date
-        uuid
-        lua-resty-cookie
-        lua-path
-
-        # various encryption
-        luazen
-
-        alt-getopt
-
-
-        lua-messagepack
+        # alt-getopt
+        # lua-messagepack
+        
+        # lua-resty-qless
+        # lua-geoip
+        # luajwt
+        # mooncrafts        
+        
         """
 
         for line in C.split("\n"):
@@ -182,7 +182,7 @@ class BuilderLua(j.builders.system._BaseClass):
         kosmos 'j.builders.runtimes.lua.install()'
         :return:
         """
-        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
+        src = "/sandbox/code/github/threefoldtech/digitalmeX/sandbox/bin"
         C = """
 
         set -e
@@ -203,6 +203,8 @@ class BuilderLua(j.builders.system._BaseClass):
         self._execute(C)
 
         self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
+
+        self.clean()
 
         self._log_info("install lua & openresty done.")
 
@@ -272,3 +274,10 @@ class BuilderLua(j.builders.system._BaseClass):
             self._copy(item, dest_full)
 
         self.clean()
+
+    def clean(self):
+        C = """
+        rm -rf {DIR_BUILD}
+        rm -rf /tmp/luarocks*
+        """
+        self._execute(C)

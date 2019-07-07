@@ -59,6 +59,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
     def install(self):
         """
         Installs the corex binary to the correct location
+        kosmos 'j.builders.apps.corex.install()'
         """
         bin_path = j.builders.tools.joinpaths(self.DIR_BUILD, "corex/build/corex")
         self._copy(bin_path, "{DIR_BIN}")

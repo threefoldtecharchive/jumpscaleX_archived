@@ -178,7 +178,7 @@ def configure(
     "-s", "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
 )
 @click.option("-d", "--delete", is_flag=True, help="if set will delete the docker container if it already exists")
-@click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
+@click.option("-w", "--web", is_flag=True, help="also install the web system")
 @click.option("--portrange", default=1, help="portrange, leave empty unless you know what you do.")
 @click.option(
     "--image",
@@ -204,7 +204,7 @@ def container_install(
     name="3bot",
     scratch=False,
     delete=True,
-    wiki=False,
+    web=False,
     portrange=1,
     image=None,
     branch=DEFAULT_BRANCH,
@@ -234,7 +234,7 @@ def container_install(
 
     docker.install()
 
-    docker.jumpscale_install(branch=branch, redo=reinstall, pull=pull, wiki=wiki)
+    docker.jumpscale_install(branch=branch, redo=reinstall, pull=pull, web=web)
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
@@ -244,7 +244,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
             # means is not running yet
             if name not in IT.DockerFactory.containers_names():
                 docker.install()
-                docker.jumpscale_install()
+                docker.jumpscale_install(web=True)
                 # needs to stay because will make sure that the config is done properly in relation to your shared folders from the host
             else:
                 docker.start()
@@ -255,7 +255,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 # INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
+@click.option("-w", "--web", is_flag=True, help="also install the web system")
 @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
@@ -271,7 +271,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=False, configdir=None):
+def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=False, configdir=None):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -292,9 +292,12 @@ def install(wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=Fa
 
     installer = IT.JumpscaleInstaller(branch=branch)
     installer.install(sandboxed=False, force=force, gitpull=pull)
-    if wiki:
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.db.zdb.install()'" % SANDBOX, showout=True)
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install()'" % SANDBOX, showout=True)
+    if web:
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.db.zdb.install()'" % SANDBOX, showout=True)
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install()'" % SANDBOX, showout=True)
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.apps.corex.install()'" % SANDBOX, showout=True)
+    IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
+    IT.Tools.shell()
     print("Jumpscale X installed successfully")
 
 

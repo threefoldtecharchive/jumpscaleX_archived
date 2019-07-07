@@ -105,10 +105,9 @@ class builder_method(object):
 
         reset = j.data.types.bool.clean(reset)
         if reset is True:
-            builder._done_reset()
+            builder._done_reset()  # removes all states from this specific builder
             builder.reset()
             return False
-
         if self.done_check and builder._done_check(key, reset):
             return True
         else:
@@ -129,15 +128,18 @@ class builder_method(object):
             """
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
-            kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
+            kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
             reset = kwargs.get("reset", False)
             reset_state = kwargs.get("reset_state", False)
 
-            if reset or reset_state:
-                builder.reset_state()
+            reset = reset or reset_state
+
+            # if reset:
+            #     builder.reset_state()  # lets not reset the full module
 
             if self.already_done(func, builder, done_key, reset):
+                builder._log_info("no need to do: %s:%s, was already done" % (builder._name, kwargs_without_reset))
                 return builder.ALREADY_DONE_VALUE
 
             # Make sure to call _init before any method
@@ -148,11 +150,11 @@ class builder_method(object):
                 builder.profile_builder_select()
 
             if name == "install":
-                builder.build()
+                builder.build(reset=reset)
 
             if name == "sandbox":
                 builder.profile_sandbox_select()
-                builder.install()
+                builder.install(reset=reset)
                 kwargs["zhub_client"] = self.get_default_zhub_client(kwargs)
 
             if name in ["stop", "running", "_init"]:

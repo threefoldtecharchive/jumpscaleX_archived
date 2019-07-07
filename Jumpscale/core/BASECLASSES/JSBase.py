@@ -427,41 +427,44 @@ class JSBase:
 
     ################
 
+    def _done_key(self, name):
+        if name == "":
+            key = self._objid
+        else:
+            key = "%s:%s" % (self._objid, name)
+        return key
+
     def _done_check(self, name="", reset=False):
         if reset:
-            self._done_reset(name=name)
-        if name == "":
-            return j.core.db.hexists("done", self._objid)
-        else:
-            return j.core.db.hexists("done", "%s:%s" % (self._objid, name))
+            self._done_delete(name=name)
+        return j.core.myenv.state_get(self._done_key(name))
+        # return j.core.db.hexists("done", key)
 
-    def _done_set(self, name="", value="1"):
-        if name == "":
-            return j.core.db.hset("done", self._objid, value)
-        else:
-            return j.core.db.hset("done", "%s:%s" % (self._objid, name), value)
+    def _done_set(self, name=""):
+        j.core.myenv.state_set(self._done_key(name))
+        # return j.core.db.hset("done", self._done_key(name), value)
 
-    def _done_get(self, name=""):
-        if name == "":
-            return j.core.db.hget("done", self._objid)
-        else:
-            return j.core.db.hget("done", "%s:%s" % (self._objid, name))
+    def _done_delete(self, name=""):
+        j.core.myenv.state_delete(self._done_key(name))
+        # return j.core.db.hset("done", self._done_key(name), value)
 
-    def _done_reset(self, name=""):
+    def _done_reset(self):
         """
         if name =="" then will remove all from this object
         :param name:
         :return:
         """
-        if name == "":
-            for item in j.core.db.hkeys("done"):
-                item = item.decode()
-                # print("reset todo:%s" % item)
-                if item.find(self._objid) != -1:
-                    j.core.db.hdel("done", item)
-                    # print("reset did:%s" % item)
-        else:
-            return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
+        name = self._done_key("")
+        j.core.myenv.states_delete(name)
+        # if name == "":
+        #     for item in j.core.db.hkeys("done"):
+        #         item = item.decode()
+        #         # print("reset todo:%s" % item)
+        #         if item.find(self._objid) != -1:
+        #             j.core.db.hdel("done", item)
+        #             # print("reset did:%s" % item)
+        # else:
+        #     return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
 
     ################### mechanisms for autocompletion in kosmos
 

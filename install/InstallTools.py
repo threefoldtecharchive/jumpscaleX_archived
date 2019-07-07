@@ -821,7 +821,9 @@ class Tools:
         if "darwin" in MyEnv.platform():
 
             script = """
-            pip3 install ipython==6.5.0
+            pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
+            pip3 install pudb
+            pip3 install pygments            
             """
             Tools.execute(script, interactive=True)
 
@@ -838,7 +840,7 @@ class Tools:
                 sudo apt-get install -y locales
                 sudo apt-get install -y curl rsync
                 sudo apt-get install -y unzip
-                pip3 install ipython==6.5.0
+                pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
                 pip3 install pudb
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
@@ -866,6 +868,9 @@ class Tools:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except Exception as e:
+                from pudb import set_trace
+
+                set_trace()
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
@@ -1435,6 +1440,11 @@ class Tools:
     #     else:
     #         return Tools._execute(cmd=script, args=None, die=die, interactive=interactive, showout=showout)
     #
+
+    @staticmethod
+    def system_cleanup():
+        CMD = BaseInstaller.cleanup_script_get()
+        Tools.execute(CMD)
 
     @staticmethod
     def process_pids_get_by_filter(filterstr, excludes=[]):
@@ -2200,7 +2210,6 @@ class MyEnv:
             Tools.execute(script, interactive=True, args=args)
 
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
@@ -2211,9 +2220,10 @@ class MyEnv:
             MyEnv._config_load()
 
         # merge interactive flags
-        MyEnv.interactive = interactive and MyEnv.config["INTERACTIVE"]
-        # enforce interactive flag consistency after having read the config file,
-        # arguments overrides config file behaviour
+        if "INTERACTIVE" in MyEnv.config:
+            MyEnv.interactive = interactive and MyEnv.config["INTERACTIVE"]
+            # enforce interactive flag consistency after having read the config file,
+            # arguments overrides config file behaviour
         MyEnv.config["INTERACTIVE"] = MyEnv.interactive
 
         if not "DIR_TEMP" in MyEnv.config:
@@ -2328,7 +2338,11 @@ class MyEnv:
                     configdir = MyEnv._cfgdir_get()
 
         MyEnv.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
+        if DockerFactory.indocker():
+            # this is important it means if we push a container we keep the state file
+            MyEnv.state_file_path = os.path.join(MyEnv._homedir_get(), ".jumpscale_done.toml")
+        else:
+            MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
 
         if Tools.exists(MyEnv.config_file_path):
             MyEnv._config_load()
@@ -2428,6 +2442,18 @@ class MyEnv:
             MyEnv.state_save()
 
     @staticmethod
+    def states_delete(prefix):
+        if MyEnv.readonly:
+            return
+        prefix = prefix.upper()
+        keys = [i for i in MyEnv.state.keys()]
+        for key in keys:
+            if key.startswith(prefix):
+                MyEnv.state.pop(key)
+                # print("#####STATEPOP:%s" % key)
+                MyEnv.state_save()
+
+    @staticmethod
     def state_reset():
         """
         remove all state
@@ -2487,18 +2513,19 @@ class BaseInstaller:
                 Tools.file_write(env_path, bashprofile)
 
         print("- get sandbox base from git")
-        Tools.code_github_get(repo="sandbox_base", branch=["master"], pull=False)
-        print("- copy files to sandbox")
+        ji = JumpscaleInstaller()
+        ji.repos_get(pull=False)
+        print("- copy files to sandbox (non binaries)")
         # will get the sandbox installed
         if not sandboxed:
 
             script = """
             set -e
             cd {DIR_BASE}
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/cfg/ {DIR_BASE}/cfg/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/bin/ {DIR_BASE}/bin/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/openresty/ {DIR_BASE}/openresty/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/env.sh {DIR_BASE}/env.sh
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/cfg/ {DIR_BASE}/cfg/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/bin/ {DIR_BASE}/bin/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/openresty/ {DIR_BASE}/openresty/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var
 
@@ -2645,9 +2672,10 @@ class BaseInstaller:
                 "toml>=0.9.2",
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
-                "bpython",
+                # "bpython",
                 "pbkdf2",
-                "ptpython",
+                "ptpython==2.0.4",
+                "prompt-toolkit==2.0.9",
                 "pygments-markdown-lexer",
                 "wsgidav",
             ],
@@ -2703,6 +2731,35 @@ class BaseInstaller:
                 C = "pip3 install '%s'" % pip  # --user
                 Tools.execute(C, die=True)
                 MyEnv.state_set("pip_%s" % pip)
+
+    @staticmethod
+    def cleanup_script_get():
+        CMD = """
+        cd /
+        rm -f /tmp/cleanedup
+        find . -name "*.pyc" -exec rm -rf {} \;
+        find . -type d -name "__pycache__" -delete
+        find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+        find . -name "*.bak" -exec rm -rf {} \;
+        rm -f /root/.jsx_history
+        rm -f /root/.ssh/*
+        rm -rf /root/.cache
+        mkdir -p /root/.cache
+        rm -rf /bd_build
+        rm -rf /var/log
+        mkdir -p /var/log
+        rm -rf /var/mail
+        mkdir -p /var/mail
+        rm -rf /tmp
+        mkdir -p /tmp
+        chmod -R 0777 /tmp
+        rm -rf /var/backups
+        find . -name "*.bak" -exec rm -rf {} \;
+        apt-get clean -y
+        apt-get autoremove --purge -y
+        touch /tmp/cleanedup
+        """
+        return Tools.text_strip(CMD, replace=False)
 
 
 class OSXInstaller:
@@ -2979,6 +3036,9 @@ class JumpscaleInstaller:
         Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
+    def web(self):
+        j.shell()
+
 
 class DockerFactory:
 
@@ -3089,8 +3149,16 @@ class DockerConfig:
             self.startupcmd = "/sbin/my_init"
 
         self.path_vardir = Tools.text_replace("{DIR_BASE}/var/containers/{NAME}", args={"NAME": name})
-        self.path_config = "%s/config.toml" % (self.path_vardir)
+        self.path_config = "%s/docker_config.toml" % (self.path_vardir)
 
+        self.load()
+
+    def reset(self):
+        """
+        erase the past config
+        :return:
+        """
+        Tools.delete(self.path_vardir)
         self.load()
 
     def _find_sshport(self, startport):
@@ -3142,6 +3210,7 @@ class DockerContainer:
             if self.container_exists:
                 self.delete()
             newport = self.config._find_sshport(self.config.sshport)
+            self.config.reset()
             if self.config.sshport != newport:
                 self.config.sshport = newport
                 self.config.save()
@@ -3169,6 +3238,13 @@ class DockerContainer:
         :return:
         """
         imagename = "temp/temp"
+
+        CLEANUPCMD = BaseInstaller.cleanup_script_get()
+        for line in CLEANUPCMD.split("\n"):
+            line = line.strip()
+            print(" - cleanup:%s" % line)
+            self.dexec(line)
+
         self.export(skip_if_exists=False)  # need to re-export to make sure
         tempcontainer = DockerContainer("temp", delete=True, portrange=2)
 
@@ -3176,32 +3252,8 @@ class DockerContainer:
             path=self.export_last_image_path, imagename=imagename, start=True, mount_dirs=False, portmap=False
         )
         # WILL CLEANUP
-        CMD = """
-        cd /
-        rm -f /tmp/cleanedup
-        find . -name "*.pyc" -exec rm -rf {} \;
-        find . -type d -name "__pycache__" -delete
-        find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-        find . -name "*.bak" -exec rm -rf {} \;
-        rm -f /root/.jsx_history
-        rm -f /root/.ssh/*
-        rm -rf /root/.cache
-        mkdir -p /root/.cache
-        rm -rf /bd_build
-        rm -rf /var/log
-        mkdir -p /var/log
-        rm -rf /var/mail
-        mkdir -p /var/mail
-        rm -rf /tmp
-        mkdir -p /tmp
-        chmod -R 0777 /tmp
-        rm -rf /var/backups
-        find . -name "*.bak" -exec rm -rf {} \;
-        apt-get clean
-        apt-get autoremove --purge
-        touch /tmp/cleanedup
-        """
-        for line in CMD.split("\n"):
+
+        for line in CLEANUPCMD.split("\n"):
             line = line.strip()
             print(" - cleanup:%s" % line)
             tempcontainer.dexec(line)
@@ -3237,7 +3289,7 @@ class DockerContainer:
         # if ":" not in args["IMAGE"]:
         #     args["IMAGE"] += ":latest"
 
-        if not Tools.exists(self._path):
+        if not Tools.exists(self._path + "/cfg/jumpscale_config.toml"):
             Tools.dir_ensure(self._path + "/cfg")
             Tools.dir_ensure(self._path + "/var")
             CONFIG = {}
@@ -3459,7 +3511,7 @@ class DockerContainer:
             print("export docker:%s to %s, was already there (export skipped)" % (self.name, path))
         return version
 
-    def jumpscale_install(self, secret=None, privatekey=None, redo=False, wiki=False, pull=False, branch=None):
+    def jumpscale_install(self, secret=None, privatekey=None, redo=False, web=True, pull=False, branch=None):
 
         args_txt = ""
         if secret:
@@ -3468,7 +3520,7 @@ class DockerContainer:
             args_txt += " --privatekey='%s'" % privatekey
         if redo:
             args_txt += " -r"
-        if wiki:
+        if web:
             args_txt += " -w"
         if pull:
             args_txt += " --pull"
