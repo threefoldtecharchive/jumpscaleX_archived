@@ -1090,6 +1090,7 @@ class group_servers(JSGroup):
         
         self._rack = None
         self._gedis = None
+        self._gundb = None
         self._myjobs = None
         self._raftserver = None
         self._dns = None
@@ -1120,6 +1121,12 @@ class group_servers(JSGroup):
             from DigitalMe.servers.gedis.GedisFactory import GedisFactory
             self._gedis =  GedisFactory()
         return self._gedis
+    @property
+    def gundb(self):
+        if self._gundb is None:
+            from DigitalMe.servers.gundb.GundbFactory import GundbFactory
+            self._gundb =  GundbFactory()
+        return self._gundb
     @property
     def myjobs(self):
         if self._myjobs is None:

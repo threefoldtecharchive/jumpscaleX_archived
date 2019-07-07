@@ -26,7 +26,7 @@ class DigitalOceanFactory(JSConfigBaseFactory):
         """
         if not self.main.token_:
             token = j.tools.console.askString("digital ocean token")
-            self.main.token_ = token
+            self.main.token_ = tokengun
             self.main.save()
         c = self.get(name="main")
         if j.clients.ssh.exists("do_test"):
