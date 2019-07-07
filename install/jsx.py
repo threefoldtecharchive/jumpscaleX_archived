@@ -302,7 +302,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=Fal
 
 
 @click.command()
-# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+# @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/saendbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
 @click.option("-p", "--path", default=None, help="image location")

@@ -109,7 +109,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     def _replace(self, txt, paths_executor=True):
         if "{" in txt:
             res = {}
-            for key, item in self.data._ddict.items():
+            for key, item in self._data._ddict.items():
                 res[key.upper()] = item
             txt = j.core.tools.text_replace(txt, args=res)
         return txt

@@ -43,9 +43,11 @@ class DigitalOceanFactory(JSConfigBaseFactory):
         do:
         kosmos 'j.clients.digitalocean.test()'
         """
-        s = j.data.bcdb.get_system()
-        # s.reset()
+        j.core.myenv.interactive = True
 
+        from pudb import set_trace
+
+        set_trace()
         if not self.exists(name="main"):
             self.new("main")
         else:
@@ -74,7 +76,7 @@ class DigitalOceanFactory(JSConfigBaseFactory):
 
         e.execute("ls /")
 
-        # sshclient.apps.kosmos()
+        e.installer.jumpscale_container()
 
         self._log_info(c.droplets)
         self._log_info(c.digitalocean_images)

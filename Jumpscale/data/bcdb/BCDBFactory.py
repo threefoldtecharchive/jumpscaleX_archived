@@ -38,6 +38,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             except Exception as e:
                 if str(e).find("Ciphertext failed") != -1:
                     raise RuntimeError("%s cannot be decrypted with secret" % self._config_data_path)
+                raise e
             self._config = j.data.serializers.msgpack.loads(data)
         else:
             self._config = {}

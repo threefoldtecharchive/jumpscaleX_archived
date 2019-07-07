@@ -52,7 +52,7 @@ class executor_method(object):
             if len(args) > 0:
                 raise RuntimeError("only use kwargs")
             name = func.__name__
-            kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
+            kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
             reset = kwargs.get("reset", False)
 
@@ -75,7 +75,7 @@ class executor_method(object):
 
 
 class ExecutorInstallers(j.application.JSBaseClass):
-    def _init2(self, executor=None):
+    def _init(self, executor=None, **kwargs):
 
         self.executor = executor
 
@@ -96,10 +96,18 @@ class ExecutorInstallers(j.application.JSBaseClass):
     @executor_method()
     def jumpscale(self):
         self.executor.execute(
-            "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py\?$RANDOM > /tmp/jsx"
+            "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py\?$RANDOM > /tmp/jsx"
         )
         self.executor.execute("chmod 777 /tmp/jsx")
         self.executor.execute("/tmp/jsx install", interactive=True)
+
+    @executor_method()
+    def jumpscale_container(self):
+        self.executor.execute(
+            "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py\?$RANDOM > /tmp/jsx"
+        )
+        self.executor.execute("chmod 777 /tmp/jsx")
+        self.executor.execute("/tmp/jsx container_install", interactive=True)
 
     def _check_base(self):
         if not self.__check_base:
