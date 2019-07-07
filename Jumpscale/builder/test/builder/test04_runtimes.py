@@ -30,7 +30,6 @@ class Runtimes_TestCases(BaseTest):
         self.info(" * Check that {} server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
-<<<<<<< HEAD
 
     def test002_golang(self):
         """ BLD-007
@@ -89,5 +88,3 @@ class Runtimes_TestCases(BaseTest):
         j.builders.runtimes.nodejs.install()
         self.info("check that nodejs installed successfully.")
         self.assertTrue(j.sal.process.execute("which nodejs"))
-=======
->>>>>>> 77075ffc95ae1e9b19cf0a9f30d6d55bad806410
