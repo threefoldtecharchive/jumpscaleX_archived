@@ -3,6 +3,7 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
+
 class Runtimes_TestCases(BaseTest):
     @parameterized.expand([("lua", "openresty"), ("php", "php-fpm")])
     def test_runtimes_builders(self, builder, process):
@@ -14,15 +15,22 @@ class Runtimes_TestCases(BaseTest):
         self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.runtimes, builder).install()
         self.info(" * {} builder: run start method.".format(builder))
-        getattr(j.builders.runtimes, builder).start()
-        self.info(" Check that {} server started successfully.".format(builder))
+        try:
+            getattr(j.builders.runtimes, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * Check that {} server started successfully.".format(builder))
         self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
         self.info(" * {} builder: run stop method.".format(builder))
-        getattr(j.builders.runtimes, builder).stop()
-        self.info(" Check that {} server stopped successfully.".foramt(builder))
+        try:
+            getattr(j.builders.runtimes, builder).stop()
+        except RuntimeError as e:
+            self.fail(e)
+        self.info(" * Check that {} server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
+<<<<<<< HEAD
 
     def test002_golang(self):
         """ BLD-007
@@ -81,3 +89,5 @@ class Runtimes_TestCases(BaseTest):
         j.builders.runtimes.nodejs.install()
         self.info("check that nodejs installed successfully.")
         self.assertTrue(j.sal.process.execute("which nodejs"))
+=======
+>>>>>>> 77075ffc95ae1e9b19cf0a9f30d6d55bad806410

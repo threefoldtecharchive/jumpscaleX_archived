@@ -4,7 +4,8 @@ import time
 
 
 class BaseTest(TestCase):
-    LOGGER = logger.add('builder_{time}.log')
+    LOGGER = logger
+    LOGGER.add("builder_{time}.log")
 
     SMALL_SLEEP = 10
     MEDIUM_SLEEP = 60
@@ -13,10 +14,10 @@ class BaseTest(TestCase):
         super().__init__(*args, **kwargs)
 
     def setUp(self):
-        self.info('* Test case : {}'.format(self._testMethodName))
+        self.info("* Test case : {}".format(self._testMethodName))
 
     def tearDown(self):
-        self.info(' * Tear_down!')
+        self.info(" * Tear_down!")
 
     def info(self, message):
         self.LOGGER.info(message)

@@ -16,13 +16,17 @@ class WebTestCases(BaseTest):
         }
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
-            
+
         self.info(" * {} builder: run build method.".format(builder))
-        getattr(j.builders.web, builder).build()
+        getattr(j.builders.web, builder).build(reset=True)
         self.info(" * {} builder: run install  method.".format(builder))
         getattr(j.builders.web, builder).install()
         self.info(" * {} builder: run start method.".format(builder))
-        getattr(j.builders.web, builder).start()
+        try:
+            getattr(j.builders.web, builder).start()
+        except RuntimeError as e:
+            self.fail(e)
+
         self.info(" * check that {} server started successfully.".format(builder))
         self.small_sleep()
         self.assertTrue(len(j.sal.process.getProcessPid(process)))
