@@ -296,8 +296,8 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=Fal
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.db.zdb.install()'" % SANDBOX, showout=True)
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install()'" % SANDBOX, showout=True)
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.apps.corex.install()'" % SANDBOX, showout=True)
-    IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
-    IT.Tools.shell()
+    # LETS NOT DO THE FOLLOWING TAKES TOO LONG
+    # IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
     print("Jumpscale X installed successfully")
 
 

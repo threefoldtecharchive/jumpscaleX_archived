@@ -1443,8 +1443,10 @@ class Tools:
 
     @staticmethod
     def system_cleanup():
+        print("- AM CLEANING UP THE CONTAINER, THIS TAKES A WHILE")
         CMD = BaseInstaller.cleanup_script_get()
-        Tools.execute(CMD)
+        for line in CMD.split("\n"):
+            Tools.execute(line, replace=False)
 
     @staticmethod
     def process_pids_get_by_filter(filterstr, excludes=[]):
@@ -2757,6 +2759,8 @@ class BaseInstaller:
         find . -name "*.bak" -exec rm -rf {} \;
         apt-get clean -y
         apt-get autoremove --purge -y
+        rm -rf /sandbox/openresty/pod
+        rm -rf /sandbox/openresty/site
         touch /tmp/cleanedup
         """
         return Tools.text_strip(CMD, replace=False)
@@ -2827,6 +2831,7 @@ class UbuntuInstaller:
     @staticmethod
     def base():
         MyEnv._init()
+
         if MyEnv.state_get("base"):
             return
 
@@ -3240,10 +3245,12 @@ class DockerContainer:
         imagename = "temp/temp"
 
         CLEANUPCMD = BaseInstaller.cleanup_script_get()
-        for line in CLEANUPCMD.split("\n"):
-            line = line.strip()
-            print(" - cleanup:%s" % line)
-            self.dexec(line)
+
+        # NO NEED TO DO HERE, takes too long
+        # for line in CLEANUPCMD.split("\n"):
+        #     line = line.strip()
+        #     print(" - cleanup:%s" % line)
+        #     self.dexec(line)
 
         self.export(skip_if_exists=False)  # need to re-export to make sure
         tempcontainer = DockerContainer("temp", delete=True, portrange=2)
@@ -3262,7 +3269,7 @@ class DockerContainer:
         DockerFactory.image_remove(imagename)
         self.delete()
         assert self.name not in DockerFactory.containers_names()
-        self.import_()
+        self.import_()  # now should be clean
 
     def install(self, baseinstall=True, mount_dirs=True, portmap=True):
         """
