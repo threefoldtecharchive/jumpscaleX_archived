@@ -173,7 +173,7 @@ class TFChainCapacity:
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, location, size=1, duration=1, source=None, refund=None):
+    def reserve_zos_vm(self, email, threebot_id, location, size=1, duration=1, password="", source=None, refund=None):
         """
         reserve an virtual 0-OS
 
@@ -181,6 +181,10 @@ class TFChainCapacity:
         :type email: string
         :param threebot_id: name or address of your threebot
         :type threebot_id: string
+        :param location: node id or farm name where to deploy the virtual 0-OS
+                        if location is a node id, the node is used
+                        if location is a farm id, a node is automatically chosen in the farm and used.
+        :type location: string
         :param size: size of the archive to reserve, defaults to 1
                     possible value:
                     - 1 => 1 CPU 2 GiB of memory  10 GiB of storage
@@ -188,10 +192,8 @@ class TFChainCapacity:
         :type size: int, optional
         :param duration: number of months the reservation should be valid for
         :type duration: int
-        :param location: node id or farm name where to deploy the virtual 0-OS
-                        if location is a node id, the node is used
-                        if location is a farm id, a node is automatically chosen in the farm and used.
-        :type location: string
+        :param password: password for the deployed zos vm
+        :type password: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
@@ -200,7 +202,7 @@ class TFChainCapacity:
         :rtype: tuple
         """
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
-            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location, "duration": duration}
+            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location, "duration": duration, "password": password}
         )
         _validate_reservation_vm(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
