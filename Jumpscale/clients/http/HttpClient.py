@@ -90,7 +90,7 @@ class Connection(JSBASE):
         :param die:
         :return:  status   if there is an error and die==False,   otherwise the result
         """
-        r = self.get_response(url=url, data=data, headers=headers, **params)
+        r = self._http_request(url=url, data=data, headers=headers, **params)
         if r.status != 200:
             if die:
                 raise RuntimeError("could not retrieve:%s, status of response:%s" % (url, r.status))

@@ -331,8 +331,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         self._test_run(name=name)
 
-        # j.servers.zdb.stop()
-        # redis = j.tools.tmux.cmd_get("bcdbredis_6380")
-        # redis.stop()
+        j.servers.zdb.stop()
+        redis = j.servers.tmux.cmd_get("main")
+        redis.stop()
+        web_dav = j.servers.tmux.cmd_get("webdav_test")
+        web_dav.stop()
         self._log_info("All TESTS DONE")
         return "OK"

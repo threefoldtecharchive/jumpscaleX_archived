@@ -283,7 +283,7 @@ class RedisServer(j.application.JSBaseClass):
         response._array(["0", res])
 
     def hset(self, response, key, id, val):
-        raise RuntimeError("not implemented")
+        return self.set(response, key, val)
 
     def hget(self, response, key, id):
         parse_key = key.replace(":", "/")
