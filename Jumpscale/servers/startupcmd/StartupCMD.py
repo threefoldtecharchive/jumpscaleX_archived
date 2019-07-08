@@ -15,7 +15,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         path = ""
         env = (dict)
         ports = (LI)
-        timeout = 0
+        timeout = 10
         process_strings = (ls)
         process_strings_regex = (ls)
         pid = 0
@@ -301,7 +301,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         return -1  # means we don't know
 
-    def wait_stopped(self, die=True, timeout=5):
+    def wait_stopped(self, die=True, timeout=10):
         """
 
         :param die:
@@ -309,7 +309,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :return: will return True if it stopped, False if it did not work, -1 if we don't know
                  if die and stopped will raise error
         """
-        self._log_debug("wait_stopped:%s" % self.name)
+        self._log_debug("wait_stopped:%s (now:%s)" % (self.name, j.data.time.epoch))
+        assert timeout > 1
         end = j.data.time.epoch + timeout
 
         if self._local:
@@ -339,6 +340,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 # we got timeout on waiting for the stopping
                 self._log_warning("stop did not happen in time on:%s" % self)
                 if die:
+                    # print(j.data.time.epoch)
                     return self._error_raise("could not stop in time, timeout happened")
                 return False
 
@@ -405,7 +407,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
             self._log_info("no need to start was already started:%s" % self.name)
             return
 
-        assert self.cmd_start
+        if not self.cmd_start:
+            raise ValueError("please make sure self.cmd_start has been specified")
 
         if "\n" in self.cmd_start.strip():
             C = self.cmd_start

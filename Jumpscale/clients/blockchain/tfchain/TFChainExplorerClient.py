@@ -38,7 +38,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 # this is required in order to be able to talk directly a daemon
                 headers = {"User-Agent": "Rivine-Agent"}
                 # do the request and check the response
-                resp = j.clients.http.get(url=address + endpoint, headers=headers)
+                resp = j.clients.http.get_response(url=address + endpoint, headers=headers)
                 if resp.getcode() == 200:
                     return resp.readline()
                 if resp.getcode() == 204:

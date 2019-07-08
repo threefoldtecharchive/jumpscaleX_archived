@@ -104,6 +104,9 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         :type zhub_instance:str
         """
 
+        # COMPLEX , COULD BE 10x more easy, just some bash script with {DIR_...} inside
+        # ALSO not right because its conflicting with building above,that one also copies to local /sandbox
+
         bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index", "lapis", "moon", "moonc"]
         dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/openresty.cfg"): "sandbox/cfg/",
@@ -156,7 +159,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
     @builder_method()
     def clean(self, reset=False):
         """
-        js_shell 'j.builders.web.openresty.clean()'
+        kosmos 'j.builders.web.openresty.clean()'
         :return:
         """
         C = """
@@ -226,34 +229,31 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        test_dir = j.core.tools.text_replace("{DIR_TEMP}/lapis_test")
-        if self.tools.exists(test_dir):
-            self.tools.dir_remove(test_dir)
-        self.tools.dir_ensure(test_dir)
         cmd = """
-            cd {dir}
-            lapis --lua new
-            lapis server
-        """.format(
-            dir=test_dir
-        )
-        cmds = [j.servers.startupcmd.get("test_openresty", cmd=cmd)]
+        rm -rf {DIR_TEMP}/lapis_test
+        mkdir -p {DIR_TEMP}/lapis_test 
+        cd {DIR_TEMP}/lapis_test
+        lapis --lua new
+        lapis server
+        """
+        cmds = [j.servers.startupcmd.get("test_openresty", cmd_start=cmd, ports=[8080], process_strings_regex="^nginx")]
         return cmds
 
-    @builder_method()
-    def stop(self):
-        # stop openresty
-        j.sal.process.killProcessByName(self.NAME)
+    def test(self):
+        """
+        kosmos 'j.builders.web.openresty.test()'
 
-    def test(self, name=""):
-        """Run tests under tests directory
+        server is running on port 8080
 
-        :param name: basename of the file to run, defaults to "".
-        :type name: str, optional
         """
         if self.running():
             self.stop()
-
         self.start()
-        assert self.running()
-        self._log_info("openresty is running")
+        self._log_info("openresty is running on port 8080")
+        # we now have done a tcp test, lets do a http client connection
+        out = j.clients.http.get("http://localhost:8080")
+
+        assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
+        self.stop()
+
+        self._log_info("openresty test was ok,no longer running")

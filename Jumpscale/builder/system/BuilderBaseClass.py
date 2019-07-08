@@ -521,7 +521,7 @@ class BuilderBaseClass(BaseClass):
 
     def running(self):
         for startupcmd in self.startup_cmds:
-            if startupcmd.running is False:
+            if startupcmd.is_running() is False:
                 return False
         return True
 

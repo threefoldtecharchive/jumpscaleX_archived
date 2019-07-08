@@ -59,7 +59,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
-                    c = j.clients.http.getConnection()
+                    c = j.clients.http.connection_get()
                     r = c.get(url).readlines()
 
                     data = r[0].decode()
