@@ -1,5 +1,6 @@
 import nacl
 import pytest
+import time
 from Jumpscale import j
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
 from Jumpscale.clients.blockchain.tfchain.stub.NotaryClientStub import NotaryClientStub
@@ -48,7 +49,7 @@ def main(self):
     DEVNET_GENESIS_SEED = "image orchard airport business cost work mountain obscure flee alpha alert salmon damage engage trumpet route marble subway immune short tide young cycle attract"
 
     # create a new devnet wallet
-    w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED)
+    w = c.wallets.get("mywallet", seed=DEVNET_GENESIS_SEED)
     # we create a new wallet using an existing seed,
     # such that our seed is used and not a new randomly generated seed
 
@@ -65,7 +66,7 @@ def main(self):
             names=[BotName(value="user3bot")],
             addresses=[],
             public_key=w.key_pair_get(w.address).public_key,
-            expiration=1552581420,
+            expiration=j.tools.time.extend(time.time(), 1),
         )
     )
     # create grid broker threebot record
@@ -75,7 +76,7 @@ def main(self):
             names=[BotName(value="development.broker")],
             addresses=[],
             public_key=PublicKey.from_json("ed25519:e4f55bc46b5feb37c03a0faa2d624a9ee1d0deb5059aaa9625d8b4f60f29bcab"),
-            expiration=1552581420,
+            expiration=j.tools.time.extend(time.time(), 1),
         )
     )
 
@@ -88,9 +89,11 @@ def main(self):
     user_priv = user_signing.to_curve25519_private_key()
     box = nacl.public.Box(user_priv, broker_public)
 
+
     # try to reserve a 0-os VM
     result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot", "ac1f6b47a04c")
     assert result.submitted
+    assert result.transaction.id in w.capacity.reservations_transactions_list()
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
@@ -106,6 +109,7 @@ def main(self):
     # try to reserve an S3
     result = w.capacity.reserve_s3("user@mail.com", "user3bot", "freefarm.s3-storage", size=2)
     assert result.submitted
+    assert result.transaction.id in w.capacity.reservations_transactions_list()
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
@@ -132,6 +136,7 @@ def main(self):
         "user@mail.com", "user3bot", "freefarm.s3-storage", size=2, disk_type="ssd", mode="seq", password=None
     )
     assert result.submitted
+    assert result.transaction.id in w.capacity.reservations_transactions_list()
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
@@ -146,3 +151,10 @@ def main(self):
     assert o.disk_type == "ssd"
     assert o.mode == "seq"
     assert o.password == ""
+
+
+    # try to reserve a 0-os VM with an expiration date past the bot's expiration
+    with pytest.raises(ValueError):
+        w.capacity.reserve_zos_vm("user@mail.com", "user3bot", "ac1f6b47a04c", duration=2)
+
+    assert w.capacity.reservations_transactions_list() == w.reservations_transactions

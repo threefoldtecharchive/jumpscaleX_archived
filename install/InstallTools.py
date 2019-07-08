@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development_jumpscale"]
+DEFAULTBRANCH = ["development", "development_installer"]
 
 import socket
 import grp
@@ -868,9 +868,6 @@ class Tools:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except Exception as e:
-                from pudb import set_trace
-
-                set_trace()
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
@@ -2642,7 +2639,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython==6.5",
+                "ipython>=6.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
