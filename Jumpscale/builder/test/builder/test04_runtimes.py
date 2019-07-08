@@ -42,7 +42,7 @@ class Runtimes_TestCases(BaseTest):
         self.info("Check that golang builder installed successfully")
         self.assertTrue(j.builders.runtimes.golang.is_installed)
 
-        def test003_nimlang(self):
+    def test003_nimlang(self):
         """ BLD-009
         *Test nimlang builer sandbox*
         """
@@ -62,8 +62,8 @@ class Runtimes_TestCases(BaseTest):
         try:
             j.sal.process.execute("which python")
         except:
-        self.assertTrue(False)
-    
+            self.assertTrue(False)
+
     def test005_rust(self):
         """ BLD-011
         *Test rust builer sandbox*
@@ -89,4 +89,3 @@ class Runtimes_TestCases(BaseTest):
         self.info("check that nodejs installed successfully.")
         self.assertTrue(j.sal.process.execute("which nodejs"))
 
-        

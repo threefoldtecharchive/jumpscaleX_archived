@@ -4,6 +4,7 @@ from loguru import logger
 from random import randint
 from testconfig import config
 from unittest import TestCase
+from Jumpscale import j
 
 
 class BaseTest(TestCase):
