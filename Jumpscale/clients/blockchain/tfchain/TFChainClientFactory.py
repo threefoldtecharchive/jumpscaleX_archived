@@ -9,6 +9,7 @@ from .TFChainClient import TFChainClient
 from .TFChainExplorerClient import TFChainExplorerClient
 from .types.Errors import ErrorTypes
 from .TFChainTypesFactory import TFChainTypesFactory
+from .TFChainTime import TFChainTime
 
 
 class TFChainClientFactory(j.application.JSBaseConfigsClass):
@@ -23,6 +24,11 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
         self._explorer_client = TFChainExplorerClient()
         self._types_factory = TFChainTypesFactory()
         self._error_types = ErrorTypes()
+        self._time = TFChainTime
+
+    @property
+    def time(self):
+        return self._time
 
     @property
     def explorer(self):

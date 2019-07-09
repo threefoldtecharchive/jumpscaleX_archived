@@ -298,7 +298,7 @@ class TFChainCapacity:
 
         # validate bot id exists
         bot = self._wallet.client.threebot.record_get(threebot_id)
-        reservation_expiry = j.tools.time.extend(time.time(), reservation.duration)
+        reservation_expiry = j.clients.tfchain.time.extend(time.time(), reservation.duration)
         if date.fromtimestamp(reservation_expiry) > date.fromtimestamp(bot.expiration):
             raise ValueError("Capacity expiration time exceeds threebot's expiration")
 
