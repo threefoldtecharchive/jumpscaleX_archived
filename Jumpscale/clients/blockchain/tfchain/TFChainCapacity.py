@@ -88,6 +88,9 @@ class TFChainCapacity:
                     _, data_dict = self._notary_data_get(transaction.data.value.decode())
                     if data_dict.get("type") in ["vm", "reverse_proxy", "namespace", "s3"]:
                         transactions.append(transaction.id)
+                except UnicodeDecodeError:
+                    self._wallet._log_warning("failed to decode tx %s" % transaction.id)
+                    continue
                 except Exception as e:
                     if "reservation not found" not in str(e):
                         raise e
