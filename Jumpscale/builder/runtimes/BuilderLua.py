@@ -189,6 +189,27 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self.lua_rocks_install()
 
+        # copy some binaries
+        C = """
+
+        set -e
+        pushd /sandbox/openresty/bin
+        cp resty /sandbox/bin/resty
+        popd
+
+        pushd /sandbox/openresty/luarocks/bin/
+        cp lapis /sandbox/bin/_lapis.lua
+        cp moon /sandbox/bin/_moon.lua
+        cp moonc /sandbox/bin/_moonc.lua
+        popd
+
+        """
+        self._execute(C)
+
+        # need to check what we do actually need from sandbox_base/bin
+        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
+        self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
+
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):
         """Copy built bins to dest_path and create flist if create_flist = True
