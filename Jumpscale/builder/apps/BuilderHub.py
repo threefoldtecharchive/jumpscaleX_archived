@@ -206,7 +206,7 @@ class BuilderHub(j.builders.system._BaseClass):
     @builder_method()
     def stop(self):
         # killing the daemon
-        j.tools.tmux.pane_get(self.NAME).kill()
+        j.servers.tmux.pane_get(self.NAME).kill()
         j.builders.db.zdb.stop()
 
     @builder_method()

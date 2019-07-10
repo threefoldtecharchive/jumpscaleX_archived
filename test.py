@@ -9,15 +9,15 @@ def schema():
 
 
 def bcdb():
-    j.tools.tmux.kill()
-    assert len(j.tools.tmux.server.sessions) == 1
+    j.servers.tmux.kill()
+    assert len(j.servers.tmux.server.sessions) == 1
     # j.servers.zdb.test(build=True)
     # j.clients.zdb.test()
     j.data.bcdb.test()
 
 
 def servers():
-    j.tools.tmux.kill()
+    j.servers.tmux.kill()
     if j.core.platformtype.myplatform.isUbuntu:
         j.builders.web.traefik.install()
         # j.builders.db.etcd.install()

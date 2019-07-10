@@ -71,10 +71,10 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
                 set -x
 
                 if [ "$1" == "kill" ] ; then
-                    js_shell 'j.tools.tmux.kill()' || exit 1
+                    js_shell 'j.servers.tmux.kill()' || exit 1
                     exit 1
                 fi
-                
+
                 tmux -f /sandbox/cfg/.tmux.conf has-session
                 if [ "$?" -eq 1 ] ; then
                     echo "no server running need to start"
@@ -82,11 +82,11 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
                 else
                     echo "tmux session already exists"
                 fi
-                
+
                 if [ "$1" != "start" ] ; then
                     tmux a
                 fi
-                
+
                 """
             self.tmuxserver.delete()
             startup_cmd = self.tmuxserver  # grab an instance

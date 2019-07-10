@@ -91,8 +91,8 @@ class ZDBServer(j.application.JSBaseClass):
         # tmux_window = "digitalme"
         # tmux_panel = "p13"
         #
-        # j.tools.tmux.window_digitalme_get()
-        # return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
+        # j.servers.tmux.window_digitalme_get()
+        # return j.servers.tmux.cmd_get(name="zdb_%s"%self.name,
         #             window_name=tmux_window,pane_name=tmux_panel,
         #             cmd=cmd,path="/tmp",ports=[self.port],
         #             process_strings = ["wwwww:"])

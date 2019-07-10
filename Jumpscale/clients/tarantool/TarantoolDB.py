@@ -64,7 +64,7 @@ class TarantoolDB(j.application.JSBaseClass):
         # j.builders.db.tarantool.start()
         self._setConfig()
         cpath = j.clients.tarantool.cfgdir + "/%s.lua" % self.name
-        j.tools.tmux.execute("tarantool -i %s" % cpath, window="tarantool")
+        j.servers.tmux.execute("tarantool -i %s" % cpath, window="tarantool")
 
         j.sal.nettools.waitConnectionTest("localhost", self.port, 5)
 
