@@ -3,9 +3,11 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
+
 class Storage_TestCases(BaseTest):
-    @parameterized.expand([("minio", "minio"), ("restic", "restic"), ("syncthing", "syncthing", 
-                            ("s3scality", "s3scality"))
+    @parameterized.expand(
+        [("minio", "minio"), ("restic", "restic"), ("syncthing", "syncthing"), ("s3scality", "s3scality")]
+    )
     def test_storage_flists(self, flist, binary):
         """ SAN-009
         *Test storage builers sandbox*
@@ -13,7 +15,7 @@ class Storage_TestCases(BaseTest):
         skipped_flists = {
             "minio": "https://github.com/threefoldtech/jumpscaleX/issues/657",
             "syncthing": "https://github.com/threefoldtech/jumpscaleX/issues/670",
-            "s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/672", 
+            "s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/672",
         }
         if flist in skipped_flists:
             self.skipTest(skipped_flists[flist])
