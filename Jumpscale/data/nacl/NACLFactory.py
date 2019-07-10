@@ -35,7 +35,7 @@ class NACLFactory(j.application.JSBaseClass):
 
         """
         n = self.get(name=name, load=False)
-        n.configure(privkey_words=privkey_words, sshagent_use=sshagent_use, generate=generate, interactive=False)
+        n.configure(privkey_words=privkey_words, sshagent_use=sshagent_use, generate=generate, interactive=interactive)
         return n
 
     def get(self, name="default", load=True):

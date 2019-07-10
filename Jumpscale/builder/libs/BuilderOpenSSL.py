@@ -22,7 +22,7 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builders.libs..openssl.build()'
+        kosmos 'j.builders.libs.openssl.build()'
         """
         if not self.tools.exists(self.DIR_BUILD):
             C = """

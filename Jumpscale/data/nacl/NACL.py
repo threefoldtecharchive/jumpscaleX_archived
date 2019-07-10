@@ -138,6 +138,11 @@ class NACL:
             if privkey_words:
                 self._keys_generate(words=privkey_words)
             else:
+                if j.sal.fs.exists(self._path_privatekey):
+                    self._log_info("load existing private key")
+                    self.load()
+                    assert self.privkey
+                    return
                 if interactive:
                     # means we did not find a priv key yet
                     self._ask_privkey_words()

@@ -15,72 +15,50 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         kosmos 'j.builders.web.openresty.build()'
         :return:
         """
+
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.mdupdate()
             j.builders.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
-            url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
 
-            dest = self._replace("{DIR_BUILD}/openresty")
-            self.tools.file_download(
-                url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=1000, removeTopDir=True, deletedest=True
-            )
-            C = """
-            cd {DIR_BUILD}/openresty
-            mkdir -p /sandbox/var/pid
-            mkdir -p /sandbox/var/log
-            ./configure \
-                --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
-                --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
-                --prefix="/sandbox/openresty" \
-                --sbin-path="/sandbox/bin/openresty" \
-                --modules-path="/sandbox/lib" \
-                --pid-path="/sandbox/var/pid/openresty.pid" \
-                --error-log-path="/sandbox/var/log/openresty.log" \
-                --lock-path="/sandbox/var/nginx.lock" \
-                --conf-path="/sandbox/cfg/openresty.cfg" \
-                -j8
-            make -j8
-            make install
-            rm -rf {DIR_BUILD}
-            rm -f /sandbox/bin/lua
-            ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
+        url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
 
-            """
-            self._execute(C)
+        dest = self._replace("{DIR_BUILD}/openresty")
+        self.tools.file_download(
+            url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=1000, removeTopDir=True, deletedest=True
+        )
+        C = """
+        cd {DIR_BUILD}/openresty
+        mkdir -p /sandbox/var/pid
+        mkdir -p /sandbox/var/log
+        ./configure \
+            --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
+            --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
+            --prefix="/sandbox/openresty" \
+            --sbin-path="/sandbox/bin/openresty" \
+            --modules-path="/sandbox/lib" \
+            --pid-path="/sandbox/var/pid/openresty.pid" \
+            --error-log-path="/sandbox/var/log/openresty.log" \
+            --lock-path="/sandbox/var/nginx.lock" \
+            --conf-path="/sandbox/cfg/openresty.cfg" \
+            -j8
+        make -j8
+        make install
+        rm -rf {DIR_BUILD}
+        rm -f /sandbox/bin/lua
+        ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
-        else:
-            # build with system openssl, no need to include custom build
-            # j.builders.libs.openssl.build()
+        """
+        self._execute(C)
 
-            url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
-            dest = self.DIR_BUILD
-            self.tools.dir_ensure(dest)
-            self.tools.file_download(
-                url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=1000, removeTopDir=True, deletedest=True
-            )
-            C = """
-            cd {DIR_BUILD}
-            mkdir -p /sandbox/var/pid
-            mkdir -p /sandbox/var/log
-            ./configure \
-                --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
-                --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
-                --prefix="/sandbox/openresty" \
-                --sbin-path="/sandbox/bin/openresty" \
-                --modules-path="/sandbox/lib" \
-                --pid-path="/sandbox/var/pid/openresty.pid" \
-                --error-log-path="/sandbox/var/log/openresty.log" \
-                --lock-path="/sandbox/var/nginx.lock" \
-                --conf-path="/sandbox/cfg/openresty.cfg" \
-                -j8
-            make -j8
-            make install
-            rm -rf {DIR_BUILD}
-            rm -f /sandbox/bin/lua
-            cp /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
-
-            """
-            self.tools.execute(C)
+    @builder_method()
+    def install(self, **kwargs):
+        """
+        kosmos 'j.builders.web.openresty.install()'
+        #will call the build step
+        :param kwargs:
+        :return:
+        """
+        pass
 
     @builder_method()
     def sandbox(
@@ -103,9 +81,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         :param zhub_instance: hub instance to upload flist to
         :type zhub_instance:str
         """
-
-        # COMPLEX , COULD BE 10x more easy, just some bash script with {DIR_...} inside
-        # ALSO not right because its conflicting with building above,that one also copies to local /sandbox
 
         bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index", "lapis", "moon", "moonc"]
         dirs = {
@@ -183,6 +158,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         js_shell 'j.builders.web.openresty.copy_to_github()'
         :return:
         """
+        raise RuntimeError("check despiegk: not immplemented yet")
         self.build(reset=reset)
 
         if j.core.platformtype.myplatform.platform_is_ubuntu:
@@ -236,6 +212,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         lapis --lua new
         lapis server
         """
+        cmd = self._replace(cmd)
         cmds = [j.servers.startupcmd.get("test_openresty", cmd_start=cmd, ports=[8080], process_strings_regex="^nginx")]
         return cmds
 
@@ -246,6 +223,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         server is running on port 8080
 
         """
+
         if self.running():
             self.stop()
         self.start()
