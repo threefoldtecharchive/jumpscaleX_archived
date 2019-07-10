@@ -24,7 +24,7 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
         self._explorer_client = TFChainExplorerClient()
         self._types_factory = TFChainTypesFactory()
         self._error_types = ErrorTypes()
-        self._time = TFChainTime
+        self._time = TFChainTime()
 
     @property
     def time(self):
