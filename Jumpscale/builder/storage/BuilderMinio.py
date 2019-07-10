@@ -23,6 +23,10 @@ class BuilderMinio(BuilderGolangTools):
         """
         Builds minio
         """
+        # install gnutls dependancy
+        self.system.package.mdupdate()
+        self.system.package.install("gnutls-bin")
+
         j.builders.runtimes.golang.install()
         self.get("github.com/minio/minio")
 
