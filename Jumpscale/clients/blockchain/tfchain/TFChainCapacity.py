@@ -88,6 +88,9 @@ class TFChainCapacity:
                     _, data_dict = self._notary_data_get(transaction.data.value.decode())
                     if data_dict.get("type") in ["vm", "reverse_proxy", "namespace", "s3"]:
                         transactions.append(transaction.id)
+                except UnicodeDecodeError:
+                    self._wallet._log_warning("failed to decode tx %s" % transaction.id)
+                    continue
                 except Exception as e:
                     if "reservation not found" not in str(e):
                         raise e
@@ -131,10 +134,12 @@ class TFChainCapacity:
             "reverse_proxy": "tfchain.reservation.reverse_proxy",
         }
         reservation["duration"] = duration
-        reservation =  j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
+        reservation = j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
 
         amount = reservation_amount(reservation)
-        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(data={"duration": duration, "transaction_id": transaction.id, "email": email})
+        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(
+            data={"duration": duration, "transaction_id": transaction.id, "email": email}
+        )
 
         signature = self._sign_reservation(threebot_id, extension)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
@@ -168,7 +173,14 @@ class TFChainCapacity:
         """
 
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.s3").new(
-            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "s3", "location": location, "duration": duration}
+            data={
+                "size": size,
+                "email": email,
+                "created": j.data.time.epoch,
+                "type": "s3",
+                "location": location,
+                "duration": duration,
+            }
         )
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
@@ -202,13 +214,31 @@ class TFChainCapacity:
         :rtype: tuple
         """
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
-            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location, "duration": duration, "organization": organization}
+            data={
+                "size": size,
+                "email": email,
+                "created": j.data.time.epoch,
+                "type": "vm",
+                "location": location,
+                "duration": duration,
+                "organization": organization,
+            }
         )
         _validate_reservation_vm(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def reserve_zdb_namespace(
-        self, email, threebot_id, location, size=1, duration=1, disk_type="ssd", mode="seq", password=None, source=None, refund=None
+        self,
+        email,
+        threebot_id,
+        location,
+        size=1,
+        duration=1,
+        disk_type="ssd",
+        mode="seq",
+        password=None,
+        source=None,
+        refund=None,
     ):
         """
         reserve an 0-DB namespace
@@ -250,7 +280,7 @@ class TFChainCapacity:
             }
         )
         _validate_reservation_namespace(reservation)
-        return self._process_reservation(reservation, threebot_id,source=source, refund=refund)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls, duration=1, source=None, refund=None):
         """
@@ -304,7 +334,9 @@ class TFChainCapacity:
 
         signature = self._sign_reservation(threebot_id, reservation)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
-        transaction_result =  self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
+        transaction_result = self._wallet.coins_send(
+            self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund
+        )
         self._wallet.reservations_transactions.append(transaction_result.transaction.id)
         self._wallet.save()
         return transaction_result
@@ -322,6 +354,7 @@ class TFChainCapacity:
         box = nacl.public.Box(pk, self._grid_broker_pub_key)
         encrypted = bytes(box.encrypt(b))
         return sk.sign(encrypted, nacl.encoding.RawEncoder)
+
 
 def _validate_reservation_base(reservation):
     for field in ["email"]:
@@ -400,6 +433,7 @@ def reservation_amount(reservation):
         raise ValueError("unsupported reservation type")
 
     return price * reservation.duration
+
 
 def s3_price(size):
     if size == 1:
