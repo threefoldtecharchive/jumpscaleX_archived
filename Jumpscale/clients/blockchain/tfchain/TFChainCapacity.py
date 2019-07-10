@@ -204,7 +204,7 @@ class TFChainCapacity:
         :type size: int, optional
         :param duration: number of months the reservation should be valid for
         :type duration: int
-        :param organization: organization for the deployed zos vm
+        :param organization: organization for the deployed zos vm. If left empty, anyone can send commands to your zos vm.
         :type organization: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional
