@@ -81,7 +81,7 @@ def main(self):
 
         if zdb:
             self._log_debug("validate list")
-            assert cl.list() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         self._log_debug("validate added objects")
         print(redis_cl.delete("data:1:url:despiegk.test2:5"))
@@ -97,7 +97,7 @@ def main(self):
         # there should be 10 items now there
         if zdb:
             self._log_debug("validate list2")
-            assert cl.list() == [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
+            assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
 
         return
 

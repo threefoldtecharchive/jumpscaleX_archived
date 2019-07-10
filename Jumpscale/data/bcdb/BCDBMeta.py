@@ -86,7 +86,7 @@ class BCDBMeta(j.application.JSBaseClass):
             self._log_debug("load in meta:%s" % s.url)
             schema = j.data.schema.get_from_text(s.text)  # make sure jumpscale knows about the schema
             self._schema_jsxobj_load(s)
-            self._bcdb.model_get_from_schema(schema, schema_set=False)
+            self._bcdb.model_get_from_schema(schema, schema_set=True)
 
             assert self._bcdb._sid_to_model[s.sid].schema._md5  # make sure its not empty
             assert self._bcdb._sid_to_model[s.sid].schema._md5 == s.md5
@@ -135,9 +135,6 @@ class BCDBMeta(j.application.JSBaseClass):
         if s.sid > self._schema_last_id:
             self._schema_last_id = s.sid
 
-        assert s.sid not in self._bcdb._sid_to_model  # is initial load so should not be there yet
-        assert s.md5 not in self._schema_md5_to_sid
-
         # its only for reference purposes & maybe 3e party usage
         r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
         r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
@@ -181,6 +178,6 @@ class BCDBMeta(j.application.JSBaseClass):
         return schema._md5 in self._schema_md5_to_sid
 
     def __repr__(self):
-        self._schemas_in_data_print()
+        return str(self._schemas_in_data_print())
 
     __str__ = __repr__

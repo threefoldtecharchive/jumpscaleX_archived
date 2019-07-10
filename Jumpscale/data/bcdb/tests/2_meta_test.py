@@ -46,9 +46,6 @@ def main(self):
     schema = bcdb.model_get_from_url("jumpscale.schema.test.a")
     o = schema.new()
 
-    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
-    cl1.flush(meta=bcdb.meta)  # remove the data
-
     redis = cl1.redis
     data = redis.get(b"\x00\x00\x00\x00")
     assert len(data) > 100
@@ -63,7 +60,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 10
+    assert len(bcdb.meta._data._ddict["schemas"]) == 9
 
     a = model.new()
     a.category = "acat"
@@ -92,7 +89,7 @@ def main(self):
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # should be same because is same schema, should be same md5
+    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     schema_text = """
@@ -106,7 +103,7 @@ def main(self):
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 10  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # acl, user, circle, despiegktest and the 1 new one
 
     a3 = model2.new()
     a3.category = "acat3"

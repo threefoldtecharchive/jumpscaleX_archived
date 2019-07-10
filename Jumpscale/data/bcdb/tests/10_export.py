@@ -66,7 +66,7 @@ def main(self):
         m3 = bcdb.model_get_from_schema(SCHEMA)
         obj2 = m3.get(3)
 
-        assert obj2._data == obj._data
+        assert obj2._ddict_hr == obj._ddict_hr
         assert obj2._data == obj._data
 
         assert obj._schema == obj2._schema

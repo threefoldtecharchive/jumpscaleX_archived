@@ -45,7 +45,7 @@ class BCDB(j.application.JSBaseClass):
         self._init_props()
 
         if reset:
-            self.meta.reset()
+            self.reset()
         else:
             self.meta._load()
 
@@ -457,6 +457,10 @@ class BCDB(j.application.JSBaseClass):
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl()
         return self.model_add(model)
+
+    def _schema_add(self, schema):
+        sid = self.meta._schema_set(schema)  # make sure we remember schema
+        return sid
 
     def models_add(self, path):
         """

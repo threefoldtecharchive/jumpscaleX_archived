@@ -112,8 +112,8 @@ def main(self):
 
         self._log_info("TEST ACL DONE: %s" % name)
 
-    # test("RDB")
-    # test("ZDB")
-    # test("SQLITE")
+    test("RDB")
+    test("ZDB")
+    test("SQLITE")
 
     self._log_info("ACL TESTS ALL DONE")

@@ -26,7 +26,7 @@ def main(self):
 
     model.set_dynamic(model_obj)
     model_obj2 = model.get(model_obj.id)
-    assert model_obj2._data == model_obj._data
+    assert model_obj2._ddict_hr == model_obj._ddict_hr
 
     # will process 1000 obj (set)
     for x in range(100):
@@ -39,7 +39,7 @@ def main(self):
     model.index_ready()
 
     model_obj2 = model.get(model_obj.id)
-    assert model_obj2._data == model_obj._data
+    assert model_obj2._ddict_hr == model_obj._ddict_hr
 
     assert model.bcdb.queue.empty()
 

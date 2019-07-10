@@ -60,10 +60,9 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
                     c = j.clients.http.connection_get()
-                    r = c.get(url).readlines()
 
-                    data = r[0].decode()
-                    data = j.data.serializers.json.loads(data)["quotes"]
+                    r = c.get(url)
+                    data = j.data.serializers.json.loads(r)["quotes"]
 
                     def get_crypto_to_usd(name):
                         # Currency layer is not very reliable sometimes it timeout we can just skip this for now
