@@ -59,7 +59,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
             if value:
                 cmd += "=%s" % value
 
-        p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        p = j.servers.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
         return p
 
     def stop(self, pid=None, sig=None):

@@ -43,7 +43,7 @@ chown root:root /tmp
 source /sandbox/env.sh
 cd /sandbox
 js_shell "j.builders.runtimes.lua.install(reset=True)"
-js_shell "j.tools.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.markdowndocs.webserver()\'',window ='flist')"
+js_shell "j.servers.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.markdowndocs.webserver()\'',window ='flist')"
 
 echo "Waiting webserver to launch on 8080..."
 TRIALS=0

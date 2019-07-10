@@ -282,7 +282,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             "{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path), overwriteTarget=False
         )
         cmd = "cd {0} && moonc . && lapis server".format(server_path)
-        j.tools.tmux.execute(cmd, reset=False)
+        j.servers.tmux.execute(cmd, reset=False)
 
         if watch:
             watcher = Watcher(self.docsites)
