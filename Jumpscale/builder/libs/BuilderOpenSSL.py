@@ -24,7 +24,8 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
         """
         kosmos 'j.builders.libs.openssl.build()'
         """
-        if not self.tools.exists(self.DIR_BUILD):
+        self.tools.dir_ensure(self._replace("{DIR_BUILD}"))
+        if not self.tools.exists(self.DIR_BUILD + "/openssl"):
             C = """
             set -ex
             cd {DIR_BUILD}
@@ -42,7 +43,7 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
         rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
-        self.tools.dir_ensure(self._replace("{DIR_BUILD}"))
+
         self._write("{DIR_BUILD}/mycompile_all.sh", C)
         self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 
