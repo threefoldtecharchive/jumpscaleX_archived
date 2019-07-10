@@ -153,11 +153,13 @@ else:
     j.application.interactive = True
     n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
     if n.load(die=False) is False:
-        print("ERROR: CANNOT LOAD THE PRIVATE KEY FROM THE FILESYSTEM")
-        j.core.myenv.secret_set()
-        if n.load(die=False) is False:
-            print("there is prob something wrong with private key, OH MY GOD, I HOPE YOU STILL HAVE THE WORDS.")
-            n.configure()
+        j.application.check()
+        # print("ERROR: CANNOT LOAD THE PRIVATE KEY FROM THE FILESYSTEM")
+        # print("")
+        # j.core.myenv.secret_set()
+        # if n.load(die=False) is False:
+        #     print("there is prob something wrong with private key, OH MY GOD, I HOPE YOU STILL HAVE THE WORDS.")
+        #     n.configure()
 
     j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
 

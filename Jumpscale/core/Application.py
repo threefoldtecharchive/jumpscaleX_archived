@@ -419,6 +419,14 @@ class Application(object):
         if generate:
             self.generate()
 
+        try:
+            j.data.nacl.default
+        except Exception as e:
+            if str(e).find("could not find the path of the private key") != -1:
+                print("WARNING:cannot find the private key")
+                j.data.nacl.configure()
+            raise e
+
         def decrypt():
             try:
                 j.data.nacl.default.signingkey
@@ -427,6 +435,8 @@ class Application(object):
             except Exception as e:
                 if str(e).find("jsx check") != -1:
                     print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                    if j.tools.console.askYesNo("Ok to change the stored private key?"):
+                        j.core.myenv.config["SECRET"] = ""
                     j.core.myenv.secret_set()
                     return False
                 raise e

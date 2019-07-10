@@ -57,6 +57,8 @@ def check_branch(IT):
 
 IT = load_install_tools()
 
+IT.MyEnv.interactive = True  # std is interactive
+
 
 def jumpscale_get(die=True):
     # jumpscale need to be available otherwise cannot do
@@ -84,6 +86,7 @@ def _configure(
 ):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
+
     IT.MyEnv.configure(
         basedir=basedir,
         readonly=None,
@@ -109,7 +112,7 @@ def _configure(
 
 
 if not IT.MyEnv.state:
-    # this is needed to make sure we can
+    # this is needed to make sure we can install when nothing has been done yet
     _configure()
 
 # IT.BaseInstaller.base()
@@ -256,7 +259,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--web", is_flag=True, help="also install the web system")
-@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+# @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -271,7 +274,8 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=False, configdir=None):
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
+def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -279,9 +283,8 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=Fal
     if you want to configure other arguments use 'jsx configure ... '
 
     """
-
-    print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)
-    _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
+    # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
+    _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
         # remove the state
@@ -296,7 +299,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_sshagent=Fal
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.db.zdb.install()'" % SANDBOX, showout=True)
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install()'" % SANDBOX, showout=True)
         IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.apps.corex.install()'" % SANDBOX, showout=True)
-    # LETS NOT DO THE FOLLOWING TAKES TOO LONG
+    # LETS NOT DO THE FOLinsLOWING TAKES TOO LONG
     # IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
     print("Jumpscale X installed successfully")
 
