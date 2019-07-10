@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 """
-there are issues when running on console 
+there are issues when running on console
 no need to run, but we leave it here, its a good reference
 """
 
@@ -9,10 +9,10 @@ START_BASH = """
     set -x
 
     if [ "$1" == "kill" ] ; then
-        js_shell 'j.tools.tmux.kill()' || exit 1
+        js_shell 'j.servers.tmux.kill()' || exit 1
         exit 1
     fi
-    
+
     tmux -f /sandbox/cfg/.tmux.conf has-session
     if [ "$?" -eq 1 ] ; then
         echo "no server running need to start"
@@ -20,11 +20,11 @@ START_BASH = """
     else
         echo "tmux session already exists"
     fi
-    
+
     if [ "$1" != "start" ] ; then
         tmux a
     fi
-    
+
     """
 
 

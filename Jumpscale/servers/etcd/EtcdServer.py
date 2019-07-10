@@ -15,7 +15,7 @@ class EtcdServer(j.application.JSBaseClass):
         cmd = j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd")
         if config_file:
             cmd += " --config-file %s" % config_file
-        return j.tools.tmux.execute(cmd, window="etcd", pane="etcd", reset=True)
+        return j.servers.tmux.execute(cmd, window="etcd", pane="etcd", reset=True)
 
     def stop(self, pid=None, sig=None):
         """Stops etcd process

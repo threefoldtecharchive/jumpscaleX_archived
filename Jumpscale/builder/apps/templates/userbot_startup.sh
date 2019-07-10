@@ -10,4 +10,4 @@ cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/userbo
 
 
 kosmos "bcdb = j.data.bcdb.new(name='userbotsettings'); bcdb.models_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models'); model = bcdb.model_get('threebot.user.initialization'); model.new({'name': 'user_initialization', 'token': j.data.idgenerator.generateGUID()}).save()"
-tmux new -d -s main  "export NACL_SECRET=123 ; kosmos 'j.tools.open_publish.default.servers_start()'"
+tmux new -d -s main  "export NACL_SECRET=123 ; kosmos 'j.servers.threebot.default.servers_start()'"

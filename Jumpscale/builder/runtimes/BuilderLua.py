@@ -4,6 +4,9 @@ builder_method = j.builders.system.builder_method
 
 
 class BuilderLua(j.builders.system._BaseClass):
+    """
+    needs openresty and openssl
+    """
 
     NAME = "lua"
 
@@ -63,7 +66,7 @@ class BuilderLua(j.builders.system._BaseClass):
 
         C = """
         luaossl
-        luasec
+        # luasec
         lapis
         moonscript
         lapis-console

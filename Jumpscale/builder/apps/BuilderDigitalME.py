@@ -23,7 +23,10 @@ class BuilderDigitalME(j.builders.system._BaseClass):
 
     @property
     def branch(self):
-        return j.core.installer_jumpscale.branch[0]
+        _, current_digitalme_branch, _ = self._execute(
+            "cd /sandbox/code/github/threefoldtech/digitalmeX/; git branch | grep \* | cut -d ' ' -f2"
+        )
+        return current_digitalme_branch.rstrip("\n")
 
     @builder_method()
     def build(self, reset=False):
@@ -33,7 +36,7 @@ class BuilderDigitalME(j.builders.system._BaseClass):
         will build python & openresty & copy all to the right git sandboxes works for Ubuntu only
         :return:
         """
-        j.builders.runtimes.python.build(reset=reset)
+        j.builders.runtimes.python.build()
         j.builders.runtimes.lua.build()  # will build openresty & lua & openssl
         j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch=self.branch)
 

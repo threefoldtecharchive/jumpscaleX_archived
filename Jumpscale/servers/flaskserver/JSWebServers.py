@@ -6,7 +6,7 @@ JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 class JSWebServers(JSConfigBase):
     def __init__(self):
-        self.__jslocation__ = "j.servers.web"
+        self.__jslocation__ = "j.servers.flask"
 
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
@@ -54,10 +54,10 @@ class JSWebServers(JSConfigBase):
             export LANG=de_DE.utf-8
             export FLASK_DEBUG=1
             export APP_SETTINGS=project.server.config.DevelopmentConfig
-            js_web start -i $instance -d    
+            js_web start -i $instance -d
             """
             cmd = cmd.replace("$instance", instance)
-            j.tools.tmux.execute(
+            j.servers.tmux.execute(
                 cmd, session="main", window=instance, pane="main", session_reset=False, window_reset=True
             )
 

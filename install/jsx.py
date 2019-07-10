@@ -12,7 +12,7 @@ import os
 os.environ["LC_ALL"] = "en_US.UTF-8"
 
 
-DEFAULT_BRANCH = "development"
+DEFAULT_BRANCH = "development_jumpscale"
 
 
 def load_install_tools():
@@ -112,7 +112,7 @@ if not IT.MyEnv.state:
     # this is needed to make sure we can
     _configure()
 
-IT.BaseInstaller.base()
+# IT.BaseInstaller.base()
 
 
 @click.group()

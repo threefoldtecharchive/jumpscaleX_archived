@@ -24,7 +24,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
     def cmd(self):
         if self._cmd == None:
             assert j.core.isSandbox
-            self._cmd = j.tools.tmux.cmd_get(
+            self._cmd = j.servers.tmux.cmd_get(
                 name="openresty",
                 window="digitalme",
                 pane="p21",

@@ -446,7 +446,14 @@ class Application(object):
                 if j.tools.console.askYesNo("Ok to delete this metadata, will prob be rebuild"):
                     j.sal.fs.remove(j.core.tools.text_replace("{DIR_CFG}/bcdb_config"))
                     j.application.bcdb_system
-        j.data.bcdb.index_rebuild()
+        try:
+            j.data.bcdb.index_rebuild()
+        except Exception as e:
+            print(e)
+            print("ERROR:COULD NOT RE-INDEX THE BCDB, DO YOU WANT TO ERASE THE BCDB: DANGER DANGER ...")
+            if j.tools.console.askYesNo("Ok to delete the BCDB? DANGER !!!", default=False):
+                j.sal.process.execute("rm -rf /sandbox/var/bcdb")
+                j.data.bcdb.index_rebuild()
 
     def generate(self, path=None):
         j = self._j

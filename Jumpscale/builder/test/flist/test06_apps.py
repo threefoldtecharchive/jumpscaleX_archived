@@ -13,6 +13,7 @@ class Apps_TestCases(BaseTest):
         skipped_flists = {
             "hub": "https://github.com/threefoldtech/jumpscaleX/issues/669",
             "odoo": "https://github.com/threefoldtech/jumpscaleX/issues/676",
+            "digitalme": "https://github.com/threefoldtech/jumpscaleX/issues/675",
         }
         if flist in skipped_flists:
             self.skipTest(skipped_flists[flist])

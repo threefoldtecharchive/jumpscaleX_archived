@@ -86,7 +86,7 @@ class Tmux(j.application.JSBaseClass):
 
     def kill(self):
         """
-        kosmos 'j.tools.tmux.kill()'
+        kosmos 'j.servers.tmux.kill()'
         """
         if (
             len(j.sal.process.getPidsByFilter("tmux")) == 1
@@ -131,7 +131,7 @@ class Tmux(j.application.JSBaseClass):
         ```
         env={}
         env["color"]="blue"
-        cmd = j.tools.tmux.cmd_get(name="test",pane="p21",cmd="ls /", env=env,stopcmd="killall...",process_strings=[])
+        cmd = j.servers.tmux.cmd_get(name="test",pane="p21",cmd="ls /", env=env,stopcmd="killall...",process_strings=[])
         cmd.stop()
         cmd.start()
         ```
@@ -218,7 +218,7 @@ class Tmux(j.application.JSBaseClass):
     def window_multi_get(self, window_name="multi", reset=False):
         """
 
-        kosmos 'j.tools.tmux.window_multi_get()'
+        kosmos 'j.servers.tmux.window_multi_get()'
 
         :param window_name:
         :param reset:
@@ -249,7 +249,7 @@ class Tmux(j.application.JSBaseClass):
 
     def test(self):
         """
-        kosmos 'j.tools.tmux.test()'
+        kosmos 'j.servers.tmux.test()'
 
         :return:
         """
@@ -296,11 +296,11 @@ class Tmux(j.application.JSBaseClass):
 
     def test_multi(self):
         """
-        kosmos 'j.tools.tmux.test_multi()'
+        kosmos 'j.servers.tmux.test_multi()'
 
         :return:
         """
-        j.tools.tmux.panes_multi_get()
+        j.servers.tmux.panes_multi_get()
 
         cmd = self.cmd_get(name="htop", window="multi", pane="p11", cmd="htop")
         cmd.start()

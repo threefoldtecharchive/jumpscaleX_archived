@@ -41,5 +41,5 @@ some shortcuts
 
 ```python
 #when only 1 pane no need to specify
-j.tools.tmux.execute(cmd="ls /", session='main', window='main')
+j.servers.tmux.execute(cmd="ls /", session='main', window='main')
 ```

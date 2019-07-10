@@ -512,6 +512,7 @@ class BuilderBaseClass(BaseClass):
         return []
 
     def start(self):
+        self.install()
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 

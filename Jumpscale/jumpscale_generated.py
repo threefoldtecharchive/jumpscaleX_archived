@@ -13,14 +13,36 @@ class JSGroup():
 
 
 
+class group_world(JSGroup):
+    def __init__(self):
+        
+        self._system = None
+        self._hypervisor = None
+
+    
+    @property
+    def system(self):
+        if self._system is None:
+            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
+            self._system =  WorldSystem()
+        return self._system
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
+            self._hypervisor =  CoordinatorHypervisor()
+        return self._hypervisor
+
+j.world = group_world()
+j.core._groups["world"] = j.world
+
+
 class group_tools(JSGroup):
     def __init__(self):
         
-        self._tfbot = None
         self._kosmos = None
         self._threefold_directory = None
         self._threefoldgrid = None
-        self._open_publish = None
         self._timer = None
         self._executorLocal = None
         self._executor = None
@@ -68,12 +90,6 @@ class group_tools(JSGroup):
 
     
     @property
-    def tfbot(self):
-        if self._tfbot is None:
-            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            self._tfbot =  TFBotFactory()
-        return self._tfbot
-    @property
     def kosmos(self):
         if self._kosmos is None:
             from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
@@ -91,12 +107,6 @@ class group_tools(JSGroup):
             from DigitalMe.tools.threefolddirectory._archive.FarmerFactory import FarmerFactory
             self._threefoldgrid =  FarmerFactory()
         return self._threefoldgrid
-    @property
-    def open_publish(self):
-        if self._open_publish is None:
-            from DigitalMe.servers.threebot.OpenPublishFactory import OpenPublishFactory
-            self._open_publish =  OpenPublishFactory()
-        return self._open_publish
     @property
     def timer(self):
         if self._timer is None:
@@ -366,55 +376,39 @@ j.tools = group_tools()
 j.core._groups["tools"] = j.tools
 
 
-class group_world(JSGroup):
-    def __init__(self):
-        
-        self._system = None
-        self._hypervisor = None
-
-    
-    @property
-    def system(self):
-        if self._system is None:
-            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
-            self._system =  WorldSystem()
-        return self._system
-    @property
-    def hypervisor(self):
-        if self._hypervisor is None:
-            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
-            self._hypervisor =  CoordinatorHypervisor()
-        return self._hypervisor
-
-j.world = group_world()
-j.core._groups["world"] = j.world
-
-
 class group_servers(JSGroup):
     def __init__(self):
         
+        self._openresty = None
         self._graphql = None
-        self._rack = None
+        self._threebot = None
         self._myjobs = None
         self._gundb = None
         self._gedis = None
+        self._rack = None
         self._raftserver = None
         self._dns = None
         self._openresty = None
         self._corex = None
         self._sockexec = None
         self._errbot = None
-        self._web = None
         self._tmux = None
         self._zdb = None
-        self._jsrun = None
         self._capacity = None
         self._startupcmd = None
+        self._flask = None
         self._sonic = None
         self._mail_forwarder = None
         self._etcd = None
+        self._sanic = None
 
     
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            from DigitalMe.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            self._openresty =  OpenRestyFactory()
+        return self._openresty
     @property
     def graphql(self):
         if self._graphql is None:
@@ -422,11 +416,11 @@ class group_servers(JSGroup):
             self._graphql =  GraphQLFactory()
         return self._graphql
     @property
-    def rack(self):
-        if self._rack is None:
-            from DigitalMe.servers.GeventRack.ServerRackFactory import ServerRackFactory
-            self._rack =  ServerRackFactory()
-        return self._rack
+    def threebot(self):
+        if self._threebot is None:
+            from DigitalMe.servers.threebot.OpenPublishFactory import OpenPublishFactory
+            self._threebot =  OpenPublishFactory()
+        return self._threebot
     @property
     def myjobs(self):
         if self._myjobs is None:
@@ -445,6 +439,12 @@ class group_servers(JSGroup):
             from DigitalMe.servers.gedis.GedisFactory import GedisFactory
             self._gedis =  GedisFactory()
         return self._gedis
+    @property
+    def rack(self):
+        if self._rack is None:
+            from DigitalMe.servers.gevent_rack.ServerRackFactory import ServerRackFactory
+            self._rack =  ServerRackFactory()
+        return self._rack
     @property
     def raftserver(self):
         if self._raftserver is None:
@@ -482,12 +482,6 @@ class group_servers(JSGroup):
             self._errbot =  ErrBotFactory()
         return self._errbot
     @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            self._web =  JSWebServers()
-        return self._web
-    @property
     def tmux(self):
         if self._tmux is None:
             from Jumpscale.servers.tmux.Tmux import Tmux
@@ -500,12 +494,6 @@ class group_servers(JSGroup):
             self._zdb =  ZDBServer()
         return self._zdb
     @property
-    def jsrun(self):
-        if self._jsrun is None:
-            from Jumpscale.servers.jsrun.JSRun import JSRun
-            self._jsrun =  JSRun()
-        return self._jsrun
-    @property
     def capacity(self):
         if self._capacity is None:
             from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
@@ -517,6 +505,12 @@ class group_servers(JSGroup):
             from Jumpscale.servers.startupcmd.StartupCMDFactory import StartupCMDFactory
             self._startupcmd =  StartupCMDFactory()
         return self._startupcmd
+    @property
+    def flask(self):
+        if self._flask is None:
+            from Jumpscale.servers.flaskserver.JSWebServers import JSWebServers
+            self._flask =  JSWebServers()
+        return self._flask
     @property
     def sonic(self):
         if self._sonic is None:
@@ -535,6 +529,12 @@ class group_servers(JSGroup):
             from Jumpscale.servers.etcd.EtcdServer import EtcdServer
             self._etcd =  EtcdServer()
         return self._etcd
+    @property
+    def sanic(self):
+        if self._sanic is None:
+            from Jumpscale.servers.sanic.SanicFactory import SanicFactory
+            self._sanic =  SanicFactory()
+        return self._sanic
 
 j.servers = group_servers()
 j.core._groups["servers"] = j.servers
