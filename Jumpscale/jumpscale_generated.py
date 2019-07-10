@@ -519,8 +519,6 @@ class group_tools(JSGroup):
         self._threefold_directory = None
         self._threefoldgrid = None
         self._kosmos = None
-        self._tfbot = None
-        self._open_publish = None
         self._sandboxer = None
         self._fixer = None
         self._logger = None
@@ -584,18 +582,6 @@ class group_tools(JSGroup):
             from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
             self._kosmos =  Kosmos()
         return self._kosmos
-    @property
-    def tfbot(self):
-        if self._tfbot is None:
-            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            self._tfbot =  TFBotFactory()
-        return self._tfbot
-    @property
-    def open_publish(self):
-        if self._open_publish is None:
-            from DigitalMe.servers.threebot.OpenPublishFactory import OpenPublishFactory
-            self._open_publish =  OpenPublishFactory()
-        return self._open_publish
     @property
     def sandboxer(self):
         if self._sandboxer is None:
@@ -1088,39 +1074,41 @@ j.core._groups["data"] = j.data
 class group_servers(JSGroup):
     def __init__(self):
         
-        self._rack = None
         self._gedis = None
+        self._openresty = None
         self._gundb = None
         self._myjobs = None
         self._raftserver = None
         self._dns = None
+        self._threebot = None
+        self._rack = None
         self._sockexec = None
+        self._flask = None
         self._errbot = None
         self._openresty = None
         self._corex = None
         self._startupcmd = None
-        self._web = None
         self._etcd = None
         self._tmux = None
+        self._sanic = None
         self._mail_forwarder = None
         self._capacity = None
         self._sonic = None
         self._zdb = None
-        self._jsrun = None
 
     
-    @property
-    def rack(self):
-        if self._rack is None:
-            from DigitalMe.servers.GeventRack.ServerRackFactory import ServerRackFactory
-            self._rack =  ServerRackFactory()
-        return self._rack
     @property
     def gedis(self):
         if self._gedis is None:
             from DigitalMe.servers.gedis.GedisFactory import GedisFactory
             self._gedis =  GedisFactory()
         return self._gedis
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            from DigitalMe.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            self._openresty =  OpenRestyFactory()
+        return self._openresty
     @property
     def gundb(self):
         if self._gundb is None:
@@ -1146,11 +1134,29 @@ class group_servers(JSGroup):
             self._dns =  DNSServerFactory()
         return self._dns
     @property
+    def threebot(self):
+        if self._threebot is None:
+            from DigitalMe.servers.threebot.OpenPublishFactory import OpenPublishFactory
+            self._threebot =  OpenPublishFactory()
+        return self._threebot
+    @property
+    def rack(self):
+        if self._rack is None:
+            from DigitalMe.servers.gevent_rack.ServerRackFactory import ServerRackFactory
+            self._rack =  ServerRackFactory()
+        return self._rack
+    @property
     def sockexec(self):
         if self._sockexec is None:
             from Jumpscale.servers.sockexec.SockExec import SockExec
             self._sockexec =  SockExec()
         return self._sockexec
+    @property
+    def flask(self):
+        if self._flask is None:
+            from Jumpscale.servers.flaskserver.JSWebServers import JSWebServers
+            self._flask =  JSWebServers()
+        return self._flask
     @property
     def errbot(self):
         if self._errbot is None:
@@ -1176,12 +1182,6 @@ class group_servers(JSGroup):
             self._startupcmd =  StartupCMDFactory()
         return self._startupcmd
     @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            self._web =  JSWebServers()
-        return self._web
-    @property
     def etcd(self):
         if self._etcd is None:
             from Jumpscale.servers.etcd.EtcdServer import EtcdServer
@@ -1193,6 +1193,12 @@ class group_servers(JSGroup):
             from Jumpscale.servers.tmux.Tmux import Tmux
             self._tmux =  Tmux()
         return self._tmux
+    @property
+    def sanic(self):
+        if self._sanic is None:
+            from Jumpscale.servers.sanic.SanicFactory import SanicFactory
+            self._sanic =  SanicFactory()
+        return self._sanic
     @property
     def mail_forwarder(self):
         if self._mail_forwarder is None:
@@ -1217,12 +1223,6 @@ class group_servers(JSGroup):
             from Jumpscale.servers.zdb.ZDBServer import ZDBServer
             self._zdb =  ZDBServer()
         return self._zdb
-    @property
-    def jsrun(self):
-        if self._jsrun is None:
-            from Jumpscale.servers.jsrun.JSRun import JSRun
-            self._jsrun =  JSRun()
-        return self._jsrun
 
 j.servers = group_servers()
 j.core._groups["servers"] = j.servers
