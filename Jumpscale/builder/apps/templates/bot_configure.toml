@@ -7,4 +7,4 @@ sshagent_use = false
 
 [[instruction]]
 instruction_method = "j.servers.tmux.execute"
-cmd = 'source /sandbox/env.sh && kosmos "j.tools.open_publish.default.servers_start()"'
+cmd = 'source /sandbox/env.sh && kosmos "j.servers.threebot.default.servers_start()"'
