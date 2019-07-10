@@ -27,6 +27,6 @@ class Rexplorer(j.application.JSBaseClass):
         :return:
         """
         cmd = "cd /tmp;rexplorer -f 'threefold:*'"
-        j.tools.tmux.execute(
+        j.servers.tmux.execute(
             cmd, session="main", window="rexplorer", pane="rexplorer", session_reset=False, window_reset=True
         )

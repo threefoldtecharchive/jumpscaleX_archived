@@ -73,7 +73,7 @@ class BuilderSockexec(j.builders.system._BaseClass):
     #
     # def stop(self):
     #     # killing the daemon
-    #     pane = j.tools.tmux.pane_get(self.NAME)
+    #     pane = j.servers.tmux.pane_get(self.NAME)
     #     pane.kill()
     #
     # @builder_method()
