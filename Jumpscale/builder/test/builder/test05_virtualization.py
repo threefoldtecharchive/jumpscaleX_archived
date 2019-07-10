@@ -32,4 +32,3 @@ class VirtualizationTestCases(BaseTest):
         self.info(" * check that {} server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
-

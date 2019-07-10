@@ -3,6 +3,7 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
+
 class Web_TestCases(BaseTest):
     @parameterized.expand([("caddy", "caddy"), ("traefik", "traefik"), ("nginx", "nginx"), ("openresty", "openresty")])
     def test_web_flists(self, flist, binary):
@@ -23,4 +24,3 @@ class Web_TestCases(BaseTest):
         self.deploy_flist_container("{}".format(flist))
         self.info("Check that {} flist works.".format(flist))
         self.assertIn("Usage: ", self.check_container_flist("/sandbox/bin/{} -h".format(binary)))
-

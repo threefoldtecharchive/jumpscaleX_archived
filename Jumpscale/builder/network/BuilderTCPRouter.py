@@ -15,6 +15,7 @@ port     = 6379
 refresh  = 10
 """
 
+
 class BuilderTCPRouter(BuilderGolangTools):
     NAME = "tcprouter"
 
@@ -52,11 +53,13 @@ class BuilderTCPRouter(BuilderGolangTools):
     def sandbox(self):
         j.builders.db.redis.sandbox()
         self.tools.copyTree(j.builders.db.redis.DIR_SANDBOX, self.DIR_SANDBOX)
-        self.tools.file_copy(self._replace("{DIR_BUILD}/bin/tcprouter"),
-                             self._replace("{DIR_SANDBOX}/sandbox/bin/tcprouter"))
+        self.tools.file_copy(
+            self._replace("{DIR_BUILD}/bin/tcprouter"), self._replace("{DIR_SANDBOX}/sandbox/bin/tcprouter")
+        )
 
-        self.tools.file_copy(self._replace("/sandbox/cfg/router.toml"),
-                             self._replace("{DIR_SANDBOX}/sandbox/cfg/router.toml"))
+        self.tools.file_copy(
+            self._replace("/sandbox/cfg/router.toml"), self._replace("{DIR_SANDBOX}/sandbox/cfg/router.toml")
+        )
 
     @property
     def startup_cmds(self):

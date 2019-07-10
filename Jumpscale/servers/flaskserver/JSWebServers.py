@@ -6,7 +6,7 @@ JSConfigBase = j.application.JSFactoryBaseClass
 
 class JSWebServers(JSConfigBase):
     def __init__(self):
-        self.__jslocation__ = "j.servers.web"
+        self.__jslocation__ = "j.servers.flask"
 
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
