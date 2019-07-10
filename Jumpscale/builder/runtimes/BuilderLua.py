@@ -284,3 +284,36 @@ class BuilderLua(j.builders.system._BaseClass):
         rm -rf /tmp/luarocks*
         """
         self._execute(C)
+
+    @property
+    def startup_cmds(self):
+        cmd = """
+        rm -rf {DIR_TEMP}/lapis_test
+        mkdir -p {DIR_TEMP}/lapis_test 
+        cd {DIR_TEMP}/lapis_test
+        lapis --lua new
+        lapis server
+        """
+        cmd = self._replace(cmd)
+        cmds = [j.servers.startupcmd.get("test_openresty", cmd_start=cmd, ports=[8080], process_strings_regex="^nginx")]
+        return cmds
+
+    def test(self):
+        """
+        kosmos 'j.builders.runtimes.lua.test()'
+
+        server is running on port 8080
+
+        """
+
+        if self.running():
+            self.stop()
+        self.start()
+        self._log_info("openresty is running on port 8080")
+        # we now have done a tcp test, lets do a http client connection
+        out = j.clients.http.get("http://localhost:8080")
+
+        assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
+        self.stop()
+
+        self._log_info("openresty test was ok,no longer running")
