@@ -1,0 +1,5 @@
+@url = tfchain.reservation.extend
+type = "extension" (S)
+duration = (I)
+transaction_id = (S)
+email = (email)

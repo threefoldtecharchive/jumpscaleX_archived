@@ -31,7 +31,7 @@ _EXPLORER_NODES = {
 _CHAIN_NETWORK_TYPES = sorted(["STD", "TEST", "DEV"])
 
 
-class TFChainClient(j.application.JSBaseConfigParentClass):
+class TFChainClient(j.application.JSBaseConfigClass):
     """
     Tfchain client object
     """
