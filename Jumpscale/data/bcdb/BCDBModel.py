@@ -428,10 +428,13 @@ class BCDBModel(j.application.JSBaseClass):
                 return None
 
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
+
+        if obj._schema.url == self.schema.url:
+            obj = self._triggers_call(obj=obj, action="get")
+        else:
+            raise RuntimeError("could not find obj with id:%s in your model" % obj_id)
+
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
-
-        obj = self._triggers_call(obj=obj, action="get")
-
         return obj
 
     def destroy(self, nid=1):
