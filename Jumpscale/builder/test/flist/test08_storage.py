@@ -3,7 +3,6 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
-
 class Storage_TestCases(BaseTest):
     @parameterized.expand(
         [("minio", "minio"), 
