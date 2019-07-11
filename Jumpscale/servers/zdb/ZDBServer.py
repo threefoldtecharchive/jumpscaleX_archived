@@ -12,12 +12,26 @@ class ZDBServer(j.application.JSBaseClass):
         self.configure()
         #
 
-    def configure(self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456"):
+    def configure(
+        self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456", executor="tmux"
+    ):
+        """
+
+        :param name:
+        :param addr:
+        :param port:
+        :param datadir:
+        :param mode:
+        :param adminsecret:
+        :param executor: tmux or corex
+        :return:
+        """
         self.name = name
         self.addr = addr
         self.port = port
         self.mode = mode
         self.adminsecret = adminsecret
+        self.executor = executor
 
     def isrunning(self):
         idir = "%s/index/" % (self.datadir)
@@ -36,7 +50,7 @@ class ZDBServer(j.application.JSBaseClass):
 
             j.shell()
 
-    def start(self, destroydata=False):
+    def start(self, destroydata=False, corex=False):
         """
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
@@ -70,6 +84,10 @@ class ZDBServer(j.application.JSBaseClass):
     @property
     def startupcmd(self):
 
+        if self.executor == "corex":
+            j.servers.corex.default.check()
+            corex = j.servers.corex.default.client
+
         idir = "%s/index/" % (self.datadir)
         ddir = "%s/data/" % (self.datadir)
         j.sal.fs.createDir(idir)
@@ -86,16 +104,9 @@ class ZDBServer(j.application.JSBaseClass):
             self.mode,
             self.adminsecret,
         )
-        return j.servers.startupcmd.get(name="zdb", cmd_start=cmd, path="/tmp", ports=[self.port])
-
-        # tmux_window = "digitalme"
-        # tmux_panel = "p13"
-        #
-        # j.servers.tmux.window_digitalme_get()
-        # return j.servers.tmux.cmd_get(name="zdb_%s"%self.name,
-        #             window_name=tmux_window,pane_name=tmux_panel,
-        #             cmd=cmd,path="/tmp",ports=[self.port],
-        #             process_strings = ["wwwww:"])
+        return j.servers.startupcmd.get(
+            name="zdb", cmd_start=cmd, path="/tmp", ports=[self.port], executor=self.executor
+        )
 
     def destroy(self):
         self.stop()

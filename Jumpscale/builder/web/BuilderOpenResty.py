@@ -39,7 +39,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
             --pid-path="/sandbox/var/pid/openresty.pid" \
             --error-log-path="/sandbox/var/log/openresty.log" \
             --lock-path="/sandbox/var/nginx.lock" \
-            --conf-path="/sandbox/cfg/openresty.cfg" \
+            --conf-path="/sandbox/cfg/nginx/openresty.cfg" \
             -j8
         make -j8
         make install
