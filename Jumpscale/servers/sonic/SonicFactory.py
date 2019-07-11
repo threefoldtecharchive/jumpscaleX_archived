@@ -19,5 +19,26 @@ class SonicFactory(JSConfigs):
     @property
     def default(self):
         if not self._default:
-            self._default = self.get("default")
+            self._default = self.new(name="default")
         return self._default
+
+    def install(self, reset=True):
+        """
+        kosmos 'j.servers.sonic.build()'
+        """
+        j.builders.apps.sonic.install(reset=reset)
+
+    def test(self):
+        """
+        kosmos 'j.servers.sonic.test()'
+        :return:
+        """
+
+        # TODO: start sonic and test sonic through the client
+
+        s = self.new("test")
+        s.start()
+
+        cl = s.default_client
+
+        pass

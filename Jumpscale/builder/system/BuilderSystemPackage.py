@@ -113,19 +113,19 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
             if j.core.platformtype.myplatform.platform_is_ubuntu:
                 cmd = "%s install %s -y" % (CMD_APT_GET, package)
 
-            elif j.builders.tools.platform_is_alpine:
-                cmd = "apk add %s" % package
+            # elif j.builders.tools.platform_is_alpine:
+            #     cmd = "apk add %s" % package
 
-            elif j.builders.tools.platform_is_arch:
-                if package.startswith("python3"):
-                    package = "extra/python"
-
-                # ignore
-                for unsupported in ["libpython3.5-dev", "libffi-dev", "build-essential", "libpq-dev", "libsqlite3-dev"]:
-                    if unsupported in package:
-                        package = "devel"
-
-                cmd = "pacman -S %s  --noconfirm\n" % package
+            # elif j.builders.tools.platform_is_arch:
+            #     if package.startswith("python3"):
+            #         package = "extra/python"
+            #
+            #     # ignore
+            #     for unsupported in ["libpython3.5-dev", "libffi-dev", "build-essential", "libpq-dev", "libsqlite3-dev"]:
+            #         if unsupported in package:
+            #             package = "devel"
+            #
+            #     cmd = "pacman -S %s  --noconfirm\n" % package
 
             elif j.core.platformtype.myplatform.platform_is_osx:
                 for unsupported in [

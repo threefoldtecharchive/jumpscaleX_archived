@@ -145,6 +145,16 @@ class CustomLink:
         assert not l.repo
         assert l.path == "docs/test.md"
 
+    def __str__(self):
+
+        if not self.repo:
+            out = "custom link: %s" % self.path
+        else:
+            out = "custom link: %s(%s):%s" % (self.repo, self.branch, self.path)
+        return out
+
+    __repr__ = __str__
+
 
 class Linker:
     HOST = None

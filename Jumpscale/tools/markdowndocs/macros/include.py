@@ -163,8 +163,6 @@ def include(
     j = current_docsite._j
     custom_link = CustomLink(link)
 
-    j.shell()
-
     if docsite_name:
         docsite = j.tools.markdowndocs.docsite_get(docsite_name)
     else:

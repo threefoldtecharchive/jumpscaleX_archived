@@ -50,10 +50,4 @@ class SonicServer(JSConfigClient):
     @property
     def startupcmd(self):
         cmd = "sonic -c {}".format(self.config_path)
-        return j.servers.startupcmd.get(name="Sonic", cmd=cmd)
-
-    def build(self, reset=True):
-        """
-        kosmos 'j.servers.sonic.build()'
-        """
-        j.builders.apps.sonic.install(reset=reset)
+        return j.servers.startupcmd.get(name="Sonic", cmd_start=cmd)
