@@ -102,6 +102,9 @@ class BuilderRipple(JSBASE):
 
     @builder_method()
     def test(self):
-        return_code, _, _ = self._execute("rippled -u")
-        assert return_code == 0
+        if self.running():
+            self.stop()
+
+        self.start()
+        assert self.running()
         print("TEST OK")
