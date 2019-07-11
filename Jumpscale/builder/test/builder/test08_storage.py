@@ -12,7 +12,6 @@ class StorageTestCases(BaseTest):
         *Test db builers sandbox*
         """
         skipped_builders = {
-            "minio": "https://github.com/threefoldtech/jumpscaleX/issues/657",
             "s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/671",
         }
         if builder in skipped_builders:
