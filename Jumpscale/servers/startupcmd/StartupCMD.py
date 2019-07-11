@@ -108,7 +108,12 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if ports:
             for port in self.ports:
-                p = j.sal.process.getProcessByPort(port)
+                try:
+                    p = j.sal.process.getProcessByPort(port)
+                except Exception as e:
+                    if str(e).find("it's a zombie") != -1:
+                        continue
+
                 if p and p.pid:
                     res.append(p)
                     pids_done.append(p.pid)

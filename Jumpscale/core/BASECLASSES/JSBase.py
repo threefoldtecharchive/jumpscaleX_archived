@@ -724,7 +724,7 @@ class JSBase:
 
         out += "{RESET}"
 
-        out = j.core.tools.text_replace(out)
+        out = j.core.tools.text_replace(out, ignore_error=True)
         print(out)
 
         # TODO: *1 dirty hack, the ansi codes are not printed, need to check why

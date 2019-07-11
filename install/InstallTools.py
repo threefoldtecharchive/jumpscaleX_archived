@@ -2305,7 +2305,7 @@ class MyEnv:
         if reset is False and MyEnv.__init:
             return
 
-        print("MYENV INIT")
+        # print("MYENV INIT")
 
         args = Tools.cmd_args_get()
 

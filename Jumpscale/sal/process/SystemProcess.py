@@ -530,6 +530,8 @@ class SystemProcess(j.application.JSBaseClass):
                     cmdline = process.cmdline()
                 except psutil.NoSuchProcess:
                     cmdline = None
+                except psutil.AccessDenied:
+                    cmdline = None
                 if cmdline:
                     name = " ".join(cmdline)
                     for r in regex_list:

@@ -222,7 +222,7 @@ class SystemFS(j.application.JSBaseClass):
 
                     if deletefirst and self.exists(dstname):
                         if self.isDir(dstname, False):
-                            self.removeDirTree(dstname)
+                            self.remove(dstname)
                         elif self.isLink(dstname):
                             self.unlink(dstname)
 
@@ -989,7 +989,7 @@ class SystemFS(j.application.JSBaseClass):
             if self.isLink(target):
                 self.remove(target)
             elif self.isDir(target):
-                self.removeDirTree(target)
+                self.remove(target)
             else:
                 self.remove(target)
 
@@ -1174,7 +1174,7 @@ class SystemFS(j.application.JSBaseClass):
             return
         if overwrite and self.exists(newname):
             if self.isDir(newname):
-                self.removeDirTree(newname)
+                self.remove(newname)
             else:
                 self.remove(newname)
         os.rename(dirname, newname)
@@ -1711,7 +1711,7 @@ class SystemFS(j.application.JSBaseClass):
         @param destinationpath: path of to destiniation dir, sourcefile will end up uncompressed in destination dir
         """
         if removeDestinationdir:
-            self.removeDirTree(destinationdir)
+            self.remove(destinationdir)
         if not self.exists(destinationdir):
             self.createDir(destinationdir)
         import tarfile

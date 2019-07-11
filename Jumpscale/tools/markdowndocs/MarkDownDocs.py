@@ -274,6 +274,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         :param sonic_server: NOT USED YET #TODO:*1
         :return:
         """
+        raise RuntimeError("no longer ok, need to use j.servers.openresty")
         url = "https://github.com/threefoldtech/OpenPublish"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"

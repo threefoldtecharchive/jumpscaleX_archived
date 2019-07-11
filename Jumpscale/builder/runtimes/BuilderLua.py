@@ -11,19 +11,21 @@ class BuilderLua(j.builders.system._BaseClass):
     NAME = "lua"
 
     @builder_method()
-    def build(self, reset=False):
+    def build(self, reset=False, deps_reset=False):
         """
-        kosmos 'j.builders.runtimes.lua.build()'
+        kosmos 'j.builders.runtimes.lua.build(reset=True)'
         :param install:
         :return:
         """
         if j.core.platformtype.myplatform.platform_is_ubuntu:
-            j.builders.system.package.install(["libsqlite3-dev"])
+            j.builders.system.package.install(
+                ["libsqlite3-dev", "libpcre3-dev", "libssl-dev", "perl", "make", "build-essential"]
+            )
 
-        j.builders.web.openresty.build(reset=reset)
-        j.builders.libs.openssl.build(reset=reset)
+        j.builders.web.openresty.build(reset=deps_reset)
+        # j.builders.libs.openssl.build(reset=deps_reset)  #DOES NOT WORK FOR NOW, maybe wrong version of openssl?
 
-        url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
+        url = "https://luarocks.org/releases/luarocks-3.1.3.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
         self.tools.file_download(
@@ -38,7 +40,7 @@ class BuilderLua(j.builders.system._BaseClass):
         cp {DIR_BUILD}/luarocks/luarocks /sandbox/bin/luarocks
         """
         # set showout to False to avoid text_replace of output log
-        self._execute(C, showout=False)
+        self._execute(C, showout=True)
 
         self.lua_rocks_install()
 
@@ -46,9 +48,18 @@ class BuilderLua(j.builders.system._BaseClass):
         self._log_info("lua_rock_install: %s" % name)
         if self._done_check("lua_rock_install_%s" % name):
             return
-
-        C = "luarocks install $NAME"
+        if j.core.platformtype.myplatform.platform_is_osx:
+            C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR "
+            C = C.replace("$CRYPTODIR", "/usr/local/opt/openssl")
+        else:
+            # C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR"
+            # C = "luarocks install lapis CRYPTO_DIR=/sandbox OPENSSL_DIR=/sandbox"
+            C = "luarocks install $NAME "
+            C = C.replace("$CRYPTODIR", "/sandbox")
+        C += "LUA_INCDIR=/sandbox/openresty/luajit/include/luajit-2.1 LUA_LIBDIR=/sandbox/openresty/luajit/lib/"
         C = C.replace("$NAME", name)
+        # example crypto dir: /usr/local/openresty/openssl/
+
         self._execute(C)
 
         self._done_set("lua_rock_install_%s" % name)
@@ -60,9 +71,9 @@ class BuilderLua(j.builders.system._BaseClass):
         :return:
         """
 
-        if j.core.platformtype.myplatform.platform_is_ubuntu:
-            # j.builders.system.package.mdupdate()
-            j.builders.system.package.ensure("geoip-database,libgeoip-dev")
+        # if j.core.platformtype.myplatform.platform_is_ubuntu:
+        #     # j.builders.system.package.mdupdate()
+        #     j.builders.system.package.ensure("geoip-database,libgeoip-dev")
 
         C = """
         luaossl
@@ -83,7 +94,7 @@ class BuilderLua(j.builders.system._BaseClass):
         lua-resty-redis-connector
         # lua-resty-openidc
 
-        LuaRestyRedis
+        # LuaRestyRedis
 
         # lua-capnproto
         lua-toml
