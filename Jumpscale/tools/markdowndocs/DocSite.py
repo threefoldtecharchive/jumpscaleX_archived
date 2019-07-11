@@ -117,7 +117,6 @@ class DocSite(j.application.JSBaseClass):
         :return: a path or a full link
         :rtype: str
         """
-        j.shell()
         if custom_link.is_url or not self.git:
             # as-is
             return custom_link.path
