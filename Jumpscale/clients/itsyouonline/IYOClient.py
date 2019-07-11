@@ -70,7 +70,7 @@ class IYOClient(j.application.JSBaseConfigClass):
     def oauth2_client(self):
         """Generated itsyou.online client oauth2 client"""
         if self._oauth2_client is None:
-            self._oauth2_client = self.client.Oauth2ClientOauth_2_0  # WEIRD NAME???
+            self._oauth2_client = self.client.oauth2_client_oauth_2_0  # WEIRD NAME???
         return self._oauth2_client
 
     def jwt_get(self, name="default", refreshable=True, validity=2592000, scope=None, die=False, reset=False):
@@ -87,7 +87,7 @@ class IYOClient(j.application.JSBaseConfigClass):
         if self.application_id == "" or self.secret == "":
             raise RuntimeError("please go to j.clients.itsyouonline.get() to get a new client")
         x = 0
-        for item in self.data.jwt_list:
+        for item in self.jwt_list:
             if item.name == name:
                 if reset:
                     self.data.jwt_list.pop(x)
@@ -99,7 +99,7 @@ class IYOClient(j.application.JSBaseConfigClass):
         if die:
             raise RuntimeError("could not find jwt with name:%s" % name)
 
-        jwt_obj = self.data.jwt_list.new()
+        jwt_obj = self.jwt_list.new()
         jwt_obj.name = name
         jwt_obj.refreshable = refreshable
         jwt_obj.scope = scope
