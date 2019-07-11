@@ -1,7 +1,7 @@
-    import unittest
-    from Jumpscale import j
-    from .base_test import BaseTest
-    from parameterized import parameterized
+import unittest
+from Jumpscale import j
+from .base_test import BaseTest
+from parameterized import parameterized
 
 
 class Storage_TestCases(BaseTest):
