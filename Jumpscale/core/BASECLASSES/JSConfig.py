@@ -5,13 +5,15 @@ from .JSBase import JSBase
 classes who use JSXObject for data storage but provide nice interface to enduser
 """
 
+from .Attr import Attr
 
-class JSConfig(JSBase):
+
+class JSConfig(JSBase, Attr):
     def _init_pre(self, jsxobject=None, datadict={}, name=None):
 
         self._triggers = []
 
-        if self._parent and hasattr(self._parent, "_model"):
+        if self._parent and "_model" in self._parent.__dict__:
             self._model = self._parent._model
         else:
             # is a fall back for situation we want to use a JSConfig class without factory JSConfigs
@@ -46,6 +48,10 @@ class JSConfig(JSBase):
     #     """
     #     JSBase._obj_cache_reset(self)
     #     self.__dict__["_data"] = None
+
+    def __init_class_post(self):
+        if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
+            raise RuntimeError("combination not allowed of config and configsclass")
 
     def _trigger_add(self, method):
         """
@@ -90,6 +96,9 @@ class JSConfig(JSBase):
         self._data._data_update(datadict=datadict)
 
     def delete(self):
+        self._delete()
+
+    def _delete(self):
         self._triggers_call(self, "delete")
         assert self._model
         self._model.delete(self._data)
@@ -99,14 +108,12 @@ class JSConfig(JSBase):
         self._triggers_call(self, "delete_post")
 
     def save(self):
+        self.save_()
+
+    def save_(self):
         assert self._model
         self._triggers_call(self, "save")
-        try:
-            self._data.save()
-        except:
-
-            self._triggers_call(self, "save_post")
-
+        self._data.save()
         self._triggers_call(self, "save_post")
 
     def edit(self):
@@ -139,55 +146,3 @@ class JSConfig(JSBase):
         :return: list of the names
         """
         return self._filter(filter=filter, llist=self._model.schema.propertynames)
-
-    # def __dir__(self):
-    #     items = [key for key in self.__dict__.keys() if not key.startswith("_")]
-    #     for item in self._model.schema.propertynames:
-    #         if item not in items:
-    #             items.append(item)
-    #     items.sort()
-    #     return items
-
-    def __getattr__(self, attr):
-        if attr.startswith("_"):
-            return self.__getattribute__(attr)
-        if attr in self._model.schema.propertynames:
-            return self._data.__getattribute__(attr)
-
-        return self.__getattribute__(attr)
-
-    def __setattr__(self, key, value):
-        if key.startswith("_") or key == "data":
-            self.__dict__[key] = value
-
-        assert "data" not in self.__dict__
-
-        if "_data" in self.__dict__ and key in self._model.schema.propertynames:
-            # if value != self._data.__getattribute__(key):
-            self._log_debug("SET:%s:%s" % (key, value))
-            # self._update_trigger(key, value)
-            self._data.__setattr__(key, value)
-        else:
-            if key in ["_protected"]:
-                self.__dict__[key] = value
-            elif not self._protected or key in self._properties:
-                self.__dict__[key] = value
-            else:
-                raise RuntimeError("protected property:%s" % key)
-
-    # def __str__(self):
-    #     out = "## "
-    #     out += "{BLUE}%s{RESET} " % self.__class__._location
-    #     out += "{GRAY}Instance: "
-    #     out += "{RED}'%s'{RESET} " % self.name
-    #     out += "{GRAY}\n"
-    #     out += self._data._hr_get()  # .replace("{","[").replace("}","]")
-    #     out += "{RESET}\n\n"
-    #     out = j.core.tools.text_strip(out)
-    #     # out = out.replace("[","{").replace("]","}")
-    #
-    #     # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
-    #     print(out)
-    #     return ""
-    #
-    # __repr__ = __str__
