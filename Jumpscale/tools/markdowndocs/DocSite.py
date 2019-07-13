@@ -92,8 +92,8 @@ class DocSite(j.application.JSBaseClass):
     def is_different_source(self, custom_link):
         """check if account, repo or branch are differnt from current docsite
 
-        :param custom_link: instanc of MarkdownLinkParser
-        :type custom_link: MarkdownLinkParser
+        :param custom_link: instanc of CustomLink
+        :type custom_link: CustomLink
         :return: True if different, False if the same
         :rtype: bool
         """
@@ -111,13 +111,12 @@ class DocSite(j.application.JSBaseClass):
         get the source of the data (only works for github and local paths for now)
 
         :param custom_link: custom link
-        :type custom_link: MarkdownLinkParser
+        :type custom_link: CustomLink
         :param linker: a linker instance, defaults to GithubLinker
         :type linker: Linker, optional
         :return: a path or a full link
         :rtype: str
         """
-
         if custom_link.is_url or not self.git:
             # as-is
             return custom_link.path

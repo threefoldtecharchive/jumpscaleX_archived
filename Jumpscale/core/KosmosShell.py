@@ -407,10 +407,10 @@ def ptconfig(repl):
             d = get_doc_string(tbc, repl.get_locals(), repl.get_globals())
         except Exception as exc:
             j.tools.logger._log_error(exc)
+            repl.docstring_buffer.reset()
             return
 
         repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
-        repl.docstring_buffer.reset()
 
     sidebar_visible = Condition(lambda: repl.show_sidebar)
 

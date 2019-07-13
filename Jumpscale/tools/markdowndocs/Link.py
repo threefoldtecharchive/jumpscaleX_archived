@@ -249,6 +249,11 @@ class GithubLinker(Linker):
         link += ":%s" % path
         return MarkdownLinkParser(link)
 
+    @classmethod
+    def replace_branch(cls, url, to_branch):
+        tmp = cls.to_custom_link(url)
+        return cls(tmp.account, tmp.repo).tree(tmp.path, to_branch)
+
 
 class Link(j.application.JSBaseClass):
     LINK_MARKDOWN_PATTERN = r"""
