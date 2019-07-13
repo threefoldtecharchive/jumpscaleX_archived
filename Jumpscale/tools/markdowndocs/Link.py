@@ -25,8 +25,10 @@ SKIPPED_LINKS = [
 ]
 
 
-class CustomLink:
+class MarkdownLinkParser:
     """A link with custom format of `account:repo(branch):path`
+    
+    THIS IS A PARSER FOR THE MARKDOWN LINKS
 
     account, repo and branch are optional, examples:
 
@@ -129,18 +131,18 @@ class CustomLink:
 
     @classmethod
     def test(cls):
-        l = CustomLink("threefoldtech:jumpscaleX(dev):#124")
+        l = MarkdownLinkParser("threefoldtech:jumpscaleX(dev):#124")
         assert l.account == "threefoldtech"
         assert l.repo == "jumpscaleX"
         assert l.branch == "dev"
         assert l.path == "#124"
 
-        l = CustomLink("jumpscaleX(dev):docs/test.md")
+        l = MarkdownLinkParser("jumpscaleX(dev):docs/test.md")
         assert l.repo == "jumpscaleX"
         assert l.branch == "dev"
         assert l.path == "docs/test.md"
 
-        l = CustomLink("docs/test.md")
+        l = MarkdownLinkParser("docs/test.md")
         assert not l.account
         assert not l.repo
         assert l.path == "docs/test.md"
@@ -157,6 +159,10 @@ class CustomLink:
 
 
 class Linker:
+    """
+
+    """
+
     HOST = None
     ISSUE = None
     PULL_REQUEST = None
@@ -241,7 +247,7 @@ class GithubLinker(Linker):
         if not path:
             path = ""
         link += ":%s" % path
-        return CustomLink(link)
+        return MarkdownLinkParser(link)
 
 
 class Link(j.application.JSBaseClass):
@@ -332,7 +338,7 @@ class Link(j.application.JSBaseClass):
             self.link_source_original = self.link_descr.split("@")[1].strip()  # was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
 
-        custom_link = CustomLink(self.link_source)
+        custom_link = MarkdownLinkParser(self.link_source)
         self.link_source = self.docsite.get_real_source(custom_link)
 
         if "?" in self.link_source:

@@ -89,7 +89,6 @@ def main(self):
     user_priv = user_signing.to_curve25519_private_key()
     box = nacl.public.Box(user_priv, broker_public)
 
-
     # try to reserve a 0-os VM
     result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot", "ac1f6b47a04c")
     assert result.submitted
@@ -151,7 +150,6 @@ def main(self):
     assert o.disk_type == "ssd"
     assert o.mode == "seq"
     assert o.password == ""
-
 
     # try to reserve a 0-os VM with an expiration date past the bot's expiration
     with pytest.raises(ValueError):

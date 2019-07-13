@@ -5,7 +5,6 @@ MaxBotPrepaidMonths = 24
 
 
 class TFChainTime:
-
     def extend(self, timestamp, months):
         timestamp -= timestamp % CompactTimestampAccuracyInSeconds
         return timestamp + (months * BotMonth)

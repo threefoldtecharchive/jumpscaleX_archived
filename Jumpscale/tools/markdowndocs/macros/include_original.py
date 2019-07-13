@@ -60,7 +60,7 @@ def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
     return out
 
 
-def include(
+def include_original(
     doc, name="test5", docsite="", repo="", start="", end="", paragraph=False, codeblock=False, docstring="", **args
 ):
     """

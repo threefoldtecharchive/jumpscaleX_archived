@@ -66,7 +66,8 @@ class LoggerFactory(j.application.JSBaseClass):
         :return:
         """
         for obj in j.application._iterate_rootobj():
-            obj._logger_set(children=True)
+            if hasattr(obj, "_logger_set"):
+                obj._logger_set(children=True)
             # self._print(obj._key)
 
     def test(self, name="base"):

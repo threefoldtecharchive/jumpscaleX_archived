@@ -18,7 +18,7 @@ class Time(j.application.JSBaseClass):
         month = expiry.month - 1 + months
         year = expiry.year + month // 12
         month = month % 12 + 1
-        day = min(expiry.day, calendar.monthrange(year,month)[1])
+        day = min(expiry.day, calendar.monthrange(year, month)[1])
         extended = datetime(year, month, day, expiry.hour, expiry.minute, expiry.second)
         return int(time.mktime(extended.timetuple()))
 

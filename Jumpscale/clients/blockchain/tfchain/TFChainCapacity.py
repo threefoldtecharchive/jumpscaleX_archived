@@ -185,7 +185,9 @@ class TFChainCapacity:
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, location, size=1, duration=1, organization="", source=None, refund=None):
+    def reserve_zos_vm(
+        self, email, threebot_id, location, size=1, duration=1, organization="", source=None, refund=None
+    ):
         """
         reserve an virtual 0-OS
 

@@ -148,7 +148,8 @@ def get_completions(self, document, complete_event):
     :rtype: `Completion` generator
     """
     j = KosmosShellConfig.j
-    j.application._in_autocomplete = True
+    if not j.tools.logger.debug:
+        j.application._in_autocomplete = True
 
     def colored_completions(names, color):
         for name in names:
