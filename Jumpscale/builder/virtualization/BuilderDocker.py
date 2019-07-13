@@ -56,7 +56,7 @@ class BuilderDocker(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         # docker daemon
-        cmd = j.tools.startupcmd.get(self.NAME, cmd="dockerd")
+        cmd = j.servers.startupcmd.get(self.NAME, cmd="dockerd")
         return [cmd]
 
     def stop(self):

@@ -74,7 +74,7 @@ class BuilderZerotier(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10, ports=[9993])
+        cmd = j.servers.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10, ports=[9993])
         return [cmd]
 
     @builder_method()

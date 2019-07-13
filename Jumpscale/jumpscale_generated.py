@@ -511,7 +511,6 @@ class group_tools(JSGroup):
         self._timer = None
         self._cython = None
         self._formatters = None
-        self._startupcmd = None
         self._capacity = None
         self._team_manager = None
         self._memusagetest = None
@@ -676,12 +675,6 @@ class group_tools(JSGroup):
             from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
             self._formatters =  FormattersFactory()
         return self._formatters
-    @property
-    def startupcmd(self):
-        if self._startupcmd is None:
-            from Jumpscale.tools.startupcmd.StartupCMDFactory import StartupCMDFactory
-            self._startupcmd =  StartupCMDFactory()
-        return self._startupcmd
     @property
     def capacity(self):
         if self._capacity is None:
@@ -1067,9 +1060,11 @@ class group_servers(JSGroup):
         self._raftserver = None
         self._dns = None
         self._threebot = None
+        self._threebot = None
         self._rack = None
         self._flask = None
         self._errbot = None
+        self._startupcmd = None
         self._etcd = None
         self._sanic = None
         self._mail_forwarder = None
@@ -1120,6 +1115,12 @@ class group_servers(JSGroup):
             self._threebot =  OpenPublishFactory()
         return self._threebot
     @property
+    def threebot(self):
+        if self._threebot is None:
+            from DigitalMe.servers.threebot.ThreebotServers import ThreeBotServers
+            self._threebot =  ThreeBotServers()
+        return self._threebot
+    @property
     def rack(self):
         if self._rack is None:
             from DigitalMe.servers.gevent_rack.ServerRackFactory import ServerRackFactory
@@ -1137,6 +1138,12 @@ class group_servers(JSGroup):
             from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
             self._errbot =  ErrBotFactory()
         return self._errbot
+    @property
+    def startupcmd(self):
+        if self._startupcmd is None:
+            from Jumpscale.servers.startupcmd.StartupCMDFactory import StartupCMDFactory
+            self._startupcmd =  StartupCMDFactory()
+        return self._startupcmd
     @property
     def etcd(self):
         if self._etcd is None:

@@ -51,7 +51,7 @@ class BuilderMinio(BuilderGolangTools):
         cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(
             access_key, secret_key, address, port, self.datadir
         )
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

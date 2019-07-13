@@ -156,7 +156,7 @@ class Tmux(j.application.JSBaseClass):
 
         pane = window.pane_get(pane_name)
 
-        startup_cmd = j.tools.startupcmd.get(
+        startup_cmd = j.servers.startupcmd.get(
             name=name,
             cmd=cmd,
             path=path,

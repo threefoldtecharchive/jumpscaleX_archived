@@ -237,7 +237,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         """.format(
             dir=test_dir
         )
-        cmds = [j.tools.startupcmd.get("test_openresty", cmd=cmd)]
+        cmds = [j.servers.startupcmd.get("test_openresty", cmd=cmd)]
         return cmds
 
     @builder_method()

@@ -191,7 +191,7 @@ class BuilderNGINX(j.builders.system._BaseClass):
             nginxcmd = self._replace(nginxcmd)
 
             self._log_info("cmd: %s" % nginxcmd)
-            cmd = j.tools.startupcmd.get("nginx", cmd=nginxcmd, cmd_stop="nginx -s stop", path="/sandbox/bin")
+            cmd = j.servers.startupcmd.get("nginx", cmd=nginxcmd, cmd_stop="nginx -s stop", path="/sandbox/bin")
             return [cmd]
         else:
             raise RuntimeError("Failed to start nginx")

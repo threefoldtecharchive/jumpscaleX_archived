@@ -3,12 +3,10 @@ from Jumpscale import j
 from .base_test import BaseTest
 from parameterized import parameterized
 
+
 class Storage_TestCases(BaseTest):
     @parameterized.expand(
-        [("minio", "minio"), 
-         ("restic", "restic"), 
-         ("syncthing", "syncthing"), 
-         ("s3scality", "s3scality")]
+        [("minio", "minio"), ("restic", "restic"), ("syncthing", "syncthing"), ("s3scality", "s3scality")]
     )
     def test_storage_flists(self, flist, binary):
         """ SAN-009

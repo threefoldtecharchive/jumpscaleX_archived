@@ -98,7 +98,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
             cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
-            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
+            cmdcmd = j.servers.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
 
             cmdcmd.start(reset=reset)
 

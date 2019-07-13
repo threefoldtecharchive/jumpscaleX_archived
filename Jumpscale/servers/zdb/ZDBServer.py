@@ -84,7 +84,7 @@ class ZDBServer(j.application.JSBaseClass):
             self.mode,
             self.adminsecret,
         )
-        return j.tools.startupcmd.get(name="zdb", cmd=cmd, path="/tmp", ports=[self.port])
+        return j.servers.startupcmd.get(name="zdb", cmd=cmd, path="/tmp", ports=[self.port])
 
         # tmux_window = "digitalme"
         # tmux_panel = "p13"

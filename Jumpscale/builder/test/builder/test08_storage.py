@@ -11,9 +11,7 @@ class StorageTestCases(BaseTest):
         """ BLD-001
         *Test db builers sandbox*
         """
-        skipped_builders = {
-            "s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/671",
-        }
+        skipped_builders = {"s3scality": "https://github.com/threefoldtech/jumpscaleX/issues/671"}
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
         self.info(" * {} builder: run build method.".format(builder))

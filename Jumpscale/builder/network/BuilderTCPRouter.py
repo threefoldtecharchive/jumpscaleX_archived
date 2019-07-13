@@ -64,5 +64,5 @@ class BuilderTCPRouter(BuilderGolangTools):
     @property
     def startup_cmds(self):
         tcprouter_cmd = "tcprouter /sandbox/cfg/router.toml"
-        tcprouter = j.tools.startupcmd.get("tcprouter", tcprouter_cmd, path="/sandbox/bin")
+        tcprouter = j.servers.startupcmd.get("tcprouter", tcprouter_cmd, path="/sandbox/bin")
         return [tcprouter]

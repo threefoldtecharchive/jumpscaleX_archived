@@ -15,6 +15,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         path = ""
         env = (dict)
         ports = (li)
+        ports_udp = (li)
         timeout = 0
         process_strings = (ls)
         pid = 0
@@ -33,7 +34,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
     @property
     def _cmd_path(self):
-        return j.sal.fs.joinPaths(j.tools.startupcmd._cmdsdir, self.name)
+        return j.sal.fs.joinPaths(j.servers.startupcmd._cmdsdir, self.name)
 
     def _error_raise(self, msg):
         msg = "error in jsrunprocess:%s\n%s\n" % (self, msg)
@@ -95,10 +96,14 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         end = j.data.time.epoch + timeout
         while j.data.time.epoch < end:
             nr = 0
+            nr_tocheck = len(self.ports) + len(self.ports_udp)
             for port in self.ports:
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                     nr += 1
-            if nr == len(self.ports):
+            for port in self.ports_udp:
+                if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                    nr += 1
+            if nr == nr_tocheck:
                 self._log_info("IS HALTED %s" % self.name)
                 return True
         if die:
@@ -115,7 +120,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
         while j.data.time.epoch < end:
             time.sleep(1)
-            if self.ports == []:
+            if self.ports == [] and self.ports_udp == []:
                 if self.process:
                     if self.process.status().casefold() in ["running", "sleeping", "idle"]:
                         self._log_info("IS RUNNING %s" % self.name)
@@ -124,10 +129,14 @@ class StartupCMD(j.application.JSBaseDataObjClass):
                     return True
             else:
                 nr = 0
+                nr_tocheck = len(self.ports) + len(self.ports_udp)
                 for port in self.ports:
                     if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port):
                         nr += 1
-                if nr == len(self.ports) and len(self.ports) > 0:
+                for port in self.ports_udp:
+                    if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port):
+                        nr += 1
+                if nr == nr_tocheck and nr_tocheck > 0:
                     self._log_info("IS RUNNING %s" % self.name)
                     return True
         if die:

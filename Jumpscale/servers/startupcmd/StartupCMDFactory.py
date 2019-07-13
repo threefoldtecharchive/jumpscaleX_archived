@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 
 class StartupCMDFactory(j.application.JSBaseClass):
     def __init__(self):
-        self.__jslocation__ = "j.tools.startupcmd"
+        self.__jslocation__ = "j.servers.startupcmd"
         JSBASE.__init__(self)
 
         tdir = j.sal.fs.joinPaths(j.sal.fs.joinPaths(j.dirs.VARDIR, "cmds"))
@@ -45,17 +45,17 @@ class StartupCMDFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        kosmos 'j.tools.startupcmd.test()'
+        kosmos 'j.servers.startupcmd.test()'
         :return:
         """
 
-        startup_object = j.tools.startupcmd.StartupCMDClass()
+        startup_object = j.servers.startupcmd.StartupCMDClass()
 
         startup_object.name = "test"
 
         assert startup_object.data.name == "test"
 
-        startup_cmd = j.tools.startupcmd.get("mc_process", "mc", path="/tmp", timeout=10)
+        startup_cmd = j.servers.startupcmd.get("mc_process", "mc", path="/tmp", timeout=10)
 
         assert startup_cmd.data.name == "mc_process"
         assert startup_cmd.data.path == "/tmp"

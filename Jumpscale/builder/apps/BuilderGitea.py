@@ -123,7 +123,7 @@ class BuilderGitea(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
         return j.builders.db.postgres.startup_cmds + [cmd]
 
     @builder_method()

@@ -44,7 +44,7 @@ class BuilderRedis(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmds = [j.tools.startupcmd.get(name="redis_server", cmd="redis-server --port {}".format(randint(6000, 7000)))]
+        cmds = [j.servers.startupcmd.get(name="redis_server", cmd="redis-server --port {}".format(randint(6000, 7000)))]
         return cmds
 
     @builder_method()
