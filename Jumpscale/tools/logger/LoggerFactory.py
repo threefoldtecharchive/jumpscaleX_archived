@@ -9,13 +9,15 @@ class LoggerFactory(j.application.JSBaseClass):
 
     @property
     def debug(self):
-        return j.core.myenv.config["DEBUG"]
+        if "LOGGER_SHELL_LOWERPANE" not in j.core.myenv.config:
+            return False
+        return j.core.myenv.config["LOGGER_SHELL_LOWERPANE"]
 
     @debug.setter
     def debug(self, value):
         assert j.data.types.bool.check(value)
         config = {}
-        config["DEBUG"] = value
+        config["LOGGER_SHELL_LOWERPANE"] = value
         self.config = config
 
     @property

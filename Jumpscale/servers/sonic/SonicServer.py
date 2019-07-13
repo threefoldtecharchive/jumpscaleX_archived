@@ -50,4 +50,4 @@ class SonicServer(JSConfigClient):
     @property
     def startupcmd(self):
         cmd = "sonic -c {}".format(self.config_path)
-        return j.servers.startupcmd.get(name="Sonic", cmd_start=cmd)
+        return j.servers.startupcmd.get(name="Sonic", cmd_start=cmd, ports=[self.port])

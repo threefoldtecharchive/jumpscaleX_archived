@@ -22,7 +22,10 @@ class JSConfigsFactory(JSBase):
 
         for kl in self.__class__._CHILDCLASSES:
             # childclasses are the JSConfigs classes
-            name = str(kl).split(".")[-1].split("'", 1)[0].lower()  # wonder if there is no better way
+            if kl._name is not None:
+                name = kl._name
+            else:
+                name = str(kl).split(".")[-1].split("'", 1)[0].lower()  # wonder if there is no better way
             if issubclass(kl, j.application.JSBaseConfigClass):
                 obj = kl(parent=self, name=name)
                 assert obj._parent

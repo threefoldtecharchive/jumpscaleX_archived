@@ -32,36 +32,27 @@ class NetTools(JSBASE):
                 conn.close()
         return True
 
-    def udpPortConnectionTest(self, ipaddr, port, timeout=None):
+    def udpPortConnectionTest(self, ipaddr, port, timeout=1, message=b"PING"):
 
-        # address = (addr, port)
-        # message = b"PING"
-        # sock = socket.socket(type=socket.SOCK_DGRAM)
-        # sock.connect(address)
-        # pprint("Sending %s bytes to %s:%s" % ((len(message),) + address))
-        # sock.send(message)
-        # try:
-        #     data, address = sock.recvfrom(8192)
-        # except Exception as e:
-        #     if "refused" in str(e):
-        #         return False
-        #     raise RuntimeError("unexpected result")
-        # return True
-        #
-
-        conn = None
+        conn = socket.socket(type=socket.SOCK_DGRAM)
+        if timeout:
+            conn.settimeout(timeout)
         try:
-            conn = socket.socket(type=socket.SOCK_DGRAM)
-            if timeout:
-                conn.settimeout(timeout)
-            j.shell()
-            try:
-                conn.connect((ipaddr, port))
-            except BaseException:
+            conn.connect((ipaddr, port))
+        except BaseException:
+            conn.close()
+            return False
+
+        self._log_debug("Sending %s bytes to %s:%s" % (len(message), ipaddr, port))
+        conn.send(message)
+
+        try:
+            data, address = conn.recvfrom(8192)
+        except Exception as e:
+            if "refused" in str(e):
                 return False
-        finally:
-            if conn:
-                conn.close()
+            return False
+            # raise RuntimeError("unexpected result")
         return True
 
     def ip_to_num(self, ip="127.0.0.1"):
