@@ -29,7 +29,7 @@ class SanicServer(JSConfigClient):
         server.save();\
         server.start();'
         """
-        return [j.tools.startupcmd.get(name="gedis", cmd=cmd_gedis), j.tools.startupcmd.get(name="Sanic", cmd=cmd)]
+        return [j.servers.startupcmd.get(name="gedis", cmd=cmd_gedis), j.servers.startupcmd.get(name="Sanic", cmd=cmd)]
 
     def start(self):
         """

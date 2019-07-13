@@ -48,7 +48,7 @@ class BuilderGraphql(j.builders.system._BaseClass):
         cd {DIR_GRAPHQL_WS} && python3 app.py
         """
         )
-        start_cmd = j.tools.startupcmd.get(self.NAME, cmd=start_script)
+        start_cmd = j.servers.startupcmd.get(self.NAME, cmd=start_script)
         return [start_cmd]
 
     @builder_method()
