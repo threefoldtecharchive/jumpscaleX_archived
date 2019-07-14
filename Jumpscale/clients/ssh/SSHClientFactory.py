@@ -8,6 +8,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     __jslocation__ = "j.clients.ssh"
     _CHILDCLASS = SSHClientBase
+    _SCHEMATEXT = _CHILDCLASS._SCHEMATEXT
 
     def _init(self):
         self._clients = {}
