@@ -323,7 +323,8 @@ class BCDBModelIndex(j.application.JSBaseClass):
             r = self._ids_redis
             bin_id = struct.pack("<I", id)
             redis_list_key = self._id_redis_listkey_get(nid)
-            r.lrem(redis_list_key, 0, bin_id)  # should remove all redis elements of the list with this id
+            # should remove all redis elements of the list with this id
+            r.execute_command("LREM", redis_list_key, 0, bin_id)
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
             out = b""

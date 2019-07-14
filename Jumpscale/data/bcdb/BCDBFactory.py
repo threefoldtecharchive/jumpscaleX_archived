@@ -155,6 +155,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                     if data["admin"]:
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
+                data.pop("type")
                 storclient = j.clients.zdb.client_get(**data)
             elif data["type"] == "rdb":
                 storclient = j.clients.rdb.client_get(**data)
@@ -198,8 +199,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 data["admin"] = storclient.admin
                 data["addr"] = storclient.addr
                 data["port"] = storclient.port
-                data["mode"] = storclient.mode
-                data["secret"] = storclient.secret
+                data["mode"] = str(storclient.mode)
+                data["secret"] = storclient.secret_
                 data["type"] = "zdb"
         else:
             data["nsname"] = name
@@ -261,7 +262,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             bcdb2 = j.data.bcdb.get("test")
             assert bcdb2.storclient == None
         elif type == "zdb":
-            storclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
+            zdb = j.servers.zdb.test_instance_start(destroydata=reset)
+            storclient_admin = zdb.client_admin_get()
             assert storclient_admin.ping()
             secret = "1234"
             storclient = storclient_admin.namespace_new("test", secret=secret)
@@ -330,8 +332,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         self._test_run(name=name)
-
-        j.servers.zdb.stop()
         redis = j.servers.startupcmd.get("redis_6380")
         redis.stop()
         web_dav = j.servers.startupcmd.get("webdav_test")

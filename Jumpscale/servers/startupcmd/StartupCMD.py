@@ -337,8 +337,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
                     for port in self.ports:
                         if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                             nr += 1
-                    for port in self.ports_udp:
-                        if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                    for port2 in self.ports_udp:
+                        if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port2) == False:
                             nr += 1
                     if nr == nr_port_check and nr > 0:
                         self._log_info("IS HALTED based on TCP/UDP %s" % self.name)

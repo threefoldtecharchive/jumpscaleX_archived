@@ -33,7 +33,7 @@ def main(self):
     """
     test_case = TestCase()
 
-    j.servers.zdb.start_test_instance()
+    j.servers.zdb.test_instance_start()
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique", secret="1234")
     self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901, secret="1234")

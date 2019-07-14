@@ -7,7 +7,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="export")'
 
     """
-    j.servers.zdb.start_test_instance()
+    j.servers.zdb.test_instance_start()
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test

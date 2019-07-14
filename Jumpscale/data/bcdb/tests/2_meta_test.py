@@ -8,7 +8,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="meta_test")'
 
     """
-    j.servers.zdb.start_test_instance(destroydata=True)
+    j.servers.zdb.test_instance_start(destroydata=True)
     # get zdb client
     c = j.clients.zdb.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
@@ -38,7 +38,7 @@ def main(self):
     sid = bcdb.meta._schema_set(s)
     assert isinstance(sid, int)
 
-    assert len(bcdb.meta._data.schemas) == 9
+    assert len(bcdb.meta._data.schemas) == 8
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
@@ -60,7 +60,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9
+    assert len(bcdb.meta._data._ddict["schemas"]) == 8
 
     a = model.new()
     a.category = "acat"

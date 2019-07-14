@@ -98,4 +98,4 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
         self.delete("test")
         self.delete("newnamespace")
 
-        j.servers.zdb, test_instance_stop()
+        j.servers.zdb.test_instance_stop()
