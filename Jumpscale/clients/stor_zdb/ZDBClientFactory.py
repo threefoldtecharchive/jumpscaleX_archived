@@ -13,7 +13,6 @@ JSBASE = j.application.JSBaseClass
 
 class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
     """
-    Factory for openresty
 
     different modes: seq,user,direct
 

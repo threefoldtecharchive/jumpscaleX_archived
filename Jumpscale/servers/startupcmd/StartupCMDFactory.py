@@ -57,7 +57,6 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             self.http.delete()
             self.http.cmd_start = "python3 -m http.server"  # starts on port 8000
             self.http.ports = 8000
-            self.http.executor = "corex"
             self.http.corex_client_name = corex.name
             self.http.start()
 
