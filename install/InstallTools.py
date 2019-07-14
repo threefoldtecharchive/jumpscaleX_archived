@@ -2277,7 +2277,6 @@ class MyEnv:
 
     @staticmethod
     def secret_set(secret=None):
-        assert "SECRET" not in MyEnv.config
         while not secret:  # keep asking till the secret is not empty
             secret = Tools.ask_password("provide secret to use for encrypting private key")
         secret = secret.encode()
