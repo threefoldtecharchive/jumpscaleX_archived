@@ -99,6 +99,7 @@ def main(self):
         if zdb:
             self._log_debug("validate list2")
             assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
+
         self._cmd.stop()
         self._cmd.wait_stopped()
         return

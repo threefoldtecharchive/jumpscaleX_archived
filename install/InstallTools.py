@@ -3215,9 +3215,11 @@ class DockerContainer:
             if self.config.sshport != newport:
                 self.config.sshport = newport
                 self.config.save()
-
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
             MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+        
+        if len(MyEnv.sshagent.keys_list()) == 0:
+            raise RuntimeError("Please load your ssh-agent with a key!")
 
     @property
     def _path(self):
@@ -3376,7 +3378,7 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
-            Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+            Tools.execute("ssh-keyscan -H 3bot >> ~/.ssh/known_hosts")
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
