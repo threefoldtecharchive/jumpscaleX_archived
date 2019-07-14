@@ -64,10 +64,8 @@ class JSXObject(j.application.JSBaseClass):
         :return:
         """
 
-        if self._model is not None and self._readonly:
+        if self._model is not None and self._model.readonly:
             raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
-        if self._readonly:
-            raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
             self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
@@ -116,7 +114,7 @@ class JSXObject(j.application.JSBaseClass):
             if serialize:
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
-            if self._readonly:
+            if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
@@ -158,7 +156,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def delete(self):
         if self._model:
-            if self._readonly:
+            if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
