@@ -532,6 +532,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         # if tpath:
         #     j.sal.fs.remove(tpath)
 
+        self.pid = j.sal.process.getProcessPid(self.cmd_start)[0]
         self.save()
 
     @property

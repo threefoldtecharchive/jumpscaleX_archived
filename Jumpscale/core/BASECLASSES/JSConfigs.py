@@ -134,7 +134,6 @@ class JSConfigs(JSBase, Attr):
         return False
 
     def _get(self, name="main", die=True):
-
         if name is not None and name in self._children:
             return self._children[name]
 
@@ -308,7 +307,7 @@ class JSConfigs(JSBase, Attr):
             ):
                 return self.__getattribute__(name)  # else see if we can from the factory find the child object
 
-            r = self._get(name=name, die=False)
+            r = self.get(name=name)
             if not r:
                 raise RuntimeError(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
