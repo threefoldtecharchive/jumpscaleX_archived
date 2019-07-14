@@ -27,7 +27,7 @@ class ZDBServers(JSConfigs):
         """
         j.builders.db.zdb.install(reset=reset)
 
-    def start_test_instance(
+    def test_instance_start(
         self, destroydata=True, namespaces=[], admin_secret="123456", namespaces_secret="1234", restart=False
     ):
         """
@@ -42,13 +42,14 @@ class ZDBServers(JSConfigs):
 
         :return:
         """
-        zdb = self.new(name="test")
+        zdb = self.get(name="test", port=9901)
 
         if destroydata:
             zdb.destroy()
             j.clients.redis._cache_clear()  # make sure all redis connections gone
 
         zdb.start()
+        zdb.save()
 
         cla = zdb.client_admin_get()
 
@@ -65,6 +66,13 @@ class ZDBServers(JSConfigs):
 
         return zdb
 
+    def test_instance_stop(self, destroy=True):
+        zdb = self.get(name="test", port=9901)
+        zdb.stop()
+        if destroy:
+            zdb.destroy()
+            zdb.delete()
+
     def test(self, build=False):
         """
         kosmos 'j.servers.zdb.test(build=True)'
@@ -73,13 +81,12 @@ class ZDBServers(JSConfigs):
 
         if build:
             self.build()
-        zdb = self.start_test_instance(namespaces=["test"], restart=True, destroydata=True)
+        zdb = self.test_instance_start(namespaces=["test"], restart=True, destroydata=True)
 
         cl = zdb.client_get(nsname="test")
 
         assert cl.ping()
 
-        zdb.stop()
-        zdb.destroy()
+        self.test_instance_stop()
 
         print("TEST OK")

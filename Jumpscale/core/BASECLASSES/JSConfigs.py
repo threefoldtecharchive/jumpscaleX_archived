@@ -43,7 +43,11 @@ class JSConfigs(JSBase, Attr):
         if self._model_ is None:
             # self._log_debug("Get model for %s"%self.__class__._location)
             bcdb = self._bcdb_selector()
-            t = self._process_schematext(self.__class__._CHILDCLASS._SCHEMATEXT)
+            if "_SCHEMATEXT" in self.__class__.__dict__:
+                s = self.__class__._SCHEMATEXT
+            else:
+                s = self.__class__._CHILDCLASS._SCHEMATEXT
+            t = self._process_schematext(s)
             self._model_ = bcdb.model_get_from_schema(t)
         return self._model_
 
@@ -65,6 +69,11 @@ class JSConfigs(JSBase, Attr):
         return self.__class__._CHILDCLASS
 
     def new(self, name, jsxobject=None, **kwargs):
+        if self.exists(name=name):
+            raise RuntimeError("obj: %s already exists" % name)
+        return self._new(name=name, jsxobject=jsxobject, **kwargs)
+
+    def _new(self, name, jsxobject=None, **kwargs):
         """
         :param name: for the CONFIG item (is a unique name for the service, client, ...)
         :param jsxobject: you can right away specify the jsxobject
@@ -91,13 +100,28 @@ class JSConfigs(JSBase, Attr):
         """
         :param name: of the object
         """
+
         jsconfig = self._get(name=name, die=False)
         if not jsconfig:
             self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
-            jsconfig = self.new(name=name)
+            jsconfig = self._new(name=name, **kwargs)
+        else:
+            # check that the stored values correspond with kwargs given
+            changed = False
+            for key, val in kwargs.items():
+                if not getattr(jsconfig, key) == val:
+                    changed = True
+                    setattr(jsconfig, key, val)
+                    # msg = "COULD NOT GET OBJ BECAUSE KWARGS GIVEN DO NOT CORRESPOND WITH OBJ IN DB\n"
+                    # msg += "kwargs: key:%s val:%s\n" % (key, val)
+                    # msg += "object was:\n%s\n" % jsconfig._data._ddict_hr_get()
+                    # raise RuntimeError(msg)
+            if changed:
+                jsconfig.save()
+
         jsconfig._triggers_call(jsconfig, "get")
-        if kwargs:
-            jsconfig._data_update(kwargs)
+        # if kwargs:
+        #     jsconfig._data_update(kwargs)
         return jsconfig
 
     def exists(self, name="main"):
@@ -114,10 +138,9 @@ class JSConfigs(JSBase, Attr):
         if name is not None and name in self._children:
             return self._children[name]
 
-        self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name))
+        self._log_debug("get child:'%s'from '%s'" % (name, self._name))
 
         # new = False
-
         res = self.find(name=name)
 
         if len(res) < 1:
@@ -164,7 +187,7 @@ class JSConfigs(JSBase, Attr):
         for jsxobject in self._findData(**kwargs):
             name = jsxobject.name
             if not name in self._children:
-                r = self.new(name=name, jsxobject=jsxobject)
+                r = self._new(name=name, jsxobject=jsxobject)
                 res.append(r)
         return res
 
@@ -205,13 +228,14 @@ class JSConfigs(JSBase, Attr):
             return self._model.find()
 
     def delete(self, name):
-        o = self.get(name)
-        o.delete()
+        if self.exists(name=name):
+            o = self.get(name)
+            o.delete()
 
     def exists(self, name):
         res = self._findData(name=name)
         if len(res) > 1:
-            raise RuntimeError("found too many items for :%s, args:\n%s\n%s" % (self.__class__.__name__, kwargs, res))
+            raise RuntimeError("found too many items for :%s, name:\n%s\n%s" % (self.__class__.__name__, name, res))
         elif len(res) == 1:
             return True
         else:
@@ -292,7 +316,7 @@ class JSConfigs(JSBase, Attr):
                 )
             return r
 
-        return self.__getattribute__(attr)
+        return self.__getattribute__(name)
 
     def __setattr__(self, key, value):
 

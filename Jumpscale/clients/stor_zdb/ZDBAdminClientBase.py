@@ -1,25 +1,9 @@
 from Jumpscale import j
 
-from .ZDBClientBase import ZDBClientBase
 
-
-class ZDBAdminClient(ZDBClientBase):
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="123456"):
-        """ is connection to ZDB
-
-        port {[int} -- (default: 9900)
-        mode -- user,seq(uential) see
-                    https://github.com/rivine/0-db/blob/master/README.md
-        """
-        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret, admin=True)
-        self._system = None
-        # self._logger_enable()
-        if self.secret:
-            # authentication should only happen in zdbadmin client
-            self._log_debug("AUTH in namespace %s" % (self.nsname))
-            self.redis.execute_command("AUTH", self.secret)
-
+class ZDBAdminClientBase:
     def namespace_exists(self, name):
+        assert self.admin
         try:
             self.redis.execute_command("NSINFO", name)
             # self._log_debug("namespace_exists:%s" % name)
@@ -31,6 +15,7 @@ class ZDBAdminClient(ZDBClientBase):
             return False
 
     def namespaces_list(self):
+        assert self.admin
         res = self.redis.execute_command("NSLIST")
         return [i.decode() for i in res]
 
@@ -44,6 +29,7 @@ class ZDBAdminClient(ZDBClientBase):
         :param die:
         :return:
         """
+        assert self.admin
         self._log_debug("namespace_new:%s" % name)
         if not self.namespace_exists(name):
             self._log_debug("namespace does not exists")
@@ -74,9 +60,11 @@ class ZDBAdminClient(ZDBClientBase):
         return ns
 
     def namespace_get(self, name, secret=""):
+        assert self.admin
         return self.namespace_new(name, secret)
 
     def namespace_delete(self, name):
+        assert self.admin
         if self.namespace_exists(name):
             self._log_debug("namespace_delete:%s" % name)
             self.redis.execute_command("NSDEL", name)
@@ -87,6 +75,7 @@ class ZDBAdminClient(ZDBClientBase):
         :param: list of namespace names not to reset
         :return:
         """
+        assert self.admin
         for name in self.namespaces_list():
             if name not in ["default"] and name not in ignore:
                 self.namespace_delete(name)

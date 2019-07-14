@@ -42,6 +42,8 @@ class JSFactoryTools:
     def _code_run(self, path, name=None, obj_key="main", die=True, **kwargs):
         if not path.startswith("/"):
             path2 = self._dirpath + "/" + path
+        else:
+            path2 = path
         assert j.sal.fs.exists(path2)
         if j.sal.fs.isDir(path2):
             path3 = self.__find_code(name=name, path=path2)

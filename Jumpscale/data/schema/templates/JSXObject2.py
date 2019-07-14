@@ -126,7 +126,8 @@ class JSXObject2(j.data.schema._JSXObjectClass):
 
         try:
             self._capnp_obj_ = self._capnp_schema.new_message(**ddict)
-        except KjException as e:
+        #KjException
+        except Exception as e:
             msg="\nERROR: could not create capnp message\n"
             try:
                 msg+=j.core.text.indent(j.data.serializers.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
@@ -171,6 +172,8 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% for prop in obj.properties %}
         {% if prop.is_jsxobject %}
         d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr_get(exclude=exclude)
+        {% elif prop.name.endswith("_") %}
+        pass
         {% else %}
         if {{prop.js_typelocation}}.NAME in ["list"]:
             res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
@@ -224,5 +227,5 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% endfor %}
         if ansi:
             out += "{RESET}"
-        out = j.core.tools.text_strip(out, replace=True)
+        out = j.core.tools.text_strip(out, replace=True,ignore_error=True)
         return out

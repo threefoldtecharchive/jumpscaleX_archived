@@ -16,8 +16,14 @@ class JSConfig(JSBase, Attr):
         if self._parent and "_model" in self._parent.__dict__:
             self._model = self._parent._model
         else:
+
+            if "_SCHEMATEXT" in self.__class__.__dict__:
+                s = self.__class__._SCHEMATEXT
+            else:
+                s = self._parent.__class__._SCHEMATEXT
+
             # is a fall back for situation we want to use a JSConfig class without factory JSConfigs
-            self._model = j.application.bcdb_system.model_get_from_schema(self.__class__._SCHEMATEXT)
+            self._model = j.application.bcdb_system.model_get_from_schema(s)
 
         # self._model._kosmosinstance = self
 

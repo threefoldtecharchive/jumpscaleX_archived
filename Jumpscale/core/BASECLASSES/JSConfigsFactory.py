@@ -20,6 +20,7 @@ class JSConfigsFactory(JSBase, Attr):
         if hasattr(self.__class__, "_CHILDCLASS"):
             # means we will only use 1 JSConfigs as child
             assert not hasattr(self.__class__, "_CHILDCLASSES")
+            assert self.__class__._CHILDCLASS
             self.__class__._CHILDCLASSES = [self.__class__._CHILDCLASS]
 
         for kl in self.__class__._CHILDCLASSES:

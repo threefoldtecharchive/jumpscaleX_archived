@@ -898,7 +898,7 @@ class Tools:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
 
     @staticmethod
-    def text_strip(content, ignorecomments=False, args={}, replace=False, executor=None, colors=True):
+    def text_strip(content, ignorecomments=False, args={}, replace=False, executor=None, colors=True,ignore_error=False):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -936,7 +936,7 @@ class Tools:
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content=content, args=args, executor=executor, text_strip=False)
+            content = Tools.text_replace(content=content, args=args, executor=executor, text_strip=False,ignore_error=ignore_error)
         else:
             if colors and "{" in content:
                 for key, val in MyEnv.MYCOLORS.items():
