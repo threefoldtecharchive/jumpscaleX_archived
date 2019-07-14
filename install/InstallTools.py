@@ -2,8 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development", "development_installer"]
-
+DEFAULTBRANCH = ["development_jumpscale"]
 import socket
 import grp
 import os
@@ -2305,7 +2304,7 @@ class MyEnv:
         if reset is False and MyEnv.__init:
             return
 
-        # print("MYENV INIT")
+            # print("MYENV INIT")
 
         args = Tools.cmd_args_get()
 
