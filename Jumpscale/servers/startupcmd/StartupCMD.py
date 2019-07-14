@@ -15,6 +15,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         path = ""
         env = (dict)
         ports = (LI)
+        ports_udp = (LI)
         timeout = 10
         process_strings = (ls)
         process_strings_regex = (ls)
@@ -108,7 +109,12 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if ports:
             for port in self.ports:
-                p = j.sal.process.getProcessByPort(port)
+                try:
+                    p = j.sal.process.getProcessByPort(port)
+                except Exception as e:
+                    if str(e).find("it's a zombie") != -1:
+                        continue
+
                 if p and p.pid:
                     res.append(p)
                     pids_done.append(p.pid)
@@ -196,6 +202,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             # if [item.name for item in self._pane.window.panes] == ["main"]:
             #     # means we only had the main tmux window left, that one can be closed
             #     self._pane.mgmt.window.server.kill_server()
+            self._pane_ = None
             self._notify_state("stopped")
             return True
 
@@ -275,6 +282,14 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 else:
                     return True
 
+        if self._local and self.ports_udp != []:
+            for port in self.ports_udp:
+                if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                    self._notify_state("down")
+                    return False
+                else:
+                    return True
+
         if self.executor == "corex":
             if not self.pid and not self.corex_id:
                 return self._error_raise("cannot check running don't have pid or corex_id")
@@ -315,14 +330,18 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if self._local:
             # are going to wait for first conditions
-            if self.ports != []:
+            if self.ports != [] or self.ports_udp != []:
                 while j.data.time.epoch < end:
                     nr = 0
+                    nr_port_check = len(self.ports) + len(self.ports_udp)
                     for port in self.ports:
                         if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                             nr += 1
-                    if nr == len(self.ports) and nr > 0:
-                        self._log_info("IS HALTED based on TCP %s" % self.name)
+                    for port in self.ports_udp:
+                        if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                            nr += 1
+                    if nr == nr_port_check and nr > 0:
+                        self._log_info("IS HALTED based on TCP/UDP %s" % self.name)
                         break
 
                     time.sleep(0.05)
@@ -363,12 +382,13 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if timeout is None:
             timeout = self.timeout
         end = j.data.time.epoch + timeout
-        if self.ports == []:
+        if self.ports == [] and self.ports_udp == []:
             time.sleep(0.5)  # need this one or it doesn't check if it failed
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
         while j.data.time.epoch < end:
             if self._local:
                 r = self.is_running()
+                # self._log_debug("check run: now:%s end:%s" % (j.data.time.epoch, end))
                 if r is True:
                     return True
             else:
@@ -398,7 +418,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         """
         self._log_debug("start:%s" % self.name)
 
-        if self.executor == "foreground" is False:
+        if self.executor != "foreground":
             if reset:
                 self.stop()
                 self._hardkill()

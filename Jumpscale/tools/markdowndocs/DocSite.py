@@ -107,11 +107,12 @@ class DocSite(j.application.JSBaseClass):
         )
 
     def get_real_source(self, custom_link, linker=None):
-        """get the real source of custom link format
+        """
+        get the source of the data (only works for github and local paths for now)
 
         :param custom_link: custom link
         :type custom_link: CustomLink
-        :param linker: a liner instance, defaults to GithubLinker
+        :param linker: a linker instance, defaults to GithubLinker
         :type linker: Linker, optional
         :return: a path or a full link
         :rtype: str

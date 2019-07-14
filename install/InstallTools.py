@@ -2265,26 +2265,16 @@ class MyEnv:
         else:
             if secret is None:
                 if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    if MyEnv.interactive:
-                        while not secret:  # keep asking till the secret is not empty
-                            secret = Tools.ask_password("provide secret to use for encrypting private key")
-                    else:
-                        print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
-                        sys.exit(1)
-                else:
-                    secret = MyEnv.config["SECRET"]
-            if secret:
-                MyEnv.secret_set(secret)
-                # is same as what is used to read from ssh-agent in SSHAgent client
+                    MyEnv.secret_set()  # will create a new one only when it doesn't exist
             else:
-                print("SECRET IS NEEDED")
-                sys.exit(1)  # we must have a secret here otherwise it will fails later on
+                MyEnv.secret_set(secret)
 
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
 
     @staticmethod
     def secret_set(secret=None):
+        assert "SECRET" not in MyEnv.config
         while not secret:  # keep asking till the secret is not empty
             secret = Tools.ask_password("provide secret to use for encrypting private key")
         secret = secret.encode()
@@ -2295,6 +2285,9 @@ class MyEnv:
         m.update(secret)
 
         secret2 = m.hexdigest()
+
+        if "SECRET" not in MyEnv.config:
+            MyEnv.config["SECRET"] = ""
 
         if MyEnv.config["SECRET"] != secret2:
 
@@ -2312,7 +2305,7 @@ class MyEnv:
         if reset is False and MyEnv.__init:
             return
 
-        print("MYENV INIT")
+        # print("MYENV INIT")
 
         args = Tools.cmd_args_get()
 
@@ -2611,6 +2604,9 @@ class BaseInstaller:
         1 in the middle (recommended)
         2 is all pips
         """
+
+        # ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9
+
         pips = {
             # level 0: most basic needed
             0: [
@@ -2639,7 +2635,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython>=6.5",
+                "ipython>=7.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -2674,7 +2670,7 @@ class BaseInstaller:
                 # "bpython",
                 "pbkdf2",
                 "ptpython==2.0.4",
-                "prompt-toolkit==2.0.9",
+                "prompt-toolkit>=2.0.9",
                 "pygments-markdown-lexer",
                 "wsgidav",
             ],
@@ -3309,6 +3305,7 @@ class DockerContainer:
             ]:
                 if i in MyEnv.config:
                     CONFIG[i] = MyEnv.config[i]
+
             Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
             shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
 
@@ -3517,7 +3514,7 @@ class DockerContainer:
 
     def jumpscale_install(self, secret=None, privatekey=None, redo=False, web=True, pull=False, branch=None):
 
-        args_txt = ""
+        args_txt = " --no-interactive"
         if secret:
             args_txt += " --secret='%s'" % secret
         if privatekey:
@@ -3548,6 +3545,7 @@ class DockerContainer:
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
+
         self.sshexec(cmd)
 
         cmd = """

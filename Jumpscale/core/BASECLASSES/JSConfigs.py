@@ -1,8 +1,10 @@
 from Jumpscale import j
 from .JSBase import JSBase
 
+from .Attr import Attr
 
-class JSConfigs(JSBase):
+
+class JSConfigs(JSBase, Attr):
     def _init_pre(self, **kwargs):
 
         self._model_ = None
@@ -14,12 +16,35 @@ class JSConfigs(JSBase):
         if not hasattr(self.__class__, "_CHILDCLASS"):
             raise RuntimeError("_CHILDCLASS needs to be specified")
 
+        if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
+            raise RuntimeError("combination not allowed of config and configsclass")
+
+    def _process_schematext(self, schematext):
+        """
+        rewrites the schema in such way there is always a parent_id and name
+        :param schematext:
+        :return:
+        """
+        assert schematext
+        schematext = j.core.tools.text_strip(schematext, replace=False)
+        if schematext.find("name") == -1:
+            if "\n" != schematext[-1]:
+                schematext += "\n"
+            schematext += 'name* = ""\n'
+        if isinstance(self._parent, j.application.JSConfigClass):
+            if schematext.find("parent_id") == -1:
+                if "\n" != schematext[-1]:
+                    schematext += "\n"
+                schematext += "parent_id* = 0 (I)\n"
+        return schematext
+
     @property
     def _model(self):
         if self._model_ is None:
             # self._log_debug("Get model for %s"%self.__class__._location)
             bcdb = self._bcdb_selector()
-            self._model_ = bcdb.model_get_from_schema(self.__class__._CHILDCLASS._SCHEMATEXT)
+            t = self._process_schematext(self.__class__._CHILDCLASS._SCHEMATEXT)
+            self._model_ = bcdb.model_get_from_schema(t)
         return self._model_
 
     def _bcdb_selector(self):
@@ -49,6 +74,13 @@ class JSConfigs(JSBase):
         if not jsxobject:
             jsxobject = self._model.new(data=kwargs)
             jsxobject.name = name
+
+        # means we need to remember the parent id
+        if isinstance(self._parent, j.application.JSConfigClass):
+            if not self._parent._id:
+                self._parent.save()
+                assert self._parent._id
+            jsxobject.parent_id = self._parent._id
         jsconfig_klass = self._childclass_selector(jsxobject=jsxobject)
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
@@ -128,12 +160,10 @@ class JSConfigs(JSBase):
                     raise ValueError("could not find for prop:%s, did not exist in %s" % (key, self._key))
             if match:
                 res.append(item)
+
         for jsxobject in self._findData(**kwargs):
             name = jsxobject.name
-            if name in self._children:
-                if jsxobject not in res:
-                    raise RuntimeError("should always be there")
-            else:
+            if not name in self._children:
                 r = self.new(name=name, jsxobject=jsxobject)
                 res.append(r)
         return res
@@ -150,6 +180,12 @@ class JSConfigs(JSBase):
         :param kwargs: e.g. color="red",...
         :return: list of the data objects (the data of the model)
         """
+
+        if isinstance(self._parent, j.application.JSConfigClass):
+            if not self._parent._id:
+                self._parent.save()
+                assert self._parent._id
+            kwargs["parent_id"] = str(self._parent._id)
 
         if len(kwargs) > 0:
             propnames = [i for i in kwargs.keys()]
@@ -226,24 +262,58 @@ class JSConfigs(JSBase):
         x = []
         for key, item in self._children.items():
             x.append(item)
-        for item in self.findData():
+        for item in self.find():
             if item not in x:
                 x.append(item)
         return self._filter(filter=filter, llist=x, nameonly=False)
 
     def __getattr__(self, name):
         # if private or non child then just return
-        if (
-            name.startswith("_")
-            or name in self._methods_names_get()
-            or name in self._properties_names_get()
-            or name in self._dataprops_names_get()
-        ):
-            return self.__getattribute__(name)  # else see if we can from the factory find the child object
-        r = self._get(name=name, die=False)
-        if not r:
-            raise RuntimeError(
-                "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
-                % (name, self._key)
-            )
-        return r
+
+        if isinstance(self, j.application.JSConfigClass):
+            if name in self._model.schema.propertynames:
+                return self._data.__getattribute__(name)
+
+        if isinstance(self, j.application.JSConfigsClass):
+
+            if (
+                name.startswith("_")
+                or name in self._methods_names_get()
+                or name in self._properties_names_get()
+                or name in self._dataprops_names_get()
+            ):
+                return self.__getattribute__(name)  # else see if we can from the factory find the child object
+
+            r = self._get(name=name, die=False)
+            if not r:
+                raise RuntimeError(
+                    "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
+                    % (name, self._key)
+                )
+            return r
+
+        return self.__getattribute__(attr)
+
+    def __setattr__(self, key, value):
+
+        if key.startswith("_"):
+            self.__dict__[key] = value
+
+        if isinstance(self, j.application.JSConfigClass):
+            if key == "data":
+                self.__dict__[key] = value
+
+        assert "data" not in self.__dict__
+
+        if "_data" in self.__dict__ and key in self._model.schema.propertynames:
+            # if value != self._data.__getattribute__(key):
+            self._log_debug("SET:%s:%s" % (key, value))
+            # self._update_trigger(key, value)
+            self._data.__setattr__(key, value)
+        else:
+            if key in ["_protected"]:
+                self.__dict__[key] = value
+            elif not self._protected or key in self._properties:
+                self.__dict__[key] = value
+            else:
+                raise RuntimeError("protected property:%s" % key)

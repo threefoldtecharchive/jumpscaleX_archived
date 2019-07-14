@@ -31,6 +31,8 @@ class JSFactoryConfigsBaseClass(JSFactoryTools, JSConfigs):
 
     """
 
+    pass
+
 
 class JSBaseConfigsClass(JSConfigs):
     """
@@ -38,11 +40,15 @@ class JSBaseConfigsClass(JSConfigs):
     has support for 1 type of children
     """
 
+    pass
+
 
 class JSBaseConfigClass(JSConfig):
     """
     no children, only 1 data object
     """
+
+    pass
 
 
 class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
@@ -50,9 +56,22 @@ class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
     no children, only 1 data object
     """
 
+    pass
+
 
 class JSBaseFactoryClass(JSBase, JSFactoryTools):
     pass
+
+
+class JSBaseConfigsConfigFactoryClass(JSConfig, JSFactoryTools, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
+
+    pass
+    # def __init__(self, **kwargs):
+    #     JSConfigsFactory.__init__(**kwargs)
+    #     JSConfig.__init__(**kwargs)
 
 
 class Application(object):
@@ -94,6 +113,8 @@ class Application(object):
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
         self.JSBaseFactoryClass = JSBaseFactoryClass
         self.JSConfigClass = JSConfig
+        self.JSConfigsClass = JSConfigs
+        self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
 
     @property
     def appname(self):
@@ -419,6 +440,14 @@ class Application(object):
         if generate:
             self.generate()
 
+        try:
+            j.data.nacl.default
+        except Exception as e:
+            if str(e).find("could not find the path of the private key") != -1:
+                print("WARNING:cannot find the private key")
+                j.data.nacl.configure()
+            raise e
+
         def decrypt():
             try:
                 j.data.nacl.default.signingkey
@@ -427,6 +456,8 @@ class Application(object):
             except Exception as e:
                 if str(e).find("jsx check") != -1:
                     print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                    if j.tools.console.askYesNo("Ok to change the stored private key?"):
+                        j.core.myenv.config["SECRET"] = ""
                     j.core.myenv.secret_set()
                     return False
                 raise e

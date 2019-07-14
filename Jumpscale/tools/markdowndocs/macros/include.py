@@ -2,7 +2,7 @@ import os
 import re
 from functools import partial
 from Jumpscale import j
-from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker, Link
+from Jumpscale.tools.markdowndocs.Link import MarkdownLinkParser, GithubLinker, Link
 
 
 def with_code_block(content, _type=""):
@@ -161,13 +161,13 @@ def include(
     """
     current_docsite = doc.docsite
     j = current_docsite._j
-    custom_link = CustomLink(link)
+    custom_link = MarkdownLinkParser(link)
 
     if docsite_name:
         docsite = j.tools.markdowndocs.docsite_get(docsite_name)
     else:
         repo = current_docsite.get_real_source(custom_link)
-        if not CustomLink(repo).is_url:
+        if not MarkdownLinkParser(repo).is_url:
             # not an external url, use current docsite
             docsite = current_docsite
         else:

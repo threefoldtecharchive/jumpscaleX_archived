@@ -21,7 +21,8 @@ def main(self):
         . /sandbox/env.sh;
         kosmos 'j.data.bcdb.get("test").redis_server_start(port=6380)'
         """
-        j.servers.tmux.execute(cmd)
+        self._cmd = j.servers.startupcmd.new(name="redis_6380", cmd_start=cmd, ports=[6380], executor="tmux")
+        self._cmd.start()
         j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=15)
         bcdb = j.data.bcdb.get("test")
         bcdb.reset()
@@ -63,7 +64,7 @@ def main(self):
         for i in range(1, 11):
             print(i)
             o = get_obj(i)
-            id = redis_cl.set("data:1:url:despiegk.test2", o._json)
+            redis_cl.set("data:1:url:despiegk.test2", o._json)
 
         print(redis_cl.get("data:1:url:despiegk.test2"))
 
@@ -98,7 +99,8 @@ def main(self):
         if zdb:
             self._log_debug("validate list2")
             assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
-
+        self._cmd.stop()
+        self._cmd.wait_stopped()
         return
 
     def sqlite_test():

@@ -29,7 +29,7 @@ class BuilderARDB(j.builders.system._BaseClass):
         self.system.package.install(packages)
 
         url = "https://github.com/yinqiwen/ardb.git"
-        j.clients.git.pullGitRepo(url=url, tag="v0.9.3", dest=self.CODE_DIR_ARDB, depth=1)
+        j.clients.git.pullGitRepo(url=url, tag="v0.9.7", dest=self.CODE_DIR_ARDB, depth=1)
 
         storageEngine = "forestdb"
         C = """

@@ -32,6 +32,29 @@ class NetTools(JSBASE):
                 conn.close()
         return True
 
+    def udpPortConnectionTest(self, ipaddr, port, timeout=1, message=b"PING"):
+
+        conn = socket.socket(type=socket.SOCK_DGRAM)
+        if timeout:
+            conn.settimeout(timeout)
+        try:
+            conn.connect((ipaddr, port))
+        except BaseException:
+            conn.close()
+            return False
+
+        self._log_debug("Sending %s bytes to %s:%s" % (len(message), ipaddr, port))
+        conn.send(message)
+
+        try:
+            data, address = conn.recvfrom(8192)
+        except Exception as e:
+            if "refused" in str(e):
+                return False
+            return False
+            # raise RuntimeError("unexpected result")
+        return True
+
     def ip_to_num(self, ip="127.0.0.1"):
         """
         Convert an IP string to number

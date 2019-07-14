@@ -39,7 +39,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
             --pid-path="/sandbox/var/pid/openresty.pid" \
             --error-log-path="/sandbox/var/log/openresty.log" \
             --lock-path="/sandbox/var/nginx.lock" \
-            --conf-path="/sandbox/cfg/openresty.cfg" \
+            --conf-path="/sandbox/cfg/nginx/openresty.cfg" \
             -j8
         make -j8
         make install
@@ -205,6 +205,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
+        raise RuntimeError("cannot use lapis here, need openresty allone")
         cmd = """
         rm -rf {DIR_TEMP}/lapis_test
         mkdir -p {DIR_TEMP}/lapis_test 
@@ -230,7 +231,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         self._log_info("openresty is running on port 8080")
         # we now have done a tcp test, lets do a http client connection
         out = j.clients.http.get("http://localhost:8080")
-
+        raise RuntimeError("need other test")
         assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
         self.stop()
 

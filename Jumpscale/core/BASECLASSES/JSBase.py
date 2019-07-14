@@ -47,6 +47,7 @@ class JSBase:
         if "parent" in kwargs:
             kwargs.pop("parent")
         self._init_pre(**kwargs)
+        self._init_pre2(**kwargs)
         self.__init_class()
         self._obj_cache_reset()
         self._init(**kwargs)
@@ -57,8 +58,12 @@ class JSBase:
     def __init_class(self):
 
         if not self.__class__.__init_class_done:
-            self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
+
             # short location name:
+
+            if not self.__class__._name:
+                self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
+                # name = str(self.__class__).split(".")[-1].split("'", 1)[0].lower()  # wonder if there is no better way
 
             if "__jslocation__" in self.__dict__:
                 self.__class__._location = self.__jslocation__
@@ -70,7 +75,8 @@ class JSBase:
                 self.__class__._location = None
                 parent = self._parent
                 while parent is not None:
-                    if hasattr(parent, "__jslocation__"):
+                    if "__jslocation__" in parent.__dict__:
+                        # if hasattr(parent, "__jslocation__"):
                         self.__class__._location = parent.__jslocation__
                         break
                     parent = parent._parent
@@ -244,6 +250,13 @@ class JSBase:
         """
         pass
 
+    def _init_pre2(self, **kwargs):
+        """
+        meant to be used by developers of the base classes
+        :return:
+        """
+        pass
+
     def _init_post(self, **kwargs):
         """
         meant to be used by developers of the base classes
@@ -279,7 +292,7 @@ class JSBase:
         if self._objid_ is None:
             id = self.__class__._location
             id2 = ""
-            if hasattr(self, "_data"):
+            if "_data" in self.__dict__:
                 try:
                     id2 = self._data.name
                 except:
@@ -670,32 +683,6 @@ class JSBase:
 
     ###################
 
-    # def __getattr__(self, attr):
-    #     if not self._prop_exist(attr):
-    #         raise RuntimeError("did not find attr:%s" % attr)
-    #
-    #     # if attr.startswith("_"):
-    #     return self.__getattribute__(attr)
-    #
-    # def __setattr__(self, attr, value):
-    #     if not self._prop_exist(attr):
-    #         raise RuntimeError("did not find attr:%s" % attr)
-    #
-    #     self.__dict__[attr] = value
-
-    # return self.__setattribute__(attr)
-
-    # if key.startswith("_") or key == "data":
-    #     self.__dict__[key] = value
-    #
-    # elif "data" in self.__dict__ and key in self._schema.propertynames:
-    #     # if value != self._data.__getattribute__(key):
-    #     self._log_debug("SET:%s:%s" % (key, value))
-    #     self._update_trigger(key, value)
-    #     self.__dict__["data"].__setattr__(key, value)
-    # else:
-    #     self.__dict__[key] = value
-
     def __str__(self):
 
         out = "## {GRAY}{RED}%s{BLUE} %s{RESET}\n\n" % (
@@ -724,7 +711,7 @@ class JSBase:
 
         out += "{RESET}"
 
-        out = j.core.tools.text_replace(out)
+        out = j.core.tools.text_replace(out, ignore_error=True)
         print(out)
 
         # TODO: *1 dirty hack, the ansi codes are not printed, need to check why

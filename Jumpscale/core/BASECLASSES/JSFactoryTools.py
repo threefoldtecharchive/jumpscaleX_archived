@@ -41,10 +41,14 @@ class JSFactoryTools:
 
     def _code_run(self, path, name=None, obj_key="main", die=True, **kwargs):
         if not path.startswith("/"):
-            path = self._dirpath + "/" + path
-        assert j.sal.fs.exists(path)
-        method = j.tools.codeloader.load(obj_key=obj_key, path=path)
-        self._log_debug("##:LOAD: path: %s\n\n" % path)
+            path2 = self._dirpath + "/" + path
+        assert j.sal.fs.exists(path2)
+        if j.sal.fs.isDir(path2):
+            path3 = self.__find_code(name=name, path=path2)
+        else:
+            path3 = path2
+        method = j.tools.codeloader.load(obj_key=obj_key, path=path3)
+        self._log_debug("##:LOAD: path: %s\n\n" % path2)
         if die or j.application.debug:
             res = method(self=self, **kwargs)
         else:

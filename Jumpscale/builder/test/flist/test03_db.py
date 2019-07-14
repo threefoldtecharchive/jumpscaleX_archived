@@ -29,6 +29,7 @@ class Db_TestCases(BaseTest):
             "mongodb": "https://github.com/threefoldtech/jumpscaleX/issues/658",
             "ardb": "https://github.com/threefoldtech/jumpscaleX/issues/658",
             "mariadb": "https://github.com/threefoldtech/jumpscaleX/issues/658",
+            "influxdb": "https://github.com/threefoldtech/jumpscaleX/issues/690",
         }
         if flist in skipped_flists:
             self.skipTest(skipped_flists[flist])

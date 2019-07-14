@@ -18,18 +18,12 @@ Tools = j.core.tools
 MyEnv = j.core.myenv
 
 
-class NACL:
-    def __init__(self, name="default"):
+class NACL(j.application.JSBaseClass):
+    def _init(self, name=None, **kwargs):
+        assert name
         self.name = name
-        self.__init = False
-        self.reset()
-
-    def _init(self, **kwargs):
-        if not self.__init:
-            if not Tools.exists(self._path):
-                Tools.dir_ensure(self._path)
-
-        self.__init = True
+        if not Tools.exists(self._path):
+            Tools.dir_ensure(self._path)
 
     def reset(self):
         self._box = None
@@ -161,9 +155,12 @@ class NACL:
         will load private key from filesystem
         if not possible will exit to shell
         """
-        self._init()
         self._signingkey = ""
         self.privkey = None
+
+        if not j.core.myenv.config["SECRET"]:
+            raise RuntimeError("secret should already have been set, do 'jsx check'")
+            # j.core.myenv.secret_set() #there is no secret yet
 
         if False and j.core.myenv.config["SSH_KEY_DEFAULT"]:
             # TODO: ERROR, ssh-agent does not work for signing, can't figure out which key to use
@@ -173,6 +170,7 @@ class NACL:
             key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
         else:
             key = j.core.myenv.config["SECRET"]  # is the hex of sha256 hash, need to go to binary
+            assert key.strip() != ""
             key = binascii.unhexlify(key)
 
         try:

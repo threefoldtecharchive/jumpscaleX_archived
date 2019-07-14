@@ -93,6 +93,7 @@ class Window(j.application.JSBaseClass):
             self.mgmt.kill_window()
         except:
             pass
+        self._panes = []
 
     def __repr__(self):
         return "window:%s:%s" % (self.id, self.name)

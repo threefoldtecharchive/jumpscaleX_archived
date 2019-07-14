@@ -63,6 +63,16 @@ class World(j.application.JSBaseConfigsFactoryClass):
     _CHILDCLASSES = [Cars, Ships, Ship]
 
 
+class WorldWithData(j.application.JSBaseConfigsConfigFactoryClass):
+
+    _CHILDCLASSES = [Cars, Ships]
+    _SCHEMATEXT = """
+        @url = jumpscale.example.ship.1
+        name* = ""
+        color = "red,blue" (E)
+        """
+
+
 def main(self):
     """
     to run:
@@ -71,6 +81,7 @@ def main(self):
     """
 
     ships = Ships()
+
     ship1 = ships.get(name="ibizaboat")
     assert ship1.name == "ibizaboat"
 
@@ -94,9 +105,37 @@ def main(self):
     assert len(allchildren) == 5
 
     w.save()
+
+    w.cars._children = {}
+
     assert len(w.cars._model.find()) == 2  # proves that the data has been saved in the DB
 
+    assert len(w.cars.find()) == 2
+
+    w2 = WorldWithData()
+    w3 = WorldWithData()
+    assert isinstance(w2, j.application.JSBaseConfigsConfigFactoryClass)
+    assert isinstance(w2, j.application.JSConfigsFactory)
+    assert isinstance(w2, j.application.JSConfigClass)
+
+    # needs to be 0 because is a new obj with other children
+
+    assert len(w3.cars.find()) == 0
+
+    assert len(w2.cars.find()) == 0
+    car3 = w2.cars.get("rabbit3")
+    car3.save()
+    assert car3._id  # cannot be empty
+
+    assert len(w2.cars.find()) == 1  # then we know that world 2 only has 1 car
+
+    assert len(w.cars.find()) == 2
+
+    car4 = w3.cars.get("rabbit4")
+    car5 = w3.cars.get("rabbit5")
+    car6 = w3.cars.get("rabbit6")
+
+    assert len(w3.cars.find()) == 3
+    assert len(w2.cars.find()) == 1
+
     print("TEST OK")
-
-
-main(1)

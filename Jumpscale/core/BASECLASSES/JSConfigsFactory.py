@@ -6,14 +6,16 @@ from .JSBase import JSBase
 factory for JSConfig & JSConfigs objects
 """
 
+from .Attr import Attr
 
-class JSConfigsFactory(JSBase):
+
+class JSConfigsFactory(JSBase, Attr):
     def __init_class_post(self):
 
         if not hasattr(self.__class__, "_CHILDCLASSES"):
             raise RuntimeError("_CHILDCLASSES needs to be specified")
 
-    def _init_pre(self, **kwargs):
+    def _init_pre2(self, **kwargs):
 
         if hasattr(self.__class__, "_CHILDCLASS"):
             # means we will only use 1 JSConfigs as child
@@ -22,7 +24,13 @@ class JSConfigsFactory(JSBase):
 
         for kl in self.__class__._CHILDCLASSES:
             # childclasses are the JSConfigs classes
-            name = str(kl).split(".")[-1].split("'", 1)[0].lower()  # wonder if there is no better way
+
+            if not kl._name:
+                name = j.core.text.strip_to_ascii_dense(str(kl)).split(".")[-1].lower()
+            else:
+                name = kl._name
+            assert name
+            # self._log_debug("attach child:%s" % name)
             if issubclass(kl, j.application.JSBaseConfigClass):
                 obj = kl(parent=self, name=name)
                 assert obj._parent
@@ -56,23 +64,15 @@ class JSConfigsFactory(JSBase):
             if isinstance(item, j.application.JSBaseConfigClass):
                 self._log("delete:%s" % item.name)
                 item.delete()
+        if isinstance(self, j.application.JSBaseConfigClass):
+            # means we delete our own config as well
+            self.delete_()
 
     def save(self):
         for item in self._children_recursive_get():
             if isinstance(item, j.application.JSBaseConfigClass):
                 self._log("save:%s" % item.name)
                 item.save()
-
-    def __getattr__(self, name):
-        # if private then just return
-        if name in self._children:
-            return self._children[name]
-        return self.__getattribute__(name)
-
-    def __setattr__(self, key, value):
-        if key in ["_protected"]:
-            self.__dict__[key] = value
-        elif not self._protected or key in self._properties:
-            self.__dict__[key] = value
-        else:
-            raise RuntimeError("protected property:%s" % key)
+        if isinstance(self, j.application.JSBaseConfigClass):
+            # means we save our own config as well
+            self.save_()

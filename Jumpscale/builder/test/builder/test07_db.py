@@ -20,7 +20,10 @@ class DBTestCases(BaseTest):
         """ BLD-001
         *Test db builers sandbox*
         """
-        skipped_builders = {"mariadb": "https://github.com/threefoldtech/jumpscaleX/issues/652"}
+        skipped_builders = {
+            "mariadb": "https://github.com/threefoldtech/jumpscaleX/issues/652",
+            "influxdb": "https://github.com/threefoldtech/jumpscaleX/issues/690",
+        }
         if builder in skipped_builders:
             self.skipTest(skipped_builders[builder])
         self.info(" * {} builder: run build method.".format(builder))
