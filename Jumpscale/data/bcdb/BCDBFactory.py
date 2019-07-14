@@ -150,12 +150,13 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             return bcdb
         elif name in self._config:
             data = self._config[name]
-            if data["type"] == "zdb":
+            if "type" not in data or data["type"] == "zdb":
                 if "admin" in data:
                     if data["admin"]:
                         raise RuntimeError("can only use ZDB connection which is not admin")
                     data.pop("admin")
-                data.pop("type")
+                if "type" in data:
+                    data.pop("type")
                 storclient = j.clients.zdb.client_get(**data)
             elif data["type"] == "rdb":
                 storclient = j.clients.rdb.client_get(**data)

@@ -19,7 +19,7 @@ def main(self):
     
     
     """
-    j.servers.zdb.test_instance_start()
+    zdb = j.servers.zdb.test_instance_start()
     bcdb = j.data.bcdb.get("test")
     bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
@@ -123,7 +123,7 @@ def main(self):
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
-    a = j.servers.zdb.client_admin_get()
+    a = zdb.client_admin_get()
     storclient2 = a.namespace_new("test2", secret="12345")
 
     bcdb2 = j.data.bcdb.new("test2", storclient2)
