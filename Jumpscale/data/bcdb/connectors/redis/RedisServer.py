@@ -114,8 +114,8 @@ class RedisServer(j.application.JSBaseClass):
             elif redis_cmd in ["hscan"]:
                 kwargs = parser.request_to_dict(request[3:])
                 if not hasattr(self, redis_cmd):
-                    raise RuntimeError("COULD NOT FIND COMMAND:%s" % redis_cmd)
                     response.error("COULD NOT FIND COMMAND:%s" % redis_cmd)
+                    raise RuntimeError("COULD NOT FIND COMMAND:%s" % redis_cmd)
                 else:
                     method = getattr(self, redis_cmd)
                     start_obj = int(request[2].decode())
@@ -260,19 +260,24 @@ class RedisServer(j.application.JSBaseClass):
         """
         # in first version will only do 1 page, so ignore scan
         res = []
+
         for i in self.vfs._bcdb_names:
-            bcdb_instance = j.data.bcdb.get(i)
+            """ bcdb_instance = j.data.bcdb.get(i) """
+            sch_sids = self.vfs.get("%s/schemas/sid" % i)
+            if len(sch_sids.items) > 0:
+                for sid in sch_sids.items:
+                    res.append("{}:schemas:sid:{}".format(i, sid))
+                    res.append("{}:data:1:sid:{}".format(i, sid))
 
-            if len([bcdb_instance.meta._data.schemas]) > 0:
-                for url in list(bcdb_instance.meta._data.schemas):
-                    res.append("{}:schemas:url:{}".format(i, url.url))
-                    res.append("{}:schemas:sid:{}".format(i, url.sid))
-                    res.append("{}:schemas:hash:{}".format(i, url.md5))
+                sch_urls = self.vfs.get("%s/schemas/url" % i)
+                for url in sch_urls.items:
+                    res.append("{}:schemas:url:{}".format(i, url))
+                    res.append("{}:data:1:url:{}".format(i, url))
 
-                    res.append("{}:data:1:url:{}".format(i, url.url))
-                    res.append("{}:data:1:sid:{}".format(i, url.sid))
-                    res.append("{}:data:1:hash:{}".format(i, url.md5))
-
+                sch_hashes = self.vfs.get("%s/schemas/hash" % i)
+                for h in sch_hashes.items:
+                    res.append("{}:schemas:hash:{}".format(i, h))
+                    res.append("{}:data:1:hash:{}".format(i, h))
             else:
                 res.append("%s:schemas:url" % i)
                 res.append("%s:data:url" % i)
@@ -331,7 +336,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hscan(self, response, key, startid, count=10000):
 
-        cat, url, _, model = self._split(key)
+        _, _, _, model = self._split(key)
         # objs = model.get_all()
         res = []
         if "schemas" in key:
