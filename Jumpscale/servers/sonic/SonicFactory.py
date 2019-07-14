@@ -32,15 +32,10 @@ class SonicFactory(JSConfigs):
         kosmos 'j.servers.sonic.test()'
         :return:
         """
-
-        # TODO: start sonic and test sonic through the client
-
+        s = self.get(name="test_instance")
+        s.save()
         if start:
-            s = self.new("test")
-            s.save()
             s.start()
-        else:
-            s = self.get("test")
 
         client = s.default_client
 
@@ -55,8 +50,4 @@ class SonicFactory(JSConfigs):
         for articleid, content in data.items():
             client.push("forum", "posts", articleid, content)
 
-        self._log_info(client.query("forum", "posts", "love"))
-
-        # TODO check the return, also the suggest
-
-        j.shell()
+        assert client.query("forum", "posts", "love") == ['post:5', 'post:4']
