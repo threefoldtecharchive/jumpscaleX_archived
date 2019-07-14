@@ -1085,6 +1085,7 @@ class group_servers(JSGroup):
         self._openresty = None
         self._gundb = None
         self._myjobs = None
+        self._graphql = None
         self._raftserver = None
         self._dns = None
         self._threebot = None
@@ -1128,6 +1129,12 @@ class group_servers(JSGroup):
             from DigitalMe.servers.myjobs.MyJobs import MyJobs
             self._myjobs =  MyJobs()
         return self._myjobs
+    @property
+    def graphql(self):
+        if self._graphql is None:
+            from DigitalMe.servers.graphql.GraphQLFactory import GraphQLFactory
+            self._graphql =  GraphQLFactory()
+        return self._graphql
     @property
     def raftserver(self):
         if self._raftserver is None:
