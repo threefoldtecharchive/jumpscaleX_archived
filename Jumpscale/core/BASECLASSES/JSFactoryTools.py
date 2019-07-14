@@ -85,8 +85,7 @@ class JSFactoryTools:
 
             bname = j.sal.fs.getBaseName(item)
             bname = get_shortname(bname)
-
-            if bname == name:
+            if bname == get_shortname(name):
                 return item
         raise RuntimeError("Could not find code: '%s' in %s" % (name, path))
 
