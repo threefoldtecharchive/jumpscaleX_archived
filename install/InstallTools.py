@@ -3313,7 +3313,7 @@ class DockerContainer:
                     CONFIG[i] = MyEnv.config[i]
 
             Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
-            shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
+            #shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
 
         if not self.container_exists:
 
