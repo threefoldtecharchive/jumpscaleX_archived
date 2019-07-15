@@ -173,11 +173,7 @@ class Response:
         """
         r = self._client.redis
         flag = "{}:flag".format(self._queue)
-        if bool(r.exists(flag)):
-            ttl = r.ttl(flag)
-            return ttl == -1 or ttl is None
-
-        return False
+        return r.ttl(flag) == -1
 
     def stream(self, callback=None):
         """
