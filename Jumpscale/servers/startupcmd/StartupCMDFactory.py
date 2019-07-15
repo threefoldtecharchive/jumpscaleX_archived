@@ -59,8 +59,6 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             self.http.ports = 8000
             self.http.corex_client_name = corex.name
             self.http.start()
-
-            j.shell()
             self.http.stop()
             self.http.delete()
 
@@ -105,7 +103,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
 
         http_tmux()
         http_back()
-        # http_corex()
+        http_corex()
 
         tmux_background()
 
