@@ -111,11 +111,13 @@ def _configure(
         j.data.nacl.configure(privkey_words=privatekey_words)
 
 
+"""
 if not IT.MyEnv.state:
     # this is needed to make sure we can install when nothing has been done yet
     _configure()
 
 # IT.BaseInstaller.base()
+"""
 
 
 @click.group()
@@ -137,7 +139,7 @@ def cli():
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("--no-interactive", is_flag=True, help="default is interactive")
+@click.option("--no_interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
@@ -226,7 +228,7 @@ def container_install(
     """
     interactive = not no_interactive
 
-    _configure(configdir=configdir)
+    _configure(configdir=configdir, no_interactive=no_interactive)
 
     if scratch:
         image = "phusion/baseimage"

@@ -1675,7 +1675,7 @@ class Tools:
         :return:
         """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.config["SSH_AGENT"]:
+        if MyEnv.config["SSH_AGENT"] and not MyEnv.config["INTERACTIVE"]:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -2878,6 +2878,7 @@ class UbuntuInstaller:
         """
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_docker_install")
+        
 
     @staticmethod
     def python_redis_install():
@@ -3068,7 +3069,8 @@ class DockerFactory:
 
             if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
                 UbuntuInstaller.docker_install()
-
+                MyEnv._cmd_installed["docker"] = shutil.which("docker")
+                
             if not Tools.cmd_installed("docker"):
                 print("Could not find Docker installed")
                 sys.exit(1)
@@ -3518,7 +3520,7 @@ class DockerContainer:
 
     def jumpscale_install(self, secret=None, privatekey=None, redo=False, web=True, pull=False, branch=None):
 
-        args_txt = " --no-interactive"
+        args_txt = ""
         if secret:
             args_txt += " --secret='%s'" % secret
         if privatekey:
