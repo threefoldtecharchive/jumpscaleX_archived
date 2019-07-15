@@ -822,7 +822,7 @@ class Tools:
             script = """
             pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
             pip3 install pudb
-            pip3 install pygments            
+            pip3 install pygments
             """
             Tools.execute(script, interactive=True)
 
@@ -1082,8 +1082,10 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["DEBUG"] and MyEnv.config.get("log_printer"):
-            p = MyEnv.config["log_printer"]
+        if MyEnv.config["DEBUG"] or logdict.get('use_custom_printer'):
+            custom_printer = MyEnv.config.get("log_printer")
+            if custom_printer:
+                p = custom_printer
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
@@ -3217,7 +3219,7 @@ class DockerContainer:
                 self.config.save()
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
             MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
-        
+
         if len(MyEnv.sshagent.keys_list()) == 0:
             raise RuntimeError("Please load your ssh-agent with a key!")
 
