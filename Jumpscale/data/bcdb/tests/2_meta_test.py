@@ -24,6 +24,7 @@ def main(self):
     assert s.url == "despiegk.test"
 
     m = bcdb.model_get_from_url("despiegk.test")
+    assert len(bcdb.meta._data.schemas) == 8  # we have 2 schemas with the same url despiegk.test but different md5
 
     schema_text = """
     @url = jumpscale.schema.test.a
@@ -38,17 +39,13 @@ def main(self):
     sid = bcdb.meta._schema_set(s)
     assert isinstance(sid, int)
 
-    assert len(bcdb.meta._data.schemas) == 8
+    assert len(bcdb.meta._data.schemas) == 9
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
 
     schema = bcdb.model_get_from_url("jumpscale.schema.test.a")
     o = schema.new()
-
-    redis = cl1.redis
-    data = redis.get(b"\x00\x00\x00\x00")
-    assert len(data) > 100
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
@@ -60,7 +57,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 8
+    assert len(bcdb.meta._data._ddict["schemas"]) == 9
 
     a = model.new()
     a.category = "acat"

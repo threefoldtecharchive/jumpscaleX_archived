@@ -20,7 +20,7 @@ def main(self):
     
     """
     zdb = j.servers.zdb.test_instance_start()
-    bcdb = j.data.bcdb.get("test")
+    bcdb = j.data.bcdb.new("test")
     bcdb.reset()
     m = bcdb.model_get_from_schema(SCHEMA)
 
