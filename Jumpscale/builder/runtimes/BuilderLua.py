@@ -1,4 +1,5 @@
 from Jumpscale import j
+from Jumpscale.sal.bash.Profile import Profile
 
 builder_method = j.builders.system.builder_method
 
@@ -9,6 +10,9 @@ class BuilderLua(j.builders.system._BaseClass):
     """
 
     NAME = "lua"
+
+    def _init(self):
+        self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
 
     @builder_method()
     def build(self, reset=False, deps_reset=False):
@@ -38,16 +42,28 @@ class BuilderLua(j.builders.system._BaseClass):
         make install
 
         cp {DIR_BUILD}/luarocks/luarocks /sandbox/bin/luarocks
+        luarocks path > {ROCKS_PATHS_PROFILE}
         """
         # set showout to False to avoid text_replace of output log
         self._execute(C, showout=True)
 
-        self.lua_rocks_install()
+    def profile_sandbox_set(self):
+        # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
+        luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
+        lua_path = luarocks_profile.env_get("LUA_PATH")
+        lua_cpath = luarocks_profile.env_get("LUA_CPATH")
+        self.profile.env_set("LUA_PATH", lua_path)
+        self.profile.env_set("LUA_CPATH", lua_cpath)
+
+        # add luarocs path to PATH, so binaries of luarocks packageds can be executed normally
+        path = luarocks_profile.env_get("PATH").replace(";", ":")
+        self.profile.path_add(path, check_exists=False)
 
     def lua_rock_install(self, name):
         self._log_info("lua_rock_install: %s" % name)
         if self._done_check("lua_rock_install_%s" % name):
             return
+
         if j.core.platformtype.myplatform.platform_is_osx:
             C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR "
             C = C.replace("$CRYPTODIR", "/usr/local/opt/openssl")
@@ -56,7 +72,6 @@ class BuilderLua(j.builders.system._BaseClass):
             # C = "luarocks install lapis CRYPTO_DIR=/sandbox OPENSSL_DIR=/sandbox"
             C = "luarocks install $NAME "
             C = C.replace("$CRYPTODIR", "/sandbox")
-        C += "LUA_INCDIR=/sandbox/openresty/luajit/include/luajit-2.1 LUA_LIBDIR=/sandbox/openresty/luajit/lib/"
         C = C.replace("$NAME", name)
         # example crypto dir: /usr/local/openresty/openssl/
 
@@ -70,6 +85,7 @@ class BuilderLua(j.builders.system._BaseClass):
         :param install:
         :return:
         """
+        self.profile_sandbox_select()
 
         # if j.core.platformtype.myplatform.platform_is_ubuntu:
         #     # j.builders.system.package.mdupdate()
@@ -103,11 +119,11 @@ class BuilderLua(j.builders.system._BaseClass):
 
         # lua-resty-influx
         lua-resty-repl
-        # 
+        #
         # lua-resty-iputils
-        # 
+        #
         # lsqlite3
-        # 
+        #
         # bcrypt
         # md5
 
@@ -120,12 +136,12 @@ class BuilderLua(j.builders.system._BaseClass):
 
         # alt-getopt
         # lua-messagepack
-        
+
         # lua-resty-qless
         # lua-geoip
         # luajwt
-        # mooncrafts        
-        
+        # mooncrafts
+
         """
 
         for line in C.split("\n"):
@@ -140,10 +156,6 @@ class BuilderLua(j.builders.system._BaseClass):
             self.lua_rock_install("lua-geoip")
             self.lua_rock_install("lua-resty-jwt")
             self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
-        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib")
-        self.tools.execute(cmd, die=False)
-        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib")
-        self.tools.execute(cmd, die=False)
 
     # def build_crypto(self):
     #
@@ -196,7 +208,9 @@ class BuilderLua(j.builders.system._BaseClass):
         kosmos 'j.builders.runtimes.lua.install()'
         :return:
         """
-        src = "/sandbox/code/github/threefoldtech/digitalmeX/sandbox/bin"
+        self.lua_rocks_install()
+
+        # copy some binaries
         C = """
 
         set -e
@@ -204,11 +218,8 @@ class BuilderLua(j.builders.system._BaseClass):
         cp resty /sandbox/bin/resty
         popd
 
-        pushd {DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
+        pushd /sandbox/openresty/luarocks/bin/
         cp lapis /sandbox/bin/_lapis.lua
-        popd
-
-        pushd '{DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
         popd
@@ -216,11 +227,9 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self._execute(C)
 
+        # need to check what we do actually need from sandbox_base/bin
+        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
         self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
-
-        self.clean()
-
-        self._log_info("install lua & openresty done.")
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):
@@ -300,7 +309,7 @@ class BuilderLua(j.builders.system._BaseClass):
     def startup_cmds(self):
         cmd = """
         rm -rf {DIR_TEMP}/lapis_test
-        mkdir -p {DIR_TEMP}/lapis_test 
+        mkdir -p {DIR_TEMP}/lapis_test
         cd {DIR_TEMP}/lapis_test
         lapis --lua new
         lapis server
