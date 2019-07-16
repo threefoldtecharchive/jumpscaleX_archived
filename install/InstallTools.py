@@ -3532,7 +3532,9 @@ class DockerContainer:
             args_txt += " --pull"
         if branch:
             args_txt += " --branch %s" % branch
-
+        if not MyEnv.interactive:
+            args_txt += " --no_interactive"
+            
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
