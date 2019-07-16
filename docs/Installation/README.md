@@ -7,12 +7,11 @@ Before starting the installation to make sure to install the [prerequisites](/do
 ## Install Jumpscale X using docker
 
 ```bash
-# TODO CHANGE BRANCH WITH MASTER (replace development_installer)
 # get the jsx command (installer)
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/jsx.py?$RANDOM > /tmp/jsx ; \
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ; \
 chmod +x /tmp/jsx; \
 # install
-/tmp/jsx container-install
+/tmp/jsx container_install
 ```
 
 The installer will ask you to provide a secret (and a couple of yes/no questions to which you answer yes).
@@ -21,7 +20,7 @@ If successfull, you will see something like:
 ```bash
 install succesfull:
 # if you use a container do:
-jsx container-kosmos
+jsx container_kosmos
 
 ```
 
@@ -33,7 +32,7 @@ To start JumpcaleX:
 
 ```bash
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container-kosmos
+/tmp/jsx container_kosmos
 ```
 
 Once kosmos is launched you will see this line:
@@ -51,8 +50,13 @@ If jsx is missing from your `/tmp` folder:
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
 chmod +x /tmp/jsx; \
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container-kosmos
+/tmp/jsx container_kosmos
 ```
+## To install no-interactive
+Pass your sectet first through <br>
+`/tmp/jsx configure -s mysecret`<br>
+then install no interactive <br>
+`/tmp/jsx install --no_interactive`
 
 ## jsx command help
 
