@@ -127,21 +127,27 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             return True
         return False
 
-    def get(self, name, reset=False):
+    def get(self, name, storclient=None, reset=False, if_not_exist_die=False):
         """
         will create a new one or an existing one if it exists
         :param name:
         :param reset: will remove the data
         :return:
         """
-        return self._get(name=name, reset=reset)
+        return self._get(name=name, reset=reset, storclient=storclient, if_not_exist_die=if_not_exist_die)
 
     def _get_vfs(self):
         from .BCDBVFS import BCDBVFS
 
         return BCDBVFS(self._bcdb_instances)
 
-    def _get(self, name, reset=False, if_not_exist_die=True):
+    def _get(self, name, reset=False, storclient=None, if_not_exist_die=False):
+        """[summary]
+        get instance of bcdb
+        :param name:
+        :param storclient: can add this if bcdb instance doesn't exist
+        :return:
+        """
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
@@ -165,7 +171,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         elif if_not_exist_die:
             raise RuntimeError("did not find bcdb with name:%s" % name)
         else:
-            return None
+            self.new(name=name, storclient=storclient)
 
         self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
         return self._bcdb_instances[name]
