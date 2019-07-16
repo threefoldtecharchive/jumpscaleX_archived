@@ -1675,7 +1675,7 @@ class Tools:
         :return:
         """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.config["SSH_AGENT"] and not MyEnv.config["INTERACTIVE"]:
+        if MyEnv.config["SSH_AGENT"] and MyEnv.config["INTERACTIVE"]:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -2518,13 +2518,12 @@ class BaseInstaller:
             cd {DIR_BASE}
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/cfg/ {DIR_BASE}/cfg/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/bin/ {DIR_BASE}/bin/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/openresty/ {DIR_BASE}/openresty/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var
 
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
         else:
 
@@ -2537,7 +2536,7 @@ class BaseInstaller:
             rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
             mkdir -p root
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             if MyEnv.platform() == "darwin":
                 reponame = "sandbox_osx"
@@ -2558,7 +2557,7 @@ class BaseInstaller:
             args = {}
             args["REPONAME"] = reponame
 
-            Tools.execute(script, interactive=True, args=args)
+            Tools.execute(script, interactive=MyEnv.interactive, args=args)
 
             script = """
             set -e
@@ -2566,7 +2565,7 @@ class BaseInstaller:
             source env.sh
             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             Tools.log("INSTALL FOR BASE OK")
 

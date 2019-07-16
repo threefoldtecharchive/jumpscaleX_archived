@@ -276,7 +276,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no-interactive", is_flag=True, help="default is interactive")
+@click.option("--no_interactive", is_flag=True, help="default is interactive")
 def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
