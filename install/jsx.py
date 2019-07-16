@@ -548,15 +548,15 @@ if __name__ == "__main__":
     # DO NOT DO THIS IN ANY OTHER WAY !!!
 
     if not IT.DockerFactory.indocker():
-        cli.add_command(container_kosmos)
-        cli.add_command(container_install)
-        cli.add_command(container_stop)
-        cli.add_command(container_start)
-        cli.add_command(container_delete)
-        cli.add_command(containers_reset)
-        cli.add_command(container_export)
-        cli.add_command(container_import)
-        cli.add_command(container_shell)
-        cli.add_command(container_clean)
+        cli.add_command(container_kosmos, "container_kosmos")
+        cli.add_command(container_install, "container_install")
+        cli.add_command(container_stop, "container_stop")
+        cli.add_command(container_start, "container_start")
+        cli.add_command(container_delete, "container_delete")
+        cli.add_command(containers_reset, "containers_reset")
+        cli.add_command(container_export, "container_export")
+        cli.add_command(container_import, "container_import")
+        cli.add_command(container_shell, "container_shell")
+        cli.add_command(container_clean, "container_shell")
 
     cli()
