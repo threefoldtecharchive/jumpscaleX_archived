@@ -9,7 +9,7 @@ class BuilderSyncthing(BuilderGolangTools):
 
     NAME = "syncthing"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         # isolate GOPATH, some dependences conflict with other builders
         self.DIR_GO_PATH = self._replace("{DIR_BUILD}/go_proj")
@@ -87,7 +87,7 @@ class BuilderSyncthing(BuilderGolangTools):
     @property
     def startup_cmds(self):
         cmd = self._replace("{DIR_BIN}/syncthing -home  {DIR_CFG}/syncthing")
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

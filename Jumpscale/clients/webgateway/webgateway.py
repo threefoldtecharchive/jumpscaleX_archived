@@ -14,7 +14,7 @@ class WebGateway(JSConfigBase):
     public_ips = [] (LS)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.etcd = j.clients.etcd.get(self.etcd_instance)
         self.traefik = j.clients.traefik.get(

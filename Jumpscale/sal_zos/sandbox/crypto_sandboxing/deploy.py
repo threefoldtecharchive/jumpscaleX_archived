@@ -141,7 +141,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     zrobot_cl = j.clients.zrobot.robots[zos_node_name]
     tft_node_name = "tft_node"
     tft_node_data = {
-        "flist": "https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
+        "flist": "https://hub.grid.tf/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
         "memory": 1024 * 14,
         "cpu": 2,
         "nics": [{"type": "default", "name": "nic01"}],
@@ -209,7 +209,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     btc_node_name = "btc_node"
 
     btc_node_data = {
-        "flist": "https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
+        "flist": "https://hub.grid.tf/abdelrahman_hussein_1/ubuntucryptoexchange.flist",
         "memory": 1024 * 14,
         "cpu": 2,
         "nics": [{"type": "default", "name": "nic01"}],
@@ -287,7 +287,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
 #     @returns: A dictionary with in the form {"btc": <prefab_obj>, "tft": <prefab_obj>, "eth": <prefab_obj>, "xrp": <prefab_obj>}
 #     """
 #     packet_cl = j.clients.packetnet.get()
-#     sshkeyname = sshkeyname or (j.clients.sshkey.listnames()[0] if j.clients.sshkey.listnames() else DEFAULT_SSHKEY_NAME)
+#     sshkeyname = sshkeyname or (j.clients.sshkey._children_names_get()[0] if j.clients.sshkey._children_names_get() else DEFAULT_SSHKEY_NAME)
 #     print("Creating packet machine for Bitcoin node")
 #     btc_node = packet_cl.startDevice(hostname='hussein.btc', os='ubuntu_16_04', remove=False, sshkey=sshkeyname)
 #     install_blockchains(prefab=btc_node.prefab)
@@ -341,7 +341,7 @@ def create_packet_zos(
     zt_api_token = j.clients.zerotier.get(zt_client_instance).config.data["token_"]
     packet_cl = j.clients.packetnet.get(packet_client_instance)
     sshkeyname = sshkeyname or (
-        j.clients.sshkey.listnames()[0] if j.clients.sshkey.listnames() else DEFAULT_SSHKEY_NAME
+        j.clients.sshkey._children_names_get()[0] if j.clients.sshkey._children_names_get() else DEFAULT_SSHKEY_NAME
     )
     zos_packet_cl, packet_node, ipaddr = packet_cl.startZeroOS(
         hostname=hostname,

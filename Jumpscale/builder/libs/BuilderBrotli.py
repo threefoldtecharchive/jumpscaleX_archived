@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderBrotli(j.builders.system._BaseClass):
     NAME = "brotli"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.src_dir = self.DIR_BUILD + "/code/"
 
     @builder_method()

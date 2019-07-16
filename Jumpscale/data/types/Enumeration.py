@@ -53,7 +53,13 @@ class EnumerationObj(TypeBaseObjClass):
     __repr__ = __str__
 
     def __eq__(self, other):
-        other = self._typebase.clean(other)
+        try:
+            other = self._typebase.clean(other)
+        except Exception as e:
+            if str(e).find("could not find enum") != -1:
+                # means its not even an enumeration we know so need to return False
+                return False
+            raise e
         return other.value == self.value
 
     def __dir__(self):

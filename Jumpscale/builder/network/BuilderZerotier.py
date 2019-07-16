@@ -8,7 +8,7 @@ JSBASE = j.builders.system._BaseClass
 class BuilderZerotier(j.builders.system._BaseClass):
     NAME = "zerotier"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/zerotier/")
         self.CLI = "/sandbox/bin/zerotier-cli"
 
@@ -29,11 +29,11 @@ class BuilderZerotier(j.builders.system._BaseClass):
         :return: 
         """
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             raise RuntimeError("not supported yet")
 
             # j.sal.process.execute("xcode-select --install", die=False, showout=True)
-        # elif j.core.platformtype.myplatform.isUbuntu:
+        # elif j.core.platformtype.myplatform.platform_is_ubuntu:
 
         j.builders.system.package.ensure("gcc")
         j.builders.system.package.ensure("g++")
@@ -53,7 +53,7 @@ class BuilderZerotier(j.builders.system._BaseClass):
 
         # cmd = "cd {code} &&  make one".format(code=codedir, build=self.DIR_BUILD)
         # j.sal.process.execute(cmd)
-        # if j.core.platformtype.myplatform.isMac:
+        # if j.core.platformtype.myplatform.platform_is_osx:
         #     cmd = "cd {code} && make install-mac-tap".format(code=codedir, build=self.DIR_BUILD)
         #     bindir = '{DIR_BIN}'
         #     j.core.tools.dir_ensure(bindir)
@@ -74,7 +74,7 @@ class BuilderZerotier(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10, ports=[9993])
+        cmd = j.servers.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10, ports=[9993])
         return [cmd]
 
     @builder_method()

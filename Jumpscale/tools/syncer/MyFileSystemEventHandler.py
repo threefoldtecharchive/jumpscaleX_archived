@@ -75,7 +75,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                     self._log_debug("copy: %s:%s" % (changedfile, dest))
                     print("copy: %s:%s" % (changedfile, dest))
                     try:
-                        self.syncer.ssh_client.copy_file(changedfile, dest)
+                        self.syncer.ssh_client.file_copy(changedfile, dest)
                     except Exception as e:
                         self._log_error("Couldn't sync file: %s:%s" % (changedfile, dest))
                         self._log_error("** ERROR IN COPY, WILL SYNC ALL")

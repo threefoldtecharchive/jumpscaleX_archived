@@ -90,7 +90,7 @@ class PlatformTypes(object):
         @param executor is an executor object, None or $hostname:$port or
                     $ipaddr:$port or $hostname or $ipaddr
         """
-        key = executor.id
+        key = executor.uid
         if key not in self._cache:
             self._cache[key] = PlatformType(j=self._j, executor=executor)
         return self._cache[key]
@@ -144,7 +144,7 @@ class PlatformType(object):
             self._platform = unn.sysname
 
         else:
-            uname = self.executor.state_on_system["uname"]
+            uname = self.executor.env_on_system["UNAME"]
             if uname.find("warning: setlocale") != -1:
                 raise RuntimeError("run kosmos 'j.tools.bash.get().profile.locale_check()'")
             uname = uname.split("\n")[0]
@@ -154,8 +154,8 @@ class PlatformType(object):
                 self._osversion = _osversion
             else:
                 # is for ubuntu
-                if "version_id" in self.executor.state_on_system:
-                    expr = self.executor.state_on_system["version_id"]
+                if "version_id" in self.executor.env_on_system:
+                    expr = self.executor.env_on_system["version_id"]
                     self._osversion = expr
             self._uname = uname
         return self._uname
@@ -212,7 +212,7 @@ class PlatformType(object):
                 print("need to fix for other types (check executorlocal")
                 sys.exit(1)
         else:
-            osname = self.executor.state_on_system["os_type"]
+            osname = self.executor.env_on_system["OS_TYPE"]
 
         return osname
 
@@ -248,47 +248,47 @@ class PlatformType(object):
             )
 
     @property
-    def isUbuntu(self):
+    def platform_is_ubuntu(self):
         return self.has_parent("ubuntu")
 
     @property
-    def isMac(self):
+    def platform_is_osx(self):
         return self.has_parent("darwin")
 
     @property
-    def isAlpine(self):
+    def platform_is_alpine(self):
         return self.has_parent("alpine")
 
     @property
-    def isUnix(self):
+    def platform_is_unix(self):
         """Checks whether the platform is Unix-based"""
         return self.has_parent("unix")
 
     @property
-    def isWindows(self):
+    def platform_is_windows(self):
         """Checks whether the platform is Windows-based"""
         return self.has_parent("win")
 
     @property
-    def isLinux(self):
+    def platform_is_linux(self):
         """Checks whether the platform is Linux-based"""
         return self.has_parent("linux")
 
-    @property
-    def isXen(self):
-        """Checks whether Xen support is enabled"""
-        return self._j.sal.process.checkProcessRunning("xen") == 0
-
-    @property
-    def isVirtualBox(self):
-        """Check whether the system supports VirtualBox"""
-        return self.executor.state_on_system.get("vboxdrv", False)
+    # @property
+    # def isXen(self):
+    #     """Checks whether Xen support is enabled"""
+    #     return self._j.sal.process.checkProcessRunning("xen") == 0
+    #
+    # @property
+    # def isVirtualBox(self):
+    #     """Check whether the system supports VirtualBox"""
+    #     return self.executor.env_on_system.get("vboxdrv", False)
 
     # @property
     # def isHyperV(self):
     #     '''Check whether the system supports HyperV'''
     #     # TODO: should be moved to _getPlatform & proper parent definition
-    #     if self.isWindows:
+    #     if self.platform_is_windows:
     #         import winreg as wr
     #         try:
     #             virt = wr.OpenKey(

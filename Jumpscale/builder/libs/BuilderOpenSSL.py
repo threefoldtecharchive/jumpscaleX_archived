@@ -8,7 +8,7 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
     NAME = "openssl"
 
     def __init__(self):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.TARGET = "darwin64-x86_64-cc"
         else:
             self.TARGET = "linux-generic64"
@@ -22,9 +22,10 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        kosmos 'j.builders.libs..openssl.build()'
+        kosmos 'j.builders.libs.openssl.build(reset=True)'
         """
-        if not self.tools.exists(self.DIR_BUILD):
+        self.tools.dir_ensure(self._replace("{DIR_BUILD}"))
+        if not self.tools.exists(self.DIR_BUILD + "/openssl"):
             C = """
             set -ex
             cd {DIR_BUILD}
@@ -42,7 +43,7 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
         rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
-        self.tools.dir_ensure("{DIR_BUILD}")
+
         self._write("{DIR_BUILD}/mycompile_all.sh", C)
         self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 

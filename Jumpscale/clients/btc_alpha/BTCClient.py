@@ -22,7 +22,7 @@ class BTCClient(JSConfigBase):
     secret_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         if not self.key_ or not self.secret_:
             raise j.exceptions.Input("Need to specify both key and secret to use the client")
 

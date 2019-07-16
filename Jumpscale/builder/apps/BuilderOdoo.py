@@ -15,18 +15,20 @@ db_user = odoouser"""
 class BuilderOdoo(j.builders.system._BaseClass):
     NAME = "odoo"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.VERSION = "12.0"
         self.APP_DIR = self._replace("{DIR_BASE}/apps/odoo")
 
     @builder_method()
     def configure(self):
-        """Configure gitea, db, iyo"""
         pass
 
     @builder_method()
     def install(self):
-        """install odoo"""
+        """
+        kosmos 'j.builders.apps.odoo.install()'
+        install odoo
+        """
         j.builders.db.postgres.install()
         j.builders.runtimes.nodejs.install()
 
@@ -68,13 +70,16 @@ class BuilderOdoo(j.builders.system._BaseClass):
     def startup_cmds(self):
         # run the db with the same user when running odoo server
         pg_ctl = self._replace("sudo -u odoouser {DIR_BIN}/pg_ctl %s -D {APP_DIR}/data")
+        # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
-        postgres_cmd = j.tools.startupcmd.get("postgres-custom", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
+        postgres_cmd = j.servers.startupcmd.get(
+            "postgres-custom", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin"
+        )
         odoo_start = self._replace(
             "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
         )
-        odoo_cmd = j.tools.startupcmd.get(
+        odoo_cmd = j.servers.startupcmd.get(
             "odoo", odoo_start, process_strings=["/sandbox/apps/odoo/odoo/odoo-bin -c"], path="/sandbox/bin"
         )
         return [postgres_cmd, odoo_cmd]

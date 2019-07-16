@@ -10,7 +10,7 @@ JSBASE = j.application.JSBaseConfigsClass
 class VirtualboxFactory(j.application.JSBaseClass):
     __jslocation__ = "j.clients.virtualbox"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._client = None
 

@@ -7,7 +7,7 @@ builder_method = j.builders.system.builder_method
 class BuilderHub(j.builders.system._BaseClass):
     NAME = "zerohub"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_CODE = self.tools.joinpaths(self.DIR_BUILD, "code")
         self.MAKEOPTS = "-j 5"
         self.DEST_CURL = self.tools.joinpaths(self.DIR_CODE, "curl")
@@ -200,13 +200,13 @@ class BuilderHub(j.builders.system._BaseClass):
         cd {DIR_CODE}/hub/python/ && python3 flist-uploader.py
         """
         )
-        start_cmd = j.tools.startupcmd.get(self.NAME, cmd=start_script)
+        start_cmd = j.servers.startupcmd.get(self.NAME, cmd=start_script)
         return [start_cmd]
 
     @builder_method()
     def stop(self):
         # killing the daemon
-        j.tools.tmux.pane_get(self.NAME).kill()
+        j.servers.tmux.pane_get(self.NAME).kill()
         j.builders.db.zdb.stop()
 
     @builder_method()

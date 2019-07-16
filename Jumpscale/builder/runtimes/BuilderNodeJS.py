@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderNodeJS(j.builders.system._BaseClass):
     NAME = "nodejs"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._version = "6.9.5"
 
     @property
@@ -25,7 +25,7 @@ class BuilderNodeJS(j.builders.system._BaseClass):
         """
         headless browser used for automation
         """
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
 
             url = "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
             cdest = j.builders.tools.file_download(
@@ -37,7 +37,7 @@ class BuilderNodeJS(j.builders.system._BaseClass):
 
             j.builders.system.package.ensure("libfontconfig")
 
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.builders.system.package.ensure("phantomjs")
 
         else:
@@ -50,7 +50,7 @@ class BuilderNodeJS(j.builders.system._BaseClass):
         self._log_info("npm install:%s" % name)
         key = "npm_%s" % name
         if global_:
-            if j.core.platformtype.myplatform.isMac:
+            if j.core.platformtype.myplatform.platform_is_osx:
                 sudo = "sudo "
             else:
                 sudo = ""
@@ -63,9 +63,9 @@ class BuilderNodeJS(j.builders.system._BaseClass):
     @builder_method()
     def build(self):
         j.builders.tools.dir_remove(self.DIR_BUILD)
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (self._version, self._version)
-        elif j.core.platformtype.myplatform.isUbuntu:
+        elif j.core.platformtype.myplatform.platform_is_ubuntu:
             url = "https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz" % (self._version, self._version)
         else:
             raise j.exceptions.Input(message="only support ubuntu & mac")

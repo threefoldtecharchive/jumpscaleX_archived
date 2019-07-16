@@ -22,7 +22,7 @@ class InfluxClient(JSConfigClient, influxdb.InfluxDBClient):
         udp_port = 4444 (ipport)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         influxdb.InfluxDBClient.__init__(
             self,
             host=self.host,

@@ -8,7 +8,7 @@ class MongoFactory(JSConfigs):
     __jslocation__ = "j.clients.mongodb"
     _CHILDCLASS = MongoDBClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "pymongo"
 
     def start(self):

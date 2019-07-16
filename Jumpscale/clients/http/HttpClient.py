@@ -74,13 +74,30 @@ class Connection(JSBASE):
         except IOError as e:
             raise RuntimeError("could not do simple auth.\n%s" % e)
 
-    def get(self, url, data=None, headers=None, **params):
+    def get_reponse(self, url, data=None, headers=None, **params):
         """
         @params is parameters as used in get e.g. name="kds",color="red"
         @headers e.g. headers={'content-type':'text/plain'}  (this is the default)
         """
         response = self._http_request(url, headers=headers, method="GET", **params)  # TODO: P1 fix & check
         return response
+
+    def get(self, url, data=None, headers=None, die=True, **params):
+        """
+
+        :param url:
+        :param headers:
+        :param die:
+        :return:  status   if there is an error and die==False,   otherwise the result
+        """
+        r = self._http_request(url=url, data=data, headers=headers, **params)
+        if r.status != 200:
+            if die:
+                raise RuntimeError("could not retrieve:%s, status of response:%s" % (url, r.status))
+            else:
+                return r.status
+        out = b"".join(r.readlines())
+        return out.decode()
 
     def get_head(self, url):
         """
@@ -238,7 +255,7 @@ class Connection(JSBASE):
 class HttpClient(j.application.JSBaseClass):
     __jslocation__ = "j.clients.http"
 
-    def getConnection(self):
+    def connection_get(self):
         """
         :returns connection instance
         """
@@ -250,32 +267,59 @@ class HttpClient(j.application.JSBaseClass):
         import ssl
 
         ssl._create_default_https_context = ssl._create_unverified_context
-        c = self.getConnection()
+        c = self.connection_get()
         res = c.ping(url)
         ssl._create_default_https_context = ssl.create_default_context
         return res
 
     def download(self, url, dest):
-        c = self.getConnection()
+        c = self.connection_get()
         return c.download(url, dest)
 
-    def get(self, url, headers=None):
-        c = self.getConnection()
-        return c.get(url, headers=headers)
+    def get_response(self, url, headers=None):
+        """
+
+        :param url:
+        :param headers:
+        :return: full blown
+        """
+        c = self.connection_get()
+        return c.get_reponse(url, headers=headers)
+
+    def get(self, url, headers=None, die=True, decode=True):
+        """
+        gets the result in bytes or string from a get request
+        :param url:
+        :param headers:
+        :param die:
+        :param decode: means bytes will be converted to string
+        :return:  status   if there is an error and die==False,   otherwise the result
+        """
+        r = self.get_response(url=url, headers=headers)
+        if r.status != 200:
+            if die:
+                raise RuntimeError("could not retrieve:%s, status of response:%s" % (url, r.status))
+            else:
+                return r.status
+        out = b"".join(r.readlines())
+        if decode:
+            return out.decode()
+        else:
+            return out
 
     def post(self, url, data=None, headers=None):
-        c = self.getConnection()
+        c = self.connection_get()
         return c.post(url, data=data, headers=headers)
 
     def put(self, url, data=None, headers=None):
-        c = self.getConnection()
+        c = self.connection_get()
         return c.put(url, data=data, headers=headers)
 
     def test(self):
         """
         kosmos 'j.clients.http.test()'
         """
-        c = self.getConnection()
+        c = self.connection_get()
         assert c.ping("https://github.com/Jumpscale") == True
 
         assert c.ping("https://something/j") == False
@@ -284,4 +328,4 @@ class HttpClient(j.application.JSBaseClass):
             c.ping("https://docs.grid.tf/dividi/values/src/branch/master/veda_values.md") == True
         )  # authentication error
 
-        # assert c.ping("https://www.linkedin.com/in/babenkonickolay/") == False
+        self._log_info("TEST OK")

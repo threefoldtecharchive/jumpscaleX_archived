@@ -14,7 +14,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
-    def _init2(self, **kwargs):
+    def _init(self, **kwargs):
 
         self._connected = None
 
@@ -71,7 +71,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         if not j.sal.fs.exists(self.path) or reset:
             cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
-            self._init2()
+            self._init()
 
     def delete(self):
         """
@@ -108,7 +108,14 @@ class SSHKey(j.application.JSBaseConfigClass):
 
     def unload(self):
         cmd = "ssh-add -d %s " % (self.path)
-        j.sal.process.executeInteractive(cmd)
+        rc = 0
+        while rc == 0:
+            rc, out, err = j.sal.process.execute(cmd, die=False)  # there could be more than 1 instance
+        j.core.myenv.sshagent.__keys = None
+        if err.find("agent refused operation") != -1:
+            raise RuntimeError("agent did not allow operation")
+        j.shell()
+        assert self.is_loaded() == False
 
     def is_loaded(self):
         """
@@ -117,9 +124,28 @@ class SSHKey(j.application.JSBaseConfigClass):
         :return: whether ssh key was loadeed in ssh agent or not
         :rtype: bool
         """
-        if self.path in j.clients.sshagent.keys_list():
-            self._log_debug("ssh key: %s loaded", self.name)
-            return True
-
+        for id, key in j.core.myenv.sshagent._read_keys():
+            if " " in key.strip():
+                keypub = key.split(" ")[1].strip()
+            else:
+                keypub = key.strip()
+            if keypub == keypub:
+                return True
         self._log_debug("ssh key: %s is not loaded", self.name)
         return False
+
+    @property
+    def pubkey_only(self):
+        """
+        return the key only with no type e.g.ssh-rsa or email/username
+        :return:
+        """
+        if not self.pubkey:
+            raise RuntimeError("pubkey is None")
+        r = self.pubkey.split(" ")
+        if len(r) == 2:
+            return r[1]
+        elif len(r) == 3:
+            return r[1]
+        else:
+            raise RuntimeError("format of pubkey not ok:%s" % self.pubkey)

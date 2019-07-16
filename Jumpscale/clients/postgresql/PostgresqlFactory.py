@@ -19,7 +19,7 @@ class PostgresqlFactory(JSConfigs):
     __jslocation__ = "j.clients.postgres"
     _CHILDCLASS = PostgresClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "sqlalchemy"
 
     def db_create(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
@@ -72,3 +72,29 @@ class PostgresqlFactory(JSConfigs):
         args["dbname"] = db
         cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (args)
         j.sal.process.execute(cmd, showout=False, die=False)
+
+    def start(self):
+        j.builders.db.postgres.start()
+
+    def stop(self):
+        j.builders.db.postgres.stop()
+
+    def test(self):
+        """
+        # needs psycopg2 sqlalchemy libtmux to be installed
+        """
+        self.start()
+        j.sal.process.execute(
+            """psql -h localhost -U postgres \
+            --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
+        )
+        self.db_create("main")
+        cl = j.clients.postgres.new(
+            name="cl", ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="main"
+        )
+        cl.save()
+        assert cl.client.status == True
+        info = cl.client.info
+        assert info.dbname == "main"
+        self.stop()
+        print("TEST OK")

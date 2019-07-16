@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderCockroachDB(j.builders.system._BaseClass):
     NAME = "cockroach"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_BUILD = self._replace("{DIR_TEMP}/cockroachdb")
 
     @builder_method()
@@ -41,7 +41,7 @@ class BuilderCockroachDB(j.builders.system._BaseClass):
         http_port = 8581
 
         cmd = "/sandbox/bin/cockroach start --host={} --insecure --port={} --http-port={}".format(host, port, http_port)
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

@@ -69,7 +69,7 @@ class Capacity:
 
         report = self.total_report()
         data = dict(
-            node_id=self._node.name,
+            node_id=self._node.node_id,
             location=report.location,
             total_resources=report.total(),
             robot_address=robot_address,
@@ -98,12 +98,17 @@ class Capacity:
 
         report = self.reality_report()
         data = dict(
-            node_id=self._node.name, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
+            node_id=self._node.node_id,
+            farmer_id=farmer_id,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
         )
 
         client = self.directory()
 
-        resp = client.api.UpdateActualUsedCapacity(data=data, node_id=self._node.name)
+        resp = client.api.UpdateActualUsedCapacity(data=data, node_id=self._node.node_id)
         resp.raise_for_status()
 
     def update_reserved(self, vms, vdisks, gateways):
@@ -113,10 +118,15 @@ class Capacity:
 
         report = j.tools.capacity.reservation_parser.get_report(vms, vdisks, gateways)
         data = dict(
-            node_id=self._node.name, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
+            node_id=self._node.node_id,
+            farmer_id=farmer_id,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
         )
 
         client = self.directory()
 
-        resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
+        resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.node_id)
         resp.raise_for_status()

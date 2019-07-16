@@ -46,7 +46,7 @@ class GitFactory(j.application.JSBaseClass):
 
         url = url.strip()
         if ssh == "auto" or ssh == "first":
-            ssh = j.clients.sshagent.available()
+            ssh = j.clients.sshagent.available
         elif ssh or ssh is False:
             pass
         else:
@@ -214,6 +214,12 @@ class GitFactory(j.application.JSBaseClass):
 
         return repository_host, repository_type, repository_account, repository_name, dest, repository_url, port
 
+    def getCurrentBranch(self, path, executor=None):
+        cmd = "cd %s; git rev-parse --abbrev-ref HEAD" % path
+        rc, out, _ = self.execute(cmd, die=False, showout=False, executor=executor)
+        if rc == 0:
+            return out.strip()
+
     def pullGitRepo(
         self,
         url="",
@@ -318,10 +324,9 @@ class GitFactory(j.application.JSBaseClass):
 
             # if we don't specify the branch, try to find the currently
             # checkedout branch
-            cmd = "cd %s; git rev-parse --abbrev-ref HEAD" % dest
-            rc, out, err = self.execute(cmd, die=False, showout=False, executor=executor)
-            if rc == 0:
-                branchFound = out.strip()
+            currentBranch = self.getCurrentBranch(dest)
+            if currentBranch:
+                branchFound = currentBranch
             else:  # if we can't retreive current branch, use master as default
                 branchFound = "master"
                 # raise RuntimeError("Cannot retrieve branch:\n%s\n" % cmd)
@@ -387,10 +392,8 @@ class GitFactory(j.application.JSBaseClass):
                             self._log_debug(
                                 "git pull rc>0, need to implement further, check what usecase is & build interactivity around"
                             )
-                            print(out)
-                            print(err)
-                            print("could not push/pull %s" % url)
-                            sys.exit(1)
+
+                            raise RuntimeError("could not push/pull: %s\n%s\n%s" % (url, out, err))
 
         else:
             self._log_info(("git clone %s -> %s" % (url, dest)))

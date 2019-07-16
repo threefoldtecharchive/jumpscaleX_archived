@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderGolangTools(j.builders.system._BaseClass):
     NAME = "golangtools"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.base_dir = self._replace("{DIR_BASE}")
 
         self.env = self.bash.profile
@@ -140,7 +140,7 @@ class BuilderGolang(BuilderGolangTools):
     STABLE_VERSION = "1.12.1"
     DOWNLOAD_URL = "https://dl.google.com/go/go{version}.{platform}-{arch}.tar.gz"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.base_dir = self._replace("{DIR_BASE}")
 
         self.env = self.bash.profile
@@ -194,11 +194,11 @@ class BuilderGolang(BuilderGolangTools):
 
         """
         # only check for linux for now
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="linux", arch=self.current_arch
             )
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="darwin", arch=self.current_arch
             )

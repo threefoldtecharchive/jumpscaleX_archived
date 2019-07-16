@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderLibffi(j.builders.system._BaseClass):
     NAME = "libffi"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.LIBFFI_URL = "https://github.com/libffi/libffi"
         self.INSTALL_DIR = self.DIR_SANDBOX + "/sandbox"
         self.tools.dir_ensure(self.INSTALL_DIR)

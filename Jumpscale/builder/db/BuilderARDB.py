@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderARDB(j.builders.system._BaseClass):
     NAME = "ardb-server"
 
-    def _init(self):
+    def _init(self, **kwargs):
         # forest db (backend engine) paths
         self.CODE_DIR_FDB = self._replace("{DIR_BUILD}/github/couchbase/forestdb")
         self.BUILD_DIR_FDB = self._replace("{DIR_BUILD}/forestdb/")
@@ -29,7 +29,7 @@ class BuilderARDB(j.builders.system._BaseClass):
         self.system.package.install(packages)
 
         url = "https://github.com/yinqiwen/ardb.git"
-        j.clients.git.pullGitRepo(url=url, tag="v0.9.3", dest=self.CODE_DIR_ARDB, depth=1)
+        j.clients.git.pullGitRepo(url=url, tag="v0.9.7", dest=self.CODE_DIR_ARDB, depth=1)
 
         storageEngine = "forestdb"
         C = """
@@ -121,7 +121,7 @@ class BuilderARDB(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmds = j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)
+        cmds = j.servers.startupcmd.get(name=self.NAME, cmd=self.NAME)
         return [cmds]
 
     @builder_method()

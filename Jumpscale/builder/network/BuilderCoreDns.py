@@ -22,7 +22,7 @@ CONFIGTEMPLATE = """
 class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
     NAME = "coredns"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.package_path = self.package_path_get(self.NAME)
         self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
@@ -48,7 +48,6 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         cd {}
         git clone https://github.com/coredns/coredns.git
         cd coredns
-        echo 'redis:github.com/arvancloud/redis' >> plugin.cfg
         make
         """.format(
             self.package_path
@@ -73,7 +72,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
-        cmds = [j.tools.startupcmd.get(name="coredns", cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name="coredns", cmd=cmd)]
         return cmds
 
     @builder_method()

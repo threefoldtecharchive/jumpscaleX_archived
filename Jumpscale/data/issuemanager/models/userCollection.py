@@ -35,7 +35,7 @@ class UserCollection(ModelBaseCollection):
 
         return User
 
-    def _init(self):
+    def _init(self, **kwargs):
         # init the index
         db = j.tools.issuemanager.indexDB
 

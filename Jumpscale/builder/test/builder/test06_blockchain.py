@@ -5,7 +5,7 @@ from parameterized import parameterized
 
 
 class Blockchain_TestCases(BaseTest):
-    @parameterized.expand([("bitcoin", "bitcoind"), ("ethereum", "ethereum")])
+    @parameterized.expand([("bitcoin", "bitcoind"), ("ethereum", "geth"), ("ripple", "ripple")])
     def test_blockchain_builders(self, builder, process):
         """ BLD-014
         *Test blockchain builers sandbox*

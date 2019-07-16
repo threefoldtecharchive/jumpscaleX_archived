@@ -16,6 +16,7 @@ from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128, TransactionV129
 
 from .TFChainCapacity import TFChainCapacity
+from .TFChainTime import MaxBotPrepaidMonths
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
@@ -41,9 +42,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         seed = "" (S)
         key_count = 1 (I)
         key_scan_count = -1 (I)
+        reservations_transactions = (LS)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # stores all key pairs of this wallet in memory
         self._key_pairs = {}
         # the primary address is kept as a seperate property,
@@ -1338,6 +1340,9 @@ class TFChainThreeBot:
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         """
+        if months > MaxBotPrepaidMonths:
+            raise ValueError("a 3bot can only have up to 24 months prepaid")
+
         # create the txn and fill the easiest properties already
         txn = j.clients.tfchain.types.transactions.threebot_registration_new()
         txn.number_of_months = months

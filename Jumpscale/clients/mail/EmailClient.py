@@ -16,13 +16,13 @@ class EmailClient(JSConfigClient):
         @url = jumpscale.Email.client
         name* = "" (S)
         smtp_server = "" (S)
-        smtp_port = 0 (ipport)
+        smtp_port = 25 (ipport)
         login = "" (S)
         password = "" (S)
         Email_from = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._server = self.smtp_server
         self._port = self.smtp_port

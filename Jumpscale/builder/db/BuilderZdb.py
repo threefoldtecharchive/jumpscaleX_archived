@@ -6,7 +6,7 @@ builder_method = j.builders.system.builder_method
 class BuilderZdb(j.builders.system._BaseClass):
     NAME = "0-db"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.git_url = "https://github.com/threefoldtech/0-db.git"
         self.DIR_BUILD = self._replace("{DIR_TEMP}/zdb")
 
@@ -48,7 +48,7 @@ class BuilderZdb(j.builders.system._BaseClass):
         cmd = "/sandbox/bin/zdb --listen {} --port {} --index {} --data {} --mode {} --admin {} --protect".format(
             addr, port, idir, ddir, mode, adminsecret
         )
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

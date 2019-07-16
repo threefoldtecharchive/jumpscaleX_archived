@@ -26,7 +26,7 @@ class tools():
     def command_location(self, command):
         """return location of cmd"""
 
-    def copyTree(self, source, dest, keepsymlinks=False, deletefirst=False,
+    def dir_copy(self, source, dest, keepsymlinks=False, deletefirst=False,
                  overwriteFiles=True, ignoredir=[".egg-info", ".dist-info"], ignorefiles=[".egg-info"],
                  recursive=True, rsyncdelete=False, createdir=False):
         """
@@ -194,14 +194,14 @@ class Tools():
     hostfile : setter/getter for the hostfile
     hostname
 
-    isAlpine
-    isArch
-    isCygwin
-    isLinux
-    isMac
-    isUbuntu
+    platform_is_alpine
+    platform_is_arch
+    platform_is_cygwin
+    platform_is_linux
+    platform_is_osx
+    platform_is_ubuntu
 
-    networking_info
+    networkinfo
 
     system_uuid
 ```

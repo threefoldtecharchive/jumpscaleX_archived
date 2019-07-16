@@ -12,7 +12,7 @@ import collections
 import sys
 import os
 
-if j.core.platformtype.myplatform.isWindows:
+if j.core.platformtype.myplatform.platform_is_windows:
     import msvcrt
 
     def clear():
@@ -58,8 +58,8 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
         when typing, char per char will be returned
         """
-        if not j.core.platformtype.myplatform.isWindows:
-            if j.core.platformtype.myplatform.isUnix:
+        if not j.core.platformtype.myplatform.platform_is_windows:
+            if j.core.platformtype.myplatform.platform_is_unix:
                 import termios
 
                 fd = sys.stdin.fileno()
@@ -249,8 +249,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @returns: Response provided by the user
         @rtype: string
         """
-        if not j.application.interactive:
-            raise j.exceptions.Input("Cannot ask a string in a non interactive mode.", "console.askstring")
+        self._check_interactive()
         if validate and not isinstance(validate, collections.Callable):
             raise TypeError("The validate argument should be a callable")
         response = ""
@@ -275,6 +274,10 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             % (retry, regex)
         )
 
+    def _check_interactive(self):
+        if not j.core.myenv.interactive:
+            raise j.exceptions.Input("Cannot use console in a non interactive mode.", "console.noninteractive")
+
     def askPassword(self, question, confirm=True, regex=None, retry=-1, validate=None):
         """Present a password input question to the user
 
@@ -288,44 +291,8 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @returns: Password provided by the user
         @rtype: string
         """
-        if not j.application.interactive:
-            raise j.exceptions.Input(
-                "Cannot ask a password in a non interactive mode.", "console.askpasswd.noninteractive"
-            )
-        if validate and not isinstance(validate, collections.Callable):
-            raise TypeError("The validate argument should be a callable")
-        response = ""
-        import getpass
-
-        startquestion = question
-        if question.endswith(": "):
-            question = question[:-2]
-        question += ": "
-        value = None
-        failed = True
-        retryCount = retry
-        while retryCount != 0:
-            response = getpass.getpass(question)
-            if (not regex or re.match(regex, response)) and (not validate or validate(response)):
-                if value == response or not confirm:
-                    return response
-                elif not value:
-                    failed = False
-                    value = response
-                    question = "%s (confirm): " % (startquestion)
-                else:
-                    value = None
-                    failed = True
-                    question = "%s: " % (startquestion)
-            if failed:
-                self.echo("Invalid password!")
-                retryCount = retryCount - 1
-        raise j.exceptions.Input(
-            (
-                "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
-                % (retry, regex)
-            ),
-            "console.askpasswd",
+        return j.core.tools.ask_password(
+            question=question, confirm=confirm, regex=regex, retry=retry, validate=validate
         )
 
     def askInteger(self, question, defaultValue=None, minValue=None, maxValue=None, retry=-1, validate=None):
@@ -340,8 +307,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
 
         @return: integer representing the response on the question
         """
-        if not j.application.interactive:
-            raise j.exceptions.Input("Cannot ask an integer in a non interactive mode.")
+        self._check_interactive()
         if validate and not isinstance(validate, collections.Callable):
             raise TypeError("The validate argument should be a callable")
         if minValue is None and maxValue is not None:
@@ -388,10 +354,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @return: Positive or negative answer
         @rtype: bool
         """
-        if j.application.interactive is not True:
-            raise j.exceptions.Input(
-                "Cannot ask a yes/no question in a non interactive mode.", "console.askyesno.notinteractive"
-            )
+        self._check_interactive()
 
         prompt = "[y/n]: "
 
@@ -430,6 +393,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @return: the input numbers
         @rtype: list<number>
         """
+        self._check_interactive()
 
         def clean(l):
             try:
@@ -464,6 +428,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @param choicearray is list or dict, when dict key needs to be the object to return,
                the value of the dics is what needs to be returned, the key is the str representation
         """
+        self._check_interactive()
         if height > 0:
             self.cls()
         if isinstance(choicearray, (tuple, list)):
@@ -653,11 +618,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         return valuearray[result - 1]
 
     def askChoiceMultiple(self, choicearray, descr=None, sort=True):
-        if not j.application.interactive:
-            raise j.exceptions.Input(
-                "Cannot ask a choice in an list of items in a non interactive mode.",
-                "console.askChoiceMultiple.notinteractive",
-            )
+        self._check_interactive()
         if not choicearray:
             return []
         if len(choicearray) == 1:
@@ -698,11 +659,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @type escapeString: string
         @return: string multi-line reply by the user, always ending with a newline
         """
-        if not j.application.interactive:
-            raise j.exceptions.Input(
-                "Cannot ask a askMultiline in an list of items in a non interactive mode.",
-                "console.askChoiceMultiple.askMultiline",
-            )
+        self._check_interactive()
         self.echo("%s:" % question)
         self.echo(
             "(Enter answer over multiple lines, end by typing '%s' (without the quotes) on an empty line)"
@@ -778,6 +735,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         return choices
 
     def askArrayRow(self, array, header=True, descr="", returncol=None):
+        self._check_interactive()
         choices = self._array2list(array, header)
         result = self.askChoiceMultiple(choices, descr="")
         results = []

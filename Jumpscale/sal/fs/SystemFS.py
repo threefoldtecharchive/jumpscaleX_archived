@@ -222,7 +222,7 @@ class SystemFS(j.application.JSBaseClass):
 
                     if deletefirst and self.exists(dstname):
                         if self.isDir(dstname, False):
-                            self.removeDirTree(dstname)
+                            self.remove(dstname)
                         elif self.isLink(dstname):
                             self.unlink(dstname)
 
@@ -257,11 +257,12 @@ class SystemFS(j.application.JSBaseClass):
             dstpath2 = dst.split(":")[1] if ":" in dst else dst  # OTHERWISE CANNOT WORK FOR SSH
 
             dstpath = dst
-
             dstpath = dstpath.replace("//", "/")
+
             src = src.replace("//", "/")
 
-            if j.sal.fs.isDir(src):
+            # ":" is there to make sure we support ssh
+            if ":" not in src and j.sal.fs.isDir(src):
                 if src[-1] != "/":
                     src += "/"
                 if dstpath[-1] != "/":
@@ -624,9 +625,9 @@ class SystemFS(j.application.JSBaseClass):
         while path[-1] == "/" or path[-1] == "\\":
             path = path[:-1]
         self._log_debug("Read link with path: %s" % path, _levelup=3)
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
             res = os.readlink(path)
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             raise j.exceptions.RuntimeError("Cannot readLink on windows")
         else:
             raise RuntimeError("cant read link, dont understand platform")
@@ -710,7 +711,7 @@ class SystemFS(j.application.JSBaseClass):
     def listFilesAndDirsInDir(
         self,
         path,
-        recursive=False,
+        recursive=True,
         filter=None,
         minmtime=None,
         maxmtime=None,
@@ -988,7 +989,7 @@ class SystemFS(j.application.JSBaseClass):
             if self.isLink(target):
                 self.remove(target)
             elif self.isDir(target):
-                self.removeDirTree(target)
+                self.remove(target)
             else:
                 self.remove(target)
 
@@ -999,10 +1000,10 @@ class SystemFS(j.application.JSBaseClass):
         if not self.exists(dir):
             self.createDir(dir)
 
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
             self._log_debug("Creating link from %s to %s" % (path, target))
             os.symlink(path, target)
-        elif j.core.platformtype.myplatform.isWindows:
+        elif j.core.platformtype.myplatform.platform_is_windows:
             path = path.replace("+", ":")
             cmd = 'junction "%s" "%s"' % (
                 self.pathNormalize(target).replace("\\", "/"),
@@ -1036,7 +1037,7 @@ class SystemFS(j.application.JSBaseClass):
         with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
         """
         self._log_debug("Create a hard link pointing to %s named %s" % (source, destin), _levelup=3)
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
             return os.link(source, destin)
         else:
             raise j.exceptions.RuntimeError("Cannot create a hard link on windows")
@@ -1119,7 +1120,7 @@ class SystemFS(j.application.JSBaseClass):
         if path[-1] == os.sep:
             path = path[:-1]
 
-        if checkJunction and j.core.platformtype.myplatform.isWindows:
+        if checkJunction and j.core.platformtype.myplatform.platform_is_windows:
             cmd = "junction %s" % path
             try:
                 result = j.sal.process.execute(cmd)
@@ -1173,7 +1174,7 @@ class SystemFS(j.application.JSBaseClass):
             return
         if overwrite and self.exists(newname):
             if self.isDir(newname):
-                self.removeDirTree(newname)
+                self.remove(newname)
             else:
                 self.remove(newname)
         os.rename(dirname, newname)
@@ -1195,7 +1196,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         self._log_debug("Unlink path: %s" % filename, _levelup=3)
 
-        if j.core.platformtype.myplatform.isWindows:
+        if j.core.platformtype.myplatform.platform_is_windows:
             cmd = "junction -d %s 2>&1 > null" % (filename)
             self._log_info(cmd)
             os.system(cmd)
@@ -1501,10 +1502,10 @@ class SystemFS(j.application.JSBaseClass):
 
             return True
 
-        if platform.isWindows:
+        if platform.platform_is_windows:
             return check_windows(filename)
 
-        if platform.isUnix:
+        if platform.platform_is_unix:
             return check_unix(filename)
 
         raise NotImplementedError("Filename validation on given platform not supported")
@@ -1554,7 +1555,7 @@ class SystemFS(j.application.JSBaseClass):
         for item in array:
             path = path + os.sep + item
         path = path + os.sep
-        if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_unix or j.core.platformtype.myplatform.platform_is_osx:
             path = path.replace("//", "/")
             path = path.replace("//", "/")
         return path
@@ -1639,7 +1640,7 @@ class SystemFS(j.application.JSBaseClass):
                     path = self.readLink(path)
                 self._log_debug("fs.tar: add file %s to tar" % path)
                 # print "fstar: add file %s to tar" % path
-                if not (j.core.platformtype.myplatform.isWindows and j.sal.windows.checkFileToIgnore(path)):
+                if not (j.core.platformtype.myplatform.platform_is_windows and j.sal.windows.checkFileToIgnore(path)):
                     if self.isFile(path) or self.isLink(path):
                         tarfile.add(path, destpath)
                     else:
@@ -1710,14 +1711,14 @@ class SystemFS(j.application.JSBaseClass):
         @param destinationpath: path of to destiniation dir, sourcefile will end up uncompressed in destination dir
         """
         if removeDestinationdir:
-            self.removeDirTree(destinationdir)
+            self.remove(destinationdir)
         if not self.exists(destinationdir):
             self.createDir(destinationdir)
         import tarfile
 
         # The tar of python does not create empty directories.. this causes
         # many problem while installing so we choose to use the linux tar here
-        if j.core.platformtype.myplatform.isWindows:
+        if j.core.platformtype.myplatform.platform_is_windows:
             tar = tarfile.open(sourceFile)
             tar.extractall(destinationdir)
             tar.close()

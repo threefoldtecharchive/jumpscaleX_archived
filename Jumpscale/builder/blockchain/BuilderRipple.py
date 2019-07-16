@@ -88,7 +88,7 @@ class BuilderRipple(JSBASE):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/{}".format(self.NAME)
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()
@@ -102,6 +102,9 @@ class BuilderRipple(JSBASE):
 
     @builder_method()
     def test(self):
-        return_code, _, _ = self._execute("rippled -u")
-        assert return_code == 0
+        if self.running():
+            self.stop()
+
+        self.start()
+        assert self.running()
         print("TEST OK")

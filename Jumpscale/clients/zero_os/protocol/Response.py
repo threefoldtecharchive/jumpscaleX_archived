@@ -161,7 +161,7 @@ class Response:
         after the 5 min is gone, the job result is no more fetchable
         :return: bool
         """
-        r = self._client._redis
+        r = self._client.redis
         flag = "{}:flag".format(self._queue)
         return bool(r.exists(flag))
 
@@ -171,13 +171,9 @@ class Response:
         Returns true if job still in running state
         :return:
         """
-        r = self._client._redis
+        r = self._client.redis
         flag = "{}:flag".format(self._queue)
-        if bool(r.exists(flag)):
-            ttl = r.ttl(flag)
-            return ttl == -1 or ttl is None
-
-        return False
+        return r.ttl(flag) == -1
 
     def stream(self, callback=None):
         """
@@ -209,7 +205,7 @@ class Response:
             raise Exception("callback must be callable")
 
         queue = "stream:%s" % self.id
-        r = self._client._redis
+        r = self._client.redis
 
         count = 0
         while True:
@@ -249,7 +245,7 @@ class Response:
         """
         if timeout is None:
             timeout = self._client.timeout
-        r = self._client._redis
+        r = self._client.redis
         start = time.time()
         maxwait = timeout
         while maxwait > 0:

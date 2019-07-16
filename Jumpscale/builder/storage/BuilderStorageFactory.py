@@ -5,11 +5,12 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.storage"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._syncthing = None
         self._minio = None
         self._restic = None
-        self._s3scality = None
+        self._s3cality = None
+        self._zstor = None
 
     @property
     def syncthing(self):
@@ -40,5 +41,13 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         if self._s3scality is None:
             from .BuilderS3Scality import BuilderS3Scality
 
-            self._s3scality = BuilderS3Scality()
-        return self._s3scality
+            self._s3cality = BuilderS3Scality()
+        return self._s3cality
+
+    @property
+    def zstor(self):
+        if self._zstor is None:
+            from .BuilderZeroStor import BuilderZeroStor
+
+            self._zstor = BuilderZeroStor()
+        return self._zstor

@@ -6,8 +6,19 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 
 class MySQLClient(JSConfigClient):
-    def _init(self, cl):
-        self.client = cl
+    _SCHEMATEXT = """
+    @url = jumpscale.mysql.client
+    name* = "" (S)
+    ipaddr = "127.0.0.1" (ipaddr)
+    port = 3306 (ipport)
+    login = "" (S)
+    passwd = "" (S)
+    dbname = "" (S)
+    """
+
+    def connect(self):
+        if not self.client.is_connected():
+            self.client.connect()
 
     def _html2text(self, html):
         return j.data.html.html2text(html)
@@ -34,75 +45,49 @@ class MySQLClient(JSConfigClient):
         :rtype:
         """
         Q = "DELETE FROM %s WHERE %s" % (tablename, whereclause)
-        self.client.query(Q)
-        result = self.client.use_result()
-        if result is not None:
-            result.fetch_row()
+        self.connect()
+        cursor = self.client.cursor()
+        cursor.execute(Q)
+        self.client.commit()
 
-        return result
-
-    def select1(self, tablename, fieldname, whereclause):
+    def select1(self, tablename, fieldname, whereclause=""):
         """ Select rows from the given table given the conditions in the whereclause, showing the fields corresponding to the fieldname given
         :param tablename: name of the specified table in database
         :type tablename: str
         :param fieldname: field name to filter output rows
         :type fieldname: str
-        :param whereclause: condition where selection of rows is based on
+        :param whereclause: (optional) condition where selection of rows is based on
         :type whereclause: str
         :return: rows selected
         :rtype:
         """
-        Q = "SELECT %s FROM %s WHERE %s;" % (fieldname, tablename, whereclause)
-        result = self.queryToListDict(Q)
+        if whereclause:
+            Q = "SELECT %s FROM %s WHERE %s;" % (fieldname, tablename, whereclause)
+        else:
+            Q = "SELECT %s FROM %s" % (fieldname, tablename)
+        self.connect()
+        cursor = self.client.cursor()
+        cursor.execute(Q)
+        result = cursor.fetchall()
         if len(result) == 0:
             return None
         else:
             return result
 
-    def queryToListDict(self, query):
-        self.client.query(query)
-        fields = {}
-        result = self.client.use_result()
-        counter = 0
-        for field in result.describe():
-            fields[counter] = field[0]
-            counter += 1
-
-        resultout = []
-        while True:
-            row = result.fetch_row()
-            if len(row) == 0:
-                break
-            row = row[0]
-            rowdict = {}
-            for colnr in range(0, len(row)):
-                colname = fields[colnr]
-                if colname.find("dt__") == 0:
-                    colname = colname[4:]
-                    col = self._mysqlTimeToEpoch(row[colnr])
-                elif colname.find("id__") == 0:
-                    colname = colname[4:]
-                    col = int(row[colnr])
-                elif colname.find("bool__") == 0:
-                    colname = colname[6:]
-                    col = str(row[colnr]).lower()
-                    if col == "1":
-                        col = True
-                    elif col == "0":
-                        col = False
-                    elif col == "false":
-                        col = False
-                    elif col == "true":
-                        col = False
-                    else:
-                        raise j.exceptions.RuntimeError("Could not decide what value for bool:%s" % col)
-                elif colname.find("html__") == 0:
-                    colname = colname[6:]
-                    col = self._html2text(row[colnr])
-                else:
-                    col = row[colnr]
-
-                rowdict[colname] = col
-            resultout.append(rowdict)
-
-        return resultout
+    def insert(self, tablename, values, colomns=""):
+        """ Insert a row to the given table with the values specified in values clause. If corresponding colomns want to be mapped with the values they can be given
+        :param tablename: name of the specified table in database
+        :type tablename: str
+        :param values: the values to be inserted in the new row (Seperated by comma)
+        :type values: str
+        :param colomns: (optional) colomns to be filled with the given values in the same relative order (Seperated by comma)
+        :type colomns: str
+        """
+        if colomns:
+            Q = "INSERT INTO %s (%s) VALUES (%s);" % (tablename, colomns, values)
+        else:
+            Q = "INSERT INTO %s VALUES (%s);" % (tablename, values)
+        self.connect()
+        cursor = self.client.cursor()
+        cursor.execute(Q)
+        self.client.commit()

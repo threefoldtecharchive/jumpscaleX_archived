@@ -2,14 +2,14 @@ from Jumpscale import j
 
 
 class BuilderFW(j.builders.system._BaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self._fw_enabled = None
         self._fw_type = None
 
     @property
     def fw_type(self):
         if self._fw_type is None:
-            if j.core.platformtype.myplatform.isMac:
+            if j.core.platformtype.myplatform.platform_is_osx:
                 raise j.exceptions.Input(
                     message="cannot enable fw, mac  not supported ", level=1, source="", tags="", msgpub=""
                 )
@@ -23,14 +23,14 @@ class BuilderFW(j.builders.system._BaseClass):
 
     def allowIncoming(self, port, protocol="tcp"):
         """as alternative on ufw"""
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return
         j.sal.process.execute(
             "nft add rule filter input {protocol} dport {port} log accept".format(protocol=protocl, port=port)
         )
 
     def denyIncoming(self, port):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return
         j.sal.process.execute(
             "nft add rule filter input {protocol} dport {port} log reject".format(protocol=protocl, port=port)

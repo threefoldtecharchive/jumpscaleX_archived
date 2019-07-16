@@ -105,10 +105,9 @@ class builder_method(object):
 
         reset = j.data.types.bool.clean(reset)
         if reset is True:
-            builder._done_reset()
+            builder._done_reset()  # removes all states from this specific builder
             builder.reset()
             return False
-
         if self.done_check and builder._done_check(key, reset):
             return True
         else:
@@ -129,11 +128,18 @@ class builder_method(object):
             """
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
-            kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
+            kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
             reset = kwargs.get("reset", False)
+            reset_state = kwargs.get("reset_state", False)
+
+            reset = reset or reset_state
+
+            # if reset:
+            #     builder.reset_state()  # lets not reset the full module
 
             if self.already_done(func, builder, done_key, reset):
+                builder._log_info("no need to do: %s:%s, was already done" % (builder._name, kwargs_without_reset))
                 return builder.ALREADY_DONE_VALUE
 
             # Make sure to call _init before any method
@@ -144,11 +150,11 @@ class builder_method(object):
                 builder.profile_builder_select()
 
             if name == "install":
-                builder.build()
+                builder.build(reset=reset)
 
             if name == "sandbox":
                 builder.profile_sandbox_select()
-                builder.install()
+                builder.install(reset=reset)
                 kwargs["zhub_client"] = self.get_default_zhub_client(kwargs)
 
             if name in ["stop", "running", "_init"]:
@@ -306,7 +312,7 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_delete("${PATH}")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.profile.path_add("${PATH}", end=True)
 
         self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
@@ -462,6 +468,15 @@ class BuilderBaseClass(BaseClass):
     def reset(self):
         """
         reset the state of your builder, important to let the state checking restart
+        and it removes build files (calls a self.clean)
+        :return:
+        """
+        self._done_reset()
+        self.clean()
+
+    def reset_state(self):
+        """
+        reset the state of your builder, all states of builder are gone that way
         :return:
         """
         self._done_reset()
@@ -491,12 +506,13 @@ class BuilderBaseClass(BaseClass):
     @property
     def startup_cmds(self):
         """
-        is list if j.tools.startupcmd...
+        is list if j.servers.startupcmd...
         :return:
         """
         return []
 
     def start(self):
+        self.install()
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 
@@ -506,7 +522,7 @@ class BuilderBaseClass(BaseClass):
 
     def running(self):
         for startupcmd in self.startup_cmds:
-            if startupcmd.running is False:
+            if startupcmd.is_running() is False:
                 return False
         return True
 
@@ -522,7 +538,7 @@ class BuilderBaseClass(BaseClass):
         :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
             j.builders.tools.dir_ensure(ld_dest)
             self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)

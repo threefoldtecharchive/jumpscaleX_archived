@@ -13,7 +13,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     _BaseFactoryClass = BuilderBaseFactoryClass
     builder_method = builder_method
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._package = None
         self._python_pip = None
         self._ns = None

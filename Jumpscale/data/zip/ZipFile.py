@@ -93,7 +93,7 @@ class ZipFile(j.application.JSBaseClass):
             try:
                 self._zip.getinfo(f)
             except KeyError:
-                if not j.core.platformtype.myplatform.isWindows:
+                if not j.core.platformtype.myplatform.platform_is_windows:
                     raise
                 f_ = f.replace("\\", "/")
                 try:

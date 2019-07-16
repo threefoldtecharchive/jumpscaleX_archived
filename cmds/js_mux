@@ -1,7 +1,7 @@
 set -x
 
 if [ "$1" == "kill" ] ; then
-    js_shell 'j.tools.tmux.kill()' || exit 1
+    js_shell 'j.servers.tmux.kill()' || exit 1
     exit 1
 fi
 

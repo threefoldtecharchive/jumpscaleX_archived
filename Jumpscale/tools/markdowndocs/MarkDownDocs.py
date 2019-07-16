@@ -8,6 +8,8 @@ import imp
 import time
 import sys
 
+from .Link import GithubLinker
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -133,7 +135,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             self._git_repos[path] = gc
         return self._git_repos[path]
 
-    # def _init(self):
+    # def _init(self,**kwargs):
     #     if not self._initOK:
     #         # self.install()
     #         j.clients.redis.core_get()
@@ -142,15 +144,16 @@ class MarkDownDocs(j.application.JSBaseClass):
     #         self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
     #         self._initOK = True
 
-    def macros_load(
-        self, pathOrUrl="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"
-    ):
+    def macros_load(self, path_or_url=None):
         """
-        @param pathOrUrl can be existing path or url
+        @param path_or_url can be existing path or url
         """
-        self._log_info("load macros:%s" % pathOrUrl)
+        self._log_info("load macros:%s" % path_or_url)
 
-        path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
+        if not path_or_url:
+            path_or_url = "https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"
+
+        path = j.clients.git.getContentPathFromURLorPath(path_or_url)
 
         if path not in self._macros_modules:
 
@@ -168,6 +171,13 @@ class MarkDownDocs(j.application.JSBaseClass):
     def load(self, path="", name="", sonic_client=None, pull=True):
         self.macros_load()
         if path.startswith("http"):
+            # check if we already have a git repo, then the current checked-out branch
+            dest = j.clients.git.getGitRepoArgs(path)[-3]
+            repo_dest = j.clients.git.findGitPath(dest, die=False)
+            if repo_dest:
+                # replace branch with current one
+                current_branch = j.clients.git.getCurrentBranch(repo_dest)
+                path = GithubLinker.replace_branch(path, current_branch)
             path = j.clients.git.getContentPathFromURLorPath(path, pull=pull)
         ds = DocSite(path=path, name=name, sonic_client=sonic_client or self._sonic_client)
         self.docsites[ds.name] = ds
@@ -266,7 +276,15 @@ class MarkDownDocs(j.application.JSBaseClass):
             return None
 
     def webserver(self, watch=True, branch="master", sonic_server=None):
-        url = "https://github.com/threefoldfoundation/lapis-wiki"
+        """
+
+        :param watch: to reload the changed data immediately
+        :param branch: branch to download
+        :param sonic_server: NOT USED YET #TODO:*1
+        :return:
+        """
+        raise RuntimeError("no longer ok, need to use j.servers.openresty")
+        url = "https://github.com/threefoldtech/OpenPublish"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url)
@@ -274,7 +292,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             "{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path), overwriteTarget=False
         )
         cmd = "cd {0} && moonc . && lapis server".format(server_path)
-        j.tools.tmux.execute(cmd, reset=False)
+        j.servers.tmux.execute(cmd, reset=False)
 
         if watch:
             watcher = Watcher(self.docsites)
@@ -321,54 +339,23 @@ class MarkDownDocs(j.application.JSBaseClass):
         """
         kosmos 'j.tools.markdowndocs.test()'
         """
-        url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
+        url = "https://github.com/abom/test_custom_md/tree/master/docs"
         ds = self.load(url, name="test")
 
-        doc = ds.doc_get("links")
-
-        assert doc.data == {"color": "green", "importance": "high", "somelist": ["a", "b", "c"]}
-
-        print(doc.images)
-
+        doc = ds.doc_get("test")
         for link in doc.links:
             print(link)
 
-        assert str(doc.link_get(cat="image", nr=0)) == "link:image:unsplash.jpeg"
-        assert str(doc.link_get(cat="link", nr=0)) == "link:link:https://unsplash.com/"
-
-        doci = ds.doc_get("include_test")
+        doci = ds.doc_get("test_include")
 
         print(doci.markdown_obj)
 
         print("### PROCESSED MARKDOWN DOC")
 
-        print(doci.markdown)
-
-        doc = ds.doc_get("use_data")
-        md = str(doc.markdown)
-        assert "- a" in md
-        assert "- b" in md
-        assert "high" in md
-
-        doc = ds.doc_get("has_data")  # combines data from subdirs as well as data from doc itself
-
-        assert doc.data == {
-            "color": "blue",
-            "colors": ["blue", "red"],
-            "importance": "somewhat",
-            "somelist": ["a", "b", "c"],
-        }
+        # should contain content of https://github.com/abom/test_include_md/blob/master/docs/include_me.md
+        assert "![image](img1.svg?sanitize=true)" in doci.markdown
 
         print("test of docsite done")
-
-        # TODO Fix Macros include for another docs in other repos i.e. include(core9:macros)
-        # include of a markdown doc in a repo
-        # p=doci.markdown_obj.parts[-2]
-        # assert str(p).find("rivine client itself")!=-1
-        #
-        # #this was include test of docstring of a method
-        # p=doci.markdown_obj.parts[-6]
-        # assert str(p).find("j.tools.fixer.write_changes()")!=-1
 
         # next will rewrite the full pre-processed docsite
         ds.write()
@@ -391,7 +378,5 @@ class MarkDownDocs(j.application.JSBaseClass):
         url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
         ds7 = self.load(url, name="tech")
         ds7.write()
-
-        self.webserver(watch)
 
         print("TEST FOR MARKDOWN PREPROCESSING IS DONE")

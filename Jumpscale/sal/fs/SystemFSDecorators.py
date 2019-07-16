@@ -17,7 +17,7 @@ def pathShorten(path):
     """
     """
     cleanedPath = os.path.normpath(path)
-    # if j.core.platformtype.myplatform.isWindows and exists(cleanedPath):
+    # if j.core.platformtype.myplatform.platform_is_windows and exists(cleanedPath):
     #     # Only execute on existing paths, otherwise an error will be raised
     #     import win32api
     #     cleanedPath = win32api.GetShortPathName(cleanedPath)

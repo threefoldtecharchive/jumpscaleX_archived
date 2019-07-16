@@ -6,7 +6,7 @@ import os.path
 import ctypes
 from Jumpscale import j
 
-if j.core.platformtype.myplatform.isWindows:
+if j.core.platformtype.myplatform.platform_is_windows:
     # raise j.exceptions.RuntimeError("WindowsSystem module only supported on Windows operating system")
     import win32pdh
     import win32api
@@ -60,7 +60,7 @@ class WindowsSystem(j.application.JSBaseClass):
         self.__dict__ = self.__shared_state
 
     def checkFileToIgnore(self, path):
-        if j.core.platformtype.myplatform.isWindows:
+        if j.core.platformtype.myplatform.platform_is_windows:
             ignore = False
             filename = j.sal.fs.getBaseName(path)
             if filename[0:2] == "~$":

@@ -8,7 +8,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
     VERSION = "1.7.9"  # latest
     URL = "https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.go_runtime = j.builders.runtimes.golang
 
@@ -26,7 +26,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
         # get the prebuilt binary, as the building needs docker...etc
         # only check for linux for now
         arch = self.go_runtime.current_arch
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")
@@ -59,7 +59,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
             if value:
                 cmd += "=%s" % value
 
-        p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        p = j.servers.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
         return p
 
     def stop(self, pid=None, sig=None):

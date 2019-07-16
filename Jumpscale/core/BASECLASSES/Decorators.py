@@ -1,3 +1,4 @@
+# NOT USED YET
 from Jumpscale import j
 from .JSBaseConfig import JSBaseConfig
 

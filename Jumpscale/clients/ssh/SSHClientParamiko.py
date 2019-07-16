@@ -18,8 +18,8 @@ class SSHClientParamiko(SSHClientBase):
     is an ssh client
     """
 
-    def _init(self):
-        SSHClientBase._init(self)
+    def _init(self, **kwargs):
+        SSHClientBase._init(self, **kwargs)
 
         if self.passwd:
             self._forward_agent = False
@@ -28,8 +28,6 @@ class SSHClientParamiko(SSHClientBase):
             self.passphrase = None
         else:
             self._look_for_keys = True
-
-        #
 
     def _test_local_agent(self):
         """
@@ -70,47 +68,14 @@ class SSHClientParamiko(SSHClientBase):
         return destination
 
     # def _copy_dir(self, local_dir, remote_dir, sftp):
-    #     """Call copy_file on every file in the specified directory, copying
+    #     """Call file_copy on every file in the specified directory, copying
     #     them to the specified remote directory."""
     #     file_list = os.listdir(local_dir)
     #     for file_name in file_list:
     #         local_path = os.path.join(local_dir, file_name)
     #         remote_path = '/'.join([remote_dir, file_name])
-    #         self.copy_file(local_path, remote_path, recurse=True,
+    #         self.file_copy(local_path, remote_path, recurse=True,
     #                        sftp=sftp)
-
-    def copy_file(self, local_file, remote_file):
-        """Copy local file to host via SFTP/SCP
-
-        Copy is done natively using SFTP/SCP version 2 protocol, no scp command
-        is used or required.
-
-        :param local_file: Local filepath to copy to remote host
-        :type local_file: str
-        :param remote_file: Remote filepath on remote host to copy file to
-        :type remote_file: str
-        :raises: :py:class:`ValueError` when a directory is supplied to
-          ``local_file`` and ``recurse`` is not set
-        :raises: :py:class:`IOError` on I/O errors writing files
-        :raises: :py:class:`OSError` on OS errors like permission denied
-        """
-        if os.path.isdir(local_file):
-            raise ValueError("Local file cannot be a dir")
-        destination = self._parent_paths_split(remote_file, sep="/")
-        self.mkdir(destination)
-        self.sftp.chdir()
-        try:
-            self.sftp.put(local_file, remote_file)
-        except Exception as error:
-            self._log_error(
-                "Error occured copying file %s to remote destination " "%s:%s - %s",
-                local_file,
-                self.host,
-                remote_file,
-                error,
-            )
-            raise error
-        self._log_debug("Copied local file %s to remote destination %s", local_file, remote_file)
 
     @property
     def _transport(self):
@@ -196,7 +161,7 @@ class SSHClientParamiko(SSHClientBase):
 
         raise j.exceptions.RuntimeError("Impossible to create SSH connection to %s:%s" % (self.addr, self.port))
 
-    def execute(self, cmd, showout=True, die=True, timeout=None):
+    def _execute(self, cmd, showout=True, die=True, timeout=None):
         """
         run cmd & return
         return: (retcode,out_err)

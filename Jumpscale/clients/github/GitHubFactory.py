@@ -16,6 +16,8 @@ class GitHubFactory(JSConfigs):
 
     def issue_class_get(self):
         # return Issue
+        from .Issue import Issue
+
         return Issue
 
     def test(self):

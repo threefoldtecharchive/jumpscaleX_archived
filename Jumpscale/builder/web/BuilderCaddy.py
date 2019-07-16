@@ -28,7 +28,7 @@ ALL_PLUGINS = {
     "datadog": "github.com/payintech/caddy-datadog",
     "prometheus": "github.com/miekg/caddy-prometheus",
     "cgi": "github.com/jung-kurt/caddy-cgi",
-    "filemanager": "github.com/filebrowser/caddy",
+    # "filemanager": "github.com/filebrowser/filebrowser",
     "iyofilemanager": "github.com/itsyouonline/filemanager/caddy/filemanager",
     "webdav": "github.com/hacdias/caddy-webdav",
     "jekyll": "github.com/hacdias/filemanager/caddy/jekyll",
@@ -48,12 +48,12 @@ ALL_PLUGINS = {
 PLUGIN_DIRECTIVES = {"iyo": "oauth", "dns": "dns", "wsproxy": "wsproxy"}
 
 
-# see https://github.com/mholt/caddy#build
+# see https://github.com/caddyserver/caddy#build
 CADDY_RUNNER = """
 package main
 
 import (
-	"github.com/mholt/caddy/caddy/caddymain"
+	"github.com/caddyserver/caddy/caddy/caddymain"
 
 	// plug in plugins here, for example:
 %s
@@ -68,17 +68,22 @@ func main() {
 
 class BuilderCaddy(BuilderGolangTools):
     NAME = "caddy"
-    PLUGINS = ["iyo", "filemanager"]  # PLEASE ADD MORE PLUGINS #TODO:*1
+    PLUGINS = ["iyo"]  # PLEASE ADD MORE PLUGINS #TODO:*1
     VERSION = "master"  # make sure the way to build with plugin is ok
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
-        self.package_path = self.package_path_get("mholt/caddy")
+        self.package_path = self.package_path_get("caddyserver/caddy")
 
     def clean(self):
         self.stop()
         self._init()
         j.builders.tools.dir_remove("{DIR_BIN}/caddy")
+        C = """
+        cd /sandbox
+        rm -rf {DIR_BUILD}
+        """
+        self._execute(C)
 
     def get_plugin(self, name):
         """get a supported plugin
@@ -107,7 +112,7 @@ class BuilderCaddy(BuilderGolangTools):
         :type plugins: list, optional
         :raises j.exceptions.RuntimeError: if platform is not supported
         """
-        if not j.core.platformtype.myplatform.isUbuntu:
+        if not j.core.platformtype.myplatform.platform_is_ubuntu:
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
         # install go runtime
@@ -123,7 +128,7 @@ class BuilderCaddy(BuilderGolangTools):
         # build caddy with a plugins
         plugin_imports = "\n".join(['\t_ "%s"' % ALL_PLUGINS[name] for name in plugins])
 
-        self.get("github.com/mholt/caddy/caddy@%s" % self.VERSION)
+        self.get("github.com/caddyserver/caddy/caddy@%s" % self.VERSION)
         runner_file = self._replace("{DIR_BUILD}/caddy.go")
         self.tools.file_write(runner_file, CADDY_RUNNER % plugin_imports)
         self._execute("cd {DIR_BUILD} && gofmt caddy.go && go mod init caddy && go install")
@@ -144,7 +149,7 @@ class BuilderCaddy(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("caddy", "caddy", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("caddy", "caddy", path="/sandbox/bin")
         return [cmd]
 
     @builder_method()

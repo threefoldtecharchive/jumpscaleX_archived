@@ -92,7 +92,7 @@ class SQLAlchemy(JSConfigClient):
     tomlpath = "../data" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         if self.sqlitepath != "":
             self.connectionstring = "sqlite:///%s" % self.sqlitepath

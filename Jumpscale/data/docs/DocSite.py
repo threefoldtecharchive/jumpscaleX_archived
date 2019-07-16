@@ -4,7 +4,7 @@ from .File import File
 from .Navigation import Navigation
 
 
-class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass):
+class DocSite(j.application.JSFactoryConfigsBaseClass, j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
         @url = jumpscale.docs.docsite.1
@@ -19,9 +19,9 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
         j.application.JSBaseConfigClass.__init__(
             self, factory=factory, dataobj=dataobj, childclass_name=childclass_name
         )
-        j.application.JSFactoryBaseClass.__init__(self)
+        j.application.JSFactoryConfigsBaseClass.__init__(self)
 
-    def _childclass_selector(self, childclass_name="doc"):
+    def _childclass_selector(self, childclass_name="doc", **kwargs):
         """
         childclass name is file or doc
         :return:
@@ -35,7 +35,7 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
         else:
             raise RuntimeError("did not find childclass type:%s" % childclass_name)
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._git = None
         self._loaded = False
 

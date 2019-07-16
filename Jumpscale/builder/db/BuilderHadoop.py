@@ -7,7 +7,7 @@ from Jumpscale import j
 class BuilderHadoop(j.builders.system._BaseClass):
     def _install(self):
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             C = """\
             apt-get install -y apt-get install openjdk-7-jre
             cd {DIR_TEMP}

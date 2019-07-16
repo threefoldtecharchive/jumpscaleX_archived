@@ -10,7 +10,7 @@ builder_method = j.builders.system.builder_method
 class BuilderMinio(BuilderGolangTools):
     NAME = "minio"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.datadir = ""
 
@@ -23,6 +23,10 @@ class BuilderMinio(BuilderGolangTools):
         """
         Builds minio
         """
+        # install gnutls dependancy
+        self.system.package.mdupdate()
+        self.system.package.install("gnutls-bin")
+
         j.builders.runtimes.golang.install()
         self.get("github.com/minio/minio")
 
@@ -47,7 +51,7 @@ class BuilderMinio(BuilderGolangTools):
         cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(
             access_key, secret_key, address, port, self.datadir
         )
-        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()

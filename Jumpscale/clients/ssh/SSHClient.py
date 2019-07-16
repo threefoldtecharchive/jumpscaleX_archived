@@ -2,44 +2,72 @@ import io
 import functools
 from Jumpscale import j
 from .SSHClientBase import SSHClientBase
+import os
+import time
 
 
 class SSHClient(SSHClientBase):
-    def _init(self):
-        SSHClientBase._init(self)
-        self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
-
     def _init2(self, **kwargs):
+        self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
+        self._logger_enable()
+
         if self.passwd == "" and self.sshkey_name == "":
-            if j.clients.sshagent.key_default_or_none:
-                self.sshkey_name = j.clients.sshagent.key_default_or_none.name
+            if j.clients.sshagent.key_default_name:
+                self.sshkey_name = j.clients.sshagent.key_default_name
                 self.save()
 
     @property
     def _client(self):
         if self._client_ is None:
-            pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
+
             passwd = self.passwd
-            if pkey:
-                passwd = self.sshkey_obj.passphrase
 
-            from pssh.clients import SSHClient as PSSHClient
+            if self.sshkey_name:
+                pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
+                if pkey:
+                    passwd = self.sshkey_obj.passphrase
 
-            PSSHClient = functools.partial(PSSHClient, retry_delay=1)
-            self._client_ = PSSHClient(
-                self.addr_variable,
-                user=self.login,
-                password=passwd,
-                port=self.port,
-                pkey=pkey,
-                num_retries=self.timeout / 6,
-                allow_agent=self.allow_agent,
-                timeout=5,
+            if self.allow_agent:
+                passwd = None
+                pkey = None
+
+            passwd = None
+
+            from pssh.clients import SSHClient as PSSHCLIENT
+
+            # SSHClient = functools.partial(PSSHClient, retry_delay=1)
+
+            # if self.stdout:
+            #     from pssh.utils import enable_host_logger
+            #
+            #     enable_host_logger()
+
+            self._log_debug(
+                "ssh connection: %s@%s:%s (passwd:%s,key:%s)"
+                % (self.login, self.addr_variable, self.port_variable, passwd, pkey)
             )
+
+            try:
+                self._client_ = PSSHCLIENT(
+                    self.addr_variable,
+                    user=self.login,
+                    password=passwd,
+                    port=self.port_variable,
+                    pkey=pkey,
+                    num_retries=10,
+                    allow_agent=self.allow_agent,
+                    timeout=self.timeout,
+                    retry_delay=1,
+                )
+            except Exception as e:
+                if str(e).find("Error connecting to host") != -1:
+                    msg = e.args[0] % e.args[1:]
+                    raise RuntimeError("PSSH:%s" % msg)
+                j.shell()
 
         return self._client_
 
-    def execute(self, cmd, showout=True, die=True, timeout=None):
+    def _execute(self, cmd, showout=True, die=True, timeout=None):
         # print ("execute", cmd, showout, die, timeout)
         channel, _, stdout, stderr, _ = self._client.run_command(cmd, timeout=timeout)
         # self._client.wait_finished(channel)
@@ -69,6 +97,17 @@ class SSHClient(SSHClientBase):
             raise j.exceptions.RuntimeError("Cannot execute (ssh):\n%s\noutput:\n%serrors:\n%s" % (cmd, output, error))
 
         return rc, output, error
+
+    def sftp_stat(self, path):
+        res = self.sftp.stat(path)
+        counter = 0
+        while isinstance(res, int):
+            res = self.sftp.stat(path)
+            counter += 1
+            time.sleep(0.1)
+            if counter > 10:
+                raise RuntimeError("sft gives back int:%s for %s" % (res, path))
+        return res
 
     # def connectViaProxy(self, host, username, port, identityfile, proxycommand=None):
     #     # TODO: Fix this
@@ -113,5 +152,5 @@ class SSHClient(SSHClientBase):
         # TODO: make sure we don't need to clean anything
         pass
 
-    def copy_file(self, local_file, remote_file, recurse=False):
-        return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
+    # def file_copy(self, local_file, remote_file, recurse=False):
+    #     return self._client.file_copy(local_file, remote_file, recurse=recurse, sftp=self.sftp)

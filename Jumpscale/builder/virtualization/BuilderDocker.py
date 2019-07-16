@@ -8,8 +8,9 @@ builder_method = j.builders.system.builder_method
 class BuilderDocker(j.builders.system._BaseClass):
     NAME = "docker"
 
+    @builder_method()
     def build(self, branch=None):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             if not branch:
                 if not self.tools.command_check("docker"):
                     C = """
@@ -55,7 +56,7 @@ class BuilderDocker(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         # docker daemon
-        cmd = j.tools.startupcmd.get(self.NAME, cmd="dockerd")
+        cmd = j.servers.startupcmd.get(self.NAME, cmd="dockerd")
         return [cmd]
 
     def stop(self):

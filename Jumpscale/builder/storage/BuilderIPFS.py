@@ -15,7 +15,7 @@ class BuilderIPFS(j.builders.system._BaseClass):
         if reset is False and self.isInstalled():
             return
 
-        if j.builders.platformtype.isLinux:
+        if j.builders.platformtype.platform_is_linux:
             url = "https://dist.ipfs.io/go-ipfs/v0.4.4/go-ipfs_v0.4.4_linux-amd64.tar.gz"
         elif "darwin" in j.builders.platformtype.osname:
             url = "https://dist.ipfs.io/go-ipfs/v0.4.4/go-ipfs_v0.4.4_darwin-amd64.tar.gz"

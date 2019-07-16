@@ -36,7 +36,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
     https://github.com/threefoldtech/rivine/blob/18b19eac90f3cf9585a7ad4de4ecd612bee9c8e6/doc/encoding/SiaEncoding.md
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._data = bytearray()
 
     @property

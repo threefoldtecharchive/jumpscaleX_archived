@@ -10,7 +10,7 @@ class CodeLoader(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.codeloader"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         #
         j.sal.fs.createDir("%s/codegen" % j.dirs.VARDIR)

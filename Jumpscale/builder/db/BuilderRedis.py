@@ -9,7 +9,7 @@ class BuilderRedis(j.builders.system._BaseClass):
 
     @builder_method()
     def build(self):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builders.system.package.mdupdate()
             j.builders.system.package.ensure("build-essential")
 
@@ -44,7 +44,7 @@ class BuilderRedis(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmds = [j.tools.startupcmd.get(name="redis_server", cmd="redis-server --port {}".format(randint(6000, 7000)))]
+        cmds = [j.servers.startupcmd.get(name="redis_server", cmd="redis-server --port {}".format(randint(6000, 7000)))]
         return cmds
 
     @builder_method()

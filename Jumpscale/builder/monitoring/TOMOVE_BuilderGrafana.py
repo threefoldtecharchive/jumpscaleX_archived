@@ -10,7 +10,7 @@ class BuilderGrafana(j.builders.system._BaseClass):
         if reset is False and self.isInstalled():
             return
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             C = """
             cd {DIR_TEMP}
             wget https://grafanarel.s3.amazonaws.com/builds/grafana_3.1.1-1470047149_amd64.deb

@@ -19,7 +19,7 @@ class GitHubClient(JSConfigClient):
         password = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.users = {}
         self.repos = {}

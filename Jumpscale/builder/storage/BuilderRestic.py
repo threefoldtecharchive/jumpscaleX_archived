@@ -7,7 +7,7 @@ class BuilderRestic(j.builders.system._BaseClass):
 
     NAME = "restic"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/restic")
         self.tools.dir_ensure(self.DIR_BUILD)
 

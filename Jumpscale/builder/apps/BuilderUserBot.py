@@ -19,7 +19,7 @@ class BuilderUserBot(j.builders.system._BaseClass):
     NAME = "userbot"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @builder_method()

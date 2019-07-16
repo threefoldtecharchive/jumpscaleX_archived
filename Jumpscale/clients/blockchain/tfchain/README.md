@@ -704,7 +704,7 @@ To be able to make a reservation you first need to:
 - record a threebot on the tfchain
 
 Once you have both, you can then use your wallet client to do a reservation.
-The wallet expose a module called `capacity`. On this module you will find function to reserver the different type of capacity.
+The wallet expose a module called `capacity`. On this module you will find function to reserve the different type of capacity.
 
 Examples:
 
@@ -715,8 +715,11 @@ result = w.capacity.reserve_s3(
     email='user@email.com', # the email on which you will received the connection information
     threebot_id='my3bot.example.org', # your threebot id, it can be any of the names you gave to your 3bot
     location='farm_name', # name of the farm where to deploy the workload
-    size=1) # each workload have a different size available
+    size=1, # each workload have a different size available
+    duration=1) # number of months the reservation should be valid for
 ```
+
+The validity of the reservation shouldn't exceed the validity of the 3bot otherwise the reservation will fail.
 
 
 The result of the `reserve_s3` method call is a tuple containing the transaction and the submission status as a boolean.
@@ -726,4 +729,36 @@ You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/)
 transaction = c.transaction_get(result.transaction.id)
 ```
 
-As soon as it is ready, usually within a few minutes, you will receive an email with the connection information.
+As soon as it is ready, usually within a few minutes, you will receive an email with the connection information and expiration date of the reservation.
+
+
+#### How to extend the expiry of your capacity on the Threefold Grid
+
+If you want to extend the validity of the reservation made in the previous section at any point in time before its expiry, you can use the capacity module to do so. The new expiration date of the reservation must be smaller than or equal to the expiration of the 3bot that was used to create the initial reservation.
+
+```python
+result = w.capacity.reservation_extend(
+    transaction_id="1bdff90882cc437cb8b781c5eb296edbfdb79777564d70ec8f2120c37d8a7737", # the id of the transaction that was created as a result of the initial reservation (result.transaction.id in the section above)
+    email='user@email.com', # the email on which you will received extension confirmation
+    duration=1) # number of months you want to extend the reservation by.
+```
+
+The result of the `reservation_extend` method call is a tuple containing the transaction and the submission status as a boolean.
+You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form or using the tfchain client:
+
+```python
+transaction = c.transaction_get(result.transaction.id)
+```
+
+As soon as it is ready, usually within a few minutes, you will receive an email with the new expiry date of the reservation.
+
+
+If you want to list all transactions that were created whenever a reservation was done (not an extension), you can use method `reservations_transactions_list`.
+
+```python
+w.capacity.reservations_transactions_list()
+- 1bdff90882cc437cb8b781c5eb296edbfdb79777564d70ec8f2120c37d8a7737
+- 5b61c9eaa2d28778620d7f60630fceb2884a3948b2cf06d59a033a02cd747439
+- ffce9a46a689eddfb69496a414e7df7a10f0c55bcf78e97122a85cdfd6da56e2
+```
+

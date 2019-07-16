@@ -11,7 +11,7 @@ class PeeweeFactory(j.application.JSBaseClass):
     __jslocation__ = "j.clients.peewee"
     _CHILDCLASS = PeeweeClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "peewee"
         self.clients = {}
 

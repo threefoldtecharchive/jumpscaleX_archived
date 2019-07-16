@@ -35,9 +35,7 @@ class Node:
     def __init__(self, client):
         # g8os client to talk to the node
         self._storage_addr = None
-        self._name = None
-        self.addr = client.host
-        self.port = client.port
+        self._node_id = None
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
@@ -50,18 +48,26 @@ class Node:
         self.capacity = Capacity(self)
         self.client = client
 
+    @property
+    def addr(self):
+        return self.client.host
+
+    @property
+    def port(self):
+        return self.client.port
+
     def ping(self):
         return self.client.ping()
 
     @property
-    def name(self):
-        if self._name is None:
+    def node_id(self):
+        if self._node_id is None:
             nics = self.client.info.nic()
             macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
             if not macgwdev:
                 raise AttributeError("name not found for node {}".format(self))
-            self._name = macgwdev.replace(":", "")
-        return self._name
+            self._node_id = macgwdev.replace(":", "")
+        return self._node_id
 
     @property
     def kernel_args(self):
@@ -204,7 +210,7 @@ class Node:
 
             # include devices which have partitions
             if len(disk.partitions) == 0:
-                available_disks.setdefault(self.name, []).append(disk)
+                available_disks.setdefault(self.node_id, []).append(disk)
 
         return available_disks
 

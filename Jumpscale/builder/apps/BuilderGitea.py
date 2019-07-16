@@ -9,7 +9,7 @@ builder_method = j.builders.system.builder_method
 class BuilderGitea(BuilderGolangTools):
     NAME = "gitea"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         # set needed paths
         self.GITEAPATH = self._replace("{DIR_GO_PATH}/src/code.gitea.io/gitea")
@@ -97,6 +97,7 @@ class BuilderGitea(BuilderGolangTools):
             self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
         self.start()
 
+        # TODO:*3 would have been cleaner to use std postgresql client & do the query, this is super cumbersome
         cfg = """
         {{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}
         """ % (
@@ -123,7 +124,7 @@ class BuilderGitea(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
         return j.builders.db.postgres.startup_cmds + [cmd]
 
     @builder_method()

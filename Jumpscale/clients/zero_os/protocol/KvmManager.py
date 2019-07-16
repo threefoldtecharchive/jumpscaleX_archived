@@ -147,7 +147,7 @@ class KvmManager:
                       [{'url': 'zdb://host:port?size=10G&blocksize=4096'},
                        {'url': 'zdb+unix:///path/to/unix.socket?size=5G'}]
         :param flist: (optional) VM flist. A special bootable flist witch has a correct boot.yaml file
-                     example: http://hub.gig.tech/azmy/ubuntu-zesty.flist
+                     example: http://hub.grid.tf/azmy/ubuntu-zesty.flist
         :param cpu: number of vcpu cores
         :param memory: memory in MiB
         :param port: A dict of host_port: container_port pairs

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .S3Client import S3Client
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class S3Factory(JSConfigBase):
@@ -12,7 +12,7 @@ class S3Factory(JSConfigBase):
     __jslocation__ = "j.clients.s3"
     _CHILDCLASS = S3Client
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "minio"
 
     def install(self):

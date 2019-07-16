@@ -16,7 +16,7 @@ class GrafanaClient(JSConfigClient):
         verify_ssl = False (B)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._httpclient = None
 
     def ping(self):

@@ -30,7 +30,6 @@ class Runtimes_TestCases(BaseTest):
         self.info(" * Check that {} server stopped successfully.".format(builder))
         self.small_sleep()
         self.assertFalse(len(j.sal.process.getProcessPid(process)))
-<<<<<<< HEAD
 
     def test002_golang(self):
         """ BLD-007
@@ -43,7 +42,7 @@ class Runtimes_TestCases(BaseTest):
         self.info("Check that golang builder installed successfully")
         self.assertTrue(j.builders.runtimes.golang.is_installed)
 
-        def test003_nimlang(self):
+    def test003_nimlang(self):
         """ BLD-009
         *Test nimlang builer sandbox*
         """
@@ -63,8 +62,8 @@ class Runtimes_TestCases(BaseTest):
         try:
             j.sal.process.execute("which python")
         except:
-        self.assertTrue(False)
-    
+            self.assertTrue(False)
+
     def test005_rust(self):
         """ BLD-011
         *Test rust builer sandbox*
@@ -89,5 +88,3 @@ class Runtimes_TestCases(BaseTest):
         j.builders.runtimes.nodejs.install()
         self.info("check that nodejs installed successfully.")
         self.assertTrue(j.sal.process.execute("which nodejs"))
-=======
->>>>>>> 77075ffc95ae1e9b19cf0a9f30d6d55bad806410

@@ -48,7 +48,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
     https://github.com/threefoldtech/rivine/blob/7c87733e250d0e195c87119208fe7ba15e762e4b/doc/encoding/RivineEncoding.md
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._data = bytearray()
 
     @property

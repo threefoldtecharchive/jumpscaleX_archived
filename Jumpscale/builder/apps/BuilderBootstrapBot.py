@@ -17,7 +17,7 @@ class BuilderBootstrapBot(j.builders.system._BaseClass):
     NAME = "bootstrapbot"
 
     @builder_method()
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @builder_method()

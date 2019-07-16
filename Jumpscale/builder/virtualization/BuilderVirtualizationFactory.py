@@ -5,7 +5,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.virtualization"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._docker = None
 
     @property

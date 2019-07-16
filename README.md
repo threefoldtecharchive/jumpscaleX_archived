@@ -1,17 +1,14 @@
-**Master:**   
-[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=master)](https://travis-ci.com/threefoldtech/jumpscaleX)
-[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/master/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)  
 **Development:**  
-[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
-[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
-
+[![Build Status](http://188.165.233.148:6010/status?project=build)](http://188.165.233.148:6010/status?project=build&&file=True)
+[![Builders Status](http://188.165.233.148:6010/status?project=builders)](http://188.165.233.148:6010/status?project=builders&&file=True)
 
 # Jumpscale
 
 Jumpscale is a cloud automation product and a branch from what used to be 
 Pylabs. About 9 years ago Pylabs was the basis of a cloud automation product 
 which was acquired by SUN Microsystems from Q-Layer. In the mean time we are 
-4 versions further and we have rebranded it to Jumpscale.
+4 versions further and we have rebranded it to Jumpscale. 
+Our newest release is version 10, called JSX.
 
 - [Jumpscale](#jumpscale)
   - [About Jumpscale](#about-jumpscale)
@@ -41,25 +38,9 @@ Some tools available in jumpscale
   Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file , write to a file, execute bash commands and many other handy methods that you will probably need in your builder) \
   To create a builder see [documentation](docs/howto/Create\ a\ new\ Builder.md)
 
-## Installing Jumpscale
+## Install and use Jumpscale
 
-[See documentation](/docs/Installation/install.md)
-
-
-## Usage
-
-* The jsshell
-  in your terminal, type `js_shell`
-
-* Kosmos in your terminal, type `kosmos`
-
-* In Python
-
-  ```bash
-  python3 -c 'from Jumpscale import j;print(j.application.getMemoryUsage())'
-  ```
-
-  the default mem usage < 23 MB and lazy loading of the modules.
+[See installation doc](/docs/Installation/README.md)
 
 ## Running Tests
 To run unittests you can execute the following command
@@ -83,5 +64,6 @@ def test_main(self)
 [Check Documentation](docs/howto/README.md)
 
 
-## Collaboration Conventions
-[check conventions](docs/CONTRIBUTING.md)
+## Collaboration
+
+[please read more here about how to collaborate](https://github.com/threefoldtech/home/tree/master/contribution)

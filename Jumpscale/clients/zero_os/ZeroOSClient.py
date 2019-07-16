@@ -18,7 +18,7 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     timeout = 120 (I)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         client = ProtocolClient(
             host=self.host,
             port=self.port,
@@ -36,3 +36,8 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
         except AttributeError:
             # not a client attribute
             pass
+
+        # force re-creation of the redis client
+        # when the config is changed
+        if key in ["host", "port", "password", "unixsocket"]:
+            self.client._redis = None

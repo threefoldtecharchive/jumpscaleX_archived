@@ -7,7 +7,7 @@ builder_method = j.builders.system.builder_method
 class BuilderEthereum(BuilderGolangTools):
     NAME = "geth"
 
-    def _init(self):
+    def _init(self, **kwargs):
         super()._init()
         self.geth_repo = "github.com/ethereum/go-ethereum"
         self.package_path = self.package_path_get("ethereum/go-ethereum")
@@ -36,7 +36,7 @@ class BuilderEthereum(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("geth", cmd="geth")
+        cmd = j.servers.startupcmd.get("geth", cmd="geth")
         return [cmd]
 
     @builder_method()

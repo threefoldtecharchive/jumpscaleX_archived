@@ -36,10 +36,10 @@ def main(self):
     o1.listnum.append("1")
     assert o1.listnum[0] == 1
 
-    jsx_obj = o1.llist.new()
+    jsxobject = o1.llist.new()
 
-    assert jsx_obj.cost_estimate == 0.0
-    assert jsx_obj.cost_estimate == 0
+    assert jsxobject.cost_estimate == 0.0
+    assert jsxobject.cost_estimate == 0
 
     self._log_info("TEST DONE CAPNP")
 

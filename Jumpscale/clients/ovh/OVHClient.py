@@ -18,7 +18,7 @@ class OVHClient(JSConfigBase):
     consumerkey_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         # id = "ovhclient_%s" % c["consumerkey_"]
 
@@ -26,7 +26,7 @@ class OVHClient(JSConfigBase):
 
         self.client.get("/me")
 
-        if self.consumerkey == "":
+        if self.consumerkey_ == "":
             self.consumer_key_get()
             self._connect()
 

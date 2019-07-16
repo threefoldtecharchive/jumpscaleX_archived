@@ -177,7 +177,7 @@ class TransactionBaseClass(ABC):
         pass
 
     def json(self):
-        obj = {"version": self.version}
+        obj = {"version": self.version.value}
         data = self._json_data_object()
         if data:
             obj["data"] = data

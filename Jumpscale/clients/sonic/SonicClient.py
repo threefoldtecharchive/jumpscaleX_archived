@@ -1,6 +1,5 @@
 from Jumpscale import j
 
-
 JSConfigClient = j.application.JSBaseConfigClass
 
 
@@ -39,9 +38,10 @@ class SonicClient(JSConfigClient):
         password = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cached_client_search = None
         self._cached_client_ingest = None
+        self._bufsize = None
 
         self.push = self._client_ingest.push
         self.pop = self._client_ingest.pop
@@ -64,7 +64,6 @@ class SonicClient(JSConfigClient):
 
         if not self._cached_client_search:
             self._cached_client_search = SearchClient(host=self.host, port=self.port, password=self.password)
-            self._cached_client_search.connect()
         return self._cached_client_search
 
     @property
@@ -77,5 +76,10 @@ class SonicClient(JSConfigClient):
 
         if not self._cached_client_ingest:
             self._cached_client_ingest = IngestClient(host=self.host, port=self.port, password=self.password)
-            self._cached_client_ingest.connect()
         return self._cached_client_ingest
+
+    @property
+    def bufsize(self):
+        if not self._bufsize:
+            self._bufsize = self._client_ingest.get_active_connection().bufsize
+        return self._bufsize

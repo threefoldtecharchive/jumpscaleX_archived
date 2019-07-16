@@ -51,7 +51,7 @@ class ModelBase(j.application.JSBaseClass):
             value = value.decode()
         self._key = value
 
-    def _post_init(self):
+    def _post_init(self, **kwargs):
         pass
 
     def _pre_save(self):

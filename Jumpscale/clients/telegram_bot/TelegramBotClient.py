@@ -17,7 +17,7 @@ class TelegramBot(JSConfigClient):
     bot_token_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._updater = None
         self._bot = None
         self._dispatcher = None

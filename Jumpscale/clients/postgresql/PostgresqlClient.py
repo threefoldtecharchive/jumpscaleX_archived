@@ -16,16 +16,19 @@ class PostgresClient(JSConfigClient):
     @url = jumpscale.postgres.client
     name* = "" (S)
     ipaddr = "" (S)
-    port = 0 (ipport)
+    port = 5432 (ipport)
     login = "" (S)
     passwd_ = "" (S)
     dbname = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
+        """
+        # needs psycopg2 sqlalchemy libtmux to be installed
+        """
         self.client = psycopg2.connect(
             "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
-            % (self.dbname, self.login, self.ipaddr, self.passwd, self.port)
+            % (self.dbname, self.login, self.ipaddr, self.passwd_, self.port)
         )
         self.cursor = None
 
@@ -137,25 +140,25 @@ class PostgresClient(JSConfigClient):
                 )
                 j.sal.process.execute(cmd, showout=False)
 
-    def exportToYAML(self, path):
-        """
-        TODO: export
+    # def exportToYAML(self, path):
+    #     """
+    #     TODO: export
 
-        export to $path/$objectType/$id_$name.yaml (if id & name exists)
-        else: export to $path/$objectType/$id_$dest[1:20].yaml (if id & descr exists)
-        else: export to $path/$objectType/$id.yaml (if id & descr exists)
-        if id does not exist but guid or uid does, use that one in stead of id
+    #     export to $path/$objectType/$id_$name.yaml (if id & name exists)
+    #     else: export to $path/$objectType/$id_$dest[1:20].yaml (if id & descr exists)
+    #     else: export to $path/$objectType/$id.yaml (if id & descr exists)
+    #     if id does not exist but guid or uid does, use that one in stead of id
 
-        check for deletes
+    #     check for deletes
 
-        """
-        pass
+    #     """
+    #     pass
 
-    def importFromYAML(self, path):
-        """
-        TODO:
-        """
-        pass
+    # def importFromYAML(self, path):
+    #     """
+    #     TODO:
+    #     """
+    #     pass
 
     # def _html2text(self, html):
     #     return j.data.html.html2text(html)

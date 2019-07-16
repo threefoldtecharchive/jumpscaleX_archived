@@ -71,4 +71,3 @@ class LibsTestCases(BaseTest):
             j.sal.process.execute("which openssl")
         except:
             self.assertTrue(False)
-

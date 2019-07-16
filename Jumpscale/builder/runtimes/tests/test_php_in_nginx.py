@@ -75,15 +75,15 @@ def test_main(self=None):
     www_path = self._replace("{DIR_TEMP}/www/")
     j.builders.tools.dir_ensure(www_path)
     nginx_conf = get_test_nginx_site(www_path)
-    default_site_path = "/sandbox/cfg/nginx-php.conf"
+    default_site_path = "/tmp/builders/nginx/conf/nginx-php.conf"
     j.sal.fs.writeFile(default_site_path, contents=nginx_conf)
     j.builders.tools.dir_ensure(j.builders.tools.joinpaths(www_path, "test"))
     j.sal.fs.writeFile(j.builders.tools.joinpaths(www_path, "test", "index.php"), contents="<?php phpinfo(); ?>")
 
     cmd = "/sandbox/sbin/php-fpm -F -y /sandbox/etc/php-fpm.d/www.conf"
-    php_cmd = j.tools.startupcmd.get(name="test_php", cmd=cmd, process_strings=["/sandbox/sbin/php-fpm"])
-    cmd = "nginx -c /sandbox/cfg/nginx-php.conf -g 'daemon off;'"
-    nginx_cmd = j.tools.startupcmd.get(name="test_nginx-php", cmd=cmd, cmd_stop="nginx -s stop")
+    php_cmd = j.servers.startupcmd.get(name="test_php", cmd=cmd, process_strings=["/sandbox/sbin/php-fpm"])
+    cmd = "nginx -c /tmp/builders/nginx/conf/nginx-php.conf -g 'daemon off;'"
+    nginx_cmd = j.servers.startupcmd.get(name="test_nginx-php", cmd=cmd, cmd_stop="nginx -s stop")
 
     php_cmd.start()
     nginx_cmd.start()

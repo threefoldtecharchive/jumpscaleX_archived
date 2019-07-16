@@ -1,12 +1,13 @@
 from Jumpscale import j
-#GENERATED CODE, can now change
 
+from Jumpscale.data.bcdb.BCDBModelIndex import BCDBModelIndex
 
-class {{BASENAME}}:
+class {{BASENAME}}(BCDBModelIndex):
+
+    {% if index.active %}
 
     def _init_index(self):
-        self.index = None
-        {%- if index.active %}
+
         self._log_info("init index:%s"%self.schema.url)
 
         p = j.clients.peewee
@@ -21,17 +22,17 @@ class {{BASENAME}}:
 
         class Index_{{schema.key}}(BaseModel):
             id = p.IntegerField(unique=True)
+            nid = p.IntegerField(index=True) #need to store the namespace id
             {%- for field in index.fields %}
             {{field.name}} = p.{{field.type}}(index=True)
             {%- endfor %}
 
-        self.index = Index_{{schema.key}}
-        self.index.create_table(safe=True)
+        self._sql_index_db = Index_{{schema.key}}
+        self._sql_index_db.create_table(safe=True)
+        self.sql=self._sql_index_db
 
-        {%- endif %}
 
-    {% if index.active %}
-    def index_set(self,obj):
+    def _sql_index_set(self,obj):
         idict={}
         {%- for field in index.fields %}
         {%- if field.jumpscaletype.NAME == "numeric" %}
@@ -40,44 +41,70 @@ class {{BASENAME}}:
         idict["{{field.name}}"] = obj.{{field.name}}
         {%- endif %}
         {%- endfor %}
+        assert obj.id
+        assert obj.nid
         idict["id"] = obj.id
-        if not self.index.select().where(self.index.id == obj.id).count()==0:
-            #need to delete previous record from index
-            self.index.delete().where(self.index.id == obj.id).execute()
-        self.index.insert(**idict).execute()
+        idict["nid"] = obj.nid
+        #need to delete previous record from index
+        self._sql_index_delete(obj)
+        self._sql_index_db.insert(**idict).execute()
 
+    def _sql_index_delete(self,obj):
+        # if not self._sql_index_db.select().where(self._sql_index_db.id == obj.id).count()==0:
+        self._sql_index_db.delete().where(self._sql_index_db.id == obj.id).execute()
 
-    def index_destroy(self):
-        self.index.drop_table()
-        self.index.create_table()
-        self._index_keys_destroy()
+    def _sql_index_destroy(self, nid=None):
+        """
+        will remove all namespaces indexes
+        :param nid:
+        :return:
+        """
+        if nid:
+            self._sql_index_db.delete().where(self._sql_index_db.nid == nid).execute()
+        else:
+            self._sql_index_db.drop_table()
+            self._sql_index_db.create_table()
+
+    {% else %}
+    def _init_index(self):
+        return
+
+    def _sql_index_set(self,obj):
+        return
+
+    def _sql_index_delete(self,obj):
+        return
+
+    def _sql_index_destroy(self, nid=None):
+        return
 
     {% endif %}
 
 
     {%- if index.active_keys %}
-    def index_keys_set(self,obj):
+    def _key_index_set(self,obj):
         {%- for property_name in index.fields_key %}
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
             # self._log_debug("key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._index_key_set("{{property_name}}",val,obj.id)
+            self._key_index_set_("{{property_name}}",val,obj.id,nid=obj.nid)
         {%- endfor %}
 
-    def index_keys_delete(self,obj):
+    def _key_index_delete(self,obj):
         {%- for property_name in index.fields_key %}
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
             self._log_debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._index_key_delete("{{property_name}}",val,obj.id)
+            self._key_index_delete_("{{property_name}}",val,obj.id,nid=obj.nid)
         {%- endfor %}
 
+    {% else %}
+    def _key_index_set(self,obj):
+        return
 
-    {%- for property_name in index.fields_key %}
-    def get_by_{{property_name}}(self,{{property_name}}):
-        return self.get_from_keys({{property_name}}=str({{property_name}}))
-    {%- endfor %}
+    def _key_index_delete(self,obj):
+        return
 
     {%- endif %}

@@ -107,11 +107,12 @@ class DocSite(j.application.JSBaseClass):
         )
 
     def get_real_source(self, custom_link, linker=None):
-        """get the real source of custom link format
+        """
+        get the source of the data (only works for github and local paths for now)
 
         :param custom_link: custom link
         :type custom_link: CustomLink
-        :param linker: a liner instance, defaults to GithubLinker
+        :param linker: a linker instance, defaults to GithubLinker
         :type linker: Linker, optional
         :return: a path or a full link
         :rtype: str
@@ -303,6 +304,7 @@ class DocSite(j.application.JSBaseClass):
             "js",
             "mov",
             "py",
+            "svg",
         ]:
             self._log_debug("found file:%s" % path)
             base = self._clean(base)
@@ -591,6 +593,16 @@ class DocSite(j.application.JSBaseClass):
 
     __str__ = __repr__
 
+    def write_metadata(self, dest):
+        # Create file with extra content to be loaded in docsites
+        data = {"name": self.name, "repo": ""}
+
+        if self.git:
+            data["repo"] = "https://github.com/%s/%s" % (self.account, self.repo)
+
+        data_json = j.data.serializers.json.dumps(data)
+        j.sal.fs.writeFile(filename=dest + "/.data", contents=data_json, append=False)
+
     def write(self, reset=False):
         self.load()
         self.verify()
@@ -609,6 +621,8 @@ class DocSite(j.application.JSBaseClass):
         # NO NEED (also the ignore does not work well)
         # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=True)
+
+        self.write_metadata(dest)
 
         keys = [item for item in self.docs.keys()]
         keys.sort()

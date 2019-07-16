@@ -4,18 +4,16 @@ JSBASE = j.application.JSBaseClass
 
 
 class SchemaProperty(j.application.JSBaseClass):
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self, **kwargs):
+
         self.name = ""
         self.jumpscaletype = None
-        # self.isList = False
-        # self.enumeration = []
         self.comment = ""
-        # self.pointer_type = None  #if the property links to another object
         self.nr = 0
         self._default = None
         self.index = False  # as used in sqlite
         self.index_key = False  # is for indexing the keys
+        self.index_text = False  # is for full text index
         self.unique = False  # to check if type is unique or not
         if self.name in ["schema"]:
             raise RuntimeError("cannot have property name:%s" % self.name)
@@ -29,6 +27,28 @@ class SchemaProperty(j.application.JSBaseClass):
         if self._default:
             return self._default
         return self.jumpscaletype.default_get()
+
+    @property
+    def has_jsxobject(self):
+        return self.is_list_jsxobject or self.is_jsxobject
+
+    @property
+    def is_list_jsxobject(self):
+        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "JSXOBJ":
+            return True
+        return False
+
+    @property
+    def is_jsxobject(self):
+        if self.jumpscaletype.BASETYPE == "JSXOBJ":
+            return True
+        return False
+
+    @property
+    def is_list(self):
+        if self.jumpscaletype.NAME == "list":
+            return True
+        return False
 
     @property
     def default_as_python_code(self):
@@ -49,6 +69,10 @@ class SchemaProperty(j.application.JSBaseClass):
             else:
                 out += item.capitalize()
         return out
+
+    @property
+    def name_str(self):
+        return "%-20s" % self.name
 
     @property
     def js_typelocation(self):

@@ -5,7 +5,7 @@ from Jumpscale import j
 
 from .CapacityServer import CapacityServer
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class CapacityFactory(JSConfigBase):
@@ -18,7 +18,7 @@ class CapacityFactory(JSConfigBase):
 
         if background:
             cmd = "kosmos '%s.start(instance=\"%s\")'" % (self.__jslocation__, instance)  # IGNORELOCATION
-            j.tools.tmux.execute(
+            j.servers.tmux.execute(
                 cmd, session="capacity_server", window=instance, pane="main", session_reset=False, window_reset=True
             )
             res = j.sal.nettools.waitConnectionTest("localhost", int(server.config.data["port"]), timeoutTotal=1000)

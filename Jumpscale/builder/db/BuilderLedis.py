@@ -9,7 +9,7 @@ class BuilderLedis(j.builders.system._BaseClass):
         if self._done_check("build", reset):
             return
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
 
             C = """
             #!/bin/bash

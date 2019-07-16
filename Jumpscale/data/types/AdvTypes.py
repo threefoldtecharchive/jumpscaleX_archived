@@ -5,11 +5,12 @@ import re
 import struct
 import builtins
 from .PrimitiveTypes import String, Integer
+from functools import reduce
 import copy
 import time
 from uuid import UUID
 from Jumpscale import j
-from datetime import datetime
+from datetime import datetime, timedelta
 from .TypeBaseClasses import *
 
 
@@ -418,7 +419,7 @@ class Numeric(TypeBaseObjFactory):
 
     def getCur(self, value):
         value = value.lower()
-        for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
+        for cur2 in list(j.clients.currencylayer.cur2id):
             # print(cur2)
             if value.find(cur2) != -1:
                 # print("FOUND:%s"%cur2)

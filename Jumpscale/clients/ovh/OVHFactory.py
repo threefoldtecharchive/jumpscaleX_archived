@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .OVHClient import OVHClient
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
 
 class OVHFactory(JSConfigBaseFactory):
@@ -12,7 +12,7 @@ class OVHFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.ovh"
     _CHILDCLASS = OVHClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "ovh"
 
     def get_manual(
@@ -47,28 +47,33 @@ class OVHFactory(JSConfigBaseFactory):
             runabove-ca for RunAbove API
 
         """
-        data = {}
-        data["appkey_"] = appkey
-        data["appsecret_"] = appsecret
-        data["consumerkey_"] = consumerkey
-        data["endpoint"] = endpoint
-        data["ipxeBase"] = ipxeBase
 
-        return self.get(instance=instance, data=data)
+        return self.get(
+            instance=instance,
+            appkey_=appkey,
+            appsecret_=appsecret,
+            consumerkey_=consumerkey,
+            endpoint=endpoint,
+            ipxeBase=ipxeBase,
+        )
 
     # def node_get(self,instance=""):
     #     cl=j.clients.ovh.client_get(instance=instance)
     #     cl.serverInstall(name="", installationTemplate="ubuntu1704-server_64", sshKeyName="ovh",
     # useDistribKernel=True, noRaid=True, hostname="", wait=True)
 
-    def test(self):
+    def test(self, appkey="", appsecret="", consumerkey=""):
         """
         do:
-        kosmos 'j.clients.ovh.test()'
+        kosmos 'j.clients.ovh.test("appkey", "appsecret", "consumerkey")'
         """
-        client = self.get()
+        client = self.get(
+            instance="test",
+            appkey_=appkey,
+            appsecret_=appsecret,
+            consumerkey_=consumerkey,
+            endpoint="soyoustart-eu",
+            ipxeBase="https://bootstrap.grid.tf/ipxe/development",
+        )
+        client._connect()
         self._log_debug(client.servers_list())
-
-        # TODO:*1 connect to ovh * boot zero-os
-        # connect the client to zero-os
-        # do a ping

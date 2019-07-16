@@ -98,7 +98,7 @@ class FormattersFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.formatters"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.lexers = Lexers()
         self.formatters = Formatters()
 
@@ -121,7 +121,7 @@ class FormattersFactory(j.application.JSBaseClass):
         j.tools.formatters.formatters.terminal
 
         C = """
-        def _init(self):
+        def _init(self,**kwargs):
             self.lexers = Lexers()
             self.formatters = Formatters()
             

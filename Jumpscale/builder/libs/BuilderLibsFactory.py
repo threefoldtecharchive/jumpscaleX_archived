@@ -5,7 +5,7 @@ class BuilderLibsFactory(j.builders.system._BaseFactoryClass):
 
     __jslocation__ = "j.builders.libs"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._openssl = None
         self._capnp = None
         self._cmake = None

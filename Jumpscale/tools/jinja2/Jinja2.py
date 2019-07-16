@@ -9,7 +9,7 @@ class Jinja2(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.jinja2"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._codegendir = j.core.tools.text_replace("{DIR_VAR}/codegen")
 
         #

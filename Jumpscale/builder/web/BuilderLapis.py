@@ -7,7 +7,7 @@ from time import sleep
 class BuilderLapis(j.builders.system._BaseClass):
     NAME = "lapis"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.BUILDDIR = self._replace("{DIR_VAR}/build/")
         self.bins = [
             "/bin/mkdir",

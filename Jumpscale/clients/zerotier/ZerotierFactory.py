@@ -17,14 +17,14 @@ from Jumpscale import j
 JSConfigs = j.application.JSBaseConfigsClass
 
 
-JSBASE = j.application.JSFactoryBaseClass
+JSBASE = j.application.JSFactoryConfigsBaseClass
 
 
 class ZerotierFactory(JSConfigs):
     __jslocation__ = "j.clients.zerotier"
     _CHILDCLASS = ZerotierClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "zerotier"
         self.connections = {}
         self.config_path = None

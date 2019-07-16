@@ -5,6 +5,9 @@ builder_method = j.builders.system.builder_method
 
 
 class BuilderLua(j.builders.system._BaseClass):
+    """
+    needs openresty and openssl
+    """
 
     NAME = "lua"
 
@@ -12,20 +15,21 @@ class BuilderLua(j.builders.system._BaseClass):
         self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
 
     @builder_method()
-    def build(self):
+    def build(self, reset=False, deps_reset=False):
         """
-        kosmos 'j.builders.runtimes.lua.build()'
+        kosmos 'j.builders.runtimes.lua.build(reset=True)'
         :param install:
         :return:
         """
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
+            j.builders.system.package.install(
+                ["libsqlite3-dev", "libpcre3-dev", "libssl-dev", "perl", "make", "build-essential"]
+            )
 
-        if j.core.platformtype.myplatform.isUbuntu:
-            j.builders.system.package.install(["libsqlite3-dev"])
+        j.builders.web.openresty.build(reset=deps_reset)
+        # j.builders.libs.openssl.build(reset=deps_reset)  #DOES NOT WORK FOR NOW, maybe wrong version of openssl?
 
-        j.builders.web.openresty.build(reset=True)
-        j.builders.libs.openssl.build(reset=True)
-
-        url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
+        url = "https://luarocks.org/releases/luarocks-3.1.3.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
         self.tools.file_download(
@@ -41,7 +45,7 @@ class BuilderLua(j.builders.system._BaseClass):
         luarocks path > {ROCKS_PATHS_PROFILE}
         """
         # set showout to False to avoid text_replace of output log
-        self._execute(C, showout=False)
+        self._execute(C, showout=True)
 
     def profile_sandbox_set(self):
         # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
@@ -56,7 +60,24 @@ class BuilderLua(j.builders.system._BaseClass):
         self.profile.path_add(path, check_exists=False)
 
     def lua_rock_install(self, name):
-        self._execute("luarocks install %s" % name)
+        self._log_info("lua_rock_install: %s" % name)
+        if self._done_check("lua_rock_install_%s" % name):
+            return
+
+        if j.core.platformtype.myplatform.platform_is_osx:
+            C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR "
+            C = C.replace("$CRYPTODIR", "/usr/local/opt/openssl")
+        else:
+            # C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR"
+            # C = "luarocks install lapis CRYPTO_DIR=/sandbox OPENSSL_DIR=/sandbox"
+            C = "luarocks install $NAME "
+            C = C.replace("$CRYPTODIR", "/sandbox")
+        C = C.replace("$NAME", name)
+        # example crypto dir: /usr/local/openresty/openssl/
+
+        self._execute(C)
+
+        self._done_set("lua_rock_install_%s" % name)
 
     def lua_rocks_install(self):
         """
@@ -66,61 +87,61 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self.profile_sandbox_select()
 
-        if j.core.platformtype.myplatform.isUbuntu:
-            # j.builders.system.package.mdupdate()
-            j.builders.system.package.ensure("geoip-database,libgeoip-dev")
+        # if j.core.platformtype.myplatform.platform_is_ubuntu:
+        #     # j.builders.system.package.mdupdate()
+        #     j.builders.system.package.ensure("geoip-database,libgeoip-dev")
 
         C = """
         luaossl
-        luasec
+        # luasec
         lapis
         moonscript
         lapis-console
         LuaFileSystem
-        luasocket
-        # lua-geoip
+        # luasocket
         lua-cjson
-        lua-term
-        penlight
-        lpeg
-        mediator_lua
-        # luajwt
-        # mooncrafts
-        inspect
+        # lua-term
+        # penlight
+        # lpeg
+        # mediator_lua
+
+        # inspect
 
         lua-resty-redis-connector
-        lua-resty-openidc
+        # lua-resty-openidc
 
-        LuaRestyRedis
-        # lua-resty-qless
+        # LuaRestyRedis
 
-        lua-capnproto
+        # lua-capnproto
         lua-toml
 
-        lua-resty-exec
+        # lua-resty-exec
 
-        lua-resty-influx
+        # lua-resty-influx
         lua-resty-repl
+        #
+        # lua-resty-iputils
+        #
+        # lsqlite3
+        #
+        # bcrypt
+        # md5
 
-        lua-resty-iputils
+        # date
+        # uuid
+        # lua-resty-cookie
+        # lua-path
 
-        lsqlite3
+        # luazen
 
-        bcrypt
-        md5
+        # alt-getopt
+        # lua-messagepack
 
-        date
-        uuid
-        lua-resty-cookie
-        lua-path
+        # lua-resty-qless
+        # lua-geoip
+        # luajwt
+        # mooncrafts
 
-        # various encryption
-        luazen
-
-        alt-getopt
-
-
-        lua-messagepack
         """
 
         for line in C.split("\n"):
@@ -131,7 +152,7 @@ class BuilderLua(j.builders.system._BaseClass):
                 continue
             self.lua_rock_install(line)
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             self.lua_rock_install("lua-geoip")
             self.lua_rock_install("lua-resty-jwt")
             self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
@@ -247,11 +268,11 @@ class BuilderLua(j.builders.system._BaseClass):
         # assert self.executor.type=="local"
         path = "/sandbox/openresty/lualib"
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_ubuntu.git"
             )
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
                 "git@github.com:threefoldtech/sandbox_osx.git"
             )
@@ -276,3 +297,43 @@ class BuilderLua(j.builders.system._BaseClass):
             self._copy(item, dest_full)
 
         self.clean()
+
+    def clean(self):
+        C = """
+        rm -rf {DIR_BUILD}
+        rm -rf /tmp/luarocks*
+        """
+        self._execute(C)
+
+    @property
+    def startup_cmds(self):
+        cmd = """
+        rm -rf {DIR_TEMP}/lapis_test
+        mkdir -p {DIR_TEMP}/lapis_test
+        cd {DIR_TEMP}/lapis_test
+        lapis --lua new
+        lapis server
+        """
+        cmd = self._replace(cmd)
+        cmds = [j.servers.startupcmd.get("test_openresty", cmd_start=cmd, ports=[8080], process_strings_regex="^nginx")]
+        return cmds
+
+    def test(self):
+        """
+        kosmos 'j.builders.runtimes.lua.test()'
+
+        server is running on port 8080
+
+        """
+
+        if self.running():
+            self.stop()
+        self.start()
+        self._log_info("openresty is running on port 8080")
+        # we now have done a tcp test, lets do a http client connection
+        out = j.clients.http.get("http://localhost:8080")
+
+        assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
+        self.stop()
+
+        self._log_info("openresty test was ok,no longer running")

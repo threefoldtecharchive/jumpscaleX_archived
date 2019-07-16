@@ -8,7 +8,7 @@ import random
 class Unique(BaseTest):
     def setUp(self):
         super().setUp()
-        self.bcdb = j.data.bcdb.new("test")
+        self.bcdb = j.data.bcdb.get("test")
 
     def tearDown(self):
         self.bcdb.reset()

@@ -8,7 +8,7 @@ class BuilderMariadb(j.builders.system._BaseClass):
     NAME = "mariadb"
     PORT = "3306"
 
-    def _init(self):
+    def _init(self, **kwargs):
         # code dir
         self.code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "code")
         # self.start_cmd = """
@@ -103,7 +103,7 @@ class BuilderMariadb(j.builders.system._BaseClass):
         """
         cmd_start = cmd
 
-        cmd = j.tools.startupcmd.get("mysqld", cmd=cmd_start)
+        cmd = j.servers.startupcmd.get("mysqld", cmd=cmd_start)
         return [cmd]
 
     @builder_method()
@@ -139,6 +139,12 @@ class BuilderMariadb(j.builders.system._BaseClass):
             self.code_dir, sandbox_dir
         )
         self._execute(install_cmd)
+
+        # add libraries if missing
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(lib_dest)
+        dir_src = self.tools.joinpaths(sandbox_dir)
+        j.tools.sandboxer.libs_clone_under(dir_src, lib_dest)
 
         # startup.toml
         templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
