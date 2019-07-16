@@ -2899,7 +2899,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools", "libgeoip-dev", "libcapnp-dev"]  # "graphviz"
 
     @staticmethod
     def apts_install():

@@ -228,7 +228,7 @@ def container_install(
     """
     interactive = not no_interactive
 
-    _configure(configdir=configdir, no_interactive=no_interactive)
+    _configure(configdir=configdir, no_interactive=interactive)
 
     if scratch:
         image = "phusion/baseimage"
