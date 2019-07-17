@@ -36,7 +36,7 @@ class BuilderEthereum(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.servers.startupcmd.get("geth", cmd="geth")
+        cmd = j.servers.startupcmd.get("geth", cmd_start="geth")
         return [cmd]
 
     @builder_method()

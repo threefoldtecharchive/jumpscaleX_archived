@@ -54,7 +54,9 @@ class BuilderS3Scality(j.builders.system._BaseClass):
             self.tools.profile.env_set("NODE_PATH", node_path)
 
         cmd = j.servers.startupcmd.get(
-            self.NAME, cmd=self._replace("cd %s && npm run start_location" % self.path), env={"NODE_PATH": node_path}
+            self.NAME,
+            cmd_start=self._replace("cd %s && npm run start_location" % self.path),
+            env={"NODE_PATH": node_path},
         )
         return [cmd]
 

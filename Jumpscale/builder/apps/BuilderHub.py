@@ -200,7 +200,7 @@ class BuilderHub(j.builders.system._BaseClass):
         cd {DIR_CODE}/hub/python/ && python3 flist-uploader.py
         """
         )
-        start_cmd = j.servers.startupcmd.get(self.NAME, cmd=start_script)
+        start_cmd = j.servers.startupcmd.get(self.NAME, cmd_start=start_script)
         return [start_cmd]
 
     @builder_method()
