@@ -117,6 +117,59 @@ class MarkDownDocs(j.application.JSBaseClass):
         self.macros_load()
         self._sonic_client = None
 
+    def test_dav(self, reset=False):
+        SCHEMA = """
+        @url = threebot.docsites.resource
+        name* = (S)
+        path* = (S) # the resource directory (this will be indexed to be able to quickly retrieve a resource by path)
+        is_dir = (B) # determine whether the resource is a directory or a file
+        children = (LS) # in case of dir this will contain list of paths for the children 
+        content_type = (S) # the contenyt type for the content that maybe used as header fr serving the special file types
+        extension = (S) # file extension
+        is_indexable = (S) # determine whether this file content should be indexed in sonic or not (for example sidebars shouldn't be indexed)
+        content*** = (S) # file content 
+        """
+
+        bcdb = j.data.bcdb.get("test_dav8")
+        if reset:
+            bcdb.reset()
+        model = bcdb.model_get_from_schema(SCHEMA)
+        if not model.find(path="/"):
+            self._init_dav_test(model)
+
+        from .DocsiteDavProvider import DocsteDavProvider
+        rack = j.servers.rack.get()
+        rack.webdav_server_add(name="docsites", webdavprovider=DocsteDavProvider("test_dav8"))
+        rack.start()
+
+    def _init_dav_test(self, model):
+        root = model.new()
+        root.path = "/"
+        root.name = "/"
+        root.is_dir = True
+        root.children = ["dir"]
+        root.save()
+
+
+        dir = model.new()
+        dir.path = "/dir"
+        dir.name = "/dir"
+        dir.is_dir = True
+        dir.children = ["file{}".format(i) for i in range(5)]
+        dir.save()
+
+        for j in range(5):
+            o = model.new()
+            o.path = "/dir/file{}".format(j)
+            o.name = "file{}".format(j)
+            o.is_dir = False
+            o.extension = "txt"
+            o.content_type = "application/json"
+            o.is_indexable = True
+            o.content = "{\"a\":\"a\"}"
+            o.save()
+
+
     def sonic_client_set(self, sonic_client):
         """
         set sonic client to be used to index docsites content
