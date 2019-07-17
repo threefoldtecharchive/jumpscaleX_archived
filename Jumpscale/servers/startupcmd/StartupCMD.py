@@ -53,6 +53,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         self.corex_id = ""
 
     @property
+    def data(self):
+        return self._data
+
+    @property
     def _cmd_path(self):
         return j.sal.fs.joinPaths(j.servers.startupcmd._cmdsdir, self.name)
 
@@ -207,6 +211,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             return True
 
     def refresh(self):
+
         self._log_info("refresh: %s" % self.name)
 
         self.time_refresh = j.data.time.epoch
@@ -661,7 +666,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
         return self._corex_local_
 
     def _corex_refresh(self):
-
         res = self._corex_client.process_info_get(pid=self.pid, corex_id=self.corex_id)
 
         def update(res, state):
