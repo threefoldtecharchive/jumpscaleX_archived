@@ -8,7 +8,15 @@ class BuilderMongodb(j.builders.system._BaseClass):
     NAME = "mongod"
 
     def _init(self, **kwargs):
-        self.build_dir = self.tools.joinpaths(self.DIR_BUILD, "mongo_db/")
+        self.DIR_DATA = self._replace("{DIR_VAR}/mongodb/data")
+        self.DIR_HOME = self._replace("{DIR_VAR}/mongodb")
+        self.BIN_PATH = self.tools.joinpaths(self.DIR_BUILD, "mongod")
+
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_HOME)
+        self._remove(self.BIN_PATH)
 
     @builder_method()
     def install(self):
@@ -16,9 +24,13 @@ class BuilderMongodb(j.builders.system._BaseClass):
         install, move files to appropriate places, and create relavent configs
         """
         # install: python3 buildscripts/scons.py --prefix=/opt/mongo install
-        bin_path = self.tools.joinpaths(self.build_dir, "mongod")
-        self._copy(bin_path, "{DIR_BIN}")
-        self.tools.dir_ensure(self._replace("{DIR_VAR}/data/mongodb"))
+        bin_path = self.tools.joinpaths(self.DIR_BUILD, "mongod")
+        install_cmd = self._replace("""
+            cp {BIN_PATH} {DIR_BIN}
+            chown mongouser:mongouser {DIR_BIN}/mongod
+            sudo -H -u mongouser mkdir {DIR_DATA}
+        """)
+        self._execute(install_cmd)
 
     @builder_method()
     def build(self):
@@ -26,6 +38,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
         self.system.package.mdupdate()
         self.system.package.install(
             [
+                "sudo",
                 "libcurl4-openssl-dev",
                 "build-essential",
                 "libboost-filesystem-dev",
@@ -47,18 +60,29 @@ class BuilderMongodb(j.builders.system._BaseClass):
             update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
             """
         )
-        # self.build_dir
+
+        # create user
+
+        self.tools.dir_ensure(self.DIR_HOME)
+        cmd = self._replace("""
+            id -u mongouser &>/dev/null || useradd mongouser --home {DIR_HOME} --no-create-home --shell /bin/bash
+            chown -R mongouser:mongouser {DIR_HOME}
+        """)
+        self._execute(cmd)
+
+        # build mongo
+
         mongo_url = "https://github.com/mongodb/mongo/"
-        self._remove(self.build_dir)
-        j.clients.git.pullGitRepo(url=mongo_url, dest=self.build_dir, branch="master", depth=1)
+        j.clients.git.pullGitRepo(url=mongo_url, dest=self.DIR_BUILD, branch="master", depth=1)
+
         build_cmd = """
-        cd {build_dir}
-        pip3 install -r etc/pip/compile-requirements.txt
-        python3 buildscripts/scons.py mongod MONGO_VERSION=4.2.0
-        """.format(
-            build_dir=self.build_dir
-        )
-        self._execute(build_cmd, timeout=4000)
+        chown -R mongouser:mongouser {DIR_BUILD}
+
+        cd {DIR_BUILD}
+        sudo -H -u mongouser python3 -m pip install --user  -r etc/pip/compile-requirements.txt
+        sudo -H -u mongouser buildscripts/scons.py mongod MONGO_VERSION=4.2.0
+        """
+        self._execute(self._replace(build_cmd), timeout=4000)
 
         self._execute(
             """
@@ -67,21 +91,18 @@ class BuilderMongodb(j.builders.system._BaseClass):
         )
 
     @builder_method()
-    def clean(self):
-        self._remove(self.build_dir)
-
-    @builder_method()
     def reset(self):
         super().reset()
         self.clean()
 
     @property
     def startup_cmds(self):
-        self.tools.dir_ensure(self._replace("{DIR_VAR}/data/mongodb"))
-        cmd = self._replace("mongod --dbpath '{DIR_VAR}/data/mongodb'")
-        cmd_start = cmd
+        cmd_start = self._replace("""
+            chown -R mongouser:mongouser {DIR_HOME}
+            sudo -H -u mongouser {DIR_BIN}/mongod --dbpath '{DIR_DATA}'
+        """)
 
-        cmd = j.servers.startupcmd.get(self.NAME, cmd=cmd_start)
+        cmd = j.servers.startupcmd.get(self.NAME, cmd_start=cmd_start, ports=[27017])
         return [cmd]
 
     @builder_method()
