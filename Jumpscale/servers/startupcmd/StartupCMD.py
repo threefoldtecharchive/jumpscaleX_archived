@@ -294,7 +294,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
             if not self.pid and not self.corex_id:
                 return self._error_raise("cannot check running don't have pid or corex_id")
             self.refresh()
-            j.shell()
 
         if self._local:
             p = self.process
@@ -396,7 +395,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 time.sleep(1)
                 r = self._corex_client.process_info_get(pid=self.pid)
                 if r["state"] in ["stopped", "stopping", "error"]:
-                    self.error = self.logs
                     self.state = "error"
                     return False
                 elif r["state"] in ["running"]:
@@ -430,9 +428,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if not self.cmd_start:
             raise ValueError("please make sure self.cmd_start has been specified")
 
-        if "\n" in self.cmd_start.strip():
-            C = self.cmd_start
-        elif self.interpreter == "bash":
+
+
+        if self.interpreter == "bash":
             C = """            
             reset
             {% if cmdobj.executor=='tmux' %}
@@ -461,6 +459,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {% endif %}
             {{cmd}}
             """
+        elif "\n" in self.cmd_start.strip():
+            C = self.cmd_start
+        else:
+            C = self.cmd_start
 
         C2 = j.core.text.strip(C)
 
@@ -475,7 +477,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
             tpath = None
             if "\n" in C3.strip():
                 # means we have to wrap it in other way
-                toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
+                # toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
+                import textwrap
+                toexec = ' '.join(textwrap.wrap(C3.replace('\n\n', ';').replace('\n', ';')))
             else:
                 toexec = C3.strip()
             if self.path:
@@ -507,8 +511,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
             j.sal.fs.writeFile(tpath, C3 + "\n\n")
             j.sal.fs.chmod(tpath, 0o770)
 
-        self.pid = 0
-
         if self.executor == "foreground":
             self._notify_state("running")
             j.sal.process.executeInteractive(toexec)
@@ -516,7 +518,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             self._background_start(toexec)
         elif self.executor == "tmux":
             self._tmux_start(toexec)
-        elif self.executor != "corex":
+        elif self.executor == "corex":
             self._corex_start(toexec)
         else:
             return self._error_raise("could not find executor:'%s'" % self.executor)
@@ -585,15 +587,14 @@ class StartupCMD(j.application.JSBaseConfigClass):
     def _corex_client(self):
         return j.clients.corex.get(name=self.corex_client_name)
 
-    def _corex_start(self, path):
-
+    def _corex_start(self, toexec):
         if self.state == "error":
-            return self._error_raise("process in error:\n%s" % p)
+            return self._error_raise("process in error:\n%s" % toexec)
 
         if self.state == "running":
             return
 
-        r = self._corex_client.process_start("sh %s" % path)
+        r = self._corex_client.process_start(toexec)
 
         self.pid = r["pid"]
         self.corex_id = r["id"]
@@ -656,8 +657,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
     @property
     def _corex_local(self):
         if not self._corex_local_:
-            self._corex_local_ = False  # FOR DEBUG
-            # self._corex_local_ = self._corex_client.addr.lower() in ["localhost", "127.0.0.1"]
+            self._corex_local_ = self._corex_client.addr.lower() in ["localhost", "127.0.0.1"]
         return self._corex_local_
 
     def _corex_refresh(self):
