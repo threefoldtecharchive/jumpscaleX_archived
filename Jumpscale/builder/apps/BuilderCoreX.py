@@ -106,7 +106,7 @@ class BuilderCoreX(j.builders.system._BaseClass):
 
     def start(self, port=7681):
         cmd = "/sandbox/bin/corex --port {}".format(port)
-        j.servers.startupcmd.get(name=self.NAME, cmd=cmd).start()
+        j.servers.startupcmd.get(name=self.NAME, cmd_start=cmd).start()
 
     def running(self):
         if len(j.sal.process.getProcessPid(self.NAME)) > 0:

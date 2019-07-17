@@ -70,7 +70,7 @@ class BuilderZeroStor(BuilderGolangTools):
         cmd = "zstor --config /sandbox/cfg/zstor.yaml daemon --listen 127.0.0.1:8000"
         cmd_zdb = j.builder.db.zdb.startup_cmds
         cmd_etcd = j.builder.db.etcd.startup_cmds
-        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd_start=cmd)]
         return cmd_zdb + cmd_etcd + cmds
 
     @builder_method()

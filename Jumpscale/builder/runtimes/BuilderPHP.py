@@ -147,7 +147,7 @@ class BuilderPHP(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/sbin/php-fpm -F -y /sandbox/etc/php-fpm.conf"  # foreground
-        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd_start=cmd)]
         return cmds
 
     def stop(self):

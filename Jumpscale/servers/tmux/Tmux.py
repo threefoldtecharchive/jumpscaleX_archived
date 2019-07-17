@@ -131,7 +131,7 @@ class Tmux(j.application.JSBaseClass):
         ```
         env={}
         env["color"]="blue"
-        cmd = j.servers.tmux.cmd_get(name="test",pane="p21",cmd="ls /", env=env,stopcmd="killall...",process_strings=[])
+        cmd = j.servers.tmux.cmd_get(name="test",pane="p21",cmd_start="ls /", env=env,stopcmd="killall...",process_strings=[])
         cmd.stop()
         cmd.start()
         ```
@@ -159,7 +159,7 @@ class Tmux(j.application.JSBaseClass):
 
         startup_cmd = j.servers.startupcmd.get(
             name=name,
-            cmd=cmd,
+            cmd_start=cmd,
             path=path,
             timeout=timeout,
             env=env,

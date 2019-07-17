@@ -102,7 +102,7 @@ class BuilderMongodb(j.builders.system._BaseClass):
             sudo -H -u mongouser {DIR_BIN}/mongod --dbpath '{DIR_DATA}'
         """)
 
-        cmd = j.servers.startupcmd.get(self.NAME, cmd_start=cmd_start, ports=[27017])
+        cmd = j.servers.startupcmd.get(self.NAME, cmd_start=cmd_start)
         return [cmd]
 
     @builder_method()

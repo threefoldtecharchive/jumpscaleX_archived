@@ -88,7 +88,7 @@ class BuilderRipple(JSBASE):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/{}".format(self.NAME)
-        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.servers.startupcmd.get(name=self.NAME, cmd_start=cmd)]
         return cmds
 
     @builder_method()
