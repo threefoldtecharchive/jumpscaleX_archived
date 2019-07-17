@@ -14,7 +14,6 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
         self._nimlang = None
         self._rust = None
         self._nodejs = None
-        self._graphql = None
 
     @property
     def python(self):
@@ -71,11 +70,3 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
 
             self._nodejs = BuilderNodeJS()
         return self._nodejs
-
-    @property
-    def graphql(self):
-        if self._graphql is None:
-            from .BuilderGraphql import BuilderGraphql
-
-            self._graphql = BuilderGraphql()
-        return self._graphql

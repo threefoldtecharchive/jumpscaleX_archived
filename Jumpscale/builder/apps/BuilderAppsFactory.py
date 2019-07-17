@@ -15,6 +15,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._sonic = None
         self._hub = None
         self._sockexec = None
+        self._graphql = None
 
     @property
     def sockexec(self):
@@ -86,3 +87,11 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
             self._hub = BuilderHub()
         return self._hub
+
+    @property
+    def graphql(self):
+        if self._graphql is None:
+            from .BuilderGraphql import BuilderGraphql
+
+            self._graphql = BuilderGraphql()
+        return self._graphql
