@@ -8,12 +8,12 @@ class BuilderGraphql(j.builders.system._BaseClass):
     NAME = "graphql"
 
     def _init(self):
-        self.DIR_GRAPHQL_WS = self.tools.joinpaths(self.DIR_BUILD, "graphql_websockets")
+        self.APP_DIR = self._replace("{DIR_BASE}/apps/graphql")
 
     @builder_method()
     def clean(self):
-        self.DIR_GRAPHQL_WS = self.tools.joinpaths(self.DIR_BUILD, "graphql_websockets")
-        self._remove(self.DIR_GRAPHQL_WS)
+        self._remove(self.DIR_BUILD)
+        self._remove(self.APP_DIR)
 
     @builder_method()
     def reset(self):
@@ -24,15 +24,21 @@ class BuilderGraphql(j.builders.system._BaseClass):
     def build(self):
         # TODO : Build from source
         graphql_websockets_url = "https://github.com/threefoldfoundation/graphql_websockets"
-        j.clients.git.pullGitRepo(dest=self.DIR_GRAPHQL_WS, url=graphql_websockets_url, depth=1)
+        j.clients.git.pullGitRepo(dest=self.DIR_BUILD, url=graphql_websockets_url, depth=1)
 
     @builder_method()
     def install(self):
-        # install graphql_ws,sanic, graphene, sanic-graphql
-        cmd = """
-        cd {DIR_GRAPHQL_WS}
-        pip3 install -r requirements.txt -t /sandbox/bin/
-        """
+        self.system.package.install("sudo")
+        self.tools.copyTree(self.DIR_BUILD, self.APP_DIR, deletefirst=True, createdir=True)
+
+        # install graphql_ws,sanic, graphene, s
+        # sanic-graphql
+        cmd = self._replace("""
+            id -u graphuser &>/dev/null || useradd graphuser --home {APP_DIR} --no-create-home --shell /bin/bash
+            chown -R graphuser:graphuser {APP_DIR}
+            cd {APP_DIR}
+            sudo -H -u graphuser python3 -m pip install --user -r requirements.txt
+        """)
         self._execute(cmd)
 
     @builder_method()
@@ -42,19 +48,21 @@ class BuilderGraphql(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        j.builders.db.zdb.start()
+        # j.builders.db.zdb.start()
         start_script = self._replace(
-            """
-        cd {DIR_GRAPHQL_WS} && python3 app.py
+        """
+        chown -R graphuser:graphuser {APP_DIR}
+        cd {APP_DIR}
+        sudo -H -u graphuser python3 app.py
         """
         )
-        start_cmd = j.servers.startupcmd.get(self.NAME, cmd=start_script)
+        start_cmd = j.servers.startupcmd.get(self.NAME, cmd_start=start_script, ports=[8000])
         return [start_cmd]
 
     @builder_method()
     def stop(self):
         # killing the daemon
-        j.tools.tmux.pane_get(self.NAME).kill()
+        j.servers.tmux.pane_get(self.NAME).kill()
         j.builders.db.zdb.stop()
 
     @builder_method()

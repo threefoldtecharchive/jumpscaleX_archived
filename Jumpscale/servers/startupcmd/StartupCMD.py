@@ -27,9 +27,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
         state = "init,running,error,stopped,stopping,down,notfound" (E)
         corex_client_name = "default" (S)
         corex_id = (S)
-        
+
         error = "" (S)
-        
+
         time_start = (T)
         time_refresh = (T)
         time_stop = (T)
@@ -428,10 +428,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if not self.cmd_start:
             raise ValueError("please make sure self.cmd_start has been specified")
 
-
-
-        if self.interpreter == "bash":
-            C = """            
+        if "\n" in self.cmd_start.strip():
+            C = self.cmd_start
+        elif self.interpreter == "bash":
+            C = """
             reset
             {% if cmdobj.executor=='tmux' %}
             tmux clear
