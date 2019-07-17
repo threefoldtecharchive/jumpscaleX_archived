@@ -1,96 +1,161 @@
 # Installation Instructions Jumpscale X
 
+## Index
+* [I- Installation Prerequisites](#prerequisites)
+    - [1- Container](#container-installation)
+    - [2- In-System](#insystem-installation)
+    - [3- macOS](#macos-installation)
+* [II- Container Install](#container-Install)
+    - [1- Interactive container](#interactive-container)
+    - [2- Non Interactive container](#non-interactive-container)
+* [III- In-System Install](#insystem-install)
+    - [1- Interactive insystem](#interactive-insystem)
+    - [2- Non Interactive insystem](#non-interactive-insystem)
+* [IV- Extra options](#extra-options)
+    - [1- reset](#reset)
+    - [2- delete](#delete)
+    - [3- install with webcomponents](#install-with-webcomponents)
+* [V- Advanced Installation](#advanced-installation)
+* [VI- After Installation](#after-installation)
+* [VII- More Info](#more-info)
 ## Prerequisites
+Before starting the installation make sure to go through the prerequisites. it differs according to your installation type
 
-Before starting the installation to make sure to install the [prerequisites](/docs/Installation/install_prerequisites.md).
+- ### Container Installation
+    This will create a docker-container for you and install jumpscale within it, to install using this method you will need to install
+    - os: `Ubuntu 18.04`
+    - packages: `curl python3`<br/>
+         ```bash
+         apt install curl python3
+         ```
+    - ssh-agent loaded with a ssh-key, make sure to add your ssh-key to your github account's authenticated keys <br/>
+        ```bash
+        eval `ssh-agent -s`
+        ssh-keygen
+        ssh-add
+        ```
+    #### if you are using macOS you will need also to install
+    - os: `macOS 10.7 or newer`
+    - packages: `docker python3 homebrew git rsync`<br/>
+        ```bash
+        brew install curl python3 git rsync
+        ```
+        see: [docker for mac installation](https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-mac)
 
-## Install Jumpscale X using docker
+- ### InSystem Installation
+    This will install jumpscale on your local system prefered ubuntu 18:04<br/>
+    **Note** This will need more prerequisites 
+    - packages: `openssh-server locales curl vim git rsync unzip lsb python3 python3-pip`<br/>
+        ```bash
+        apt install -y openssh-server locales curl vim git rsync unzip lsb python3 python3-pip
+        ```
+    - pips: `click`
+        ```bash
+        pip3 install click
+        ```
 
-```bash
-# get the jsx command (installer)
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ; \
-chmod +x /tmp/jsx; \
-# install
-/tmp/jsx container_install
-```
+- ### macOS Installation
+    This will install jumpscale on your macOS<br/>
+    - os: `macOS 10.7 or newer`
+    - packages: `curl python3 git rsync`
+        ```bash
+        brew install curl python3 git rsync
+        ```
+        see: [docker for mac installation](https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-mac)
+    - pips: `click`
+        ```bash
+        pip3 install click
+        ```
 
-The installer will ask you to provide a secret (and a couple of yes/no questions to which you answer yes).
-If successfull, you will see something like:
+## Container Install
+Here we will install jumpscale using container_install option which will create a docker-container for you and install jumpscale within it. we have 2 types of installation as the following<br/>
 
-```bash
-install succesfull:
-# if you use a container do:
-jsx container_kosmos
+- #### Interactive Container
+    In here you will be asked to provide a secret and to authenticate github cloning in the middle of installation. make sure to add your ssh-key to your github account's authenticated keys
+    - #### steps for installation
+    - 1- install the prerequisites
+    - 2- download the installation file, make it executable, then run it
+        ```bash
+        # download
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        # change permission
+        chmod +x /tmp/jsx; \
+        # install
+        /tmp/jsx container_install
+        ```
+- #### Non Interactive Container
+    This type of installation won't ask you about anything
+    - 1- install the prerequisites
+    - 2- download the installation file, make it executable, configure the installation with your secret, then run it.
+        ```bash
+        # download
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;\
+        # change permission
+        chmod +x /tmp/jsx;\
+        # configure with your secret - replace mysecret with yours`
+        /tmp/jsx configure --no_interactive -s mysecret;\
+        # install
+        /tmp/jsx container_install --no_interactive
+        ```
 
-```
+## InSystem Install
+Here we will install jumpscale using install option which willinstall jumpscale within your local system. we also have 2 types of installation as the following<br/>
 
-The install script has built and started a docker container named `3bot` on your machine.
+- #### Interactive InSystem
+    In here you will be asked to provide a secret and to authenticate github cloning in the middle of installation. make sure to add your ssh-key to your github account's authenticated keys
 
-## To use Jumpscale X
+    - 1- install the prerequisites
+    - 2- download the installation file, make it executable, then run it
+        ```bash
+        # download
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        # change permission
+        chmod +x /tmp/jsx; \
+        # install
+        /tmp/jsx install 
+        ```
 
-To start JumpcaleX:
+- #### Non Interactive InSystem
+    This type of installation won't ask you about anything
+    - 1- install the prerequisites
+    - 2- download the installation file, make it executable,configure the installation with your secret, then run it
+        ```bash
+        # download
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        # change permission
+        chmod +x /tmp/jsx; \
+        # configure with your secret - replace mysecret with yours`
+        /tmp/jsx configure --no_interactive -s mysecret;\
+        # install
+        /tmp/jsx install --no_interactive
+        ```
 
-```bash
-# get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
-```
+## Extra options
+also there's some more intersting options to use
+- #### reset
+    - Will restart the installation
+        ```bash
+        /tmp/jsx install -r
+        ```
+- #### delete
+    - if you are using a docker this option will delete the existing one
+        ```bash
+        /tmp/jsx container_install -d
+        ```
+- #### install with webcomponents
+    - installs webcomponents
+        ```bash
+        /tmp/jsx container_install -w
+        ```
+- #### jsx command help
+    - get more information about other options
+        ```bash
+        #get more help of jsx command
+        /tmp/jsx --help
+        ``` 
 
-Once kosmos is launched you will see this line:
-
-```bash
-JSX>
-```
-
-Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library ! Follow these [steps](Installation/get_started.md) to go further in the use of Jumpscale.
-
-If jsx is missing from your `/tmp` folder:
-
-```bash
-# get the jsx command
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
-chmod +x /tmp/jsx; \
-# get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
-```
-## To install no-interactive
-Pass your sectet first through <br>
-`/tmp/jsx configure -s mysecret`<br>
-then install no interactive <br>
-`/tmp/jsx install --no_interactive`
-
-## jsx command help
-
-```bash
-#get more help of jsx command
-/tmp/jsx --help
-```
-
-## OSX requirements
-
-[see here OSX requirements specifics](/docs/Installation/install_prerequisites.md#osx)
-
-## JSX
-
-JSX is the main tool for working with a jumpscale deployment
-
-- install
-- export/import docker containers
-- export BCDB data (coming soon)
-- access the kosmos shell in container
-- configure your local or container JSX
-
-see [JSX](jsx.md) for more info
-
-## More Info
-
-- [more info about container install](install_docker.md)
-- [install in local system (EXPERTS ONLY)](install_insystem.md)
-- [more info about the JSX tool](jsx.md)
-- [init the jumpscale code, can be required after pulling new code](generation.md)
-
-## Get Installer from Code (experts)
-
-is easy to develop on the installer
+## Advanced Installation
+it is easy to develop on the installer, will install from existing code on your system
 
 ```bash
 #create directory, make sure your user has full access to this director (can be a manual step)
@@ -108,3 +173,45 @@ rm -f /tmp/InstallTools.py;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```
+
+## after-installation
+### How to use Jumpscale X
+
+To start JumpcaleX:
+The install script has built and started a docker container named `3bot` on your machine.
+```bash
+# get your kosmos shell (inside your 3bot container)
+/tmp/jsx container_kosmos
+```
+Once kosmos is launched you will see this line:
+```bash
+JSX>
+```
+Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library ! Follow these [steps](Installation/get_started.md) to go further in the use of Jumpscale.
+
+If jsx is missing from your `/tmp` folder:
+
+```bash
+# get the jsx command
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
+chmod +x /tmp/jsx; \
+# get your kosmos shell (inside your 3bot container)
+/tmp/jsx container_kosmos
+```
+
+JSX is the main tool for working with a jumpscale deployment
+
+- install
+- export/import docker containers
+- export BCDB data (coming soon)
+- access the kosmos shell in container
+- configure your local or container JSX
+
+see [JSX](jsx.md) for more info
+
+## More Info
+- [more info about container install](install_docker.md)
+- [install in local system (EXPERTS ONLY)](install_insystem.md)
+- [more info about the JSX tool](jsx.md)
+- [init the jumpscale code, can be required after pulling new code](generation.md)
+- [see here OSX requirements specifics](/docs/Installation/install_prerequisites.md#osx)
