@@ -134,7 +134,7 @@ def cli():
     default=None,
     help="path where JSX will be installed default /sandbox if /sandbox exists otherwise ~/sandbox",
 )
-@click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
+@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
@@ -557,6 +557,6 @@ if __name__ == "__main__":
         cli.add_command(container_export, "container_export")
         cli.add_command(container_import, "container_import")
         cli.add_command(container_shell, "container_shell")
-        cli.add_command(container_clean, "container_shell")
+        cli.add_command(container_clean, "container_clean")
 
     cli()
