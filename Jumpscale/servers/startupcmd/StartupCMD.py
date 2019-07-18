@@ -278,13 +278,17 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def is_running(self):
 
-        # self._log_debug("running:%s" % self.name)
+        if self._local and self.pid > 0:
+            self._notify_state("running")
+            return True
+
         if self._local and self.ports != []:
             for port in self.ports:
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                     self._notify_state("down")
                     return False
                 else:
+                    self._notify_state("running")
                     return True
 
         if self._local and self.ports_udp != []:
@@ -309,12 +313,20 @@ class StartupCMD(j.application.JSBaseConfigClass):
                     return True
                 else:
                     return False
-            else:
-                if self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
+            elif self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
                     # we check on ports or process strings so we know for sure its down
                     if len(self._get_processes_by_port_or_filter()) > 0:
                         self._notify_state("running")
                         return True
+                    self._notify_state("down")
+                    return False
+            else:
+                try:
+                    pid = j.sal.process.getProcessPid(self.cmd_start)[0]
+                    if pid > 0:
+                        self._notify_state("running")
+                        return True
+                except:
                     self._notify_state("down")
                     return False
 
