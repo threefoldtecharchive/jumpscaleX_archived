@@ -3,6 +3,7 @@ from wsgidav import compat, util
 from wsgidav.dav_provider import DAVCollection, DAVNonCollection, DAVProvider
 
 
+
 class DirCollection(DAVCollection):
     """
     Handles all kinds of directory-like resources
@@ -11,7 +12,9 @@ class DirCollection(DAVCollection):
     def __init__(self, path, environ):
         DAVCollection.__init__(self, path, environ)
         self._model = self.provider._model
-        self.obj = self._model.find(path=self.path)[0]
+
+        self.obj = self.provider.get_by_path(self.path)
+
     def get_member_names(self):
         """
         get member names to be listed from the path
@@ -29,27 +32,52 @@ class DirCollection(DAVCollection):
         """
 
         path = j.sal.fs.joinPaths(self.path, name)
-        obj = self._model.find(path=path)[0]
+
+        obj = self.provider.get_by_path(path)
+        if not obj:
+            return None
         if obj.is_dir:
             return DirCollection(path, self.environ)
         else:
             return DocResource(path, self.environ, obj)
 
     def create_collection(self, name):
-        dir = self.model.new()
+        dir = self._model.new()
         dir.is_dir = True
         path = j.sal.fs.joinPaths(self.path, name)
         dir.path = path
         dir.name = name
         dir.save()
-        self.obj.children.append(path)
+        self.obj.children.append(name)
+        self.obj.save()
+        return True
+
+    def handle_delete(self):
+        parent_path = j.sal.fs.getDirName(self.path).rstrip("/")
+        parent = self.provider.get_by_path(parent_path)
+        parent.children.remove(self.obj.name)
+        parent.save()
+        for name in self.get_member_names():
+            member = self.get_member(name)
+            member.delete()
+        self.obj.delete()
+        return True
+
+    def support_recursive_delete(self):
         return True
 
     def create_empty_resource(self, name):
-        pass
+        self.obj.children.append(name)
+        self.obj.save()
+        new_obj = self._model.new()
+        new_obj.name = name
+        new_obj.path = j.sal.fs.joinPaths(self.path, name)
+        new_obj.is_dir = False
+        new_obj.save()
+        return self.get_member(name)
 
 
-
+TMP_DIR = "/tmp/dav_tmp"
 class DocResource(DAVNonCollection):
     """
     Handles docs. a doc is bcdb data object treated like a documentation
@@ -83,19 +111,38 @@ class DocResource(DAVNonCollection):
 
     def handle_delete(self):
         self.vfile.delete()
-
-    def handle_copy(self, dest_path, depth_infinity):
-       pass
+        parent_path = j.sal.fs.getDirName(self.vfile.path).rstrip("/")
+        parent = self.provider.get_by_path(parent_path)
+        parent.children.remove(self.vfile.name)
+        parent.save()
+        return True
 
     def begin_write(self, content_type=None):
-        pass
+        j.sal.fs.createEmptyFile(TMP_DIR)
+        j.sal.fs.writeFile(TMP_DIR, self.vfile.content)
+        return open(TMP_DIR, "wb")
+
 
     def end_write(self, with_errors):
-        pass
+        if j.sal.fs.exists(TMP_DIR):
+            new_content = j.sal.fs.readFile(TMP_DIR)
+            self.vfile.content = new_content
+            self.vfile.save()
+            j.sal.fs.remove(TMP_DIR)
 
-    def handle_move(self, dest_path):
-        pass
-
+    def copy_move_single(self, dest_path, is_move):
+        new_obj = self.provider._model.new()
+        new_obj.path = dest_path
+        new_obj.name = j.sal.fs.getBaseName(dest_path)
+        new_obj.content = self.vfile.content
+        new_obj.is_dir = False
+        new_obj.save()
+        new_parent_path = j.sal.fs.getDirName(dest_path).rstrip("/") or "/"
+        parent = self.provider.get_by_path(new_parent_path)
+        parent.children.append(new_obj.name)
+        if is_move:
+            self.delete()
+        return True
 
 
 RESOURCE_MODEL_URL = "threebot.docsites.resource"
@@ -112,3 +159,17 @@ class DocsteDavProvider(DAVProvider):
         """
         root = DirCollection("/", environ)
         return root.resolve("/", path)
+
+    def get_by_path(self, path):
+
+        res = self._model.find(path=path)
+        if len(res) == 1:
+            print("> found one object with path: {}".format(path))
+            return res[0]
+        elif len(res) > 1:
+            print("> found more the one object with path: {}".format(path))
+            return res
+        else:
+            print("> can't find objects for {}".format(path))
+            return None
+
