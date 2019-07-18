@@ -380,9 +380,6 @@ class JSBase:
 
         """
 
-        if j.application._in_autocomplete:
-            return None
-
         if j.application.debug or self.__class__._logger_min_level - 1 < level:
             # now we will log
 
@@ -427,6 +424,8 @@ class JSBase:
                     logdict["context"] = ""
                     pass  # TODO:*1 is not good
             logdict["cat"] = cat
+
+            logdict["use_custom_printer"] = j.application._in_autocomplete
 
             logdict["data"] = data
             if data and isinstance(data, dict):

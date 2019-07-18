@@ -148,8 +148,6 @@ def get_completions(self, document, complete_event):
     :rtype: `Completion` generator
     """
     j = KosmosShellConfig.j
-    if not j.tools.logger.debug:
-        j.application._in_autocomplete = True
 
     def colored_completions(names, color):
         for name in names:
@@ -182,8 +180,6 @@ def get_completions(self, document, complete_event):
             # try dir()
             members = sorted(dir(obj), key=sort_children_key)
             yield from colored_completions(members, "ansigray")
-
-    j.application._in_autocomplete = False
 
 
 def get_doc_string(tbc, locals_, globals_):
@@ -228,7 +224,8 @@ class HasLogs(PythonInputFilter):
     def __call__(self):
         j = KosmosShellConfig.j
         debug = j.core.myenv.config.get("DEBUG", False)
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug
+        in_autocomplete = j.application._in_autocomplete
+        return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug and not in_autocomplete
 
 
 class IsInsideString(PythonInputFilter):
@@ -438,6 +435,8 @@ def ptconfig(repl):
     old_get_completions = repl._completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
+        j.application._in_autocomplete = True
+
         try:
             _, _, prefix = get_current_line(document)
         except ValueError:
@@ -451,6 +450,8 @@ def ptconfig(repl):
 
         if not completions:
             completions = old_get_completions(self, document, complete_event)
+
+        j.application._in_autocomplete = False
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions

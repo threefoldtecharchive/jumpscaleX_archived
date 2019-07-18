@@ -48,9 +48,6 @@ if options.debug:
     j.tools.logger.reload()
     j.tools.logger.debug = True
 
-# lets for now put it on all the time
-j.tools.logger.debug = True
-
 
 def instruction_process(ddict):
 
