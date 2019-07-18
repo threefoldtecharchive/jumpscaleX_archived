@@ -11,7 +11,7 @@ class BaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.js_branch = config["main"]["branch"]
-        self.jsname = config["main"]["container_name"]
+        self.js_container = config["main"]["container_name"]
 
     def setUp(self):
         pass
