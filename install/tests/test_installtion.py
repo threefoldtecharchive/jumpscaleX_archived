@@ -5,6 +5,18 @@ class Test_instaltion(BaseTest):
     def setUp(self):
         pass
 
+    @classmethod
+    def tearDownClass(cls):
+        self = cls()
+        self.info("Delete jumpscale created container.")
+        if not self.check_js_installtion():
+            pass
+        command = "/tmp/jsx container_delete"
+        output, error = self.linux_os(command)
+        command = "docker ps -a | grep {}".format(self.js_container)
+        output, error = self.linux_os(command)
+        self.assertFalse(output)
+
     def test01_install_jumpscale_on_linux_inside_docker(self):
         """
         test TCR337
@@ -34,11 +46,7 @@ class Test_instaltion(BaseTest):
 
         """
         self.info(" Check that js container exist ,should succeed")
-        command = "/tmp/jsx container_kosmos"
-        output, error = self.linux_os(command)
-        if error:
-            output, error = self.jumpscale_installtion()
-            self.assertIn("install succesfull", output)
+        self.assertTrue(self.check_js_installtion())
 
         self.info("Run container stop ")
         command = "/tmp/jsx container_stop"
@@ -60,12 +68,15 @@ class Test_instaltion(BaseTest):
 
     def Test03_jumpscale_installtion_inside_jumpscale_docker_Linux_os(self):
         """
-        test TCR338
+        test TCR339
         #. Run kosmos command inside docker, should start kosmos shell .
         #. Run js_init generate command inside docker, sshould run successfully.
         #. Check the branch of jumpscale code, should be same as installtion branch.
-
         """
+
+        self.info(" Check that js container exist ,should succeed")
+        self.assertTrue(self.check_js_installtion())
+
         self.info("Run kosmos command inside docker,should start kosmos shell")
         command = "docker exec -i {} /bin/bash -c 'source /sandbox/env.sh && kosmos'".format(self.js_container)
         output, error = self.linux_os(command)
@@ -85,4 +96,17 @@ class Test_instaltion(BaseTest):
         output, error = self.linux_os(command)
         branch = output.decode()[output.decode().find("head") + 6 : -2]
         self.assertEqual(branch, self.js_branch)
+
+    def Test04_loaded_ssh_key_inside_jumpscale_docker_linux_os(self):
+        """
+        test TCR340
+        #. check  that ssh-key loaded in docker  successfully.
+        """
+        self.info(" Check that js container exist ,should succeed")
+        self.assertTrue(self.check_js_installtion())
+
+        self.info("check  that ssh-key loaded in docker  successfully")
+        command = "docker exec -i {} /bin/bash -c 'cat /root/.ssh/authorized_keys'".format(self.js_container)
+        output, error = self.linux_os(command)
+        self.assertEqual(output.decode().strip("\n"), self.ssh_key)
 

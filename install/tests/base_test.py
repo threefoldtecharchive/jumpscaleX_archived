@@ -12,6 +12,7 @@ class BaseTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
         self.js_branch = config["main"]["branch"]
         self.js_container = config["main"]["container_name"]
+        self.ssh_key = config["main"]["ssh_key"]
 
     def setUp(self):
         pass
@@ -40,3 +41,15 @@ class BaseTest(unittest.TestCase):
         command = "/tmp/jsx container_install -n {}".format(self.container_name)
         output, error = self.linux_os(command)
         return output, error
+
+    def check_js_installtion(self):
+        self.info(" Check that js container exist ,should succeed")
+        command = "/tmp/jsx container_kosmos"
+        output, error = self.linux_os(command)
+        if error:
+            output, error = self.jumpscale_installtion()
+            if "install succesfull" not in output:
+                return False
+
+        return True
+
