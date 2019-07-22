@@ -1,14 +1,6 @@
-
 click
 python3.6
 nose
-curl
-rsync
-unzip
+nose-progressive
+nose-testconfig
 loguru
-locales
-curl 
-language-pack-en 
-rsync 
-unzip 
-python3-pip
