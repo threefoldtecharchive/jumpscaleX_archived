@@ -176,7 +176,7 @@ def configure(
 
 
 # INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
-@click.command()
+@click.command(name="container-install")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option(
@@ -243,6 +243,7 @@ def container_install(
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    IT.MyEnv.sshagent.key_default
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
     if existcheck:
         if name not in IT.DockerFactory.containers_running():
@@ -306,7 +307,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
     print("Jumpscale X installed successfully")
 
 
-@click.command()
+@click.command(name="container-import")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/saendbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
@@ -323,7 +324,7 @@ def container_import(name="3bot", path=None, imagename="despiegk/3bot", no_start
     docker.import_(path=path, imagename=imagename, start=start)
 
 
-@click.command()
+@click.command(name="container-export")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-p", "--path", default=None, help="image location")
@@ -342,7 +343,7 @@ def container_export(name="3bot", path=None, no_overwrite=False, skip_if_exists=
     docker.export(path=path, skip_if_exists=skip_if_exists, overwrite=overwrite)
 
 
-@click.command()
+@click.command(name="container-clean")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_clean(name="3bot", configdir=None):
@@ -357,7 +358,7 @@ def container_clean(name="3bot", configdir=None):
     docker.clean()
 
 
-@click.command()
+@click.command(name="container-stop")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_stop(name="3bot", configdir=None):
@@ -371,7 +372,7 @@ def container_stop(name="3bot", configdir=None):
     docker.stop()
 
 
-@click.command()
+@click.command(name="container-start")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_start(name="3bot", configdir=None):
@@ -385,7 +386,7 @@ def container_start(name="3bot", configdir=None):
     docker.start()
 
 
-@click.command()
+@click.command(name="container-delete")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_delete(name="3bot", configdir=None):
@@ -399,7 +400,7 @@ def container_delete(name="3bot", configdir=None):
     docker.delete()
 
 
-@click.command()
+@click.command(name="container-reset")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 def containers_reset(configdir=None):
     """
@@ -411,7 +412,7 @@ def containers_reset(configdir=None):
     IT.DockerFactory.reset()
 
 
-@click.command()
+@click.command(name="container-kosmos")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_kosmos(name="3bot", configdir=None):
@@ -450,7 +451,7 @@ def kosmos(name="3bot", target="auto", configdir=None):
     j.shell(loc=False, locals_=locals(), globals_=globals())
 
 
-@click.command()
+@click.command(name="container-shell")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_shell(name="3bot", configdir=None):
@@ -459,7 +460,7 @@ def container_shell(name="3bot", configdir=None):
     :param name: name of container if not the default
     :return:
     """
-
+    IT.MyEnv
     docker = container_get(name=name)
     os.execv(
         shutil.which("ssh"),
@@ -488,7 +489,7 @@ def wireguard(configdir=None):
         docker.wireguard.connect()
 
 
-@click.command()
+@click.command(name="modules-install")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("--url", default="3bot", help="git url e.g. https://github.com/myfreeflow/kosmos")
 def modules_install(url=None, configdir=None):
@@ -548,15 +549,15 @@ if __name__ == "__main__":
     # DO NOT DO THIS IN ANY OTHER WAY !!!
 
     if not IT.DockerFactory.indocker():
-        cli.add_command(container_kosmos, "container_kosmos")
-        cli.add_command(container_install, "container_install")
-        cli.add_command(container_stop, "container_stop")
-        cli.add_command(container_start, "container_start")
-        cli.add_command(container_delete, "container_delete")
-        cli.add_command(containers_reset, "containers_reset")
-        cli.add_command(container_export, "container_export")
-        cli.add_command(container_import, "container_import")
-        cli.add_command(container_shell, "container_shell")
-        cli.add_command(container_clean, "container_clean")
+        cli.add_command(container_kosmos, "container-kosmos")
+        cli.add_command(container_install, "container-install")
+        cli.add_command(container_stop, "container-stop")
+        cli.add_command(container_start, "container-start")
+        cli.add_command(container_delete, "container-delete")
+        cli.add_command(containers_reset, "containers-reset")
+        cli.add_command(container_export, "container-export")
+        cli.add_command(container_import, "container-import")
+        cli.add_command(container_shell, "container-shell")
+        cli.add_command(container_clean, "container-clean")
 
     cli()

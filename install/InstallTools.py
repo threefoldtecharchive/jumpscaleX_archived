@@ -457,13 +457,17 @@ if redis:
                     self.__class__._redis_cli_path_ = "redis-cli"
             return self.__class__._redis_cli_path_
 
-        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=[], args=[]):
+        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=None, args=None):
             """
 
             :param command:
             :param args:
             :return:
             """
+            if not keys:
+                keys = []
+            if not args:
+                args = []
             rediscmd = self._redis_cli_path
             if debug:
                 rediscmd += " --ldb"
