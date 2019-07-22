@@ -2262,7 +2262,7 @@ class MyEnv:
                     sys.exit(1)
 
         # defaults are now set, lets now configure the system
-        if False and sshagent_use:
+        if sshagent_use:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             MyEnv.sshagent = SSHAgent()
@@ -3668,7 +3668,7 @@ class SSHAgent:
         def ask_key(key_names):
             if len(key_names) == 1:
                 if MyEnv.interactive:
-                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % self.key_names[0]):
+                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % key_names[0]):
                         return None
                 name = key_names[0]
             elif len(key_names) == 0:
