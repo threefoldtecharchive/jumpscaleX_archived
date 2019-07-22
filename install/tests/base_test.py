@@ -1,7 +1,6 @@
 import unittest
 import subprocess
 from loguru import logger
-from testconfig import config
 import uuid, platform
 
 
@@ -11,7 +10,7 @@ class BaseTest(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.rep_location = "/opt/code/github/threefoldtech/jumpscaleX"
+        self.repo_location = "/opt/code/github/threefoldtech/jumpscaleX"
         self.js_branch = self.get_js_branch()
         self.js_container = str(uuid.uuid4()).replace("-", "")[:10]
         self.ssh_key = self.get_loaded_key()
@@ -30,7 +29,7 @@ class BaseTest(unittest.TestCase):
         return output.decode().strip()
 
     def get_js_branch(self):
-        command = "cd {} && cat .git/HEAD".format(self.rep_location)
+        command = "cd {} && cat .git/HEAD".format(self.repo_location)
         output, error = self.linux_os(command)
         branch = output.decode()[output.decode().find("head") + 6 : -2]
         return branch
@@ -56,7 +55,7 @@ class BaseTest(unittest.TestCase):
         self.linux_os(command)
 
         self.info("Run script with container-install")
-        command = "/tmp/jsx container_install -n {}".format(self.container_name)
+        command = "/tmp/jsx container_install -n {}".format(self.js_container)
         output, error = self.linux_os(command)
         return output, error
 
