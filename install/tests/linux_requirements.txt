@@ -1,6 +1,13 @@
-
-python3
+lsb
+git
+vim
 nose
-nose-progressive
-nose-testconfig
+curl
+rsync
+unzip
 loguru
+locales
+python3-pip
+openssh-server
+nose-testconfig
+nose-progressive

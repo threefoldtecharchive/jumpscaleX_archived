@@ -11,6 +11,7 @@ class BaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.js_branch = config["main"]["branch"]
+        self.os_type = config["main"]["os_type"]
         self.js_container = config["main"]["container_name"]
         self.ssh_key = config["main"]["ssh_key"]
 
@@ -53,3 +54,23 @@ class BaseTest(unittest.TestCase):
 
         return True
 
+    def jumpscale_installtion_insystem(self):
+        self.info("curl installtion script")
+        command = "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/{}/install/jsx.py?$RANDOM > /tmp/jsx".format(
+            self.js_branch
+        )
+
+        self.linux_os(command)
+
+        self.info("Change installer script [/tmp/jsx]to be executed ")
+        command = "chmod +x /tmp/jsx"
+        self.linux_os(command)
+
+        self.info("set a secret for jumpscale ")
+        command = "/tmp/jsx configure --no_interactive -s mypassword"
+        self.linux_os(command)
+        
+        self.info("Run script with container-install")
+        command = "/tmp/jsx install --no-interactive"
+        output, error = self.linux_os(command)
+        return output, error

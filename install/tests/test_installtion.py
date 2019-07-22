@@ -1,5 +1,5 @@
+import os.path
 from .base_test import BaseTest
-
 
 class Test_instaltion(BaseTest):
     def setUp(self):
@@ -109,4 +109,48 @@ class Test_instaltion(BaseTest):
         command = "docker exec -i {} /bin/bash -c 'cat /root/.ssh/authorized_keys'".format(self.js_container)
         output, error = self.linux_os(command)
         self.assertEqual(output.decode().strip("\n"), self.ssh_key)
+
+
+class Test_instaltion_insystem(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Setup
+        *clean old installation*
+        #. remove sandbox /tmp/jsx, /tmp/jumpscale/, /tmp/InstallTools.py
+        #. install click python package
+        """
+        self = cls()
+        self.info("Clean old installation")
+        command = "rm -rf ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        output, error = self.linux_os(command)
+        os.path.isfile("/tmp/jsx")
+
+        self.info("install click python package")
+        command = "pip3 install click"
+        output, error = self.linux_os(command)
+        self.assertIn("Successfully installed", output.decode())
+
+    @classmethod
+    def tearDownClass(cls):
+        pass 
+
+    def test01_install_jumpscale_insystem_no_interactive(self):
+        """
+        test TC63
+        *Test installation of Jumpscale*
+        #. Install jumpscale from specific branch
+        #. Run kosmos ,should succeed
+        """
+
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installtion()
+        self.assertIn("install succesfull", output)
+
+        self.info(" Run kosmos shell,should succeed")
+        command = " . /sandbox/env.sh; kosmos"
+        output, error = self.linux_os(command)
+        self.assertIn("BCDB INIT DONE", output)
+        self.assertFalse(error)
+
 

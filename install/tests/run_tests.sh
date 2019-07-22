@@ -18,8 +18,10 @@ echo " [*] Install requirements"
 if [[ OS == "linux" ]]; then
         apt-get install -r linux_requirements
 elif [[ OS == "mac" ]]; then
-        apt-get install -r mac_requirements
-         
+        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install
+        brew install -r mac_requirements        
+pip3 install click
+
 echo " [*] Running instaltion tests .."
 nosetests-3.4 -v -s test_instaltion.py --tc-file=config.ini  --tc=main.os_type:os --tc=main.ssh_key:sshkey --tc=main.branch=branch --tc=main.container_name=js_container_name
 
