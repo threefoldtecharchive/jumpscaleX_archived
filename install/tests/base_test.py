@@ -2,6 +2,7 @@ import unittest
 import subprocess
 from loguru import logger
 from testconfig import config
+import uuid, platform
 
 
 class BaseTest(unittest.TestCase):
@@ -10,9 +11,11 @@ class BaseTest(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.js_branch = config["main"]["branch"]
-        self.js_container = config["main"]["container_name"]
-        self.ssh_key = config["main"]["ssh_key"]
+        self.rep_location = "/opt/code/github/threefoldtech/jumpscaleX"
+        self.js_branch = self.get_js_branch()
+        self.js_container = str(uuid.uuid4()).replace("-", "")[:10]
+        self.ssh_key = self.get_loaded_key()
+        self.os_type = self.get_os_type()
 
     def setUp(self):
         pass
@@ -20,17 +23,32 @@ class BaseTest(unittest.TestCase):
     def info(self, message):
         self.LOGGER.info(message)
 
+    def get_loaded_key(self):
+        command = "ssh-add -L"
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        output, error = process.communicate()
+        return output.decode().strip()
+
+    def get_js_branch(self):
+        command = "cd {} && cat .git/HEAD".format(self.rep_location)
+        output, error = self.linux_os(command)
+        branch = output.decode()[output.decode().find("head") + 6 : -2]
+        return branch
+
+    def get_os_type(self):
+        os = platform.system()
+        if os == "Darwin":
+            return "Mac"
+        return os
+
     def linux_os(self, command):
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         output, error = process.communicate()
         return output, error
 
     def jumpscale_installtion(self):
-        self.info("curl installtion script")
-        command = "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/{}/install/jsx.py?$RANDOM > /tmp/jsx".format(
-            self.js_branch
-        )
-
+        self.info("copy installtion script to /tmp")
+        command = "cp {}/install/jsx.py  /tmp/jsx".format(self.repo_location)
         self.linux_os(command)
 
         self.info("Change installer script [/tmp/jsx]to be executed ")
