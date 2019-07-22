@@ -1,0 +1,5 @@
+install:
+  - apt-get update; apt-get install -y -r linux_requirements 
+  - eval `ssh-agent -s`; ssh-keygen; ssh-add 
+script:
+  - nosetests-3.4 -v -s test_instaltion.py 
