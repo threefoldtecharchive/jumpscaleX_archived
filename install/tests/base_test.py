@@ -84,10 +84,10 @@ class BaseTest(unittest.TestCase):
         self.linux_os(command)
 
         self.info("set a secret for jumpscale ")
-        command = "/tmp/jsx configure --no_interactive -s mypassword"
+        command = "/tmp/jsx configure --no-interactive -s mypassword"
         self.linux_os(command)
         
-        self.info("Run script with container-install")
+        self.info("Run script with install option")
         command = "/tmp/jsx install --no-interactive"
         output, error = self.linux_os(command)
         return output, error

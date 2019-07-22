@@ -104,15 +104,13 @@ class Test_instaltion(BaseTest):
     def Test04_loaded_ssh_key_inside_jumpscale_docker(self):
         """
         TC52,TC57
-        ** test  that ss
-        eh-key loaded successfuly  dependes on os_type **
+        ** test  that ssh-key loaded successfuly  dependes on os_type **
 
         #. check  that ssh-key loaded in docker  successfully.
         """
         self.info("Running on {} os type".format(self.os_type))
         self.info("Check that js container exist ,should succeed")
         self.assertTrue(self.check_js_installtion())
-
         self.info("check  that ssh-key loaded in docker  successfully")
         command = "docker exec -i {} /bin/bash -c 'cat /root/.ssh/authorized_keys'".format(self.js_container)
         output, error = self.linux_os(command)
@@ -152,13 +150,13 @@ class Test_instaltion_insystem(BaseTest):
         """
 
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installtion()
-        self.assertIn("install succesfull", output)
+        output, error = self.jumpscale_installtion_insystem()
+        self.assertIn("install succesfull", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = " . /sandbox/env.sh; kosmos"
         output, error = self.linux_os(command)
-        self.assertIn("BCDB INIT DONE", output)
+        self.assertIn("BCDB INIT DONE", output.decode())
         self.assertFalse(error)
 
 
