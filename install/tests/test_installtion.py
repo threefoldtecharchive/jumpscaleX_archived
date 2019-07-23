@@ -132,11 +132,6 @@ class Test_instaltion_insystem(BaseTest):
         output, error = self.linux_os(command)
         os.path.isfile("/tmp/jsx")
 
-        self.info("install click python package")
-        command = "pip3 install click"
-        output, error = self.linux_os(command)
-        self.assertIn("Successfully installed", output.decode())
-
     @classmethod
     def tearDownClass(cls):
         pass 
