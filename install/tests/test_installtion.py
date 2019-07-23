@@ -127,7 +127,7 @@ class Test_instaltion_insystem(BaseTest):
         """
         self = cls()
         self.info("Check for old JSX installation")
-        self.assertTure(os.path.isfile("/tmp/jsx"))
+        self.assertTrue(os.path.isfile("/tmp/jsx"))
         self.info("Clean old installation")
         command = "rm -rf ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
         output, error = self.linux_os(command)
