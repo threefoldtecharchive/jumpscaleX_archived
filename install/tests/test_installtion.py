@@ -124,7 +124,6 @@ class Test_instaltion_insystem(BaseTest):
         Setup
         *clean old installation*
         #. remove sandbox /tmp/jsx, /tmp/jumpscale/, /tmp/InstallTools.py
-        #. install click python package
         """
         self = cls()
         self.info("Clean old installation")
