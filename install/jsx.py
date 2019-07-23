@@ -136,12 +136,12 @@ def cli():
     default=None,
     help="path where JSX will be installed default /sandbox if /sandbox exists otherwise ~/sandbox",
 )
-@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+@click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
@@ -206,7 +206,7 @@ def configure(
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 def container_install(
     name="3bot",
     scratch=False,
@@ -269,7 +269,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--web", is_flag=True, help="also install the web system")
-# @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+# @click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -284,7 +284,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.

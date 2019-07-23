@@ -93,9 +93,9 @@ Here we will install jumpscale using container-install option which will create 
         # change permission
         chmod +x /tmp/jsx;\
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure --no_interactive -s mysecret;\
+        /tmp/jsx configure --no-interactive -s mysecret;\
         # install
-        /tmp/jsx container-install --no_interactive
+        /tmp/jsx container-install --no-interactive
         ```
 
 ## InSystem Install
@@ -125,9 +125,9 @@ Here we will install jumpscale using install option which willinstall jumpscale 
         # change permission
         chmod +x /tmp/jsx; \
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure --no_interactive -s mysecret;\
+        /tmp/jsx configure --no-interactive -s mysecret;\
         # install
-        /tmp/jsx install --no_interactive
+        /tmp/jsx install --no-interactive
         ```
 
 ## Extra options
