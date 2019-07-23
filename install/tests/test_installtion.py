@@ -1,6 +1,5 @@
 import os.path
 from .base_test import BaseTest
-from parameterized import parameterized
 
 class Test_instaltion(BaseTest):
     def setUp(self):
@@ -145,14 +144,14 @@ class Test_instaltion_insystem(BaseTest):
     @parameterized.expand("--no-interactive", "-r")
     def test01_install_jumpscale_insystem_no_interactive_and_re_install(self, option):
         """
-        test TC63, TC64, TC65, TC66
-        ** Test installation of Jumpscale using insystem non-interactive and re-install option on Linux or mac OS **
+        test TC63, TC64
+        ** Test installation of Jumpscale using insystem non-interactive option on Linux or mac OS **
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
 
-        self.info("Install jumpscale from {} branch on {}, using {} option".format(self.js_branch, self.os_type, option))
-        output, error = self.jumpscale_installtion_insystem(option)
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installtion_insystem()
         self.assertIn("install succesfull", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
