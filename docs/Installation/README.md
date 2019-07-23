@@ -3,7 +3,6 @@
 ## Prerequisites
 Before starting the installation make sure to go through the prerequisites. it differs according to your installation type
 
-<<<<<<< HEAD
 ### Ubuntu
 
 install requirements
