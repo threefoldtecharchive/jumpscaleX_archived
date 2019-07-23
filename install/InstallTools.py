@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development_jumpscale"]
+DEFAULTBRANCH = "development_jumpscale"
 import socket
 import grp
 import os
@@ -2250,7 +2250,7 @@ class MyEnv:
         for key, val in config.items():
             MyEnv.config[key] = val
 
-        if not sshagent_use and MyEnv.interactive:  # just a warning when interactive
+        if sshagent_use and MyEnv.interactive:  # just a warning when interactive
             T = """
             Is it ok to continue without SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
@@ -2270,7 +2270,6 @@ class MyEnv:
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             MyEnv.sshagent = SSHAgent()
             MyEnv.sshagent.key_default
-        else:
             if secret is None:
                 if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
                     MyEnv.secret_set()  # will create a new one only when it doesn't exist
