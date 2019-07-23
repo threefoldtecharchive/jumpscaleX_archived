@@ -149,7 +149,7 @@ class BuilderCaddy(BuilderGolangTools):
 
     @property
     def startup_cmds(self):
-        cmd = j.servers.startupcmd.get("caddy", "caddy", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("caddy", cmd_start="caddy", path="/sandbox/bin")
         return [cmd]
 
     @builder_method()
