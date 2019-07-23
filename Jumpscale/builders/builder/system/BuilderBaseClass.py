@@ -243,8 +243,6 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set("LC_ALL", "en_US.UTF-8")
         self.profile.env_set("LANG", "en_US.UTF-8")
 
-        self.profile.path_add("${PATH}", end=True)
-
     def _profile_builder_set(self):
         def _build_flags(env_name, delimiter):
             flags = self.profile.env_get(env_name).split(":")

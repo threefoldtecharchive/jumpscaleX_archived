@@ -175,6 +175,9 @@ class BuilderTools(j.builders.system._BaseClass):
         if to == "" or expand:
             to = self.joinpaths("{DIR_TEMP}", j.sal.fs.getBaseName(url))
 
+        if not j.sal.fs.exists(to):
+            raise RuntimeError("cannot find:%s" % to)
+
         to = self._replace(to)
 
         if deletedest:

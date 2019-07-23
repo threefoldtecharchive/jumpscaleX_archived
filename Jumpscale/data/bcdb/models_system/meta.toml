@@ -76,6 +76,7 @@ type = "doc,markdown,spreadsheet,web,code,text,presentation,image,video"
 extension** = ""                                                                #e.g. xls, 
 
 
+#max 1 MB
 @url = jumpscale.bcdb.fs.block.2
 md5* = ""
 size = (I)

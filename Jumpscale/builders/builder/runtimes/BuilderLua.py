@@ -1,6 +1,5 @@
 from Jumpscale import j
-
-# from Jumpscale.sal.bash.Profile import Profile
+from Jumpscale.sal.bash.Profile import Profile
 
 builder_method = j.builders.system.builder_method
 
@@ -12,8 +11,8 @@ class BuilderLua(j.builders.system._BaseClass):
 
     NAME = "lua"
 
-    # def _init(self):
-    #     self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
+    def _init(self):
+        self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
 
     @builder_method()
     def build(self, reset=False, deps_reset=False):
@@ -30,6 +29,15 @@ class BuilderLua(j.builders.system._BaseClass):
         j.builders.web.openresty.build(reset=deps_reset)
         # j.builders.libs.openssl.build(reset=deps_reset)  #DOES NOT WORK FOR NOW, maybe wrong version of openssl?
 
+        self.build_luarocks()
+
+    @builder_method()
+    def build_luarocks(self, reset=False):
+        """
+        kosmos 'j.builders.runtimes.lua.build_luarocks(reset=True)'
+        :param reset:
+        :return:
+        """
         url = "https://luarocks.org/releases/luarocks-3.1.3.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
@@ -48,21 +56,34 @@ class BuilderLua(j.builders.system._BaseClass):
         # set showout to False to avoid text_replace of output log
         self._execute(C, showout=True)
 
-    def profile_sandbox_set(self):
+    def profile_installer_select(self):
+
+        self.profile_builder_select()
+
+        if not j.sal.fs.exists(self.ROCKS_PATHS_PROFILE):
+            self.build(reset=True)
+            assert j.sal.fs.exists(self.ROCKS_PATHS_PROFILE)
+
+        if not j.sal.fs.exists("/sandbox/openresty/luajit/include"):
+            # we need the include headers so if not there need to build openresty
+            j.builders.web.openresty.build(reset=True)
+
         # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
-        # luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
-        # lua_path = luarocks_profile.env_get("LUA_PATH")
-        # lua_cpath = luarocks_profile.env_get("LUA_CPATH")
+        luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
+        lua_path = luarocks_profile.env_get("LUA_PATH")
+        lua_cpath = luarocks_profile.env_get("LUA_CPATH")
         self.profile.env_set("LUA_PATH", lua_path)
         self.profile.env_set("LUA_CPATH", lua_cpath)
+        # self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include/luajit-2.1")
+        self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include")
+        self.profile.path_add("/sandbox/bin")
 
-        # add luarocs path to PATH, so binaries of luarocks packageds can be executed normally
         path = luarocks_profile.env_get("PATH").replace(";", ":")
         self.profile.path_add(path, check_exists=False)
 
-    def lua_rock_install(self, name):
+    def lua_rock_install(self, name, reset=False):
         self._log_info("lua_rock_install: %s" % name)
-        if self._done_check("lua_rock_install_%s" % name):
+        if not reset and self._done_check("lua_rock_install_%s" % name):
             return
 
         if j.core.platformtype.myplatform.platform_is_osx:
@@ -80,13 +101,13 @@ class BuilderLua(j.builders.system._BaseClass):
 
         self._done_set("lua_rock_install_%s" % name)
 
-    def lua_rocks_install(self):
+    def lua_rocks_install(self, reset=False):
         """
         kosmos 'j.builders.runtimes.lua.lua_rocks_install()'
         :param install:
         :return:
         """
-        self.profile_sandbox_select()
+        self.profile_installer_select()
 
         # if j.core.platformtype.myplatform.platform_is_ubuntu:
         #     # j.builders.system.package.mdupdate()
@@ -151,12 +172,21 @@ class BuilderLua(j.builders.system._BaseClass):
                 continue
             if line.startswith("#"):
                 continue
-            self.lua_rock_install(line)
+            self.lua_rock_install(line, reset=reset)
 
         if j.core.platformtype.myplatform.platform_is_ubuntu:
-            self.lua_rock_install("lua-geoip")
-            self.lua_rock_install("lua-resty-jwt")
-            self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
+            self.lua_rock_install("lua-geoip", reset=reset)
+            self.lua_rock_install("lua-resty-jwt", reset=reset)
+            self.lua_rock_install("lua-resty-iyo-auth", reset=reset)  # need to check how to get this to work on OSX
+
+        cmd = self._replace(
+            "rsync -rav  /sandbox/openresty/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib"
+        )
+        self.tools.execute(cmd, die=False)
+        cmd = self._replace(
+            "rsync -rav /sandbox/openresty/luarocks/share/lua/5.1/luarocks/  /sandbox/openresty/lualib/"
+        )
+        self.tools.execute(cmd, die=False)
 
     # def build_crypto(self):
     #
@@ -218,12 +248,14 @@ class BuilderLua(j.builders.system._BaseClass):
         pushd /sandbox/openresty/bin
         cp resty /sandbox/bin/resty
         popd
-
-        pushd /sandbox/openresty/luarocks/bin/
+        pushd /sandbox/openresty/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
         cp lapis /sandbox/bin/_lapis.lua
+        popd
+        pushd '/sandbox/openresty/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
         popd
+
 
         """
         self._execute(C)

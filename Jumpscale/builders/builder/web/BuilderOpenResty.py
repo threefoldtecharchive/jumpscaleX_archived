@@ -43,7 +43,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
             -j8
         make -j8
         make install
-        rm -rf {DIR_BUILD}
         rm -f /sandbox/bin/lua
         ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
@@ -57,6 +56,12 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         #will call the build step
         :param kwargs:
         :return:
+        """
+        C = """
+        #TODO:link
+        cp /sandbox/openresty/bin/resty /sandbox/bin/
+        rm  -rf /sandbox/openresty/pod
+        rm  -rf /sandbox/openresty/site
         """
         pass
 
