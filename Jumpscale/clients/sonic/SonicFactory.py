@@ -13,10 +13,10 @@ class SonicFactory(JSConfigs):
     __jslocation__ = "j.clients.sonic"
     _CHILDCLASS = SonicClient
 
-    def get_client_default(self):
-        j.builders.apps.sonic.install()
-        j.servers.sonic.default.start()
-        return self.get("test", host="127.0.0.1", port=1491, password="123456")
+    def get_client_bcdb(self):
+        # j.builders.apps.sonic.install()
+        j.servers.sonic.get("test", port=1414).start()
+        return self.get("test", host="127.0.0.1", port=1414, password="123456")
 
     def test(self):
         """

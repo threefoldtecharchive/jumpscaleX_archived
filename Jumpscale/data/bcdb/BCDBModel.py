@@ -70,12 +70,19 @@ class BCDBModel(j.application.JSBaseClass):
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
         self.index = indexklass(self, reset=reset)
 
+        self._sonic_client = None
         # self.cache_expiration = 3600
 
         self._triggers = []
 
         if reset:
             self.reset()
+
+    @property
+    def sonic_client(self):
+        if not self._sonic_client:
+            self._sonic_client = j.clients.sonic.get_client_bcdb()
+        return self._sonic_client
 
     def _schema_get(self):
         return None
@@ -238,6 +245,14 @@ class BCDBModel(j.application.JSBaseClass):
     def get_by_name(self, name, nid=1):
         args = {"name": name}
         return self.find(nid=nid, **args)
+
+    def search(self, text):
+        # FIXME: get the real nid
+        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.sid), text)
+        res = []
+        for obj in objs:
+            res.append(self.get(obj.split(":")[0]))
+        return res
 
     def find(self, nid=1, **args):
         """

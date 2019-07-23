@@ -7,15 +7,12 @@ class {{BASENAME}}(BCDBModelIndex):
     {% if index.active %}
 
     def _init_index(self):
-
         self._log_info("init index:%s"%self.schema.url)
 
         p = j.clients.peewee
 
         db = self.bcdb.sqlclient.sqlitedb
         # print(db)
-
-        self.sonic = j.clients.sonic.get_client_default()
 
         class BaseModel(p.Model):
             class Meta:
@@ -122,7 +119,7 @@ class {{BASENAME}}(BCDBModelIndex):
         {%- endfor %}
 
     def _text_index_delete(self,obj):
-        {%- for property_name in index.fields_ext %}
+        {%- for property_name in index.fields_text %}
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
