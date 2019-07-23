@@ -1700,7 +1700,7 @@ class Tools:
         args["NAME"] = repo
 
         if branch is None:
-            branch = ["development", "master"]
+            branch = "development_jumpscale"
         elif isinstance(branch, str):
             if "," in branch:
                 branch = [branch.strip() for branch in branch.split(",")]
@@ -1709,7 +1709,7 @@ class Tools:
         else:
             raise RuntimeError("branch should be a string or list, now %s" % branch)
 
-        args["BRANCH"] = branch[0]
+        args["BRANCH"] = branch
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1801,9 +1801,8 @@ class Tools:
                     assert getbranch(args=args) == branch
                 return True
 
-            for branch_item in branch:
-                if checkoutbranch(args, branch_item):
-                    return
+            if checkoutbranch(args, branch):
+                return
 
             raise RuntimeError("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
