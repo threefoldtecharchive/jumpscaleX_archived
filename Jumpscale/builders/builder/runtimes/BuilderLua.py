@@ -1,5 +1,6 @@
 from Jumpscale import j
-from Jumpscale.sal.bash.Profile import Profile
+
+# from Jumpscale.sal.bash.Profile import Profile
 
 builder_method = j.builders.system.builder_method
 
@@ -11,8 +12,8 @@ class BuilderLua(j.builders.system._BaseClass):
 
     NAME = "lua"
 
-    def _init(self):
-        self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
+    # def _init(self):
+    #     self.ROCKS_PATHS_PROFILE = self._replace("{DIR_BUILD}/rocks_paths")
 
     @builder_method()
     def build(self, reset=False, deps_reset=False):
@@ -49,9 +50,9 @@ class BuilderLua(j.builders.system._BaseClass):
 
     def profile_sandbox_set(self):
         # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
-        luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
-        lua_path = luarocks_profile.env_get("LUA_PATH")
-        lua_cpath = luarocks_profile.env_get("LUA_CPATH")
+        # luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
+        # lua_path = luarocks_profile.env_get("LUA_PATH")
+        # lua_cpath = luarocks_profile.env_get("LUA_CPATH")
         self.profile.env_set("LUA_PATH", lua_path)
         self.profile.env_set("LUA_CPATH", lua_cpath)
 
@@ -227,9 +228,8 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self._execute(C)
 
-        # need to check what we do actually need from sandbox_base/bin
-        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
-        self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
+        # src = "/sandbox/code/github/threefoldtech/digitalmeX/sandbox/bin"
+        # self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):
