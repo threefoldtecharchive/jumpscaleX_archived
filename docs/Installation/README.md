@@ -3,6 +3,7 @@
 ## Prerequisites
 Before starting the installation make sure to go through the prerequisites. it differs according to your installation type
 
+<<<<<<< HEAD
 ### Ubuntu
 
 install requirements
@@ -137,13 +138,13 @@ To start JumpcaleX:
 The install script has built and started a docker container named `3bot` on your machine.
 ```bash
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
+/tmp/jsx container-kosmos
 ```
 Once kosmos is launched you will see this line:
 ```bash
 JSX>
 ```
-Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library ! Follow these [steps](Installation/get_started.md) to go further in the use of Jumpscale.
+Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library 
 
 If jsx is missing from your `/tmp` folder:
 
@@ -152,7 +153,7 @@ If jsx is missing from your `/tmp` folder:
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
 chmod +x /tmp/jsx; \
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
+/tmp/jsx container-kosmos
 ```
 
 JSX is the main tool for working with a jumpscale deployment

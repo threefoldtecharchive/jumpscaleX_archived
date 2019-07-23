@@ -2107,7 +2107,7 @@ class MyEnv:
     #     --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
     #
     #     --readonly                      default is false
-    #     --no_interactive                default is interactive, means will ask questions
+    #     --no-interactive                default is interactive, means will ask questions
     #     --debug_configure               default debug_configure is False, will configure in debug mode
     #     """
     #     return Tools.text_strip(C)
@@ -2134,10 +2134,10 @@ class MyEnv:
         --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --no_sshagent                  default is to use the sshagent, if you want to disable use this flag
+        --no-sshagent                  default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
-        --no_interactive                default is interactive, means will ask questions
+        --no-interactive                default is interactive, means will ask questions
         --debug_configure               default debug_configure is False, will configure in debug mode
 
         :param configdir: is the directory where all configuration & keys will be stored
@@ -3539,7 +3539,7 @@ class DockerContainer:
         if branch:
             args_txt += " --branch %s" % branch
         if not MyEnv.interactive:
-            args_txt += " --no_interactive"
+            args_txt += " --no-interactive"
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
@@ -3576,7 +3576,7 @@ class DockerContainer:
         install succesfull:
 
         # if you use a container do:
-        jsx container_kosmos
+        jsx container-kosmos
 
         or
 

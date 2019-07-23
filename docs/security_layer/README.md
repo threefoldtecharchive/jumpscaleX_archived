@@ -12,12 +12,12 @@
 
 ### Intro
 Jumpscale's security layer contains 2 main components
-- nacl module
-- config manager
-### Nacl
+- NACL module
+- Config manager
+### Nacl Module
 - ### Nacl Description
     NaCl's goal is to provide all of the core operations needed to build higher-level cryptographic tools.
-    Jumpscale Nacl's Module uses Asymetric cryptography using a 2-level encryption.
+    Jumpscale Nacl's Module uses using a two-level encryption with a secret encrypting a private-key that encrypts configurations in config manager.
 
 - ### Flow 
     - At the beging of installation it requires to enter a secret key.

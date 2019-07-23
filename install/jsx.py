@@ -15,7 +15,7 @@ os.environ["LC_ALL"] = "en_US.UTF-8"
 DEFAULT_BRANCH = "development_jumpscale"
 
 
-def load_install_tools():
+def load_install_tools(branch=None):
     # get current install.py directory
     path = "/sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py"
     if not os.path.exists(path):
@@ -26,6 +26,11 @@ def load_install_tools():
             url = (
                 "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
             )
+
+            if branch:
+                url = "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % branch
+                print("Downloading Install Tools from branch %s" % branch)
+
             with urlopen(url) as resp:
                 if resp.status != 200:
                     raise RuntimeError("fail to download InstallTools.py")
@@ -55,9 +60,7 @@ def check_branch(IT):
                     sys.exit(1)
 
 
-IT = load_install_tools()
-
-IT.MyEnv.interactive = True  # std is interactive
+# IT = load_install_tools()
 
 
 def jumpscale_get(die=True):
@@ -86,7 +89,6 @@ def _configure(
 ):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
-
     IT.MyEnv.configure(
         basedir=basedir,
         readonly=None,
@@ -134,12 +136,12 @@ def cli():
     default=None,
     help="path where JSX will be installed default /sandbox if /sandbox exists otherwise ~/sandbox",
 )
-@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+@click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
@@ -204,7 +206,7 @@ def configure(
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 def container_install(
     name="3bot",
     scratch=False,
@@ -212,7 +214,7 @@ def container_install(
     web=False,
     portrange=1,
     image=None,
-    branch=DEFAULT_BRANCH,
+    branch=None,
     reinstall=False,
     no_interactive=False,
     pull=False,
@@ -226,6 +228,7 @@ def container_install(
 
 
     """
+    IT = load_install_tools(branch=branch)
     interactive = not no_interactive
 
     _configure(configdir=configdir, no_interactive=no_interactive)
@@ -235,6 +238,9 @@ def container_install(
     if not image:
         image = "despiegk/3bot"
 
+    if not branch:
+        branch = DEFAULT_BRANCH
+
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange, image=image)
 
     docker.install()
@@ -243,6 +249,7 @@ def container_install(
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    IT = load_install_tools()
     IT.MyEnv.sshagent.key_default
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
     if existcheck:
@@ -262,7 +269,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--web", is_flag=True, help="also install the web system")
-# @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+# @click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -277,7 +284,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
@@ -287,6 +294,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
 
     """
     # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
+    IT = load_install_tools(branch=branch)
     _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
@@ -295,6 +303,9 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
         force = True
     else:
         force = False
+
+    if not branch:
+        branch = DEFAULT_BRANCH
 
     installer = IT.JumpscaleInstaller(branch=branch)
     installer.install(sandboxed=False, force=force, gitpull=pull)
@@ -477,6 +488,7 @@ def wireguard(configdir=None):
     :return:
     """
     name = "3bot"
+    IT = load_install_tools()
     if not IT.DockerFactory.indocker():
         docker = container_get(name=name)
         # remotely execute wireguard
@@ -537,6 +549,9 @@ def _generate(path=None):
 
 if __name__ == "__main__":
 
+    IT = load_install_tools()
+    IT.MyEnv.interactive = True  # std is interactive
+
     cli.add_command(configure)
     cli.add_command(check)
     cli.add_command(install)
@@ -547,7 +562,6 @@ if __name__ == "__main__":
     # cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
-
     if not IT.DockerFactory.indocker():
         cli.add_command(container_kosmos, "container-kosmos")
         cli.add_command(container_install, "container-install")
