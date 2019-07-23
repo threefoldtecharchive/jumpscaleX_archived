@@ -68,7 +68,7 @@ Before starting the installation make sure to go through the prerequisites. it d
         ```
 
 ## Container Install
-Here we will install jumpscale using container_install option which will create a docker-container for you and install jumpscale within it. we have 2 types of installation as the following<br/>
+Here we will install jumpscale using container-install option which will create a docker-container for you and install jumpscale within it. we have 2 types of installation as the following<br/>
 
 - #### Interactive Container
     In here you will be asked to provide a secret and to authenticate github cloning in the middle of installation. make sure to add your ssh-key to your github account's authenticated keys
@@ -81,7 +81,7 @@ Here we will install jumpscale using container_install option which will create 
         # change permission
         chmod +x /tmp/jsx; \
         # install
-        /tmp/jsx container_install
+        /tmp/jsx container-install
         ```
 - #### Non Interactive Container
     This type of installation won't ask you about anything
@@ -95,7 +95,7 @@ Here we will install jumpscale using container_install option which will create 
         # configure with your secret - replace mysecret with yours`
         /tmp/jsx configure --no_interactive -s mysecret;\
         # install
-        /tmp/jsx container_install --no_interactive
+        /tmp/jsx container-install --no_interactive
         ```
 
 ## InSystem Install
@@ -140,12 +140,12 @@ also there's some more intersting options to use
 - #### delete
     - if you are using a docker this option will delete the existing one
         ```bash
-        /tmp/jsx container_install -d
+        /tmp/jsx container-install -d
         ```
 - #### install with webcomponents
     - installs webcomponents
         ```bash
-        /tmp/jsx container_install -w
+        /tmp/jsx container-install -w
         ```
 - #### jsx command help
     - get more information about other options
@@ -181,13 +181,13 @@ To start JumpcaleX:
 The install script has built and started a docker container named `3bot` on your machine.
 ```bash
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
+/tmp/jsx container-kosmos
 ```
 Once kosmos is launched you will see this line:
 ```bash
 JSX>
 ```
-Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library ! Follow these [steps](Installation/get_started.md) to go further in the use of Jumpscale.
+Congrats ! You may now use this jsx shell to manipulate the Jumpscale X library 
 
 If jsx is missing from your `/tmp` folder:
 
@@ -196,7 +196,7 @@ If jsx is missing from your `/tmp` folder:
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
 chmod +x /tmp/jsx; \
 # get your kosmos shell (inside your 3bot container)
-/tmp/jsx container_kosmos
+/tmp/jsx container-kosmos
 ```
 
 JSX is the main tool for working with a jumpscale deployment
