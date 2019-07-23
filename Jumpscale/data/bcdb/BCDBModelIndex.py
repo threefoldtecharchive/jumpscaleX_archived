@@ -77,6 +77,15 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._sql_index_delete(obj)
             self._key_index_delete(obj)
 
+    ###### Full text indexing
+
+    def _text_index_dir_get_(self, property_name, val, obj_id, nid=1):
+        return self.bcdb.name, "{}:{}:{}".format(nid, self.bcdbmodel.sid, obj_id), property_name, val
+
+    def _text_index_set_(self, property_name, val, obj_id, nid=1):
+        self.sonic.push(*self._text_index_dir_get_(property_name, val, obj_id, nid))
+
+
     ###### INDEXER ON KEYS:
 
     def _key_index_hsetkey_get(self, nid=1):

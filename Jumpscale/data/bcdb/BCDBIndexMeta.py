@@ -41,6 +41,7 @@ class BCDBIndexMeta(j.application.JSBaseClass):
 
         self.fields = []
         self.fields_key = []
+        self.fields_text = []
 
         for p in schema.properties_index_sql:
             self.fields.append(IndexField(p))
@@ -48,15 +49,13 @@ class BCDBIndexMeta(j.application.JSBaseClass):
         for p in schema.properties_index_keys:
             self.fields_key.append(p.name)
 
-        if len(self.fields) > 0:
-            self.active = True
-        else:
-            self.active = False
+        for p in schema.properties_index_text:
+            self.fields_text.append(p.name)
 
-        if len(self.fields_key) > 0:
-            self.active_keys = True
-        else:
-            self.active_keys = False
+
+        self.active = len(self.fields) > 0
+        self.active_keys = len(self.fields_key) > 0
+        self.active_text = len(self.fields_text) > 0
 
     def __str__(self):
         out = "indexmodel:\s"
