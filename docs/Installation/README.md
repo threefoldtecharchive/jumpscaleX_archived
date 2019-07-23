@@ -156,7 +156,6 @@ also there's some more intersting options to use
 
 ## Advanced Installation
 it is easy to develop on the installer, will install from existing code on your system
-
 ```bash
 #create directory, make sure your user has full access to this director (can be a manual step)
 mkdir -p /sandbox/code/github/threefoldtech
@@ -164,13 +163,13 @@ cd /sandbox/code/github/threefoldtech;
 #if you have a permission denied add sudo at the beginning of the command
 # then do a sudo chown -R $USER:$USER /sandbox
 git clone git@github.com:threefoldtech/jumpscaleX.git; cd jumpscaleX;
-git checkout development
+git checkout master
 git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/jsx.py
 rm -f /tmp/InstallTools.py;
-ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
+ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx.py;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```
 
