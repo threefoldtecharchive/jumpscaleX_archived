@@ -12,7 +12,7 @@ Our newest release is version 10, called JSX.
 
 - [Jumpscale](#jumpscale)
   - [About Jumpscale](#about-jumpscale)
-  - [Installing Jumpscale](#installing-jumpscale)
+  - [Installing Jumpscale](docs/Installation/README.md)
   - [Usage](#usage)
   - [Tutorials](#tutorials)
   - [Collaboration Conventions](#collaboration-conventions)

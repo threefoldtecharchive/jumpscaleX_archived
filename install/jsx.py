@@ -60,7 +60,8 @@ def check_branch(IT):
                     sys.exit(1)
 
 
-# IT = load_install_tools()
+IT = load_install_tools()
+IT.MyEnv.interactive = True  # std is interactive
 
 
 def jumpscale_get(die=True):
@@ -229,6 +230,7 @@ def container_install(
 
     """
     IT = load_install_tools(branch=branch)
+    IT.MyEnv.interactive = True
     interactive = not no_interactive
 
     _configure(configdir=configdir, no_interactive=no_interactive)
@@ -249,7 +251,6 @@ def container_install(
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
-    IT = load_install_tools()
     IT.MyEnv.sshagent.key_default
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
     if existcheck:
@@ -295,6 +296,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
     """
     # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
     IT = load_install_tools(branch=branch)
+    IT.MyEnv.interactive = True
     _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
@@ -488,7 +490,6 @@ def wireguard(configdir=None):
     :return:
     """
     name = "3bot"
-    IT = load_install_tools()
     if not IT.DockerFactory.indocker():
         docker = container_get(name=name)
         # remotely execute wireguard
@@ -548,9 +549,6 @@ def _generate(path=None):
 
 
 if __name__ == "__main__":
-
-    IT = load_install_tools()
-    IT.MyEnv.interactive = True  # std is interactive
 
     cli.add_command(configure)
     cli.add_command(check)
