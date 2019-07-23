@@ -60,20 +60,34 @@ write_once = False (B)  #means in this namespace records can only be written onc
 
 @url = jumpscale.bcdb.fs.dir.2
 nid = 0  #namespace id
-path = ""
-#TODO: need posix attributes modeled here
-files = (LI)
+name* = "" (S)
+dir_path*** = "" (S)
+links = (LO) !jumpscale.bcdb.fs.link.2
+posixattr = (O) !jumpscale.bcdb.meta.posixattr.2
+epoch = (T)
+
+
+@url = jumpscale.bcdb.fs.link.2
+@sub = true
+name* = "" (S)
+destination = (I)
+destination_bot_id = 0 (I)
+posixattr = (O) !jumpscale.bcdb.meta.posixattr.2
+epoch = (T)
 
 @url = jumpscale.bcdb.fs.file.2
 name* = "" (S)
+dir_path*** = "" (S)
+dir_id = (I)
 description*** = "" (S)
 content*** = "" (S)                                                             #optional e.g. for a markdown document
 size_bytes = ""
 tags = (LS)
-#TODO: need posix attributes modeled here
+posixattr = (O) !jumpscale.bcdb.meta.posixattr.2
 blocks = (LI)                                                                   #is link to the blocks which are the content
 type = "doc,markdown,spreadsheet,web,code,text,presentation,image,video"     
-extension** = ""                                                                #e.g. xls, 
+extension = ""#e.g. xls
+epoch = (T)
 
 
 #max 1 MB
@@ -81,3 +95,8 @@ extension** = ""                                                                
 md5* = ""
 size = (I)
 content = (BIN)
+epoch = (T)
+
+@url = jumpscale.bcdb.fs.posixattr.2
+something = ""
+#TODO: need posix attributes modeled here
