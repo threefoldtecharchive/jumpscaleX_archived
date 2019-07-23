@@ -10,7 +10,7 @@ class Test_instaltion(BaseTest):
     def tearDownClass(cls):
         self = cls()
         self.info("Delete jumpscale created container.")
-        if not self.check_js_installtion():
+        if not self.check_js_container_installtion():
             pass
         command = "/tmp/jsx container_delete"
         output, error = self.linux_os(command)
@@ -24,17 +24,17 @@ class Test_instaltion(BaseTest):
         ** test installtion of jumpscale on linux or mac dependes on os_type **
         *Test libs builers sandbox*
         #. Install jumpscale from specific branch
-        #. Run container_kosmos ,should succeed
+        #. Run container-kosmos ,should succeed
         """
 
         self.info("Install jumpscale from {} branch in {} os type".format(self.js_branch, self.os_type))
         output, error = self.jumpscale_installtion()
-        self.assertIn("install succesfull", output)
+        self.assertIn("install succesfull", output.decode())
 
         self.info(" Run container_kosmos ,should succeed")
-        command = "/tmp/jsx container_kosmos"
+        command = "/tmp/jsx container-kosmos"
         output, error = self.linux_os(command)
-        self.assertIn("BCDB INIT DONE", output)
+        self.assertIn("BCDB INIT DONE", output.decode(), error)
         self.assertFalse(error)
 
     def Test02_container_stop_and_container_start_options(self):
@@ -50,10 +50,10 @@ class Test_instaltion(BaseTest):
         """
         self.info(" Running on {} os type".format(self.os_type))
         self.info(" Check that js container exist ,should succeed")
-        self.assertTrue(self.check_js_installtion())
+        self.assertTrue(self.check_js_container_installtion())
 
         self.info("Run container stop ")
-        command = "/tmp/jsx container_stop"
+        command = "/tmp/jsx container-stop"
         output, error = self.linux_os(command)
 
         self.info("Check that container stopped successfully")
@@ -61,7 +61,7 @@ class Test_instaltion(BaseTest):
         output, error = self.linux_os(command)
         self.assertFalse(output)
         self.info("Run container started ")
-        command = "/tmp/jsx container_start"
+        command = "/tmp/jsx container-start"
         output, error = self.linux_os(command)
 
         self.info("Check that container started successfully")
@@ -79,12 +79,12 @@ class Test_instaltion(BaseTest):
         """
         self.info("Running on {} os type".format(self.os_type))
         self.info(" Check that js container exist ,should succeed")
-        self.assertTrue(self.check_js_installtion())
+        self.assertTrue(self.check_js_container_installtion())
 
         self.info("Run kosmos command inside docker,should start kosmos shell")
         command = "docker exec -i {} /bin/bash -c 'source /sandbox/env.sh && kosmos'".format(self.js_container)
         output, error = self.linux_os(command)
-        self.assertIn("BCDB INIT DONE", output)
+        self.assertIn("BCDB INIT DONE", output.decode())
         self.info("Run js_init generate ")
         command = "docker exec -i {} /bin/bash -c 'source /sandbox/env.sh && js_init generate'".format(
             self.js_container
@@ -111,7 +111,7 @@ class Test_instaltion(BaseTest):
         """
         self.info("Running on {} os type".format(self.os_type))
         self.info("Check that js container exist ,should succeed")
-        self.assertTrue(self.check_js_installtion())
+        self.assertTrue(self.check_js_container_installtion())
 
         self.info("check  that ssh-key loaded in docker  successfully")
         command = "docker exec -i {} /bin/bash -c 'cat /root/.ssh/authorized_keys'".format(self.js_container)

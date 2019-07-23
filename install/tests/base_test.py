@@ -3,6 +3,8 @@ import subprocess
 from loguru import logger
 import uuid, platform
 
+CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
+
 
 class BaseTest(unittest.TestCase):
     LOGGER = logger
@@ -12,9 +14,9 @@ class BaseTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
         self.repo_location = "/opt/code/github/threefoldtech/jumpscaleX"
         self.js_branch = self.get_js_branch()
-        self.js_container = str(uuid.uuid4()).replace("-", "")[:10]
         self.ssh_key = self.get_loaded_key()
         self.os_type = self.get_os_type()
+        self.js_container = CONTAINER_NAME
 
     def setUp(self):
         pass
@@ -54,18 +56,21 @@ class BaseTest(unittest.TestCase):
         command = "chmod +x /tmp/jsx"
         self.linux_os(command)
 
+        self.info("Configure the non-interactive option")
+        command = "/tmp/jsx configure --no_interactive -s mysecret;"
+
         self.info("Run script with container-install")
-        command = "/tmp/jsx container_install -n {}".format(self.js_container)
+        command = "/tmp/jsx container-install  --no_interactive -n {} ".format(self.js_container)
         output, error = self.linux_os(command)
         return output, error
 
-    def check_js_installtion(self):
+    def check_js_container_installtion(self):
         self.info(" Check that js container exist ,should succeed")
-        command = "/tmp/jsx container_kosmos"
+        command = "/tmp/jsx container-kosmos"
         output, error = self.linux_os(command)
         if error:
             output, error = self.jumpscale_installtion()
-            if "install succesfull" not in output:
+            if "install succesfull" not in output.decode():
                 return False
 
         return True
