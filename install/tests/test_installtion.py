@@ -145,7 +145,7 @@ class Test_instaltion_insystem(BaseTest):
         """
 
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installtion_insystem()
+        output, error = self.jumpscale_installtion_insystem("--no-interactive")
         self.assertIn("install succesfull", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
@@ -154,3 +154,23 @@ class Test_instaltion_insystem(BaseTest):
         self.assertIn("BCDB INIT DONE", output.decode())
         self.assertFalse(error)
 
+        def test02_install_jumpscale_insystem_no_interactive_and_re_install(self):
+        """
+        test TC65, TC66
+        ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
+        #. Install jumpscale from specific branch
+        #. Run kosmos ,should succeed
+        """
+
+        self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
+            self.js_branch, self.os_type))
+        output, error = self.jumpscale_installtion_insystem("--no-interactive -r")
+        self.assertIn("install succesfull", output.decode())
+
+        self.info(" Run kosmos shell,should succeed")
+        command = " . /sandbox/env.sh; kosmos"
+        output, error = self.linux_os(command)
+        self.info("Check for reinstallation is done successfully")
+        self.assertIn("Distributor ID", output.decode())
+        self.assertIn("BCDB INIT DONE", output.decode())
+        self.assertFalse(error)
