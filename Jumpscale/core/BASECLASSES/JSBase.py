@@ -696,7 +696,10 @@ class JSBase:
                 if len(items) < 20:
                     for item in items:
                         if name in ["data", "properties"]:
-                            out += " - %-20s : %s\n" % (item, getattr(self, item))
+                            try:
+                                out += " - %-20s : %s\n" % (item, getattr(self, item))
+                            except:
+                                out += " - %-20s : ERROR\n" % (item)
                         else:
                             out += " - %s\n" % item
                 else:

@@ -53,3 +53,30 @@ md5 = ""
 name* = ""                              #chosen name needs to be unique
 acls = (LO) !jumpscale.bcdb.acl.2
 write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+
+
+#FILE & FILE METADATA OBJECTS
+
+
+@url = jumpscale.bcdb.fs.dir.2
+nid = 0  #namespace id
+path = ""
+#TODO: need posix attributes modeled here
+files = (LI)
+
+@url = jumpscale.bcdb.fs.file.2
+name* = "" (S)
+description*** = "" (S)
+content*** = "" (S)                                                             #optional e.g. for a markdown document
+size_bytes = ""
+tags = (LS)
+#TODO: need posix attributes modeled here
+blocks = (LI)                                                                   #is link to the blocks which are the content
+type = "doc,markdown,spreadsheet,web,code,text,presentation,image,video"     
+extension** = ""                                                                #e.g. xls, 
+
+
+@url = jumpscale.bcdb.fs.block.2
+md5* = ""
+size = (I)
+content = (BIN)
