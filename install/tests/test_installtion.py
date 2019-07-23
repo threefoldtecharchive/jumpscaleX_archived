@@ -11,11 +11,15 @@ class Test_instaltion(BaseTest):
         self.info("Delete jumpscale created container.")
         if not self.check_js_container_installtion():
             pass
-        command = "/tmp/jsx container_delete"
+        command = "/tmp/jsx container-delete"
         output, error = self.linux_os(command)
         command = "docker ps -a | grep {}".format(self.js_container)
         output, error = self.linux_os(command)
         self.assertFalse(output)
+
+        self.info("stop ssh-agent")
+        command = "ssh-agent -k"
+        output, error = self.linux_os(command)
 
     def test01_install_jumpscale_inside_docker(self):
         """
