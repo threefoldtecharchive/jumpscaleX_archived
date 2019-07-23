@@ -2270,11 +2270,11 @@ class MyEnv:
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             MyEnv.sshagent = SSHAgent()
             MyEnv.sshagent.key_default
-            if secret is None:
-                if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    MyEnv.secret_set()  # will create a new one only when it doesn't exist
-            else:
-                MyEnv.secret_set(secret)
+        if secret is None:
+            if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
+                MyEnv.secret_set()  # will create a new one only when it doesn't exist
+        else:
+            MyEnv.secret_set(secret)
 
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
@@ -3538,7 +3538,7 @@ class DockerContainer:
             args_txt += " --branch %s" % branch
         if not MyEnv.interactive:
             args_txt += " --no-interactive"
-
+        
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
@@ -3556,7 +3556,6 @@ class DockerContainer:
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
-
         self.sshexec(cmd)
 
         cmd = """
