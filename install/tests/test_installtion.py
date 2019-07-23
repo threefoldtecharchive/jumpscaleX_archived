@@ -141,7 +141,7 @@ class Test_instaltion_insystem(BaseTest):
     def tearDownClass(cls):
         pass 
 
-    def test01_install_jumpscale_insystem_no_interactive_and_re_install(self):
+    def test01_install_jumpscale_insystem_no_interactive(self):
         """
         test TC63, TC64
         ** Test installation of Jumpscale using insystem non-interactive option on Linux or mac OS **
