@@ -314,15 +314,18 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 else:
                     return False
             elif self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
-                    # we check on ports or process strings so we know for sure its down
-                    if len(self._get_processes_by_port_or_filter()) > 0:
-                        self._notify_state("running")
-                        return True
-                    self._notify_state("down")
-                    return False
+                # we check on ports or process strings so we know for sure its down
+                if len(self._get_processes_by_port_or_filter()) > 0:
+                    self._notify_state("running")
+                    return True
+                self._notify_state("down")
+                return False
             else:
                 try:
-                    pid = j.sal.process.getProcessPid(self.cmd_start)[0]
+                    cmd_start = self.cmd_start
+                    if "--port" in self.cmd_start:
+                        cmd_start = cmd_start.replace("--port ", "*:")
+                    pid = j.sal.process.getProcessPid(cmd_start)[0]
                     if pid > 0:
                         self._notify_state("running")
                         return True
@@ -496,7 +499,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 # means we have to wrap it in other way
                 # toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
                 import textwrap
-                toexec = ' '.join(textwrap.wrap(C3.replace('\n\n', ';').replace('\n', ';')))
+
+                toexec = " ".join(textwrap.wrap(C3.replace("\n\n", ";").replace("\n", ";")))
             else:
                 toexec = C3.strip()
             if self.path:
@@ -551,7 +555,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         # if tpath:
         #     j.sal.fs.remove(tpath)
         try:
-            self.pid = j.sal.process.getProcessPid(self.cmd_start)[0]
+            cmd_start = self.cmd_start
+            if "--port" in self.cmd_start:
+                cmd_start = cmd_start.replace("--port ", "*:")
+            self.pid = j.sal.process.getProcessPid(cmd_start)[0]
         except:
             pass
 
