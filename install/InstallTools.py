@@ -1630,6 +1630,7 @@ class Tools:
             dontpull means, we found .dontpull in the repodir, means code is being synced to the repo from remote, should not update
 
         """
+        
         prefix = "code"
         if "DIR_CODE" in MyEnv.config:
             accountdir = os.path.join(MyEnv.config["DIR_CODE"], "github", account)
@@ -1681,7 +1682,7 @@ class Tools:
         :return:
         """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.config["SSH_AGENT"] and MyEnv.config["INTERACTIVE"]:
+        if MyEnv.config["SSH_AGENT"] and MyEnv.interactive:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -2252,7 +2253,7 @@ class MyEnv:
 
         if sshagent_use and MyEnv.interactive:  # just a warning when interactive
             T = """
-            Is it ok to continue without SSH-Agent, are you sure?
+            Is it ok to continue with SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
 
@@ -2933,7 +2934,7 @@ class JumpscaleInstaller:
         self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
 
     def install(self, sandboxed=False, force=False, gitpull=False):
-
+        
         MyEnv.check_platform()
 
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
