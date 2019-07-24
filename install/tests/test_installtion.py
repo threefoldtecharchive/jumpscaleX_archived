@@ -158,7 +158,7 @@ class Test_instaltion_insystem(BaseTest):
         self.assertIn("BCDB INIT DONE", output.decode())
         self.assertFalse(error)
 
-        def test02_install_jumpscale_insystem_no_interactive_and_re_install(self):
+    def test02_install_jumpscale_insystem_no_interactive_and_re_install(self):
         """
         test TC65, TC66
         ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
