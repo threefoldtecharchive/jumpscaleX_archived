@@ -1,5 +1,4 @@
 click
-python3.6
 nose
 nose-progressive
 nose-testconfig
