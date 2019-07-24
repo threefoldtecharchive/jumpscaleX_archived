@@ -58,12 +58,11 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         :return:
         """
         C = """
-        #TODO:link
-        cp /sandbox/openresty/bin/resty /sandbox/bin/
+        ln -s /sandbox/openresty/bin/resty /sandbox/bin/resty
         rm  -rf /sandbox/openresty/pod
         rm  -rf /sandbox/openresty/site
         """
-        pass
+        self._execute(C)
 
     @builder_method()
     def sandbox(

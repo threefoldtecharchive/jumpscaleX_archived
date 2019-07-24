@@ -356,10 +356,10 @@ class BuilderBaseClass(BaseClass):
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
 
-        cmd = "cd %s\n. %s\n%s" % (self.bash.path, self.profile.profile_path, cmd)
+        cmd = "cd /tmp/\n. %s\n%s" % (self.profile.profile_path, cmd)
         name = self.__class__._name
         name = name.replace("builder", "")
-        path = "%s/builder_%s.sh" % (self.bash.path, name)
+        path = "/tmp/builder_%s.sh" % (name)
         self._log_debug("execute: '%s'" % path)
 
         if die:
@@ -368,7 +368,7 @@ class BuilderBaseClass(BaseClass):
 
         j.sal.fs.writeFile(path, contents=cmd)
 
-        return j.sal.process.execute(
+        rc, res, out = j.sal.process.execute(
             "bash %s" % path,
             cwd=None,
             timeout=timeout,
@@ -378,6 +378,8 @@ class BuilderBaseClass(BaseClass):
             replace=False,
             showout=showout,
         )
+        j.sal.fs.remove(path)
+        return (rc, res, out)
 
     def _copy(
         self,
