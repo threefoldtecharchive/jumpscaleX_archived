@@ -229,3 +229,6 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             out += "{RESET}"
         out = j.core.tools.text_strip(out, replace=True,ignore_error=True)
         return out
+
+    def __hash__(self):
+        return int(self.id)

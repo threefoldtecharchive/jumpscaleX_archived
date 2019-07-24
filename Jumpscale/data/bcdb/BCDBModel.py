@@ -246,12 +246,14 @@ class BCDBModel(j.application.JSBaseClass):
         args = {"name": name}
         return self.find(nid=nid, **args)
 
-    def search(self, text):
-        # FIXME: get the real nid
+    def search(self, text, property_name=None):
+        # FIXME: get the real nids
         objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.sid), text)
         res = []
         for obj in objs:
-            res.append(self.get(obj.split(":")[0]))
+            parts = obj.split(":")
+            if (property_name and parts[1] == property_name) or (not property_name):
+                res.append(self.get(parts[0]))
         return res
 
     def find(self, nid=1, **args):
@@ -471,6 +473,11 @@ class BCDBModel(j.application.JSBaseClass):
             if not o:
                 continue
             yield o
+
+    def _text_index_content_pre_(self, property_name, val, obj_id, nid=1):
+        """ A hook to be called before setting to the full text index
+        """
+        return property_name, val, obj_id, nid
 
     def __str__(self):
         out = "model:%s\n" % self.schema.url
