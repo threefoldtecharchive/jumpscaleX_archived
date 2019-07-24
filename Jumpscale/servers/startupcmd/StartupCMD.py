@@ -322,13 +322,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 return False
             else:
                 try:
-                    cmd_start = self.cmd_start
-                    if "--port" in self.cmd_start:
-                        cmd_start = cmd_start.replace("--port ", "*:")
-                    pid = j.sal.process.getProcessPid(cmd_start)[0]
-                    if pid > 0:
-                        self._notify_state("running")
-                        return True
+                    return j.sal.process.psfind("startupcmd_%s" % self.name)
                 except:
                     self._notify_state("down")
                     return False
@@ -466,7 +460,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {% if cmdpath != None %}
             cd {{cmdpath}}
             {% endif %}
-            {{cmd}}
+            bash -c \"exec -a startupcmd_{{name}} {{cmd}}\"
 
             """
         elif self.interpreter in ["direct", "python"]:
@@ -555,10 +549,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         # if tpath:
         #     j.sal.fs.remove(tpath)
         try:
-            cmd_start = self.cmd_start
-            if "--port" in self.cmd_start:
-                cmd_start = cmd_start.replace("--port ", "*:")
-            self.pid = j.sal.process.getProcessPid(cmd_start)[0]
+            self.pid = j.sal.process.getProcessPid("startipcmd_%s" % self.name)[0]
         except:
             pass
 
