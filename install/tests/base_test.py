@@ -2,9 +2,9 @@ import unittest
 import subprocess
 from loguru import logger
 import uuid, platform
+from parameterized import parameterized
 
 CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
-
 
 class BaseTest(unittest.TestCase):
     LOGGER = logger
@@ -75,3 +75,25 @@ class BaseTest(unittest.TestCase):
 
         return True
 
+    parameterized.expand("--no-interactive", "--no-interactive -r ")
+    def jumpscale_installtion_insystem(self, option):
+        self.info("curl installtion script")
+        command = "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/{}/install/jsx.py?$RANDOM > /tmp/jsx".format(
+            self.js_branch
+        )
+
+        self.linux_os(command)
+
+        self.info("Change installer script [/tmp/jsx]to be executed ")
+        command = "chmod +x /tmp/jsx"
+        self.linux_os(command)
+
+        
+        self.info("set a secret for jumpscale ")
+        command = "/tmp/jsx configure --no-interactive -s mypassword"
+        self.linux_os(command)
+        
+        self.info("Run script with install option")
+        command = "/tmp/jsx install {}".format(option)
+        output, error = self.linux_os(command)
+        return output, error
