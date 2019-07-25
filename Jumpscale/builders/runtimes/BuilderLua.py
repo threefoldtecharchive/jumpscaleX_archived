@@ -52,8 +52,8 @@ class BuilderLua(j.builders.system._BaseClass):
 
         def _clean_env(env_paths):
             build_lua_path = self._replace('{DIR_BUILD}/luarocks/')
-            clean_path = ';'.join([path for path in env_paths if not(
-                build_lua_path.startswith(build_lua_path) or build_lua_path.startswith('/root'))])
+            clean_path = ';'.join([path for path in env_paths.split(';') if not(
+                path.startswith(build_lua_path) or path.startswith('/root'))])
             return clean_path
 
         if not j.sal.fs.exists(self.ROCKS_PATHS_PROFILE):
@@ -75,8 +75,8 @@ class BuilderLua(j.builders.system._BaseClass):
 
         self.profile.env_set("LUA_PATH", lua_path)
         self.profile.env_set("LUA_CPATH", lua_cpath)
-        # self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include/luajit-2.1")
-        self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include")
+        self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include/luajit-2.1")
+        # self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include")
         self.profile.path_add("/sandbox/bin")
 
         path = luarocks_profile.env_get("PATH").replace(";", ":")
@@ -143,6 +143,7 @@ class BuilderLua(j.builders.system._BaseClass):
 
         # lua-resty-influx
         lua-resty-repl
+        lua-resty-auto-ssl
         #
         # lua-resty-iputils
         #
