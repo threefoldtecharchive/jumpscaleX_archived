@@ -176,7 +176,7 @@ class BuilderTools(j.builders.system._BaseClass):
             to = self.joinpaths("{DIR_TEMP}", j.sal.fs.getBaseName(url))
 
         if not j.sal.fs.exists(to):
-            raise RuntimeError("cannot find:%s" % to)
+            self.dir_ensure(to)
 
         to = self._replace(to)
 
@@ -598,6 +598,7 @@ class BuilderTools(j.builders.system._BaseClass):
     # =============================================================================
 
     def joinpaths(self, *args):
+        args = [self._replace(arg) for arg in args]
         return j.sal.fs.joinPaths(*args)
 
     def path_relative(self, path):
