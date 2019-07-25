@@ -187,7 +187,7 @@ class BuilderLua(j.builders.system._BaseClass):
         )
         self.tools.execute(cmd, die=False)
         cmd = self._replace(
-            "rsync -rav /sandbox/openresty/luarocks/share/lua/5.1/luarocks/  /sandbox/openresty/lualib/"
+            "rsync -rav /sandbox/openresty/luarocks/share/lua/5.1/  /sandbox/openresty/lualib/"
         )
         self.tools.execute(cmd, die=False)
 
