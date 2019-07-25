@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
@@ -31,7 +32,6 @@ def main(self):
         parent.save()
         root.dirs.append(parent.id)
 
-
         # create subdirs
         for k in range(1, 3):
             subdir = dir_model.new()
@@ -39,7 +39,6 @@ def main(self):
             subdir.path = "{}{}/".format(parent.path, k)
             subdir.save()
             parent.dirs.append(subdir.id)
-
 
         # create files
         for k in range(1, 3):
@@ -53,5 +52,4 @@ def main(self):
 
         parent.save()
     root.save()
-    j.shell()
     res = file_model.files_search(tags="color:blue")

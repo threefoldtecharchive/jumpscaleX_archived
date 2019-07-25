@@ -1,6 +1,6 @@
 # BCDB technical overview
 
-BCDB is a librairie to index and store data
+BCDB is a library to index and store data
 
 ## indexing
 Indexing is done with redis and sqlite
