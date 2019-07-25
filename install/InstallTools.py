@@ -3540,6 +3540,12 @@ class DockerContainer:
             args_txt += " --branch %s" % branch
         if not MyEnv.interactive:
             args_txt += " --no-interactive"
+            cmd = "scp -P {} -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -r {} root@localhost:/sandbox/cfg/".format(
+                self.config.sshport, MyEnv.config_file_path
+            )
+            Tools.execute(cmd)
         
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):

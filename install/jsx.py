@@ -230,8 +230,8 @@ def container_install(
 
     """
     IT = load_install_tools(branch=branch)
-    IT.MyEnv.interactive = True
-    interactive = not no_interactive
+    # IT.MyEnv.interactive = True
+    # interactive = not no_interactive
 
     _configure(configdir=configdir, no_interactive=no_interactive)
 
@@ -296,7 +296,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
     """
     # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
     IT = load_install_tools(branch=branch)
-    IT.MyEnv.interactive = True
+    # IT.MyEnv.interactive = True
     _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
