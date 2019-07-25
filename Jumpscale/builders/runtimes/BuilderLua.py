@@ -182,13 +182,11 @@ class BuilderLua(j.builders.system._BaseClass):
             self.lua_rock_install("lua-resty-jwt", reset=reset)
             self.lua_rock_install("lua-resty-iyo-auth", reset=reset)  # need to check how to get this to work on OSX
 
-        cmd = self._replace(
-            "rsync -rav  /sandbox/openresty/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib"
-        )
+        cmd = "rsync -rav  /sandbox/openresty/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib"
         self.tools.execute(cmd, die=False)
-        cmd = self._replace(
-            "rsync -rav /sandbox/openresty/luarocks/share/lua/5.1/  /sandbox/openresty/lualib/"
-        )
+        cmd = "rsync -rav /sandbox/openresty/luarocks/share/lua/5.1/  /sandbox/openresty/lualib/"
+        self.tools.execute(cmd, die=False)
+        cmd = "rsync -rav /sandbox/openresty/luarocks/lib/lua/5.1/  /sandbox/openresty/lualib/"
         self.tools.execute(cmd, die=False)
 
     # def build_crypto(self):
