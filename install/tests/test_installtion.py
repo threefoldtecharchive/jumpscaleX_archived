@@ -1,5 +1,7 @@
-import os.path
 from .base_test import BaseTest
+from parameterized import parameterized
+import os
+
 
 class Test_instaltion(BaseTest):
     def setUp(self):
@@ -12,16 +14,13 @@ class Test_instaltion(BaseTest):
         if not self.check_js_container_installtion():
             pass
         command = "/tmp/jsx container-delete"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
+
         command = "docker ps -a | grep {}".format(self.js_container)
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertFalse(output)
 
-        self.info("stop ssh-agent")
-        command = "ssh-agent -k"
-        output, error = self.linux_os(command)
-
-    def test01_install_jumpscale_inside_docker(self):
+    def Test01_install_jumpscale_inside_docker(self):
         """
         TCRTC45,TC54
         ** test installtion of jumpscale on linux or mac dependes on os_type **
@@ -31,12 +30,12 @@ class Test_instaltion(BaseTest):
         """
 
         self.info("Install jumpscale from {} branch in {} os type".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installtion()
+        output, error = self.jumpscale_installtion("container-install", "-n {}".format(self.js_container))
         self.assertIn("install succesfull", output.decode())
 
         self.info(" Run container_kosmos ,should succeed")
         command = "/tmp/jsx container-kosmos"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertIn("BCDB INIT DONE", output.decode(), error)
         self.assertFalse(error)
 
@@ -57,19 +56,19 @@ class Test_instaltion(BaseTest):
 
         self.info("Run container stop ")
         command = "/tmp/jsx container-stop"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
 
         self.info("Check that container stopped successfully")
         command = "docker ps -a -f status=running  | grep {}".format(self.js_container)
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertFalse(output)
         self.info("Run container started ")
         command = "/tmp/jsx container-start"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
 
         self.info("Check that container started successfully")
         command = "docker ps -a -f status=running  | grep {}".format(self.js_container)
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertIn(self.js_container, output.decode())
 
     def Test03_jumpscale_installtion_inside_jumpscale_docker(self):
@@ -86,13 +85,13 @@ class Test_instaltion(BaseTest):
 
         self.info("Run kosmos command inside docker,should start kosmos shell")
         command = "docker exec -i {} /bin/bash -c 'source /sandbox/env.sh && kosmos'".format(self.js_container)
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertIn("BCDB INIT DONE", output.decode())
         self.info("Run js_init generate ")
         command = "docker exec -i {} /bin/bash -c 'source /sandbox/env.sh && js_init generate'".format(
             self.js_container
         )
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertIn("process", output.decode())
         self.assertFalse(error)
 
@@ -100,14 +99,14 @@ class Test_instaltion(BaseTest):
         command = "docker exec -i {} /bin/bash -c 'cd /sandbox/code/github/threefoldtech/jumpscaleX && cat .git/HEAD'".format(
             self.js_container
         )
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         branch = output.decode()[output.decode().find("head") + 6 : -2]
         self.assertEqual(branch, self.js_branch)
 
     def Test04_loaded_ssh_key_inside_jumpscale_docker(self):
         """
         TC52,TC57
-        ** test  that ssh-key loaded successfuly  dependes on os_type **
+        ** test  that ssh key loaded successfuly inside docker**
 
         #. check  that ssh-key loaded in docker  successfully.
         """
@@ -117,7 +116,7 @@ class Test_instaltion(BaseTest):
 
         self.info("check  that ssh-key loaded in docker  successfully")
         command = "docker exec -i {} /bin/bash -c 'cat /root/.ssh/authorized_keys'".format(self.js_container)
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertEqual(output.decode().strip("\n"), self.ssh_key)
 
 
@@ -134,11 +133,11 @@ class Test_instaltion_insystem(BaseTest):
         self.assertTrue(os.path.isfile("/tmp/jsx"))
         self.info("Clean old installation")
         command = "rm -rf ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
 
     @classmethod
     def tearDownClass(cls):
-        pass 
+        pass
 
     def test01_install_jumpscale_insystem_no_interactive(self):
         """
@@ -149,16 +148,16 @@ class Test_instaltion_insystem(BaseTest):
         """
 
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installtion_insystem("--no-interactive")
+        output, error = self.jumpscale_installtion("install")
         self.assertIn("install succesfull", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = " . /sandbox/env.sh; kosmos"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.assertIn("BCDB INIT DONE", output.decode())
         self.assertFalse(error)
 
-        def test02_install_jumpscale_insystem_no_interactive_and_re_install(self):
+    def test02_install_jumpscale_insystem_no_interactive_and_re_install(self):
         """
         test TC65, TC66
         ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
@@ -166,14 +165,17 @@ class Test_instaltion_insystem(BaseTest):
         #. Run kosmos ,should succeed
         """
 
-        self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
-            self.js_branch, self.os_type))
-        output, error = self.jumpscale_installtion_insystem("--no-interactive -r")
+        self.info(
+            "Install jumpscale from {} branch on {} using no_interactive and re-install".format(
+                self.js_branch, self.os_type
+            )
+        )
+        output, error = self.jumpscale_installtion("install", "-r")
         self.assertIn("install succesfull", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = " . /sandbox/env.sh; kosmos"
-        output, error = self.linux_os(command)
+        output, error = self.os_command(command)
         self.info("Check for reinstallation is done successfully")
         self.assertIn("Distributor ID", output.decode())
         self.assertIn("BCDB INIT DONE", output.decode())
