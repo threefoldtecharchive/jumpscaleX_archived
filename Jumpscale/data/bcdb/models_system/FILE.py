@@ -14,19 +14,20 @@ class FILE(j.data.bcdb._BCDBModelClass):
         text e.g. : color__red ftype__doc importance__1
 
         """
-        obj = self.get(obj_id)
-        out = ""
         if property_name == "tags":
+            obj = self.get(obj_id)
+            out = ""
             for tag in obj.tags:
                 out += tag.replace(":", "__") + " "
-        # Add more meta data as tags
-        type = str(obj.type).lower()
-        if type:
-            out += "type__%s " % type
-        ext = str(obj.extension).lower()
-        if ext:
-            out += "ext__%s " % ext
-        return property_name, out, obj_id, nid
+            # Add more meta data as tags
+            type = str(obj.type).lower()
+            if type:
+                out += "type__%s " % type
+            ext = str(obj.extension).lower()
+            if ext:
+                out += "ext__%s " % ext
+            val = out
+        return property_name, val, obj_id, nid
 
     def files_search(
         self,
