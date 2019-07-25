@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 import time
+from psutil import NoSuchProcess
 
 
 class StartupCMD(j.application.JSBaseConfigClass):
@@ -146,7 +147,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :return:
         """
         for p in self._get_processes_by_port_or_filter():
-            p.kill()
+            try:
+                p.kill()
+            except NoSuchProcess:
+                pass  # already killed
 
     def _softkill(self):
         """
@@ -561,7 +565,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             return True
         return self._corex_local
 
-    ####TMUX
+    #### TMUX
 
     @property
     def _pane(self):
