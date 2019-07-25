@@ -34,7 +34,7 @@ class BaseTest(unittest.TestCase):
     def get_js_branch(self):
         command = "cd {} && cat .git/HEAD".format(self.repo_location)
         output, error = self.os_command(command)
-        branch = output.decode()[output.decode().find("head") + 6 : -2]
+        branch = output.decode()[output.decode().find("head") + 6 : -1]
         return branch
 
     def get_os_type(self):
@@ -57,7 +57,6 @@ class BaseTest(unittest.TestCase):
         self.info("Change installer script [/tmp/jsx]to be executed ")
         command = "chmod +x /tmp/jsx"
         self.os_command(command)
-
         self.info("Configure the non-interactive option")
         command = "/tmp/jsx configure --no-interactive -s mysecret;"
         output, error = self.os_command(command)
@@ -73,6 +72,8 @@ class BaseTest(unittest.TestCase):
         output, error = self.os_command(command)
         if error:
             output, error = self.jumpscale_installtion("container-install", "-n {}".format(self.js_container))
+            if error:
+                return False
             if "install succesfull" not in output.decode():
                 return False
 
