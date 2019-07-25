@@ -1,5 +1,5 @@
 from Jumpscale import j
-from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
+from Jumpscale.builders.runtimes.BuilderGolang import BuilderGolangTools
 
 import os
 import textwrap

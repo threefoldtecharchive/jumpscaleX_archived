@@ -1719,97 +1719,97 @@ class group_builders(JSGroup):
     @property
     def db(self):
         if self._db is None:
-            from Jumpscale.builders.builder.db.BuildDBFactory import BuildDBFactory
+            from Jumpscale.builders.db.BuildDBFactory import BuildDBFactory
             self._db =  BuildDBFactory()
         return self._db
     @property
     def virtualization(self):
         if self._virtualization is None:
-            from Jumpscale.builders.builder.virtualization.BuilderVirtualizationFactory import BuilderAppsFactory
+            from Jumpscale.builders.virtualization.BuilderVirtualizationFactory import BuilderAppsFactory
             self._virtualization =  BuilderAppsFactory()
         return self._virtualization
     @property
     def systemtools(self):
         if self._systemtools is None:
-            from Jumpscale.builders.builder.systemtools.BuilderSystemToolsFactory import BuilderSystemToolsFactory
+            from Jumpscale.builders.systemtools.BuilderSystemToolsFactory import BuilderSystemToolsFactory
             self._systemtools =  BuilderSystemToolsFactory()
         return self._systemtools
     @property
     def apps(self):
         if self._apps is None:
-            from Jumpscale.builders.builder.apps.BuilderAppsFactory import BuilderAppsFactory
+            from Jumpscale.builders.apps.BuilderAppsFactory import BuilderAppsFactory
             self._apps =  BuilderAppsFactory()
         return self._apps
     @property
     def libs(self):
         if self._libs is None:
-            from Jumpscale.builders.builder.libs.BuilderLibsFactory import BuilderLibsFactory
+            from Jumpscale.builders.libs.BuilderLibsFactory import BuilderLibsFactory
             self._libs =  BuilderLibsFactory()
         return self._libs
     @property
     def tools(self):
         if self._tools is None:
-            from Jumpscale.builders.builder.tools.BuilderTools import BuilderTools
+            from Jumpscale.builders.tools.BuilderTools import BuilderTools
             self._tools =  BuilderTools()
         return self._tools
     @property
     def web(self):
         if self._web is None:
-            from Jumpscale.builders.builder.web.BuilderWebFactory import BuilderWebFactory
+            from Jumpscale.builders.web.BuilderWebFactory import BuilderWebFactory
             self._web =  BuilderWebFactory()
         return self._web
     @property
     def storage(self):
         if self._storage is None:
-            from Jumpscale.builders.builder.storage.BuilderStorageFactory import BuilderAppsFactory
+            from Jumpscale.builders.storage.BuilderStorageFactory import BuilderAppsFactory
             self._storage =  BuilderAppsFactory()
         return self._storage
     @property
     def _template(self):
         if self.__template is None:
-            from Jumpscale.builders.builder.TEMPLATE.BuilderGrafanaFactory import GrafanaFactory
+            from Jumpscale.builders.TEMPLATE.BuilderGrafanaFactory import GrafanaFactory
             self.__template =  GrafanaFactory()
         return self.__template
     @property
     def _template(self):
         if self.__template is None:
-            from Jumpscale.builders.builder.monitoring.BuilderGrafanaFactory import BuilderGrafanaFactory
+            from Jumpscale.builders.monitoring.BuilderGrafanaFactory import BuilderGrafanaFactory
             self.__template =  BuilderGrafanaFactory()
         return self.__template
     @property
     def monitoring(self):
         if self._monitoring is None:
-            from Jumpscale.builders.builder.monitoring.BuilderMonitoringFactory import BuilderMonitoringFactory
+            from Jumpscale.builders.monitoring.BuilderMonitoringFactory import BuilderMonitoringFactory
             self._monitoring =  BuilderMonitoringFactory()
         return self._monitoring
     @property
     def blockchain(self):
         if self._blockchain is None:
-            from Jumpscale.builders.builder.blockchain.BuilderBlockchainFactory import BuilderBlockchainFactory
+            from Jumpscale.builders.blockchain.BuilderBlockchainFactory import BuilderBlockchainFactory
             self._blockchain =  BuilderBlockchainFactory()
         return self._blockchain
     @property
     def system(self):
         if self._system is None:
-            from Jumpscale.builders.builder.system.BuilderSystemFactory import BuilderSystemPackage
+            from Jumpscale.builders.system.BuilderSystemFactory import BuilderSystemPackage
             self._system =  BuilderSystemPackage()
         return self._system
     @property
     def runtimes(self):
         if self._runtimes is None:
-            from Jumpscale.builders.builder.runtimes.BuilderRuntimesFactory import BuilderRuntimesFactory
+            from Jumpscale.builders.runtimes.BuilderRuntimesFactory import BuilderRuntimesFactory
             self._runtimes =  BuilderRuntimesFactory()
         return self._runtimes
     @property
     def network(self):
         if self._network is None:
-            from Jumpscale.builders.builder.network.BuilderNetworkFactory import BuilderNetworkFactory
+            from Jumpscale.builders.network.BuilderNetworkFactory import BuilderNetworkFactory
             self._network =  BuilderNetworkFactory()
         return self._network
     @property
     def buildenv(self):
         if self._buildenv is None:
-            from Jumpscale.builders.builder.buildenv.BuildEnv import BuildEnv
+            from Jumpscale.builders.buildenv.BuildEnv import BuildEnv
             self._buildenv =  BuildEnv()
         return self._buildenv
 

@@ -1,6 +1,6 @@
 from Jumpscale import j
 from unittest.mock import MagicMock
-from Jumpscale.builder.test.builder.base_test import BaseTest
+from Jumpscale.builders.test.builder.base_test import BaseTest
 
 
 class BuilderBaseTest(BaseTest):
