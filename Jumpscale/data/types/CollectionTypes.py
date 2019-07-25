@@ -121,6 +121,10 @@ class Dictionary(TypeBaseClass):
             j.data.serializers.json.loads(s)
             return s
 
+    def toData(self, v):
+        v = self.clean(v)
+        return j.data.serializers.msgpack.dumps(v)
+
     def clean(self, v=""):
         """
         supports binary, string & dict

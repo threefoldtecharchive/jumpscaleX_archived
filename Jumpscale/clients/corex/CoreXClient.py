@@ -83,7 +83,6 @@ class CoreXClient(j.application.JSBaseConfigClass):
         if pid:
             for item in res:
                 if int(item["pid"]) == pid:
-                    self.id = ""  # because other one no longer valid
                     return item
 
     def ui_link_print(self, corex_id):

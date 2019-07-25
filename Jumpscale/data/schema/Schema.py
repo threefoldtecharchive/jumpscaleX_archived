@@ -369,6 +369,18 @@ class Schema(j.application.JSBaseClass):
         return res
 
     @property
+    def properties_index_text(self):
+        """
+        list of the properties which are used for indexing with keys
+        :return:
+        """
+        res = []
+        for prop in self.properties:
+            if prop.index_text:
+                res.append(prop)
+        return res
+
+    @property
     def properties_unique(self):
         """
         list of the properties which are used for indexing with keys

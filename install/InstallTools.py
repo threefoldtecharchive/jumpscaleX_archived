@@ -2,8 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development_jumpscale"]
-
+DEFAULTBRANCH = "development_jumpscale"
 import socket
 import grp
 import os
@@ -458,13 +457,17 @@ if redis:
                     self.__class__._redis_cli_path_ = "redis-cli"
             return self.__class__._redis_cli_path_
 
-        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=[], args=[]):
+        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=None, args=None):
             """
 
             :param command:
             :param args:
             :return:
             """
+            if not keys:
+                keys = []
+            if not args:
+                args = []
             rediscmd = self._redis_cli_path
             if debug:
                 rediscmd += " --ldb"
@@ -823,7 +826,7 @@ class Tools:
             script = """
             pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
             pip3 install pudb
-            pip3 install pygments            
+            pip3 install pygments
             """
             Tools.execute(script, interactive=True)
 
@@ -899,7 +902,9 @@ class Tools:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
 
     @staticmethod
-    def text_strip(content, ignorecomments=False, args={}, replace=False, executor=None, colors=True):
+    def text_strip(
+        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, ignore_error=False
+    ):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -937,7 +942,9 @@ class Tools:
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content=content, args=args, executor=executor, text_strip=False)
+            content = Tools.text_replace(
+                content=content, args=args, executor=executor, text_strip=False, ignore_error=ignore_error
+            )
         else:
             if colors and "{" in content:
                 for key, val in MyEnv.MYCOLORS.items():
@@ -1079,8 +1086,10 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["DEBUG"] and MyEnv.config.get("log_printer"):
-            p = MyEnv.config["log_printer"]
+        if MyEnv.config["DEBUG"] or logdict.get('use_custom_printer'):
+            custom_printer = MyEnv.config.get("log_printer")
+            if custom_printer:
+                p = custom_printer
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
@@ -1621,6 +1630,7 @@ class Tools:
             dontpull means, we found .dontpull in the repodir, means code is being synced to the repo from remote, should not update
 
         """
+        
         prefix = "code"
         if "DIR_CODE" in MyEnv.config:
             accountdir = os.path.join(MyEnv.config["DIR_CODE"], "github", account)
@@ -1672,7 +1682,7 @@ class Tools:
         :return:
         """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.config["SSH_AGENT"]:
+        if MyEnv.config["SSH_AGENT"] and MyEnv.interactive:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -1691,7 +1701,7 @@ class Tools:
         args["NAME"] = repo
 
         if branch is None:
-            branch = ["development", "master"]
+            branch = "development_jumpscale"
         elif isinstance(branch, str):
             if "," in branch:
                 branch = [branch.strip() for branch in branch.split(",")]
@@ -1700,7 +1710,7 @@ class Tools:
         else:
             raise RuntimeError("branch should be a string or list, now %s" % branch)
 
-        args["BRANCH"] = branch[0]
+        args["BRANCH"] = branch
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1792,9 +1802,8 @@ class Tools:
                     assert getbranch(args=args) == branch
                 return True
 
-            for branch_item in branch:
-                if checkoutbranch(args, branch_item):
-                    return
+            if checkoutbranch(args, branch):
+                return
 
             raise RuntimeError("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
@@ -2015,6 +2024,7 @@ class MyEnv:
         if MyEnv.readonly:
             return "/tmp/jumpscale"
         if Tools.exists("/sandbox"):
+            Tools.dir_ensure("/sandbox")
             return "/sandbox"
         p = "%s/sandbox" % MyEnv._homedir_get()
         if not Tools.exists(p):
@@ -2098,7 +2108,7 @@ class MyEnv:
     #     --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
     #
     #     --readonly                      default is false
-    #     --no_interactive                default is interactive, means will ask questions
+    #     --no-interactive                default is interactive, means will ask questions
     #     --debug_configure               default debug_configure is False, will configure in debug mode
     #     """
     #     return Tools.text_strip(C)
@@ -2125,10 +2135,10 @@ class MyEnv:
         --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --no_sshagent                  default is to use the sshagent, if you want to disable use this flag
+        --no-sshagent                  default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
-        --no_interactive                default is interactive, means will ask questions
+        --no-interactive                default is interactive, means will ask questions
         --debug_configure               default debug_configure is False, will configure in debug mode
 
         :param configdir: is the directory where all configuration & keys will be stored
@@ -2242,9 +2252,9 @@ class MyEnv:
         for key, val in config.items():
             MyEnv.config[key] = val
 
-        if not sshagent_use and MyEnv.interactive:  # just a warning when interactive
+        if sshagent_use and MyEnv.interactive:  # just a warning when interactive
             T = """
-            Is it ok to continue without SSH-Agent, are you sure?
+            Is it ok to continue with SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
 
@@ -2257,24 +2267,22 @@ class MyEnv:
                     sys.exit(1)
 
         # defaults are now set, lets now configure the system
-        if False and sshagent_use:
+        if sshagent_use:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             MyEnv.sshagent = SSHAgent()
             MyEnv.sshagent.key_default
+        if secret is None:
+            if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
+                MyEnv.secret_set()  # will create a new one only when it doesn't exist
         else:
-            if secret is None:
-                if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    MyEnv.secret_set()  # will create a new one only when it doesn't exist
-            else:
-                MyEnv.secret_set(secret)
+            MyEnv.secret_set(secret)
 
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
 
     @staticmethod
     def secret_set(secret=None):
-        assert "SECRET" not in MyEnv.config
         while not secret:  # keep asking till the secret is not empty
             secret = Tools.ask_password("provide secret to use for encrypting private key")
         secret = secret.encode()
@@ -2305,7 +2313,7 @@ class MyEnv:
         if reset is False and MyEnv.__init:
             return
 
-        # print("MYENV INIT")
+            # print("MYENV INIT")
 
         args = Tools.cmd_args_get()
 
@@ -2516,13 +2524,12 @@ class BaseInstaller:
             cd {DIR_BASE}
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/cfg/ {DIR_BASE}/cfg/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/bin/ {DIR_BASE}/bin/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/openresty/ {DIR_BASE}/openresty/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var
 
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
         else:
 
@@ -2535,7 +2542,7 @@ class BaseInstaller:
             rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
             mkdir -p root
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             if MyEnv.platform() == "darwin":
                 reponame = "sandbox_osx"
@@ -2556,7 +2563,7 @@ class BaseInstaller:
             args = {}
             args["REPONAME"] = reponame
 
-            Tools.execute(script, interactive=True, args=args)
+            Tools.execute(script, interactive=MyEnv.interactive, args=args)
 
             script = """
             set -e
@@ -2564,7 +2571,7 @@ class BaseInstaller:
             source env.sh
             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             Tools.log("INSTALL FOR BASE OK")
 
@@ -2876,6 +2883,7 @@ class UbuntuInstaller:
         """
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_docker_install")
+        
 
     @staticmethod
     def python_redis_install():
@@ -2897,7 +2905,7 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
+        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools", "libgeoip-dev", "libcapnp-dev"]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -2927,7 +2935,7 @@ class JumpscaleInstaller:
         self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
 
     def install(self, sandboxed=False, force=False, gitpull=False):
-
+        
         MyEnv.check_platform()
 
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
@@ -3066,7 +3074,8 @@ class DockerFactory:
 
             if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
                 UbuntuInstaller.docker_install()
-
+                MyEnv._cmd_installed["docker"] = shutil.which("docker")
+                
             if not Tools.cmd_installed("docker"):
                 print("Could not find Docker installed")
                 sys.exit(1)
@@ -3212,9 +3221,11 @@ class DockerContainer:
             if self.config.sshport != newport:
                 self.config.sshport = newport
                 self.config.save()
-
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
             MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+
+        if len(MyEnv.sshagent.keys_list()) == 0:
+            raise RuntimeError("Please load your ssh-agent with a key!")
 
     @property
     def _path(self):
@@ -3307,7 +3318,7 @@ class DockerContainer:
                     CONFIG[i] = MyEnv.config[i]
 
             Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
-            shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
+            #shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
 
         if not self.container_exists:
 
@@ -3373,7 +3384,7 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
-            Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+            Tools.execute("ssh-keyscan -H 3bot >> ~/.ssh/known_hosts")
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
@@ -3514,7 +3525,7 @@ class DockerContainer:
 
     def jumpscale_install(self, secret=None, privatekey=None, redo=False, web=True, pull=False, branch=None):
 
-        args_txt = " --no-interactive"
+        args_txt = ""
         if secret:
             args_txt += " --secret='%s'" % secret
         if privatekey:
@@ -3527,7 +3538,15 @@ class DockerContainer:
             args_txt += " --pull"
         if branch:
             args_txt += " --branch %s" % branch
-
+        if not MyEnv.interactive:
+            args_txt += " --no-interactive"
+            cmd = "scp -P {} -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -r {} root@localhost:/sandbox/cfg/".format(
+                self.config.sshport, MyEnv.config_file_path
+            )
+            Tools.execute(cmd)
+        
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
@@ -3545,7 +3564,6 @@ class DockerContainer:
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
-
         self.sshexec(cmd)
 
         cmd = """
@@ -3659,7 +3677,7 @@ class SSHAgent:
         def ask_key(key_names):
             if len(key_names) == 1:
                 if MyEnv.interactive:
-                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % self.key_names[0]):
+                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % key_names[0]):
                         return None
                 name = key_names[0]
             elif len(key_names) == 0:

@@ -7,7 +7,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="export")'
 
     """
-    j.servers.zdb.start_test_instance()
+    j.servers.zdb.test_instance_start()
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test
@@ -51,12 +51,12 @@ def main(self):
             j.sal.fs.remove(p)
             bcdb.export(path=p, encrypt=encr)
 
-        obj = m2.get(3)
+        obj = m2.get(13)  # because we check the second model that's start with id 11
 
         bcdb.reset()
 
         try:
-            m2.get(3)
+            m2.get(13)
             raise RuntimeError("should not exist")
         except:
             pass
@@ -64,7 +64,7 @@ def main(self):
         bcdb.import_(path=p)
 
         m3 = bcdb.model_get_from_schema(SCHEMA)
-        obj2 = m3.get(3)
+        obj2 = m3.get(13)
 
         assert obj2._ddict_hr == obj._ddict_hr
         assert obj2._data == obj._data

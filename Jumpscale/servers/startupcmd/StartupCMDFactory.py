@@ -50,19 +50,20 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             # make sure corex is there
             j.servers.corex.default.check()
             corex = j.servers.corex.default.client
-
-            self.http.executor = "corex"
-            self.http.corex_client_name = corex.name
-            self.http.timeout = 5
-            self.http.delete()
-            self.http.cmd_start = "python3 -m http.server"  # starts on port 8000
+            self.http.interpreter = 'direct'
             self.http.ports = 8000
             self.http.executor = "corex"
             self.http.corex_client_name = corex.name
-            self.http.start()
+            self.http.timeout = 5
+            self.http.cmd_start = "python3 -m http.server"  # starts on port 8000
 
-            j.shell()
-            self.http.stop()
+            self.http.start()
+            assert self.http.is_running() == True
+            assert self.http.pid
+
+            r = self.http.stop()
+
+            assert self.http.is_running() == False
             self.http.delete()
 
         # NOT WORKING, SOMETHING WEIRD
@@ -106,7 +107,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
 
         http_tmux()
         http_back()
-        # http_corex()
+        http_corex()
 
         tmux_background()
 

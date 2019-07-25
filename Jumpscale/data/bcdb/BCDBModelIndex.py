@@ -35,6 +35,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         self._ids_last = {}  # need to keep last id per namespace
 
         self.storclient = self.bcdb.storclient
+        self._sonic = None
 
         self.readonly = self.bcdbmodel.readonly
 
@@ -42,6 +43,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
         if reset:
             self.destroy()
+
+    @property
+    def sonic(self):
+        if not self._sonic:
+            self._sonic = j.clients.sonic.get_client_bcdb()
+        return self._sonic
 
     def destroy(self, nid=None):
         """
@@ -52,6 +59,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         """
         self._key_index_destroy(nid=nid)
         self._ids_destroy(nid=nid)
+        self._text_index_destroy_()
 
     def set(self, obj):
         """
@@ -62,6 +70,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         """
         self._sql_index_set(obj)
         self._key_index_set(obj)
+        self._text_index_set(obj)
         assert obj.nid
         self._id_set(obj.id, nid=obj.nid)
 
@@ -76,6 +85,34 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._id_delete(obj.id)
             self._sql_index_delete(obj)
             self._key_index_delete(obj)
+            self._text_index_delete(obj)
+
+    ###### Full text indexing
+
+    def _text_index_keys_get_(self, property_name, val, obj_id, nid=1):
+        """
+        gets the keys to be used to index data to sonic:
+        Collection: {BCDB_NAME}
+        Bucket: {NAMESPACEID}:{SCHEMA_ID}
+        Object: {obj_id}:{property_name}
+        Data: {value}
+        """
+        if val:
+            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.sid), "{}:{}".format(obj_id, property_name), val
+        else:
+            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.sid), "{}:{}".format(obj_id, property_name)
+
+    def _text_index_set_(self, property_name, val, obj_id, nid=1):
+        args = self.bcdbmodel._text_index_content_pre_(property_name, val, obj_id, nid)
+        keys = self._text_index_keys_get_(*args)
+        self.sonic.push(*keys)
+
+    def _text_index_delete_(self, property_name, val, obj_id, nid=1):
+        keys = self._text_index_keys_get_(property_name, None, obj_id, nid)
+        self.sonic.flush_object(*keys)
+
+    def _text_index_destroy_(self):
+        self.sonic.flush(self.bcdb.name)
 
     ###### INDEXER ON KEYS:
 
@@ -293,6 +330,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     if obj._schema.url == self.schema.url:
                         self.set(obj)
                         yield obj.id
+            # IS TOO HARSH NEED TO FIND OTHER SOLUTION FOR IT
+            # else:
+            #     for obj in list(self.bcdb.get_all()):
+            #         if obj._schema.url == self.schema.url:
+            #             self.set(obj)
+            #             yield obj.id
 
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
@@ -322,7 +365,8 @@ class BCDBModelIndex(j.application.JSBaseClass):
             r = self._ids_redis
             bin_id = struct.pack("<I", id)
             redis_list_key = self._id_redis_listkey_get(nid)
-            r.lrem(redis_list_key, 0, bin_id)  # should remove all redis elements of the list with this id
+            # should remove all redis elements of the list with this id
+            r.execute_command("LREM", redis_list_key, 0, bin_id)
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
             out = b""

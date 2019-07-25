@@ -15,7 +15,7 @@ os.environ["LC_ALL"] = "en_US.UTF-8"
 DEFAULT_BRANCH = "development_jumpscale"
 
 
-def load_install_tools():
+def load_install_tools(branch=None):
     # get current install.py directory
     path = "/sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py"
     if not os.path.exists(path):
@@ -26,6 +26,11 @@ def load_install_tools():
             url = (
                 "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
             )
+
+            if branch:
+                url = "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % branch
+                print("Downloading Install Tools from branch %s" % branch)
+
             with urlopen(url) as resp:
                 if resp.status != 200:
                     raise RuntimeError("fail to download InstallTools.py")
@@ -56,7 +61,6 @@ def check_branch(IT):
 
 
 IT = load_install_tools()
-
 IT.MyEnv.interactive = True  # std is interactive
 
 
@@ -86,7 +90,6 @@ def _configure(
 ):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
-
     IT.MyEnv.configure(
         basedir=basedir,
         readonly=None,
@@ -111,11 +114,13 @@ def _configure(
         j.data.nacl.configure(privkey_words=privatekey_words)
 
 
+"""
 if not IT.MyEnv.state:
     # this is needed to make sure we can install when nothing has been done yet
     _configure()
 
 # IT.BaseInstaller.base()
+"""
 
 
 @click.group()
@@ -174,7 +179,7 @@ def configure(
 
 
 # INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
-@click.command()
+@click.command(name="container-install")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option(
@@ -202,7 +207,7 @@ def configure(
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 def container_install(
     name="3bot",
     scratch=False,
@@ -210,7 +215,7 @@ def container_install(
     web=False,
     portrange=1,
     image=None,
-    branch=DEFAULT_BRANCH,
+    branch=None,
     reinstall=False,
     no_interactive=False,
     pull=False,
@@ -224,14 +229,19 @@ def container_install(
 
 
     """
-    interactive = not no_interactive
+    IT = load_install_tools(branch=branch)
+    # IT.MyEnv.interactive = True
+    # interactive = not no_interactive
 
-    _configure(configdir=configdir)
+    _configure(configdir=configdir, no_interactive=no_interactive)
 
     if scratch:
         image = "phusion/baseimage"
     if not image:
         image = "despiegk/3bot"
+
+    if not branch:
+        branch = DEFAULT_BRANCH
 
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange, image=image)
 
@@ -241,6 +251,7 @@ def container_install(
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    IT.MyEnv.sshagent.key_default
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
     if existcheck:
         if name not in IT.DockerFactory.containers_running():
@@ -259,7 +270,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--web", is_flag=True, help="also install the web system")
-# @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+# @click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -284,6 +295,8 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
 
     """
     # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
+    IT = load_install_tools(branch=branch)
+    # IT.MyEnv.interactive = True
     _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
@@ -292,6 +305,9 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
         force = True
     else:
         force = False
+
+    if not branch:
+        branch = DEFAULT_BRANCH
 
     installer = IT.JumpscaleInstaller(branch=branch)
     installer.install(sandboxed=False, force=force, gitpull=pull)
@@ -304,7 +320,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
     print("Jumpscale X installed successfully")
 
 
-@click.command()
+@click.command(name="container-import")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/saendbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
@@ -321,7 +337,7 @@ def container_import(name="3bot", path=None, imagename="despiegk/3bot", no_start
     docker.import_(path=path, imagename=imagename, start=start)
 
 
-@click.command()
+@click.command(name="container-export")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-p", "--path", default=None, help="image location")
@@ -340,7 +356,7 @@ def container_export(name="3bot", path=None, no_overwrite=False, skip_if_exists=
     docker.export(path=path, skip_if_exists=skip_if_exists, overwrite=overwrite)
 
 
-@click.command()
+@click.command(name="container-clean")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_clean(name="3bot", configdir=None):
@@ -355,7 +371,7 @@ def container_clean(name="3bot", configdir=None):
     docker.clean()
 
 
-@click.command()
+@click.command(name="container-stop")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_stop(name="3bot", configdir=None):
@@ -369,7 +385,7 @@ def container_stop(name="3bot", configdir=None):
     docker.stop()
 
 
-@click.command()
+@click.command(name="container-start")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_start(name="3bot", configdir=None):
@@ -383,7 +399,7 @@ def container_start(name="3bot", configdir=None):
     docker.start()
 
 
-@click.command()
+@click.command(name="container-delete")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_delete(name="3bot", configdir=None):
@@ -397,7 +413,7 @@ def container_delete(name="3bot", configdir=None):
     docker.delete()
 
 
-@click.command()
+@click.command(name="container-reset")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 def containers_reset(configdir=None):
     """
@@ -409,7 +425,7 @@ def containers_reset(configdir=None):
     IT.DockerFactory.reset()
 
 
-@click.command()
+@click.command(name="container-kosmos")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_kosmos(name="3bot", configdir=None):
@@ -448,7 +464,7 @@ def kosmos(name="3bot", target="auto", configdir=None):
     j.shell(loc=False, locals_=locals(), globals_=globals())
 
 
-@click.command()
+@click.command(name="container-shell")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 def container_shell(name="3bot", configdir=None):
@@ -457,7 +473,7 @@ def container_shell(name="3bot", configdir=None):
     :param name: name of container if not the default
     :return:
     """
-
+    IT.MyEnv
     docker = container_get(name=name)
     os.execv(
         shutil.which("ssh"),
@@ -486,7 +502,7 @@ def wireguard(configdir=None):
         docker.wireguard.connect()
 
 
-@click.command()
+@click.command(name="modules-install")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("--url", default="3bot", help="git url e.g. https://github.com/myfreeflow/kosmos")
 def modules_install(url=None, configdir=None):
@@ -544,17 +560,16 @@ if __name__ == "__main__":
     # cli.add_command(bcdb_indexrebuild)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
-
     if not IT.DockerFactory.indocker():
-        cli.add_command(container_kosmos)
-        cli.add_command(container_install)
-        cli.add_command(container_stop)
-        cli.add_command(container_start)
-        cli.add_command(container_delete)
-        cli.add_command(containers_reset)
-        cli.add_command(container_export)
-        cli.add_command(container_import)
-        cli.add_command(container_shell)
-        cli.add_command(container_clean)
+        cli.add_command(container_kosmos, "container-kosmos")
+        cli.add_command(container_install, "container-install")
+        cli.add_command(container_stop, "container-stop")
+        cli.add_command(container_start, "container-start")
+        cli.add_command(container_delete, "container-delete")
+        cli.add_command(containers_reset, "containers-reset")
+        cli.add_command(container_export, "container-export")
+        cli.add_command(container_import, "container-import")
+        cli.add_command(container_shell, "container-shell")
+        cli.add_command(container_clean, "container-clean")
 
     cli()

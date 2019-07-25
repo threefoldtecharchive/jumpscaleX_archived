@@ -31,6 +31,8 @@ class JSFactoryConfigsBaseClass(JSFactoryTools, JSConfigs):
 
     """
 
+    pass
+
 
 class JSBaseConfigsClass(JSConfigs):
     """
@@ -38,11 +40,15 @@ class JSBaseConfigsClass(JSConfigs):
     has support for 1 type of children
     """
 
+    pass
+
 
 class JSBaseConfigClass(JSConfig):
     """
     no children, only 1 data object
     """
+
+    pass
 
 
 class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
@@ -50,9 +56,22 @@ class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
     no children, only 1 data object
     """
 
+    pass
+
 
 class JSBaseFactoryClass(JSBase, JSFactoryTools):
     pass
+
+
+class JSBaseConfigsConfigFactoryClass(JSConfig, JSFactoryTools, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
+
+    pass
+    # def __init__(self, **kwargs):
+    #     JSConfigsFactory.__init__(**kwargs)
+    #     JSConfig.__init__(**kwargs)
 
 
 class Application(object):
@@ -94,6 +113,8 @@ class Application(object):
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
         self.JSBaseFactoryClass = JSBaseFactoryClass
         self.JSConfigClass = JSConfig
+        self.JSConfigsClass = JSConfigs
+        self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
 
     @property
     def appname(self):

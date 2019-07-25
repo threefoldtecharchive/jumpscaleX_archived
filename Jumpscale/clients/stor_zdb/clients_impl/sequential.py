@@ -4,7 +4,7 @@ import redis
 from Jumpscale import j
 
 from ..ZDBClientBase import ZDBClientBase
-
+from ..ZDBAdminClientBase import ZDBAdminClientBase
 
 MODE = "seq"
 
@@ -40,3 +40,7 @@ class ZDBClientSeqMode(ZDBClientBase):
     def exists(self, key):
         key = self._key_encode(key)
         return self.redis.execute_command("EXISTS", key) == 1
+
+
+class ZDBClientSeqModeAdmin(ZDBClientSeqMode, ZDBAdminClientBase):
+    pass

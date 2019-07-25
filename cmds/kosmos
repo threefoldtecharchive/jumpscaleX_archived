@@ -46,6 +46,7 @@ if options.debug:
     j.core.myenv.debug = True
     j.core.myenv.config["LOGGER_INCLUDE"] = ["*"]
     j.tools.logger.reload()
+    j.tools.logger.debug = True
 
 
 def instruction_process(ddict):

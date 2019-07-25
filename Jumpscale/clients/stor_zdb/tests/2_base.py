@@ -78,9 +78,11 @@ def main(self):
 
     nsname = "newnamespace"
 
-    c = self.client_admin_get(port=9901)
+    c = self.client_admin_get(name="admin", port=9901)
+
     c.namespace_new(nsname, secret="1234", maxsize=1000)
-    ns = self.client_get(nsname, secret="1234", port=9901)
+
+    ns = self.get(name=nsname, nsname=nsname, secret_="1234", port=9901)
     ns.flush()
 
     assert ns.nsinfo["data_limits_bytes"] == 1000

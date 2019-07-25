@@ -4,34 +4,29 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
-# DO NEVER USE CONFIG MANAGEMENT CLASSES
-class ZDBServer(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jslocation__ = "j.servers.zdb"
-        JSBASE.__init__(self)
-        self.configure()
-        #
+JSConfigClient = j.application.JSBaseConfigClass
 
-    def configure(
-        self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456", executor="tmux"
-    ):
-        """
 
-        :param name:
-        :param addr:
-        :param port:
-        :param datadir:
-        :param mode:
-        :param adminsecret:
-        :param executor: tmux or corex
-        :return:
-        """
-        self.name = name
-        self.addr = addr
-        self.port = port
-        self.mode = mode
-        self.adminsecret = adminsecret
-        self.executor = executor
+class ZDBServer(JSConfigClient):
+    _SCHEMATEXT = """
+           @url =  jumpscale.sonic.server.1
+           name* = "default" (S)
+           addr = "127.0.0.1" (S)
+           port = 9900 (I)
+           adminsecret_ = "123456" (S)
+           executor = "tmux"
+           mode = "seq"
+           """
+
+    def _init(self, **kwargs):
+        self._datadir = ""
+
+    @property
+    def datadir(self):
+        if not self._datadir:
+            self._datadir = "%s/zdb/%s" % (j.core.myenv.config["DIR_VAR"], self.name)
+
+        return self._datadir
 
     def isrunning(self):
         idir = "%s/index/" % (self.datadir)
@@ -50,7 +45,7 @@ class ZDBServer(j.application.JSBaseClass):
 
             j.shell()
 
-    def start(self, destroydata=False, corex=False):
+    def start(self):
         """
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
@@ -58,23 +53,7 @@ class ZDBServer(j.application.JSBaseClass):
         kosmos 'j.servers.zdb.start()'
 
         """
-
-        if not destroydata and j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
-            r = j.clients.redis.get(ipaddr=self.addr, port=self.port)
-            r.ping()
-            return ()
-
-        if destroydata:
-            self.destroy()
-
         self.startupcmd.start()
-
-        self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
-
-        res = j.sal.nettools.waitConnectionTest(self.addr, self.port)
-        if res is False:
-            raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.name, self.addr, self.port))
-
         self.client_admin_get()  # should also do a test, so we know if we can't connect
 
     def stop(self):
@@ -84,25 +63,21 @@ class ZDBServer(j.application.JSBaseClass):
     @property
     def startupcmd(self):
 
-        if self.executor == "corex":
-            j.servers.corex.default.check()
-            corex = j.servers.corex.default.client
+        # zdb doesn't understand hostname
+        addr = socket.gethostbyname(self.addr)
 
         idir = "%s/index/" % (self.datadir)
         ddir = "%s/data/" % (self.datadir)
         j.sal.fs.createDir(idir)
         j.sal.fs.createDir(ddir)
 
-        # zdb doesn't understand hostname
-        addr = socket.gethostbyname(self.addr)
-
         cmd = "zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect" % (
-            addr,
+            self.addr,
             self.port,
             idir,
             ddir,
             self.mode,
-            self.adminsecret,
+            self.adminsecret_,
         )
         return j.servers.startupcmd.get(
             name="zdb", cmd_start=cmd, path="/tmp", ports=[self.port], executor=self.executor
@@ -122,7 +97,7 @@ class ZDBServer(j.application.JSBaseClass):
         """
 
         """
-        cl = j.clients.zdb.client_admin_get(addr=self.addr, port=self.port, secret=self.adminsecret, mode=self.mode)
+        cl = j.clients.zdb.client_admin_get(addr=self.addr, port=self.port, secret=self.adminsecret_, mode=self.mode)
         return cl
 
     def client_get(self, nsname="default", secret="1234"):
@@ -135,61 +110,3 @@ class ZDBServer(j.application.JSBaseClass):
         assert cl.ping()
 
         return cl
-
-    def start_test_instance(self, destroydata=True, namespaces=[], admin_secret="123456", namespaces_secret="1234"):
-        """
-
-        kosmos 'j.servers.zdb.start_test_instance(reset=True)'
-
-        start a test instance with self.adminsecret 123456
-        will use port 9901
-        and name = test
-
-        production is using other ports and other secret
-
-        :return:
-        """
-        self.name = "test"
-        self.port = 9901
-        self.mode = "seq"
-        self.adminsecret = admin_secret
-        self.tmux_panel = "p11"
-
-        self.start()
-
-        cla = self.client_admin_get()
-        if destroydata:
-            j.clients.redis._cache_clear()  # make sure all redis connections gone
-
-        for ns in namespaces:
-            if not cla.namespace_exists(ns):
-                cla.namespace_new(ns, secret=namespaces_secret)
-            else:
-                if destroydata:
-                    cla.namespace_delete(ns)
-                    cla.namespace_new(ns, secret=namespaces_secret)
-
-        if destroydata:
-            j.clients.redis._cache_clear()  # make sure all redis connections gone
-
-        return self.client_admin_get()
-
-    def build(self, reset=True):
-        """
-        kosmos 'j.servers.zdb.build()'
-        """
-        j.builders.db.zdb.install(reset=reset)
-
-    def test(self, build=False):
-        """
-        kosmos 'j.servers.zdb.test(build=True)'
-        """
-        self.destroy()
-        if build:
-            self.build()
-        self.start_test_instance(namespaces=["test"])
-        self.stop()
-        self.start()
-        cl = self.client_get(nsname="test")
-
-        print("TEST OK")

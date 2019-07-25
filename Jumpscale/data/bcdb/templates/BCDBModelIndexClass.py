@@ -7,7 +7,6 @@ class {{BASENAME}}(BCDBModelIndex):
     {% if index.active %}
 
     def _init_index(self):
-
         self._log_info("init index:%s"%self.schema.url)
 
         p = j.clients.peewee
@@ -105,6 +104,34 @@ class {{BASENAME}}(BCDBModelIndex):
         return
 
     def _key_index_delete(self,obj):
+        return
+
+    {%- endif %}
+
+    {%- if index.active_text %}
+    def _text_index_set(self,obj):
+        {%- for property_name in index.fields_text %}
+        val = obj.{{property_name}}
+        if val not in ["",None]:
+            val=str(val)
+            # self._log_debug("key:{{property_name}}:%s:%s"%(val,obj.id))
+            self._text_index_set_("{{property_name}}",val,obj.id,nid=obj.nid)
+        {%- endfor %}
+
+    def _text_index_delete(self,obj):
+        {%- for property_name in index.fields_text %}
+        val = obj.{{property_name}}
+        if val not in ["",None]:
+            val=str(val)
+            self._log_debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
+            self._text_index_delete_("{{property_name}}",val,obj.id,nid=obj.nid)
+        {%- endfor %}
+
+    {% else %}
+    def _text_index_set(self,obj):
+        return
+
+    def _text_index_delete(self,obj):
         return
 
     {%- endif %}

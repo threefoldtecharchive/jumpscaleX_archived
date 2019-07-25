@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 import time
+from psutil import NoSuchProcess
 
 
 class StartupCMD(j.application.JSBaseConfigClass):
@@ -15,6 +16,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         path = ""
         env = (dict)
         ports = (LI)
+        ports_udp = (LI)
         timeout = 10
         process_strings = (ls)
         process_strings_regex = (ls)
@@ -26,9 +28,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
         state = "init,running,error,stopped,stopping,down,notfound" (E)
         corex_client_name = "default" (S)
         corex_id = (S)
-        
+
         error = "" (S)
-        
+
         time_start = (T)
         time_refresh = (T)
         time_stop = (T)
@@ -50,6 +52,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         self.pid = 0
         self.state = "init"
         self.corex_id = ""
+
+    @property
+    def data(self):
+        return self._data
 
     @property
     def _cmd_path(self):
@@ -141,7 +147,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
         :return:
         """
         for p in self._get_processes_by_port_or_filter():
-            p.kill()
+            try:
+                p.kill()
+            except NoSuchProcess:
+                pass  # already killed
 
     def _softkill(self):
         """
@@ -201,10 +210,12 @@ class StartupCMD(j.application.JSBaseConfigClass):
             # if [item.name for item in self._pane.window.panes] == ["main"]:
             #     # means we only had the main tmux window left, that one can be closed
             #     self._pane.mgmt.window.server.kill_server()
+            self._pane_ = None
             self._notify_state("stopped")
             return True
 
     def refresh(self):
+
         self._log_info("refresh: %s" % self.name)
 
         self.time_refresh = j.data.time.epoch
@@ -271,10 +282,22 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def is_running(self):
 
-        # self._log_debug("running:%s" % self.name)
+        if self._local and self.pid > 0:
+            self._notify_state("running")
+            return True
+
         if self._local and self.ports != []:
             for port in self.ports:
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                    self._notify_state("down")
+                    return False
+                else:
+                    self._notify_state("running")
+                    return True
+
+        if self._local and self.ports_udp != []:
+            for port in self.ports_udp:
+                if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port) == False:
                     self._notify_state("down")
                     return False
                 else:
@@ -284,7 +307,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
             if not self.pid and not self.corex_id:
                 return self._error_raise("cannot check running don't have pid or corex_id")
             self.refresh()
-            j.shell()
 
         if self._local:
             p = self.process
@@ -295,12 +317,17 @@ class StartupCMD(j.application.JSBaseConfigClass):
                     return True
                 else:
                     return False
+            elif self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
+                # we check on ports or process strings so we know for sure its down
+                if len(self._get_processes_by_port_or_filter()) > 0:
+                    self._notify_state("running")
+                    return True
+                self._notify_state("down")
+                return False
             else:
-                if self.ports != [] or self.process_strings != "" or self.process_strings_regex != "":
-                    # we check on ports or process strings so we know for sure its down
-                    if len(self._get_processes_by_port_or_filter()) > 0:
-                        self._notify_state("running")
-                        return True
+                try:
+                    return j.sal.process.psfind("startupcmd_%s" % self.name)
+                except:
                     self._notify_state("down")
                     return False
 
@@ -320,14 +347,18 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if self._local:
             # are going to wait for first conditions
-            if self.ports != []:
+            if self.ports != [] or self.ports_udp != []:
                 while j.data.time.epoch < end:
                     nr = 0
+                    nr_port_check = len(self.ports) + len(self.ports_udp)
                     for port in self.ports:
                         if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
                             nr += 1
-                    if nr == len(self.ports) and nr > 0:
-                        self._log_info("IS HALTED based on TCP %s" % self.name)
+                    for port2 in self.ports_udp:
+                        if j.sal.nettools.udpPortConnectionTest(ipaddr="localhost", port=port2) == False:
+                            nr += 1
+                    if nr == nr_port_check and nr > 0:
+                        self._log_info("IS HALTED based on TCP/UDP %s" % self.name)
                         break
 
                     time.sleep(0.05)
@@ -368,12 +399,13 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if timeout is None:
             timeout = self.timeout
         end = j.data.time.epoch + timeout
-        if self.ports == []:
+        if self.ports == [] and self.ports_udp == []:
             time.sleep(0.5)  # need this one or it doesn't check if it failed
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
         while j.data.time.epoch < end:
             if self._local:
                 r = self.is_running()
+                # self._log_debug("check run: now:%s end:%s" % (j.data.time.epoch, end))
                 if r is True:
                     return True
             else:
@@ -381,7 +413,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 time.sleep(1)
                 r = self._corex_client.process_info_get(pid=self.pid)
                 if r["state"] in ["stopped", "stopping", "error"]:
-                    self.error = self.logs
                     self.state = "error"
                     return False
                 elif r["state"] in ["running"]:
@@ -403,7 +434,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         """
         self._log_debug("start:%s" % self.name)
 
-        if self.executor == "foreground" is False:
+        if self.executor != "foreground":
             if reset:
                 self.stop()
                 self._hardkill()
@@ -418,7 +449,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if "\n" in self.cmd_start.strip():
             C = self.cmd_start
         elif self.interpreter == "bash":
-            C = """            
+            C = """
             reset
             {% if cmdobj.executor=='tmux' %}
             tmux clear
@@ -433,7 +464,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {% if cmdpath != None %}
             cd {{cmdpath}}
             {% endif %}
-            {{cmd}}
+            bash -c \"exec -a startupcmd_{{name}} {{cmd}}\"
 
             """
         elif self.interpreter in ["direct", "python"]:
@@ -446,6 +477,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
             {% endif %}
             {{cmd}}
             """
+        elif "\n" in self.cmd_start.strip():
+            C = self.cmd_start
+        else:
+            C = self.cmd_start
 
         C2 = j.core.text.strip(C)
 
@@ -460,7 +495,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
             tpath = None
             if "\n" in C3.strip():
                 # means we have to wrap it in other way
-                toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
+                # toexec = j.data.text.bash_wrap(C3)  # need to wrap a bash script to 1 line (TODO in text module)
+                import textwrap
+
+                toexec = " ".join(textwrap.wrap(C3.replace("\n\n", ";").replace("\n", ";")))
             else:
                 toexec = C3.strip()
             if self.path:
@@ -492,8 +530,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
             j.sal.fs.writeFile(tpath, C3 + "\n\n")
             j.sal.fs.chmod(tpath, 0o770)
 
-        self.pid = 0
-
         if self.executor == "foreground":
             self._notify_state("running")
             j.sal.process.executeInteractive(toexec)
@@ -501,7 +537,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             self._background_start(toexec)
         elif self.executor == "tmux":
             self._tmux_start(toexec)
-        elif self.executor != "corex":
+        elif self.executor == "corex":
             self._corex_start(toexec)
         else:
             return self._error_raise("could not find executor:'%s'" % self.executor)
@@ -516,6 +552,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         # if tpath:
         #     j.sal.fs.remove(tpath)
+        try:
+            self.pid = j.sal.process.getProcessPid("startupcmd_%s" % self.name)[0]
+        except:
+            pass
 
         self.save()
 
@@ -525,7 +565,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             return True
         return self._corex_local
 
-    ####TMUX
+    #### TMUX
 
     @property
     def _pane(self):
@@ -566,15 +606,14 @@ class StartupCMD(j.application.JSBaseConfigClass):
     def _corex_client(self):
         return j.clients.corex.get(name=self.corex_client_name)
 
-    def _corex_start(self, path):
-
+    def _corex_start(self, toexec):
         if self.state == "error":
-            return self._error_raise("process in error:\n%s" % p)
+            return self._error_raise("process in error:\n%s" % toexec)
 
         if self.state == "running":
             return
 
-        r = self._corex_client.process_start("sh %s" % path)
+        r = self._corex_client.process_start(toexec)
 
         self.pid = r["pid"]
         self.corex_id = r["id"]
@@ -637,12 +676,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
     @property
     def _corex_local(self):
         if not self._corex_local_:
-            self._corex_local_ = False  # FOR DEBUG
-            # self._corex_local_ = self._corex_client.addr.lower() in ["localhost", "127.0.0.1"]
+            self._corex_local_ = self._corex_client.addr.lower() in ["localhost", "127.0.0.1"]
         return self._corex_local_
 
     def _corex_refresh(self):
-
         res = self._corex_client.process_info_get(pid=self.pid, corex_id=self.corex_id)
 
         def update(res, state):

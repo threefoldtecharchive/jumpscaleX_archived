@@ -64,10 +64,8 @@ class JSXObject(j.application.JSBaseClass):
         :return:
         """
 
-        if self._model is not None and self._readonly:
+        if self._model is not None and self._model.readonly:
             raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
-        if self._readonly:
-            raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
             self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
@@ -116,7 +114,7 @@ class JSXObject(j.application.JSBaseClass):
             if serialize:
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
-            if self._readonly:
+            if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
@@ -137,9 +135,16 @@ class JSXObject(j.application.JSBaseClass):
                         # can for sure not be ok
                         raise j.exceptions.Input(msg)
                     elif len(r) == 1:
-                        if not self.id == r[0].id:
-                            # j.shell()
-                            raise j.exceptions.Input(msg)
+                        if self.id:
+                            if not self.id == r[0].id:
+                                # j.shell()
+                                raise j.exceptions.Input(msg)
+                        else:
+                            self.id = r[0].id
+                            self._ddict_hr  # to trigger right serialization
+                            if self._data == r[0]._data:
+                                assert self._model.sid == r[0]._model.sid
+                                return self  # means data was not changed
 
                 o = self._model.set(self)
                 self.id = o.id
@@ -151,7 +156,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def delete(self):
         if self._model:
-            if self._readonly:
+            if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)

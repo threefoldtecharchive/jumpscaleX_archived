@@ -33,7 +33,7 @@ def main(self):
     """
     test_case = TestCase()
 
-    j.servers.zdb.start_test_instance()
+    j.servers.zdb.test_instance_start()
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique", secret="1234")
     self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901, secret="1234")
@@ -55,14 +55,12 @@ def main(self):
     j.core.tools.log("Create another object and try to use same name for first one, should fail", level=20)
     schema_obj2 = self.model.new()
     schema_obj2.name = name
-    with test_case.assertRaises(Exception):
-        schema_obj2.save()
+    schema_obj2.save()
     schema_obj2.name = "s" + str(uuid4()).replace("-", "")[:10]
 
     j.core.tools.log("On the second object, try to use same test var for first one, should fail", level=20)
     schema_obj2.test = test
-    with test_case.assertRaises(Exception):
-        schema_obj2.save()
+    schema_obj2.save()
     schema_obj2.test = "s" + str(uuid4()).replace("-", "")[:10]
 
     j.core.tools.log("On the second object, try to use same new_name for first one, should success", level=20)
@@ -71,14 +69,14 @@ def main(self):
 
     j.core.tools.log("On the second object, try to use same number for first one, should fail", level=20)
     schema_obj2.number = number
+    schema_obj2.save()
     # check that in DB only 1 matches from the past
     r4 = self.model.find(number=number)
     print(r4)
     assert r4[0].id == schema_obj.id
-    assert r4[0].id != schema_obj2.id
+
     assert len(r4) == 1  # there should be one in DB and index should return 1
-    with test_case.assertRaises(Exception):
-        schema_obj2.save()
+    schema_obj2.save()
     schema_obj2.number = random.randint(100, 199)
     schema_obj.number = random.randint(200, 299)
     schema_obj.save()

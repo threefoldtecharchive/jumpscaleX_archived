@@ -251,3 +251,8 @@ class SSHAgent(j.application.JSBaseClass):
         # on mac does not seem to work
         skey.unload()
         assert skey.is_loaded() is False
+
+    # def __str__(self):
+    #     return "j.clients.sshagent"
+    #
+    # __repr__ = __str__

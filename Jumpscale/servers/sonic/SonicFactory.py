@@ -12,8 +12,7 @@ class SonicFactory(JSConfigs):
     __jslocation__ = "j.servers.sonic"
     _CHILDCLASS = SonicServer
 
-    def __init__(self):
-        JSConfigs.__init__(self)
+    def _init(self, **kwargs):
         self._default = None
 
     @property
@@ -28,17 +27,27 @@ class SonicFactory(JSConfigs):
         """
         j.builders.apps.sonic.install(reset=reset)
 
-    def test(self):
+    def test(self, start=True):
         """
         kosmos 'j.servers.sonic.test()'
         :return:
         """
+        s = self.get(name="test_instance")
+        s.save()
+        if start:
+            s.start()
 
-        # TODO: start sonic and test sonic through the client
+        client = s.default_client
 
-        s = self.new("test")
-        s.start()
+        data = {
+            "post:1": "this is some test text hello",
+            "post:2": "this is a hello world post",
+            "post:3": "hello how is it going?",
+            "post:4": "for the love of god?",
+            "post:5": "for the love lorde?",
+        }
 
-        cl = s.default_client
+        for articleid, content in data.items():
+            client.push("forum", "posts", articleid, content)
 
-        pass
+        assert client.query("forum", "posts", "love") == ['post:5', 'post:4']

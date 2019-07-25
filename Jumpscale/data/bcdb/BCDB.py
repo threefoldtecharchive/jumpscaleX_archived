@@ -455,7 +455,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
-        model = cl()
+        model = cl(self)
         return self.model_add(model)
 
     def _schema_add(self, schema):
@@ -502,7 +502,7 @@ class BCDB(j.application.JSBaseClass):
                     toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
                     j.sal.fs.renameFile(schemapath, toml_path)
                     schemapath = toml_path
-            except:
+            except Exception as e:
                 error_count = errored.get(schemapath, 0)
                 if error_count > 3:
                     raise e
