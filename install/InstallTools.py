@@ -2024,6 +2024,7 @@ class MyEnv:
         if MyEnv.readonly:
             return "/tmp/jumpscale"
         if Tools.exists("/sandbox"):
+            Tools.dir_ensure("/sandbox")
             return "/sandbox"
         p = "%s/sandbox" % MyEnv._homedir_get()
         if not Tools.exists(p):
