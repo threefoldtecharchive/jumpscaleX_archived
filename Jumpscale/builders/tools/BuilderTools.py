@@ -176,7 +176,7 @@ class BuilderTools(j.builders.system._BaseClass):
             to = self.joinpaths("{DIR_TEMP}", j.sal.fs.getBaseName(url))
 
         if not j.sal.fs.exists(to):
-            self.dir_ensure(to)
+            self.dir_ensure(j.sal.fs.getDirName(to))
 
         to = self._replace(to)
 
