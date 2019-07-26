@@ -1086,7 +1086,7 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["DEBUG"] or logdict.get('use_custom_printer'):
+        if MyEnv.config["DEBUG"] or logdict.get("use_custom_printer"):
             custom_printer = MyEnv.config.get("log_printer")
             if custom_printer:
                 p = custom_printer
@@ -1630,7 +1630,7 @@ class Tools:
             dontpull means, we found .dontpull in the repodir, means code is being synced to the repo from remote, should not update
 
         """
-        
+
         prefix = "code"
         if "DIR_CODE" in MyEnv.config:
             accountdir = os.path.join(MyEnv.config["DIR_CODE"], "github", account)
@@ -2883,7 +2883,6 @@ class UbuntuInstaller:
         """
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_docker_install")
-        
 
     @staticmethod
     def python_redis_install():
@@ -2905,7 +2904,16 @@ class UbuntuInstaller:
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools", "libgeoip-dev", "libcapnp-dev"]  # "graphviz"
+        return [
+            "iproute2",
+            "python-ufw",
+            "ufw",
+            "libpq-dev",
+            "iputils-ping",
+            "net-tools",
+            "libgeoip-dev",
+            "libcapnp-dev",
+        ]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -2935,7 +2943,7 @@ class JumpscaleInstaller:
         self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
 
     def install(self, sandboxed=False, force=False, gitpull=False):
-        
+
         MyEnv.check_platform()
 
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
@@ -3075,7 +3083,7 @@ class DockerFactory:
             if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
                 UbuntuInstaller.docker_install()
                 MyEnv._cmd_installed["docker"] = shutil.which("docker")
-                
+
             if not Tools.cmd_installed("docker"):
                 print("Could not find Docker installed")
                 sys.exit(1)
@@ -3318,7 +3326,7 @@ class DockerContainer:
                     CONFIG[i] = MyEnv.config[i]
 
             Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
-            #shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
+            # shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
 
         if not self.container_exists:
 
@@ -3546,7 +3554,7 @@ class DockerContainer:
                 self.config.sshport, MyEnv.config_file_path
             )
             Tools.execute(cmd)
-        
+
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"

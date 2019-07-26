@@ -49,11 +49,15 @@ class BuilderLua(j.builders.system._BaseClass):
         self._execute(C, showout=True)
 
     def profile_installer_select(self):
-
         def _clean_env(env_paths):
-            build_lua_path = self._replace('{DIR_BUILD}/luarocks/')
-            clean_path = ';'.join([path for path in env_paths.split(';') if not(
-                path.startswith(build_lua_path) or path.startswith('/root'))])
+            build_lua_path = self._replace("{DIR_BUILD}/luarocks/")
+            clean_path = ";".join(
+                [
+                    path
+                    for path in env_paths.split(";")
+                    if not (path.startswith(build_lua_path) or path.startswith("/root"))
+                ]
+            )
             return clean_path
 
         if not j.sal.fs.exists(self.ROCKS_PATHS_PROFILE):

@@ -13,7 +13,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         interpreter = "bash,jumpscale,direct,python" (E)  #direct means we will not put in bash script
         cmd_stop = ""
         debug = False (b)
-        path = ""
+        path = "/tmp"
         env = (dict)
         ports = (LI)
         ports_udp = (LI)
@@ -41,6 +41,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
         self._pane_ = None
         self._corex_local_ = None
         self._logger_enable()
+        if self.path == "":
+            self.path = "/tmp"
 
         if self.executor == "corex":
             self._corex_clean()

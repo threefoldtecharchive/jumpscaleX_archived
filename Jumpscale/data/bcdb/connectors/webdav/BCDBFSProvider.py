@@ -3,7 +3,6 @@ from wsgidav import compat, util
 from wsgidav.dav_provider import DAVCollection, DAVNonCollection, DAVProvider
 
 
-
 class DirCollection(DAVCollection):
     """
     Handles all kinds of directory-like resources
@@ -16,7 +15,6 @@ class DirCollection(DAVCollection):
         self._files = {}
         self._dirs = {}
         self._init_members()
-
 
     def _init_members(self):
         self._files = {}
@@ -87,6 +85,8 @@ class DirCollection(DAVCollection):
 
 
 TMP_DIR = "/tmp/dav_tmp"
+
+
 class DocResource(DAVNonCollection):
     """
     Handles docs. a doc is bcdb data object treated like a documentation
@@ -131,7 +131,6 @@ class DocResource(DAVNonCollection):
         j.sal.fs.writeFile(TMP_DIR, self.vfile.content)
         return open(TMP_DIR, "wb")
 
-
     def end_write(self, with_errors):
         if j.sal.fs.exists(TMP_DIR):
             new_content = j.sal.fs.readFile(TMP_DIR)
@@ -150,7 +149,6 @@ class DocResource(DAVNonCollection):
         if is_move:
             self.delete()
         return True
-
 
 
 class BCDBFSProvider(DAVProvider):
@@ -178,4 +176,3 @@ class BCDBFSProvider(DAVProvider):
         else:
             print("> can't find objects for {}".format(name))
             return None
-

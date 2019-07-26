@@ -15,7 +15,15 @@ class SonicServer(JSConfigClient):
            """
 
     def _init(self, **kwargs):
-        self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "sonic_config.cfg")
+        self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "sonic_config_%s.cfg" % self.name)
+        if self.host == "localhost":
+            self.host = "127.0.0.1"
+
+        # NOT SURE NEXT IS CORRECT
+        # if self.host == "127.0.0.1" and j.core.myenv.platform_is_osx:
+        #     # ofcourse not ok, but is not for production anyhow, osx does not support the 127.0.0.1
+        #     self.host = "0.0.0.0"
+
         self._default_client = None
 
     def start(self):
@@ -25,14 +33,25 @@ class SonicServer(JSConfigClient):
         self._write_config()
         self.startupcmd.start()
 
-    def _write_config(self):
-        def do():
-            cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
-            args = {"host": self.host, "port": self.port, "password": self.password, "timeout": self.timeout}
-            j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
-            return self.config_path
+    @property
+    def _path(self):
 
-        return self._cache.get("sonic_{}_{}_{}".format(self.name, self.host, self.port), method=do, expire=3600)
+        p = "%s/sonic_db/%s" % (j.core.myenv.config["DIR_VAR"], self.name)
+        j.sal.fs.createDir("%s/kv" % p)
+        j.sal.fs.createDir("%s/fst" % p)
+        return p
+
+    def _write_config(self):
+        cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "sonic_config.cfg")
+        args = {
+            "host": self.host,
+            "port": self.port,
+            "password": self.password,
+            "timeout": self.timeout,
+            "datapath": self._path,
+        }
+        j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
+        return self.config_path
 
     @property
     def default_client(self):

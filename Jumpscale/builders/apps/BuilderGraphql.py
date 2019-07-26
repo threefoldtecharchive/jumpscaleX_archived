@@ -33,12 +33,14 @@ class BuilderGraphql(j.builders.system._BaseClass):
 
         # install graphql_ws,sanic, graphene, s
         # sanic-graphql
-        cmd = self._replace("""
+        cmd = self._replace(
+            """
             id -u graphuser &>/dev/null || useradd graphuser --home {APP_DIR} --no-create-home --shell /bin/bash
             chown -R graphuser:graphuser {APP_DIR}
             cd {APP_DIR}
             sudo -H -u graphuser python3 -m pip install --user -r requirements.txt
-        """)
+        """
+        )
         self._execute(cmd)
 
     @builder_method()
@@ -50,7 +52,7 @@ class BuilderGraphql(j.builders.system._BaseClass):
     def startup_cmds(self):
         # j.builders.db.zdb.start()
         start_script = self._replace(
-        """
+            """
         chown -R graphuser:graphuser {APP_DIR}
         cd {APP_DIR}
         sudo -H -u graphuser python3 app.py

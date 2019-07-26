@@ -52,7 +52,6 @@ class BCDBIndexMeta(j.application.JSBaseClass):
         for p in schema.properties_index_text:
             self.fields_text.append(p.name)
 
-
         self.active = len(self.fields) > 0
         self.active_keys = len(self.fields_key) > 0
         self.active_text = len(self.fields_text) > 0

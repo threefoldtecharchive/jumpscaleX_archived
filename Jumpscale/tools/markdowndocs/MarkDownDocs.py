@@ -138,6 +138,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             self._init_dav_test(model)
 
         from .DocsiteDavProvider import DocsteDavProvider
+
         rack = j.servers.rack.get()
         rack.webdav_server_add(name="docsites", webdavprovider=DocsteDavProvider("test_dav8"))
         rack.start()
@@ -149,7 +150,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         root.is_dir = True
         root.children = ["dir"]
         root.save()
-
 
         dir = model.new()
         dir.path = "/dir"
@@ -166,9 +166,8 @@ class MarkDownDocs(j.application.JSBaseClass):
             o.extension = "txt"
             o.content_type = "application/json"
             o.is_indexable = True
-            o.content = "{\"a\":\"a\"}"
+            o.content = '{"a":"a"}'
             o.save()
-
 
     def sonic_client_set(self, sonic_client):
         """

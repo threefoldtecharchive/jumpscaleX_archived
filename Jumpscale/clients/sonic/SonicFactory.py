@@ -41,4 +41,3 @@ class SonicFactory(JSConfigs):
         # assert client.suggest("forum", "posts", "lo") == ["lorde", "love"]
 
         print("TEST OK")
-

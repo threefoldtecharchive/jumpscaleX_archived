@@ -3,7 +3,6 @@ from wsgidav import compat, util
 from wsgidav.dav_provider import DAVCollection, DAVNonCollection, DAVProvider
 
 
-
 class DirCollection(DAVCollection):
     """
     Handles all kinds of directory-like resources
@@ -78,6 +77,8 @@ class DirCollection(DAVCollection):
 
 
 TMP_DIR = "/tmp/dav_tmp"
+
+
 class DocResource(DAVNonCollection):
     """
     Handles docs. a doc is bcdb data object treated like a documentation
@@ -122,7 +123,6 @@ class DocResource(DAVNonCollection):
         j.sal.fs.writeFile(TMP_DIR, self.vfile.content)
         return open(TMP_DIR, "wb")
 
-
     def end_write(self, with_errors):
         if j.sal.fs.exists(TMP_DIR):
             new_content = j.sal.fs.readFile(TMP_DIR)
@@ -146,6 +146,7 @@ class DocResource(DAVNonCollection):
 
 
 RESOURCE_MODEL_URL = "threebot.docsites.resource"
+
 
 class DocsteDavProvider(DAVProvider):
     def __init__(self, bcdb_name):
@@ -172,4 +173,3 @@ class DocsteDavProvider(DAVProvider):
         else:
             print("> can't find objects for {}".format(path))
             return None
-

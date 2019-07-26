@@ -67,4 +67,3 @@ class Application(WebSocketApplication):
 
     def on_open(self):
         self.client_gedis = j.clients.gedis.get("main", port=8900)
-

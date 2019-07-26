@@ -29,14 +29,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
             val = out
         return property_name, val, obj_id, nid
 
-    def files_search(
-        self,
-        type=None,
-        tags=None,
-        content=None,
-        description=None,
-        extension=None,
-    ):
+    def files_search(self, type=None, tags=None, content=None, description=None, extension=None):
         # import ipdb;ipdb.set_trace()
         return list(
             self.do_search(**dict(type=type, tags=tags, extension=extension, content=content, description=description))
@@ -66,5 +59,3 @@ class FILE(j.data.bcdb._BCDBModelClass):
             return set(res).intersection(next)
         else:
             return set(res)
-
-

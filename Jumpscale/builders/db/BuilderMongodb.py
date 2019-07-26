@@ -25,11 +25,13 @@ class BuilderMongodb(j.builders.system._BaseClass):
         """
         # install: python3 buildscripts/scons.py --prefix=/opt/mongo install
         bin_path = self.tools.joinpaths(self.DIR_BUILD, "mongod")
-        install_cmd = self._replace("""
+        install_cmd = self._replace(
+            """
             cp {BIN_PATH} {DIR_BIN}
             chown mongouser:mongouser {DIR_BIN}/mongod
             sudo -H -u mongouser mkdir {DIR_DATA}
-        """)
+        """
+        )
         self._execute(install_cmd)
 
     @builder_method()
@@ -64,10 +66,12 @@ class BuilderMongodb(j.builders.system._BaseClass):
         # create user
 
         self.tools.dir_ensure(self.DIR_HOME)
-        cmd = self._replace("""
+        cmd = self._replace(
+            """
             id -u mongouser &>/dev/null || useradd mongouser --home {DIR_HOME} --no-create-home --shell /bin/bash
             chown -R mongouser:mongouser {DIR_HOME}
-        """)
+        """
+        )
         self._execute(cmd)
 
         # build mongo
@@ -97,10 +101,12 @@ class BuilderMongodb(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmd_start = self._replace("""
+        cmd_start = self._replace(
+            """
             chown -R mongouser:mongouser {DIR_HOME}
             sudo -H -u mongouser {DIR_BIN}/mongod --dbpath '{DIR_DATA}'
-        """)
+        """
+        )
 
         cmd = j.servers.startupcmd.get(self.NAME, cmd_start=cmd_start)
         return [cmd]

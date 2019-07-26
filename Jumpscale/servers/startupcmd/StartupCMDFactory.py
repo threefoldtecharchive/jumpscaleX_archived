@@ -50,7 +50,7 @@ class StartupCMDFactory(j.application.JSBaseConfigsClass):
             # make sure corex is there
             j.servers.corex.default.check()
             corex = j.servers.corex.default.client
-            self.http.interpreter = 'direct'
+            self.http.interpreter = "direct"
             self.http.ports = 8000
             self.http.executor = "corex"
             self.http.corex_client_name = corex.name

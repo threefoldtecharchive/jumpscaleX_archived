@@ -50,4 +50,4 @@ class SonicFactory(JSConfigs):
         for articleid, content in data.items():
             client.push("forum", "posts", articleid, content)
 
-        assert client.query("forum", "posts", "love") == ['post:5', 'post:4']
+        assert client.query("forum", "posts", "love") == ["post:5", "post:4"]
