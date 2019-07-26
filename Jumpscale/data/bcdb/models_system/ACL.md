@@ -15,6 +15,8 @@ An access-control list (ACL), with  BCDB, is a list of permissions attached to a
   - properties of user:
     - name
     - description
+    - email
+    - threebot_id
     - user_members (corresponds to users)
     - circle_members (correspondes to circles)
   - behavior of access:
@@ -61,4 +63,9 @@ assert a.acl.rights_check(1, "rw") is True
 assert a.acl.rights_check(1, "w") is True
 
 
+```
+
+## run the test 
+``` python 
+j.data.bcdb.test(name="acl")
 ```
