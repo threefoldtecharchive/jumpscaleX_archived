@@ -74,7 +74,6 @@ class DirCollection(DAVCollection):
         return True
 
     def create_empty_resource(self, name):
-
         new_obj = self.provider._file_model.new()
         new_obj.name = j.sal.fs.joinPaths(self.path, name)
         new_obj.save()
@@ -97,17 +96,19 @@ class DocResource(DAVNonCollection):
         self.vfile = vfile
         self.content = self.vfile.content
         self._title = j.sal.fs.getBaseName(self.vfile.name)
+        self._model = self.provider._file_model
+        self._block_model = self.provider._block_model
 
     @property
     def title(self):
         return self._title
 
     def get_content(self):
-        html = self.content
-        return compat.BytesIO(html.encode("utf-8"))
+        res = self._model.filestream_get(self.vfile, self._block_model).read_stream_get()
+        return res
 
     def get_content_length(self):
-        return len(self.get_content().read())
+        return self.vfile.size_bytes
 
     def get_content_type(self):
         return self.vfile.content_type
@@ -121,22 +122,18 @@ class DocResource(DAVNonCollection):
     def handle_delete(self):
         self.vfile.delete()
         parent_path = j.sal.fs.getDirName(self.vfile.name)
-        parent = self.provider.get_by_path(parent_path)
+        parent = self.provider.get_by_name(parent_path)
         parent.children.remove(self.vfile.id)
         parent.save()
         return True
 
     def begin_write(self, content_type=None):
-        j.sal.fs.createEmptyFile(TMP_DIR)
-        j.sal.fs.writeFile(TMP_DIR, self.vfile.content)
-        return open(TMP_DIR, "wb")
+        return self._model.filestream_get(self.vfile, self._block_model)
 
+
+==== BASE ====
     def end_write(self, with_errors):
-        if j.sal.fs.exists(TMP_DIR):
-            new_content = j.sal.fs.readFile(TMP_DIR)
-            self.vfile.content = new_content
-            self.vfile.save()
-            j.sal.fs.remove(TMP_DIR)
+        pass
 
     def copy_move_single(self, dest_path, is_move):
         new_obj = self.provider._file_model.new()
@@ -144,7 +141,7 @@ class DocResource(DAVNonCollection):
         new_obj.content = self.vfile.content
         new_obj.save()
         new_parent_path = j.sal.fs.getDirName(dest_path) or "/"
-        parent = self.provider.get_by_path(new_parent_path)
+        parent = self.provider.get_by_name(new_parent_path)
         parent.children.append(new_obj.id)
         if is_move:
             self.delete()
@@ -157,6 +154,7 @@ class BCDBFSProvider(DAVProvider):
         self._bcdb = j.data.bcdb.get(bcdb_name)
         self._file_model = self._bcdb.model_get_from_file("{}/models_system/FILE.py".format(self._bcdb._dirpath))
         self._dir_model = self._bcdb.model_get_from_file("{}/models_system/DIR.py".format(self._bcdb._dirpath))
+        self._block_model = self._bcdb.model_get_from_file("{}/models_system/BLOCK.py".format(self._bcdb._dirpath))
 
     def get_resource_inst(self, path, environ):
         """

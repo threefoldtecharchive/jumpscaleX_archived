@@ -3,20 +3,22 @@
 @url = jumpscale.bcdb.user.2
 @acl = false
 name* = ""
-dm_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+threebot_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
 email* = ""                             #optional, not required
 pubkey = ""                             #public key of the 3bot
 ipaddr* = ""                            #how to reach the digitalme (3bot)
 
 @url = jumpscale.bcdb.circle.2          #circle of users
-name* = ""
+name* = "circle_bcdb"
 description = ""
+threebot_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+email* = ""    
 user_members = (LI)
-circle_members = (LSET)                 #a set is (int,int) is link to (dmid,circleid)
+circle_members = (LI)                 #a set is (int,int) is link to (dmid,circleid)
 
 @url = jumpscale.bcdb.acl.2
 @acl = false
-name* = ""                                      #give a unique name to an acl, needs to be unique
+name* = "acl2"                                      #give a unique name to an acl, needs to be unique
 description = ""                                #can be set by an owner, is to make it easy to understand
 circles = (LO) !jumpscale.bcdb.acl.circle.2
 users = (LO) !jumpscale.bcdb.acl.user.2
@@ -24,12 +26,14 @@ md5* = ""
 
 @url = jumpscale.bcdb.acl.circle.2
 @sub = true
-cid=  (SET)                                     #a set is (int,int) is link to (dmid,circleid)
+name*=""
+cid*= 1 (I)                                    
 rights = ""
 
 @url = jumpscale.bcdb.acl.user.2
 @sub = true
-uid= 0 (I)
+name*=""
+uid*= 0 (I)
 rights = ""
 
 
@@ -73,7 +77,7 @@ dir_id = (I)
 description*** = "" (S)
 content*** = "" (S)                                                             #optional e.g. for a markdown document
 content_type = "text/plain" (S)
-size_bytes = ""
+size_bytes = 0 (I)
 tags*** = (LS)
 #posixattr = (O) !jumpscale.bcdb.fs.posixattr.2
 blocks = (LI)                                                                   #is link to the blocks which are the content
