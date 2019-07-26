@@ -322,7 +322,7 @@ class BCDBModel(j.application.JSBaseClass):
                         # means is not in db
                         obj.acl.save()
                     else:
-                        if obj.acl.hash != acl2.hash:
+                        if obj.acl.md5 != acl2.md5:
                             obj.acl.id = None
                             obj.acl.save()  # means there is acl but not same as in DB, need to save
                             if obj.acl.readonly:
