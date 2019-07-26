@@ -21,7 +21,7 @@ class SonicFactory(JSConfigs):
             self._default = self.new(name="default")
         return self._default
 
-    def install(self, reset=True):
+    def install(self, reset=False):
         """
         kosmos 'j.servers.sonic.build()'
         """
@@ -32,6 +32,7 @@ class SonicFactory(JSConfigs):
         kosmos 'j.servers.sonic.test()'
         :return:
         """
+        self.install()
         s = self.get(name="test_instance")
         s.save()
         if start:
