@@ -44,6 +44,7 @@ def main(self):
             file.type = types[(k - 1) % 5]
             file.tags.append(tags[(k - 1) % 5])
             file.dir_id = parent.id
+            file.size_bytes = len(file.content.encode())
             file.save()
             parent.files.append(file.id)
 
