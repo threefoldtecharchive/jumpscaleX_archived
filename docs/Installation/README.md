@@ -108,9 +108,9 @@ Here we will install jumpscale using install option which willinstall jumpscale 
     - 2- download the installation file, make it executable, then run it
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;
         # change permission
-        chmod +x /tmp/jsx; \
+        chmod +x /tmp/jsx; 
         # install
         /tmp/jsx install 
         ```
@@ -121,11 +121,11 @@ Here we will install jumpscale using install option which willinstall jumpscale 
     - 2- download the installation file, make it executable,configure the installation with your secret, then run it
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;
         # change permission
-        chmod +x /tmp/jsx; \
+        chmod +x /tmp/jsx; 
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure --no-interactive -s mysecret;\
+        /tmp/jsx configure --no-interactive -s mysecret;
         # install
         /tmp/jsx install --no-interactive
         ```
@@ -193,7 +193,7 @@ If jsx is missing from your `/tmp` folder:
 ```bash
 # get the jsx command
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx ; \
-chmod +x /tmp/jsx; \
+chmod +x /tmp/jsx; 
 # get your kosmos shell (inside your 3bot container)
 /tmp/jsx container-kosmos
 ```
