@@ -128,11 +128,12 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if process_filter:
             for pstring in self.process_strings:
-                for pid in j.sal.process.getPidsByFilter(self.process_strings):
-                    p = j.sal.process.getProcessObject(pid)
-                    if p.pid not in pids_done:
-                        pids_done.append(p.pid)
-                        res.append(p)
+                for ps in self.process_strings:
+                    for pid in j.sal.process.getPidsByFilter(ps):
+                        p = j.sal.process.getProcessObject(pid)
+                        if p.pid not in pids_done:
+                            pids_done.append(p.pid)
+                            res.append(p)
 
             if self.process_strings_regex != []:
                 for pid in j.sal.process.getPidsByFilter(regex_list=self.process_strings_regex):
