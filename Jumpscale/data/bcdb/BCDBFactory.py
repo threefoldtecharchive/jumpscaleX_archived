@@ -148,7 +148,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :param storclient: can add this if bcdb instance doesn't exist
         :return:
         """
-        #DO NOT CHANGE if_not_exist_die NEED TO BE TRUE
+        # DO NOT CHANGE if_not_exist_die NEED TO BE TRUE
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
@@ -217,7 +217,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._config_write()
         self._load()
 
-        bcdb = self.get(name=name,if_not_exist_die=True)
+        bcdb = self.get(name=name, if_not_exist_die=True)
 
         if storclient:
             assert bcdb.storclient

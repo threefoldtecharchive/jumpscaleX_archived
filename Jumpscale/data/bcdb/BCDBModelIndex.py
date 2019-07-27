@@ -328,12 +328,13 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
             else:
                 # IS TOO HARSH NEED TO FIND OTHER SOLUTION FOR IT
-                self._log_warning("iterator was empty for bcdb:%s, will rebuild from backend, IS DANGEROUS" % self.bcdb.name)
+                self._log_warning(
+                    "iterator was empty for bcdb:%s, will rebuild from backend, IS DANGEROUS" % self.bcdb.name
+                )
                 for obj in list(self.bcdb.get_all()):
                     if obj._schema.url == self.schema.url:
                         self.set(obj)
                         yield obj.id
-
 
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)

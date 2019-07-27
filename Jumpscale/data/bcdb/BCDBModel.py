@@ -284,7 +284,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         res = []
         for id_ in ids:
-            res2 = self.get(id_, die=None)
+            res2 = self.get(id_, die=True)
             if res2 is None:
                 if delete_if_not_found:
                     for key, val in args.items():
