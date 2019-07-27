@@ -63,6 +63,7 @@ class Syncer(j.application.JSBaseConfigClass):
     def _init(self, **kwargs):
 
         self.sshclients = {}
+        self.monitor_greenlet = None
 
         for name in self.sshclient_names:
             self.sshclients_add(name)
@@ -83,7 +84,6 @@ class Syncer(j.application.JSBaseConfigClass):
 
         :return: [[src,dest],...]
         """
-        assert executor
         res = []
         for item in self.paths:
 
@@ -101,8 +101,11 @@ class Syncer(j.application.JSBaseConfigClass):
             else:
                 raise RuntimeError("can only have 2 parts")
             src = j.core.tools.text_replace(src)
-            if "{" in dst:
-                dst = executor._replace(dst)
+            if not executor:
+                dst = None
+            else:
+                if "{" in dst:
+                    dst = executor._replace(dst)
             res.append((src, dst))
         return res
 
@@ -118,9 +121,11 @@ class Syncer(j.application.JSBaseConfigClass):
     def monitor(self, start=True):
         from .MyFileSystemEventHandler import FileSystemMonitor
 
-        self.monitor = FileSystemMonitor(syncer=self)
-        j.servers.rack.current.greenlets["fs_sync_monitor"] = self.monitor
-        j.shell()
+        self.monitor_greenlet = FileSystemMonitor(syncer=self)
+        if j.servers.rack.current:
+            j.servers.rack.current.greenlets["fs_sync_monitor"] = self.monitor_greenlet
+
+        self.monitor_greenlet.start()
 
     def handler(self, event, action="copy"):
         # self._log_debug("%s:%s" % (event, action))
