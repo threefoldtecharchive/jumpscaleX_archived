@@ -262,7 +262,16 @@ class ExecutorBase(j.application.JSBaseClass):
         """
         means we don't work with ssh-agent ...
         """
-        return self.env_on_system["iscontainer"]
+
+        if not "IN_DOCKER" in self.config:
+            rc, out, _ = self.execute("cat /proc/1/cgroup", die=False, showout=False)
+            if rc == 0 and out.find("/docker/") != -1:
+                self.config["IN_DOCKER"] = True
+            else:
+                self.config["IN_DOCKER"] = False
+            self.save()
+
+        return j.data.types.bool.clean(self.config["IN_DOCKER"])
 
     @property
     def isSandbox(self):

@@ -2278,6 +2278,11 @@ class MyEnv:
         else:
             MyEnv.secret_set(secret)
 
+        if DockerFactory.indocker():
+            MyEnv.config["IN_DOCKER"] = True
+        else:
+            MyEnv.config["IN_DOCKER"] = False
+
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
 

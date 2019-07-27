@@ -125,6 +125,10 @@ class Syncer(j.application.JSBaseConfigClass):
     def handler(self, event, action="copy"):
         # self._log_debug("%s:%s" % (event, action))
         for key, sshclient in self.sshclients.items():
+
+            if sshclient.executor.isContainer:
+                continue
+
             ftp = sshclient.sftp
             changedfile = event.src_path
             if event.src_path.endswith((".swp", ".swx")):
@@ -206,6 +210,13 @@ class Syncer(j.application.JSBaseConfigClass):
         """
 
         for key, sshclient in self.sshclients.items():
+
+            if sshclient.executor.isContainer:
+
+                continue
+
+            j.shell()
+            w
 
             for item in self._get_paths(executor=sshclient.executor):
                 source, dest = item
