@@ -285,7 +285,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-@click.option("--no-interactive", is_flag=True, help="default is interactive")
+@click.option("-s", "--no-interactive", is_flag=True, help="default is interactive")
 def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
@@ -297,8 +297,7 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
     # print("DEBUG:: no_sshagent", no_sshagent, "configdir", configdir)  #no_sshagent=no_sshagent
     IT = load_install_tools(branch=branch)
     # IT.MyEnv.interactive = True
-    if not no_interactive:
-        _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
+    _configure(configdir="/sandbox/cfg", basedir="/sandbox", no_interactive=no_interactive)
     SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
         # remove the state

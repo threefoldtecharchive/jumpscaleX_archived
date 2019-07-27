@@ -65,6 +65,10 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         return self._digitalocean_regions
 
     @property
+    def digitalocean_region_names(self):
+        return [i.slug for i in self.digitalocean_regions]
+
+    @property
     def sshkeys(self):
         if not self._sshkeys:
             self._sshkeys = self.client.get_all_sshkeys()
@@ -98,6 +102,8 @@ class DigitalOcean(j.application.JSBaseConfigClass):
 
     def region_get(self, name):
         for item in self.digitalocean_regions:
+            if name == item.slug:
+                return item
             if name == item.name:
                 return item
         raise RuntimeError("did not find region:%s" % name)
@@ -158,7 +164,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 dr0.destroy()
             else:
                 sshcl = j.clients.ssh.get(
-                    name="do_%s" % name, addr=dr0.ip_address, client_type="pssh", sshkey_name=sshkey.name
+                    name="do_%s" % name, addr=dr0.ip_address, client_type="pssh", sshkey_name=sshkey
                 )
                 sshcl.save()
                 return dr0, sshcl

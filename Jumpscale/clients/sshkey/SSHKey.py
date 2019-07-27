@@ -35,6 +35,10 @@ class SSHKey(j.application.JSBaseConfigClass):
                 self.pubkey = j.sal.fs.readFile(path)
                 self.save()
 
+    def save(self):
+        self._init()
+        j.application.JSBaseConfigClass.save(self)
+
     def generate(self, reset=False):
         """
         Generate ssh key

@@ -62,7 +62,7 @@ class BuilderOdoo(j.builders.system._BaseClass):
         chmod +x odoo-bin
         """
         )
-
+d
         self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
         j.builders.runtimes.nodejs.npm_install("rtlcss")
 

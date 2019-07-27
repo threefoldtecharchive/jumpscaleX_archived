@@ -7,7 +7,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
     NAME = "psql"
 
     def _init(self, **kwargs):
-        self.DOWNLOAD_DIR = self.tools.joinpaths(self.DIR_BUILD, 'build')
+        self.DOWNLOAD_DIR = self.tools.joinpaths(self.DIR_BUILD, "build")
         self.DATA_DIR = self._replace("{DIR_BASE}/apps/psql/data")
 
     @builder_method()

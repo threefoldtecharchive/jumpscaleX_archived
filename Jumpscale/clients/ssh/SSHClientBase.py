@@ -176,9 +176,9 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         if cmd:
             j.shell()
         if self.use_mosh:
-            cmd = "mosh {login}@{addr} -p {port}"
+            cmd = "mosh {LOGIN}@{ADDR} -p {PORT}"
         else:
-            cmd = "ssh {login}@{addr} -p {port}"
+            cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
 
