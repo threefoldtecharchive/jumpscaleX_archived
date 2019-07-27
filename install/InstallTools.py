@@ -2529,6 +2529,7 @@ class BaseInstaller:
             cd {DIR_BASE}
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/cfg/ {DIR_BASE}/cfg/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/bin/ {DIR_BASE}/bin/
+            #rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/openresty/ {DIR_BASE}/openresty/
             rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var

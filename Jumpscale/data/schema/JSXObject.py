@@ -206,6 +206,12 @@ class JSXObject(j.application.JSBaseClass):
             val = tt.clean(val)
         return self._data == val._data
 
+    def __hash__(self):
+        return j.data.hash.md5_string(self._data)
+        # return int(self.id)
+        # CANNOT DO THIS it does not mean its the same
+        #WHY DO WE NEED THIS?
+
     def __str__(self):
         out = self._str_get(ansi=True)
         out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")

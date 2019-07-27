@@ -119,11 +119,7 @@ class JSConfig(JSBase, Attr):
     def save_(self):
         assert self._model
         self._triggers_call(self, "save")
-        try:
-            self._data.save()
-        except:
-            pass
-
+        self._data.save()
         self._triggers_call(self, "save_post")
 
     def edit(self):

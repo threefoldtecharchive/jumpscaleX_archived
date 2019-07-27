@@ -307,7 +307,7 @@ class JSConfigs(JSBase, Attr):
             ):
                 return self.__getattribute__(name)  # else see if we can from the factory find the child object
 
-            r = self.get(name=name)
+            r = self._get(name=name, die=False)
             if not r:
                 raise RuntimeError(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
