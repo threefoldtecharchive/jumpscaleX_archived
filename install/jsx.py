@@ -142,7 +142,7 @@ def cli():
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("--no-interactive", is_flag=True, help="default is interactive")
+@click.option("-s", "--no-interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
