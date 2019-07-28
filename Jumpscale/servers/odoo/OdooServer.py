@@ -27,13 +27,16 @@ class OdooServer(JSConfigClient):
             self.host = "0.0.0.0"
 
         self._default_client = None
+        self._databse = None
+        self._postgres_cmd = j.servers.startupcmd.get("postgres-custom")
+        self._odoo_cmd = j.servers.startupcmd.get("odoo")
 
-    def start(self):
+    def start(self, module_name=None):
         """
         Starts odoo server in tmux
         """
         self._write_config()
-        for server in self.startupcmd:
+        for server in self.startupcmd(module_name):
             server.start()
 
     @property
@@ -44,14 +47,14 @@ class OdooServer(JSConfigClient):
 
     def _write_config(self):
         cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "odoo_config.conf")
-        database = self.databases.new()
+        self._database = self.databases.new()
         args = {
             "email": self.Email,
             "host": self.host,
             "port": self.port,
             "admin_password": self.admin_secret_,
-            "db_secret": database.db_secret_,
-            "db_name": database.name,
+            "db_secret": self._database.db_secret_,
+            "db_name": self._database.name,
         }
         j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
         return self.config_path
@@ -64,6 +67,11 @@ class OdooServer(JSConfigClient):
             )
             self._default_client.save()
         return self._default_client
+
+    def _install_module(self, module_name):
+        if self._odoo_cmd.is_running():
+            self._odoo_cmd.stop()
+        self.start(module_name=module_name)
 
     def databases_reset(self):
         """
@@ -119,23 +127,30 @@ class OdooServer(JSConfigClient):
 
     def stop(self):
         self._log_info("stop odoo server")
-        self.startupcmd.stop()
+        for server in self.startupcmd:
+            server.stop()
 
-    @property
-    def startupcmd(self):
-        pg_ctl = "sudo -u odoouser /sandbox/bin/pg_ctl %s -D /sandbox/apps/odoo/data"
+    def startupcmd(self, module_name):
+
+        if module_name:
+            cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {} -d {} -i {},{}".format(
+                self.config_path, self._database.name, module_name, module_name
+            )
+
         # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
-        cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {}".format(self.config_path)
-        odoo_cmd = j.servers.startupcmd.get("odoo")
-        odoo_cmd.cmd_start = cmd
-        odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
-        odoo_cmd.path = "/sandbox/bin"
+        else:
+            cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {}".format(self.config_path)
 
+        self._odoo_cmd.cmd_start = cmd
+        self._odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
+        self._odoo_cmd.path = "/sandbox/bin"
+
+        pg_ctl = "sudo -u odoouser /sandbox/bin/pg_ctl %s -D /sandbox/apps/odoo/data"
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
-        postgres_cmd = j.servers.startupcmd.get("postgres-custom")
-        postgres_cmd.cmd_start = cmd_start
-        postgres_cmd.cmd_stop = cmd_stop
-        postgres_cmd.ports = [5432]
-        postgres_cmd.path = "/sandbox/bin"
-        return [odoo_cmd, postgres_cmd]
+
+        self._postgres_cmd.cmd_start = cmd_start
+        self._postgres_cmd.cmd_stop = cmd_stop
+        self._postgres_cmd.ports = [5432]
+        self._postgres_cmd.path = "/sandbox/bin"
+        return [self._odoo_cmd, self._postgres_cmd]
