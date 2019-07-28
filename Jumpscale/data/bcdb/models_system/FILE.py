@@ -7,6 +7,22 @@ class FILE(j.data.bcdb._BCDBModelClass):
     def _schema_get(self):
         return j.data.schema.get_from_url_latest("jumpscale.bcdb.fs.file.2")
 
+    _dir_model_ = None
+
+    @property
+    def _dir_model(self):
+        if not self._dir_model_:
+            self._dir_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.dir.2")
+        return self._dir_model_
+
+    _block_model_ = None
+
+    @property
+    def _block_model(self):
+        if not self._block_model_:
+            self._block_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.block.2")
+        return self._block_model_
+
     def _text_index_content_pre_(self, property_name, val, obj_id, nid=1):
         """
 
@@ -73,7 +89,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         new_file = self.new()
         new_file.name = name
         new_file.save()
-        dir = self._dir_model.get(name=j.sal.fs.getDirName(name))
+        dir = self._dir_model.find(name=j.sal.fs.getParent(name))[0]
         dir.files.append(new_file.id)
         dir.save()
         return new_file
@@ -88,7 +104,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         :return: file object
         """
         try:
-            file = self.get(name=path)
+            file = self.find(name=path)[0]
         except:
             if not create:
                 raise RuntimeError(
@@ -100,9 +116,9 @@ class FILE(j.data.bcdb._BCDBModelClass):
         return file
 
     def file_delete(self, path):
-        file = self.get(name=path)
+        file = self.find(name=path)[0]
         file.delete()
-        parent = self._dir_model.get(name=j.sal.fs.getDirName(path))
+        parent = self._dir_model.find(name=j.sal.fs.getDirName(path))[0]
         parent.files.delete(file.id)
         parent.save()
 

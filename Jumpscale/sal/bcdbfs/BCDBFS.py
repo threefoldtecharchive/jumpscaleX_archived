@@ -12,9 +12,9 @@ class BCDBFS(j.application.JSBaseClass):
     __jslocation__ = "j.sal.bcdbfs"
 
     def _init(self, bcdb_name="bcdbfs"):
-        self.bcdb = j.data.bcdb.get(bcdb_name)
-        self._file_model = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.file.2")
-        self._dir_model = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.dir.2")
+        self._bcdb = j.data.bcdb.get(bcdb_name)
+        self._file_model = self._bcdb.model_get_from_file("{}/models_system/FILE.py".format(self._bcdb._dirpath))
+        self._dir_model = self._bcdb.model_get_from_file("{}/models_system/DIR.py".format(self._bcdb._dirpath))
 
     #############################
     ######  DIR OPERATIONS ######
@@ -34,7 +34,7 @@ class BCDBFS(j.application.JSBaseClass):
         :param recursive: if true will perform recursive delete by deleting all sub directorie
         :return: None
         """
-        dir = self._dir_model.get(name=path)
+        dir = self._dir_model.find(name=path)[0]
         if not recursive and dir.dirs:
             raise RuntimeError("this dir contains other dirs you must pass recursive = True")
         elif not recursive and not dir.dirs:
@@ -73,10 +73,10 @@ class BCDBFS(j.application.JSBaseClass):
         :param recursive: copy subdirs
         :return:
         """
-        dir_source = self._dir_model.get(name=path)
+        dir_source = self._dir_model.find(name=path)[0]
         source_files = dir_source.files
         for file_id in source_files:
-            file = self._file_model.get(file_id)
+            file = self._file_model.find(file_id)[0]
             basename = j.sal.getBaseName(file.name)
             self.file_copy_form_bcdbfs(file.path, j.sal.fs.joinPaths(path, basename))
         if recursive:
@@ -120,7 +120,7 @@ class BCDBFS(j.application.JSBaseClass):
         :param create: create new if true and the file doesn't exist
         :return: file object
         """
-        return self._file_model.file_create_empty(filename, contents, append=append, create=create)
+        return self._file_model.file_write(filename, contents, append=append, create=create)
 
     def file_copy_from_local(self, path, dest):
         """
@@ -141,7 +141,7 @@ class BCDBFS(j.application.JSBaseClass):
         :param dest: destination path
         :return: file object
         """
-        source_file = self._file_model.get(name=path)
+        source_file = self._file_model.find(name=path)[0]
         dest_file = self.file_create_empty(dest)
         if source_file.blocks:
             dest_file.blocks = source_file.blocks
@@ -167,13 +167,24 @@ class BCDBFS(j.application.JSBaseClass):
     def file_delete(self, path):
         return self._file_model.file_delete(path)
 
+
     def _destroy(self):
         """
         VERY DANGEROUS: deletes everything in bcdbfs
         :return:
         """
+        self._bcdb.reset()
 
     def test(self):
-        j.shell()
+        cl = j.clients.sonic.get_client_bcdb()
+        cl.flush("bcdbfs")
+        j.sal.bcdbfs.mkdir("/")
         for i in range(5):
             j.sal.bcdbfs.mkdir("/dir_{}".format(i))
+            j.sal.bcdbfs.file_create_empty("/test_{}".format(i))
+            for k in range(5):
+                j.sal.bcdbfs.file_create_empty(("/dir_{}/test_{}".format(i, k)))
+
+        j.sal.bcdbfs.file_copy_form_bcdbfs("/test_0", "/test_copied")
+        j.sal.fs.createEmptyFile("/tmp/test_bcdbfs")
+        j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local") 
