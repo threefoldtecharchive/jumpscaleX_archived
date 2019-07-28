@@ -13,7 +13,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
         self.go_runtime = j.builders.runtimes.golang
 
     @builder_method()
-    def install(self, reset=True):
+    def install(self):
         """
 
         kosmos 'j.builders.web.traefik.install()'
@@ -31,11 +31,9 @@ class BuilderTraefik(j.builders.system._BaseClass):
         else:
             raise j.exceptions.RuntimeError("platform not supported")
 
-        dest = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        dest = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
         self.tools.file_download(download_url, dest, overwrite=True, retry=3, timeout=0)
         self.tools.file_attribs(dest, mode=0o770)
-
-        self._done_set("install")
 
     def start(self, config_file=None, args=None):
         """Starts traefik with the configuration file provided
@@ -48,8 +46,7 @@ class BuilderTraefik(j.builders.system._BaseClass):
         :return: tmux pane
         :rtype: tmux.Pane
         """
-        self.install()
-        cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        cmd = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
         if config_file and self.tools.file_exists(config_file):
             cmd += " --configFile=%s" % config_file
 
