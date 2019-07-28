@@ -24,10 +24,10 @@ class SyncerFactory(j.application.JSBaseConfigsClass):
         :return:
         """
 
-        cl = j.clients.ssh.get(name="docker", addr="localhost", port=9122)
+        cl = j.clients.ssh.get(name="test1", addr="167.71.65.114", port=22)
         cl.save()
 
-        cl2 = j.clients.ssh.get(name="docker2", addr="localhost", port=9122)
+        cl2 = j.clients.ssh.get(name="test2", addr="167.71.65.114", port=22)
         cl2.save()
 
         s = j.tools.syncer.get()
@@ -35,10 +35,3 @@ class SyncerFactory(j.application.JSBaseConfigsClass):
         s.sshclients_add([cl, cl2])
 
         s.sync(monitor=True)
-
-        # r = cl.execute("ls / ")
-
-        j.shell()
-
-        s = self.get(name="builder", sshclient_name=cl.name, paths=None)
-        s.sync()

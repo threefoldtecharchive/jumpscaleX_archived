@@ -1588,7 +1588,6 @@ class group_tutorials(JSGroup):
     def __init__(self):
         
         self._base = None
-        self._odoo = None
 
     
     @property
@@ -1597,12 +1596,6 @@ class group_tutorials(JSGroup):
             from Jumpscale.tutorials.base.Tutorial import Tutorial
             self._base =  Tutorial()
         return self._base
-    @property
-    def odoo(self):
-        if self._odoo is None:
-            from kosmos.tutorials.odoo.Odoo import Odoo
-            self._odoo =  Odoo()
-        return self._odoo
 
 j.tutorials = group_tutorials()
 j.core._groups["tutorials"] = j.tutorials
@@ -1836,23 +1829,6 @@ class group_sal_zos(JSGroup):
 
 j.sal_zos = group_sal_zos()
 j.core._groups["sal_zos"] = j.sal_zos
-
-
-class group__builder(JSGroup):
-    def __init__(self):
-        
-        self._odoo = None
-
-    
-    @property
-    def odoo(self):
-        if self._odoo is None:
-            from kosmos.builder.apps.BuilderOdoo import BuilderOdoo
-            self._odoo =  BuilderOdoo()
-        return self._odoo
-
-j._builder = group__builder()
-j.core._groups["_builder"] = j._builder
 
 
 

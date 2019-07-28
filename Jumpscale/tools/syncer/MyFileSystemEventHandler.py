@@ -4,6 +4,8 @@ JSBASE = j.application.JSBaseClass
 
 
 from watchdog.events import FileSystemEventHandler
+
+# from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 import time
 
@@ -38,11 +40,14 @@ import time
 #         return "FileSystemMonitor"
 
 
-class FileSystemMonitor(JSBASE):
-    def _init(self, syncer=None):
+class FileSystemMonitor:
+    def __init__(self, syncer=None):
         self.syncer = syncer
         self.event_handler = MyFileSystemEventHandler(syncer=self.syncer)
         self.observer = Observer()
+
+    def _log_info(self, msg):
+        print(" - %s" % msg)
 
     def start(self):
 
@@ -50,12 +55,14 @@ class FileSystemMonitor(JSBASE):
             source, dest = item
             self._log_info("monitor:%s" % source)
             self.observer.schedule(self.event_handler, source, recursive=True)
+
         self.observer.start()
+
         self._log_info("WE ARE MONITORING")
 
         try:
             while True:
-                time.sleep(0.1)
+                time.sleep(1)
         except KeyboardInterrupt:
             pass
 
@@ -64,9 +71,24 @@ class FileSystemMonitor(JSBASE):
 
 
 class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
+    def __init__(self, syncer=None):
+        FileSystemEventHandler.__init__(self)
+        JSBASE.__init__(self, syncer=syncer)
+
     def _init(self, syncer=None):
         assert syncer
         self.syncer = syncer
+        self._done = {}
+        self._period = 2
+
+    def _cleanup_done(self):
+        # remove all remembered paths older than 2 sec
+        toremove = []
+        for key, val in self._done.items():
+            if val < j.data.time.epoch - self._period:
+                toremove.append(key)
+        for key in toremove:
+            self._done.pop(key)
 
     def handler(self, event, action="copy"):
         """
@@ -75,6 +97,12 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
         :param action:
         :return:
         """
+        # self._log_info("event:%s" % event)
+        if self._period != 0:
+            self._cleanup_done()
+            if event.src_path in self._done:
+                return
+            self._done[event.src_path] = j.data.time.epoch
         self.syncer.handler(event, action=action)
 
     def on_moved(self, event):

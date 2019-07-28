@@ -2495,27 +2495,28 @@ class BaseInstaller:
         else:
             raise RuntimeError("only OSX and Linux Ubuntu supported.")
 
-        # BASHPROFILE
-        if sandboxed:
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
-            if Tools.exists(env_path):
-                bashprofile = Tools.file_text_read(env_path)
-                cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd) != -1:
-                    bashprofile = bashprofile.replace(cmd, "")
-                    Tools.file_write(env_path, bashprofile)
-        else:
-            # if not sandboxed need to remove old python's from bin dir
-            Tools.execute("rm -f {DIR_BASE}/bin/pyth*")
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
-            if not Tools.exists(env_path):
-                bashprofile = ""
+        for profile_name in [".bash_profile", ".profile"]:
+            # BASHPROFILE
+            if sandboxed:
+                env_path = "%s/%s" % (MyEnv.config["DIR_HOME"], profile_name)
+                if Tools.exists(env_path):
+                    bashprofile = Tools.file_text_read(env_path)
+                    cmd = "source /sandbox/env.sh"
+                    if bashprofile.find(cmd) != -1:
+                        bashprofile = bashprofile.replace(cmd, "")
+                        Tools.file_write(env_path, bashprofile)
             else:
-                bashprofile = Tools.file_text_read(env_path)
-            cmd = "source /sandbox/env.sh"
-            if bashprofile.find(cmd) == -1:
-                bashprofile += "\n%s\n" % cmd
-                Tools.file_write(env_path, bashprofile)
+                # if not sandboxed need to remove old python's from bin dir
+                Tools.execute("rm -f {DIR_BASE}/bin/pyth*")
+                env_path = "%s/%s" % (MyEnv.config["DIR_HOME"], profile_name)
+                if not Tools.exists(env_path):
+                    bashprofile = ""
+                else:
+                    bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd) == -1:
+                    bashprofile += "\n%s\n" % cmd
+                    Tools.file_write(env_path, bashprofile)
 
         print("- get sandbox base from git")
         ji = JumpscaleInstaller()
@@ -3581,12 +3582,14 @@ class DockerContainer:
         self.sshexec(cmd)
 
         cmd = """
+        echo 'autoclean'
         apt-get autoclean -y
         apt-get clean -y
         apt-get autoremove -y
         # rm -rf /tmp/*
         # rm -rf /var/log/*
-        find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+        # echo 'find and remove pyc files'
+        # find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
         """
         self.sshexec(cmd)
 
@@ -3676,7 +3679,6 @@ class SSHAgent:
             Tools.execute(cmd, timeout=10)
 
             Tools.log("load generated sshkey: %s" % path)
-        Tools.shell()
 
     @property
     def key_default(self):
@@ -3899,7 +3901,7 @@ class SSHAgent:
 
             out += "%s\n" % line
 
-        out += "export SSH_AUTH_SOCK=%s" % self.ssh_socket_path
+        out += '[ -z "SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK=%s' % self.ssh_socket_path
         out = out.replace("\n\n\n", "\n\n")
         out = out.replace("\n\n\n", "\n\n")
         j.sal.fs.writeFile(bashprofile_path, out)

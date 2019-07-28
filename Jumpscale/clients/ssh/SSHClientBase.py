@@ -104,7 +104,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         destination = j.sal.fs.getDirName(remote_file)
         self.executor.dir_ensure(destination)
         self._client.scp_send(local_file, remote_file, recurse=False, sftp=None)
-        self._log_debug("Copied local file %s to remote destination %s", local_file, remote_file)
+        self._log_debug("Copied local file %s to remote destination %s for %s" % (local_file, remote_file, self))
 
     def _replace(self, txt, paths_executor=True):
         if "{" in txt:
@@ -192,7 +192,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         if self._syncer is None:
-            self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
+            self._syncer = j.tools.syncer.get(name=self.name, sshclient_names=[self.name])
         return self._syncer
 
     def portforward_to_local(self, remoteport, localport):

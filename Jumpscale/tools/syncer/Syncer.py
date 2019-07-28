@@ -30,7 +30,8 @@ class Syncer(j.application.JSBaseConfigClass):
         sshclient_names = [] (LS)
         paths = [] (LS)
         ignoredir = [] (LS)
-        t = ""  (S)  
+        ignore_delete = true  (B)  
+        rsyncdelete = false (B)
         """
 
     def sshclients_add(self, sshclients=None):
@@ -63,7 +64,7 @@ class Syncer(j.application.JSBaseConfigClass):
     def _init(self, **kwargs):
 
         self.sshclients = {}
-        self.monitor_greenlet = None
+        self._monitor = None
 
         for name in self.sshclient_names:
             self.sshclients_add(name)
@@ -118,14 +119,14 @@ class Syncer(j.application.JSBaseConfigClass):
                 return dest
         raise RuntimeError("did not find:%s" % src)
 
-    def monitor(self, start=True):
+    def monitor(self):
         from .MyFileSystemEventHandler import FileSystemMonitor
 
-        self.monitor_greenlet = FileSystemMonitor(syncer=self)
-        if j.servers.rack.current:
-            j.servers.rack.current.greenlets["fs_sync_monitor"] = self.monitor_greenlet
+        self._monitor = FileSystemMonitor(syncer=self)
+        # if j.servers.rack.current:
+        #     j.servers.rack.current.greenlets["fs_sync_monitor"] = self.monitor_greenlet
 
-        self.monitor_greenlet.start()
+        self._monitor.start()
 
     def handler(self, event, action="copy"):
         # self._log_debug("%s:%s" % (event, action))
@@ -166,11 +167,11 @@ class Syncer(j.application.JSBaseConfigClass):
                     elif changedfile.endswith("___"):
                         return
                     dest = self._path_dest_get(executor=sshclient.executor, src=changedfile)
+
                     e = ""
 
                     if action == "copy":
-                        self._log_debug("copy: %s:%s" % (changedfile, dest))
-                        print("copy: %s:%s" % (changedfile, dest))
+                        # self._log_info("copy (ssh:%s): %s:%s" % (sshclient.name, changedfile, dest))
                         try:
                             sshclient.file_copy(changedfile, dest)
                         except Exception as e:
@@ -179,6 +180,8 @@ class Syncer(j.application.JSBaseConfigClass):
                             self._log_error(str(e))
                             error = True
                     elif action == "delete":
+                        if self.ignore_delete:
+                            return
                         self._log_debug("delete: %s:%s" % (changedfile, dest))
                         try:
                             cmd = "rm %s" % dest
@@ -186,7 +189,7 @@ class Syncer(j.application.JSBaseConfigClass):
                         except Exception as e:
                             self._log_error("Couldn't remove file: %s" % (dest))
                             if "No such file" in str(e):
-                                return
+                                continue
                             else:
                                 error = True
                                 # raise RuntimeError(e)
@@ -200,7 +203,7 @@ class Syncer(j.application.JSBaseConfigClass):
                             self._log_debug(e)
                         except BaseException:
                             pass
-                        self.sync(monitor=False)
+                        return self.sync(monitor=False)
                         error = False
 
     def delete(self):
@@ -208,34 +211,29 @@ class Syncer(j.application.JSBaseConfigClass):
             item.delete()
         j.application.JSBaseConfigClass.delete(self)
 
-    def sync(self, monitor=True, start=True):
+    def sync(self, monitor=True):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 
         """
-
         for key, sshclient in self.sshclients.items():
 
             if sshclient.executor.isContainer:
 
                 continue
 
-            j.shell()
-            w
-
             for item in self._get_paths(executor=sshclient.executor):
                 source, dest = item
                 self._log_info("upload:%s to %s" % (source, dest))
-                for i in range(2):
-                    sshclient.executor.upload(
-                        source,
-                        dest,
-                        recursive=True,
-                        createdir=True,
-                        rsyncdelete=True,
-                        ignoredir=self.IGNOREDIR,
-                        ignorefiles=None,
-                    )
+                sshclient.executor.upload(
+                    source,
+                    dest,
+                    recursive=True,
+                    createdir=True,
+                    rsyncdelete=self.rsyncdelete,
+                    ignoredir=self.IGNOREDIR,
+                    ignorefiles=None,
+                )
 
         if monitor:
-            self.monitor(start=start)
+            self.monitor()
