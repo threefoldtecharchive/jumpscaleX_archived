@@ -90,8 +90,8 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
         bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index"]
         dirs = {
-            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/nginx/openresty.cfg"): "sandbox/cfg/",
-            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/mime.types"): "sandbox/cfg/",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/nginx/openresty.cfg"): "sandbox/cfg/nginx",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/nginx/mime.types"): "sandbox/cfg/nginx",
             self.tools.joinpaths(j.core.dirs.BASEDIR, "openresty/"): "sandbox/openresty/",
             "/lib/x86_64-linux-gnu/libnss_files.so.2": "sandbox/lib/",
         }
