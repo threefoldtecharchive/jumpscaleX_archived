@@ -149,7 +149,7 @@ def cli():
     help="24 words, use '' around the private key if secret specified and private_key not then will ask in -y mode will autogenerate",
 )
 @click.option(
-    "-s", "--secret", default=None, help="secret for the private key (to keep secret), default will get from ssh-key"
+    "--secret", default=None, help="secret for the private key (to keep secret), default will get from ssh-key"
 )
 def configure(
     basedir=None,

@@ -2023,7 +2023,12 @@ class MyEnv:
     def _basedir_get():
         if MyEnv.readonly:
             return "/tmp/jumpscale"
-        if Tools.exists("/sandbox"):
+        isroot = None
+        rc, out, err = Tools.execute("whoami", showout=False, die=False)
+        if rc == 0:
+            if out.strip() == "root":
+                isroot = 1
+        if Tools.exists("/sandbox") or isroot == 1:
             Tools.dir_ensure("/sandbox")
             return "/sandbox"
         p = "%s/sandbox" % MyEnv._homedir_get()
