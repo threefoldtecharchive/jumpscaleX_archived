@@ -183,7 +183,7 @@ def configure(
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option(
-    "-s", "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
+    "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
 )
 @click.option("-d", "--delete", is_flag=True, help="if set will delete the docker container if it already exists")
 @click.option("-w", "--web", is_flag=True, help="also install the web system")
@@ -227,8 +227,8 @@ def container_install(
 
     if you want to configure other arguments use 'jsx configure ... '
 
-
     """
+
     IT = load_install_tools(branch=branch)
     # IT.MyEnv.interactive = True
     # interactive = not no_interactive
@@ -237,6 +237,8 @@ def container_install(
 
     if scratch:
         image = "phusion/baseimage"
+        delete = True
+        reinstall = True
     if not image:
         image = "despiegk/3bot"
 

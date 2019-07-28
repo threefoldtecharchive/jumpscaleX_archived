@@ -7,6 +7,7 @@ from watchdog.events import FileSystemEventHandler
 
 # from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
+from watchdog.observers.fsevents import *
 import time
 
 # from gevent import Greenlet
@@ -97,23 +98,30 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
         :param action:
         :return:
         """
-        # self._log_info("event:%s" % event)
-        if self._period != 0:
+        self._log_info("event:%s" % event)
+        if self._period != 0 and action == "copy":
             self._cleanup_done()
             if event.src_path in self._done:
                 return
             self._done[event.src_path] = j.data.time.epoch
         self.syncer.handler(event, action=action)
 
+    def _on_modified(self, event):
+        self.handler(event, action="copy")
+
+    def on_any_event(self, event):
+        if isinstance(event, FileModifiedEvent):
+            self.handler(event, action="copy")
+        elif isinstance(event, DirModifiedEvent):
+            return
+        self._log_debug(event)
+
     def on_moved(self, event):
         self.syncer.sync(monitor=False)
-        # self.handler(event, action="delete")
+        self.handler(event, action="moved")
 
     def on_created(self, event):
-        self.handler(event)
+        self.handler(event, action="copy")
 
     def on_deleted(self, event):
         self.handler(event, action="delete")
-
-    def on_modified(self, event):
-        self.handler(event)

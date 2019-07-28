@@ -129,12 +129,11 @@ class Syncer(j.application.JSBaseConfigClass):
         self._monitor.start()
 
     def handler(self, event, action="copy"):
-        # self._log_debug("%s:%s" % (event, action))
+        self._log_debug("%s:%s" % (event, action))
         for key, sshclient in self.sshclients.items():
 
             if sshclient.executor.isContainer:
                 continue
-
             ftp = sshclient.sftp
             changedfile = event.src_path
             if event.src_path.endswith((".swp", ".swx")):
@@ -155,7 +154,6 @@ class Syncer(j.application.JSBaseConfigClass):
                 error = False
 
                 if error is False:
-                    print(changedfile)
                     if changedfile.find("/.git") != -1:
                         return
                     elif changedfile.find("/__pycache__/") != -1:
@@ -169,20 +167,23 @@ class Syncer(j.application.JSBaseConfigClass):
                     dest = self._path_dest_get(executor=sshclient.executor, src=changedfile)
 
                     e = ""
+                    self._log_debug("action:%s for %s" % (action, changedfile))
 
                     if action == "copy":
-                        # self._log_info("copy (ssh:%s): %s:%s" % (sshclient.name, changedfile, dest))
+                        self._log_info("copy (ssh:%s): %s:%s" % (sshclient.name, changedfile, dest))
                         try:
                             sshclient.file_copy(changedfile, dest)
+                            self._log_info("OK")
                         except Exception as e:
+                            j.shell()
                             self._log_error("Couldn't sync file: %s:%s" % (changedfile, dest))
                             self._log_error("** ERROR IN COPY, WILL SYNC ALL")
                             self._log_error(str(e))
                             error = True
                     elif action == "delete":
+                        self._log_debug("delete: %s:%s" % (changedfile, dest))
                         if self.ignore_delete:
                             return
-                        self._log_debug("delete: %s:%s" % (changedfile, dest))
                         try:
                             cmd = "rm %s" % dest
                             sshclient.exec_command(cmd)
