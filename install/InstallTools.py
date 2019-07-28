@@ -848,7 +848,11 @@ class Tools:
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
             """
-            Tools.execute(script, interactive=True)
+            if DockerFactory.indocker():
+                sudoremove = True
+            else:
+                sudoremove = False
+            Tools.execute(script, interactive=True, sudo_remove=sudoremove)
 
     @staticmethod
     def clear():
@@ -1225,6 +1229,7 @@ class Tools:
         asfile=False,
         original_command=None,
         log=False,
+        sudo_remove=False,
     ):
 
         if env is None:
@@ -1232,6 +1237,9 @@ class Tools:
         if self is None:
             self = MyEnv
         command = Tools.text_strip(command, args=args, replace=replace)
+        if sudo_remove:
+            command = command.replace("sudo ", "")
+
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
             if MyEnv.debug or log:
@@ -2905,13 +2913,20 @@ class UbuntuInstaller:
 
         script = """
         cd /tmp
-        apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
+        apt-get install -y mc wget python3 git tmux 
+        set +ex
+        apt-get install python3-distutils -y
+        set -ex
+        apt-get install python3-psutil -y
         apt-get install -y build-essential
         #apt-get install -y python3.6-dev
         apt-get install -y redis-server
 
         """
-        Tools.execute(script, interactive=True)
+        rc, out, err = Tools.execute(script, interactive=True, timeout=300)
+        if rc > 0:
+            # lets try other time
+            rc, out, err = Tools.execute(script, interactive=True, timeout=300)
         MyEnv.state_set("python_redis_install")
 
     @staticmethod
@@ -3404,6 +3419,7 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
+            Tools.execute('ssh-keygen -f "/root/.ssh/known_hosts" -R "[localhost]:%s"' % args["PORT"])
             Tools.execute("ssh-keyscan -H 3bot >> ~/.ssh/known_hosts")
 
             self.dexec("touch /root/.BASEINSTALL_OK")
@@ -3737,6 +3753,8 @@ class SSHAgent:
             sshkey = ask_key(choices)
 
         if not sshkey in self.key_names:
+            if DockerFactory.indocker():
+                raise RuntimeError("sshkey should be passed forward by means of SSHAgent")
             self.key_load(name=sshkey)
             assert sshkey in self.key_names
 
@@ -3920,7 +3938,7 @@ class SSHAgent:
         :raises RuntimeError: ssh-agent was not started while there was no error
         :raises RuntimeError: Could not find pid items in ssh-add -l
         """
-        
+
         socketpath = self.ssh_socket_path
 
         Tools.process_kill_by_by_filter("ssh-agent")

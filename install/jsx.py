@@ -236,7 +236,8 @@ def container_install(
     _configure(configdir=configdir, no_interactive=no_interactive)
 
     if scratch:
-        image = "phusion/baseimage"
+        # image = "phusion/baseimage"
+        image = "unilynx/phusion-baseimage-1804"
         delete = True
         reinstall = True
     if not image:
@@ -477,6 +478,7 @@ def container_shell(name="3bot", configdir=None):
     """
     IT.MyEnv
     docker = container_get(name=name)
+    IT.Tools.execute('ssh-keygen -f "/root/.ssh/known_hosts" -R "[localhost]:9122"')
     os.execv(
         shutil.which("ssh"),
         ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.config.sshport)],
