@@ -364,7 +364,10 @@ class BCDB(j.application.JSBaseClass):
             sid = self.meta._schema_md5_to_sid[schema._md5]
             # means we already know the schema
         else:
-            sid = self.meta._schema_set(schema)
+            if schema_set:
+                sid = self.meta._schema_set(schema)
+            else:
+                raise RuntimeError("sid should be known in the self.meta._schema_md5...")
 
         if sid in self._sid_to_model:
             return self._sid_to_model[sid]
@@ -384,11 +387,11 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
         assert model.sid
 
+        self._sid_to_model[model.sid] = model
+
         if schema_set:
             self._schema_property_add_if_needed(model.schema)
             self.meta._schema_set(model.schema)  # do not forget to add the schema
-
-        self._sid_to_model[model.sid] = model
 
         s = model.schema
         assert self.meta._schema_md5_to_sid[s._md5]

@@ -82,12 +82,18 @@ class BCDBMeta(j.application.JSBaseClass):
         if self._data.name != self._bcdb.name:
             raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
 
+        check = []
+
+        self._verify()
+
         for s in self._data.schemas:
             self._log_debug("load in meta:%s" % s.url)
+            if s.md5 in check:
+                raise RuntimeError("corrupted metadata index, duplicate in schema")
+            check.append(s.md5)
             schema = j.data.schema.get_from_text(s.text)  # make sure jumpscale knows about the schema
             self._schema_jsxobj_load(s)
-            self._bcdb.model_get_from_schema(schema, schema_set=True)
-
+            self._bcdb.model_get_from_schema(schema, schema_set=False)  # IMPORTANT leave schema_set False
             assert self._bcdb._sid_to_model[s.sid].schema._md5  # make sure its not empty
             assert self._bcdb._sid_to_model[s.sid].schema._md5 == s.md5
 
@@ -101,6 +107,17 @@ class BCDBMeta(j.application.JSBaseClass):
         for s in self._data.schemas:
             print("%s:%s:%s" % (s.sid, s.md5, s.url))
 
+    def _verify(self):
+        check = []
+
+        for s in self._data.schemas:
+            if s.md5 in check:
+                raise RuntimeError("corrupted metadata index, duplicate in schema (md5")
+            if s.sid in check:
+                raise RuntimeError("corrupted metadata index, duplicate in schema (sid)")
+            check.append(s.md5)
+            check.append(s.sid)
+
     def _save(self):
 
         self._log_debug("save meta:%s" % self._bcdb.name)
@@ -108,6 +125,9 @@ class BCDBMeta(j.application.JSBaseClass):
         if not self._data:
             self._data = self._schema.new()
             self._data.name = self._bcdb.name
+
+        self._verify()
+
         serializeddata = j.data.serializers.jsxdata.dumps(self._data)
 
         if self._bcdb.storclient is None:

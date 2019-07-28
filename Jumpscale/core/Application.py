@@ -127,17 +127,21 @@ class Application(object):
     @property
     def bcdb_system(self):
         if self._bcdb_system is None:
-            bcdb = self._j.data.bcdb.new("system")
+            bcdb = self._j.data.bcdb.get_system(reset=False)
             self._bcdb_system = bcdb
         return self._bcdb_system
 
-    def bcdb_system_configure(self, addr, port, namespace, secret):
-        """
-        will remember that this becdb is being used
-        will remember in redis (encrypted)
-        :return:
-        """
-        self._j.shell()
+    def bcdb_system_destroy(self):
+        self._j.data.bcdb.get_system(reset=True)
+        self._bcdb_system = None
+
+    # def bcdb_system_configure(self, addr, port, namespace, secret):
+    #     """
+    #     will remember that this bcdb is being used
+    #     will remember in redis (encrypted)
+    #     :return:
+    #     """
+    #     self._j.shell()
 
     def _trace_get(self, ttype, err, tb=None):
 
