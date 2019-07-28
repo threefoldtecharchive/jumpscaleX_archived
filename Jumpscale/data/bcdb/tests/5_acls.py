@@ -83,15 +83,11 @@ def main(self):
         # means we have indeed the index for acl == 1
         assert len(bcdb.acl.find()) == 1
 
-        assert a.acl.md5 == "b5591700fe2b95420095d8658d5a4ad3"
-
         self._log_debug("MODIFY RIGHTS")
         a.acl.rights_set(userids=[1], rights="r")
         a.save()
 
         assert len(bcdb.acl.find()) == 1  # there needs to be a new acl
-
-        assert a.acl.md5 == "02c5e759f2f69c290f3301610216c43c"
 
         assert a.acl.rights_check(1, "r") is True
         assert a.acl.rights_check(1, "d") is False

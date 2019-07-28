@@ -7,10 +7,10 @@
     - [3- macOS](#macos-installation)
 * [II- Container Install](#container-Install)
     - [1- Interactive container](#interactive-container)
-    - [2- Non Interactive container](#non-interactive-container)
+    - [2- No Interactive container](#no-interactive-container)
 * [III- In-System Install](#insystem-install)
     - [1- Interactive insystem](#interactive-insystem)
-    - [2- Non Interactive insystem](#non-interactive-insystem)
+    - [2- No Interactive insystem](#no-interactive-insystem)
 * [IV- Extra options](#extra-options)
     - [1- reset](#reset)
     - [2- delete](#delete)
@@ -77,25 +77,27 @@ Here we will install jumpscale using container-install option which will create 
     - 2- download the installation file, make it executable, then run it
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;\
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
         # change permission
-        chmod +x /tmp/jsx; \
+        chmod +x /tmp/jsx;
         # install
         /tmp/jsx container-install
         ```
-- #### Non Interactive Container
-    This type of installation won't ask you about anything
+- #### No Interactive Container
+    This type of installation will install silently and won't ask you about anything
+
     - 1- install the prerequisites
-    - 2- download the installation file, make it executable, configure the installation with your secret, then run it.
+    - 2- download the installation file, make it executable, configure the installation with your secret, then run it. <br/>
+    Note: default sshkey will be the "id_rsa" in `~/.ssh/id_rsa`  so make sure to have one.
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;\
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
         # change permission
-        chmod +x /tmp/jsx;\
+        chmod +x /tmp/jsx;
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure --no-interactive -s mysecret;\
+        /tmp/jsx configure -s --secret mysecret;
         # install
-        /tmp/jsx container-install --no-interactive
+        /tmp/jsx container-install -s
         ```
 
 ## InSystem Install
@@ -108,26 +110,27 @@ Here we will install jumpscale using install option which willinstall jumpscale 
     - 2- download the installation file, make it executable, then run it
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
         # change permission
         chmod +x /tmp/jsx; 
         # install
         /tmp/jsx install 
         ```
 
-- #### Non Interactive InSystem
+- #### No Interactive InSystem
     This type of installation won't ask you about anything
     - 1- install the prerequisites
-    - 2- download the installation file, make it executable,configure the installation with your secret, then run it
+    - 2- download the installation file, make it executable,configure the installation with your secret, then run it <br/>
+    Note: default sshkey will be the "id_rsa" in `~/.ssh/id_rsa`  so make sure to have one.
         ```bash
         # download
-        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx ;
+        curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
         # change permission
         chmod +x /tmp/jsx; 
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure --no-interactive -s mysecret;
+        /tmp/jsx configure -s --secret mysecret;
         # install
-        /tmp/jsx install --no-interactive
+        /tmp/jsx install -s
         ```
 
 ## Extra options
@@ -169,7 +172,7 @@ git pull
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/jsx.py
 rm -f /tmp/InstallTools.py;
-ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx.py;
+ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py /tmp/jsx;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```
 

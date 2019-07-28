@@ -9,21 +9,22 @@ class OdooServer(JSConfigClient):
            @url =  jumpscale.odoo.server.1
            name* = "default" (S)
            host = "127.0.0.1" (S)
-           port = 8080 (I)
-           secret_ = "123456" (S)
+           port = 8069 (I)
+           admin_secret_ = "123456" (S)
+           Email = "bola@incubaid.com" (S)
            timeout = 300
            databases = (LO) !jumpscale.odoo.server.db.1
            
            @url =  jumpscale.odoo.server.db.1
-           name* = "default" (S)
-           secret_ = "123456" (S)
+           name* = "user" (S)
+           db_secret_ = "123456" (S)
            
            """
 
     def _init(self, **kwargs):
-        self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "odoo_config_%s.cfg" % self.name)
+        self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "odoo_config_%s.conf" % self.name)
         if self.host == "localhost":
-            self.host = "127.0.0.1"
+            self.host = "0.0.0.0"
 
         self._default_client = None
 
@@ -32,7 +33,8 @@ class OdooServer(JSConfigClient):
         Starts odoo server in tmux
         """
         self._write_config()
-        self.startupcmd.start()
+        for server in self.startupcmd:
+            server.start()
 
     @property
     def _path(self):
@@ -41,13 +43,15 @@ class OdooServer(JSConfigClient):
         return p
 
     def _write_config(self):
-        cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "odoo_config.cfg")
+        cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "odoo_config.conf")
+        database = self.databases.new()
         args = {
+            "email": self.Email,
             "host": self.host,
             "port": self.port,
-            "secret_": self.secret_,
-            "timeout": self.timeout,
-            "datapath": self._path,
+            "admin_password": self.admin_secret_,
+            "db_secret": database.db_secret_,
+            "db_name": database.name,
         }
         j.tools.jinja2.file_render(path=cfg_template, dest=self.config_path, **args)
         return self.config_path
@@ -119,5 +123,19 @@ class OdooServer(JSConfigClient):
 
     @property
     def startupcmd(self):
-        cmd = "odoo -c {}".format(self.config_path)
-        return j.servers.startupcmd.get(name="Odoo", cmd_start=cmd, ports=[self.port])
+        pg_ctl = "sudo -u odoouser /sandbox/bin/pg_ctl %s -D /sandbox/apps/odoo/data"
+        # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
+        cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {}".format(self.config_path)
+        odoo_cmd = j.servers.startupcmd.get("odoo")
+        odoo_cmd.cmd_start = cmd
+        odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
+        odoo_cmd.path = "/sandbox/bin"
+
+        cmd_start = pg_ctl % "start"
+        cmd_stop = pg_ctl % "stop"
+        postgres_cmd = j.servers.startupcmd.get("postgres-custom")
+        postgres_cmd.cmd_start = cmd_start
+        postgres_cmd.cmd_stop = cmd_stop
+        postgres_cmd.ports = [5432]
+        postgres_cmd.path = "/sandbox/bin"
+        return [odoo_cmd, postgres_cmd]

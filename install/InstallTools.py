@@ -3038,7 +3038,15 @@ class JumpscaleInstaller:
     def repos_get(self, pull=False):
 
         for sourceName, _ in self._jumpscale_repos:
-            Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            try:
+                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            except Exception:
+                activate_http = Tools.ask_yes_no("\n### SSH cloning Failed, your key isn't on github or you're missing permission, Do you want to clone via http?\n")
+                if activate_http:
+                    MyEnv.interactive = False
+                    Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+                else:
+                    raise RuntimeError("\n### Please authenticate your key and try again\n")
 
     def repos_link(self):
         """
@@ -3723,7 +3731,10 @@ class SSHAgent:
                 )
                 sys.exit(1)
             else:
-                name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                if MyEnv.interactive:
+                    name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                else:
+                    name = "id_rsa"
             return name
 
         self._keys  # will fetch the keys if not possible will show error
@@ -3737,6 +3748,7 @@ class SSHAgent:
             hdir = Tools.text_replace("{DIR_HOME}/.ssh")
             if not Tools.exists(hdir):
                 print("cannot find home dir:%s" % hdir)
+                print("\n### Please get a ssh key or generate one using ssh-keygen\n")
                 sys.exit(1)
             choices = []
             for item in os.listdir(hdir):

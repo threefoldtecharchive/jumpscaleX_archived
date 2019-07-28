@@ -76,7 +76,6 @@ class BuilderCaddy(BuilderGolangTools):
         self.package_path = self.package_path_get("caddyserver/caddy")
 
     def clean(self):
-        self.stop()
         self._init()
         j.builders.tools.dir_remove("{DIR_BIN}/caddy")
         C = """
