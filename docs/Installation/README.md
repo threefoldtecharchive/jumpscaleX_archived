@@ -128,7 +128,7 @@ Here we will install jumpscale using install option which willinstall jumpscale 
         # change permission
         chmod +x /tmp/jsx; 
         # configure with your secret - replace mysecret with yours`
-        /tmp/jsx configure -s -secret mysecret;
+        /tmp/jsx configure -s --secret mysecret;
         # install
         /tmp/jsx install -s
         ```
