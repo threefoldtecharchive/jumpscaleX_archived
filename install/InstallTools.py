@@ -3023,7 +3023,15 @@ class JumpscaleInstaller:
     def repos_get(self, pull=False):
 
         for sourceName, _ in self._jumpscale_repos:
-            Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            try:
+                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            except Exception:
+                activate_http = Tools.ask_yes_no("\n### SSH cloning Failed, your key isn't on github or you're missing permission, Do you want to clone via http?\n")
+                if activate_http:
+                    MyEnv.interactive = False
+                    Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+                else:
+                    raise RuntimeError("\n### Please authenticate your key and try again\n")
 
     def repos_link(self):
         """
