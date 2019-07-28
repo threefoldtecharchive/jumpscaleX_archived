@@ -3707,7 +3707,10 @@ class SSHAgent:
                 )
                 sys.exit(1)
             else:
-                name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                if MyEnv.interactive:
+                    name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                else:
+                    name = "id_rsa"
             return name
 
         self._keys  # will fetch the keys if not possible will show error
