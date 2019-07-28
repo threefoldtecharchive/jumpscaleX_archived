@@ -3920,7 +3920,7 @@ class SSHAgent:
         :raises RuntimeError: ssh-agent was not started while there was no error
         :raises RuntimeError: Could not find pid items in ssh-add -l
         """
-
+        
         socketpath = self.ssh_socket_path
 
         Tools.process_kill_by_by_filter("ssh-agent")
@@ -3929,6 +3929,7 @@ class SSHAgent:
 
         if not Tools.exists(socketpath):
             Tools.log("start ssh agent")
+            Tools.dir_ensure("{DIR_VAR}")
             rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
                 raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
