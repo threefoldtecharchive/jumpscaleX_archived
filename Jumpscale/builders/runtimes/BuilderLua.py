@@ -238,6 +238,11 @@ class BuilderLua(j.builders.system._BaseClass):
         self._execute(C)
 
     @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+
+    @builder_method()
     def install(self, reset=False, deps_reset=False):
         """
         will build & install in sandbox
@@ -281,7 +286,7 @@ class BuilderLua(j.builders.system._BaseClass):
         dest_path = self.DIR_SANDBOX
         j.builders.web.openresty.sandbox(reset=reset)
 
-        bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua"]
+        bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua", "lapis", "moon", "moonc"]
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
