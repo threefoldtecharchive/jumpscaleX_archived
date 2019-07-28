@@ -131,7 +131,6 @@ class DocResource(DAVNonCollection):
         return self._model.filestream_get(self.vfile, self._block_model)
 
 
-==== BASE ====
     def end_write(self, with_errors):
         pass
 

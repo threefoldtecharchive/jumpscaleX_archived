@@ -64,6 +64,48 @@ class FILE(j.data.bcdb._BCDBModelClass):
     def filestream_get(self, vfile, model):
         return FileStream(vfile, model)
 
+    def file_create_empty(self, name):
+        """
+        create new file inside a directory
+        :param name: file name
+        :return: file object
+        """
+        new_file = self.new()
+        new_file.name = name
+        new_file.save()
+        dir = self._dir_model.get(name=j.sal.fs.getDirName(name))
+        dir.files.append(new_file.id)
+        dir.save()
+        return new_file
+
+    def file_write(self, path, content, append=True, create=True):
+        """
+        writes a file to bcdb
+        :param path: the path to store the file
+        :param content: content of the file to be written
+        :param append: if True will append if the file already exists
+        :param create: create new if true and the file doesn't exist
+        :return: file object
+        """
+        try:
+            file = self.get(name=path)
+        except:
+            if not create:
+                raise RuntimeError(
+                    "file with path {} doesn't exist, if you want to create it pass create = True".format(path)
+                )
+            file = self.file_create_empty(path)
+        fs = FileStream(file, self._block_model)
+        fs.writelines(content, append=append)
+        return file
+
+    def file_delete(self, path):
+        file = self.get(name=path)
+        file.delete()
+        parent = self._dir_model.get(name=j.sal.fs.getDirName(path))
+        parent.files.delete(file.id)
+        parent.save()
+
 
 class FileStream:
     # plain types are the the file types that will be stored as plain text in content
@@ -74,18 +116,21 @@ class FileStream:
         self._vfile = vfile
         self._block_model = model
 
-    def writelines(self, stream):
+    def writelines(self, stream, append=True):
         ext = self._vfile.extension or self._vfile.name.split(".")[-1]
         if ext in self.PLAIN_TYPES:
-            self._save_plain(stream)
+            self._save_plain(stream, append=append)
         else:
-            self._save_blocks(stream)
+            self._save_blocks(stream, append=append)
 
         if not self._vfile.extension and ext:
             self._vfile.extension = ext
             self._vfile.save()
 
-    def _save_blocks(self, stream):
+    def _save_blocks(self, stream, append=True):
+        if not append:
+            self._vfile.blocks = []
+            self._vfile.save()
         for block in stream:
             hash = j.data.hash.md5_string(block)
             exists = self._block_model.find(md5=hash)
@@ -101,8 +146,12 @@ class FileStream:
             self._vfile.size_bytes += b.size
             self._vfile.blocks.append(b.id)
 
-    def _save_plain(self, stream):
-        self._vfile.content = self._vfile.content + "\n".join([line for line in stream])
+    def _save_plain(self, stream, append=True):
+        if append:
+            content = self._vfile.content
+        else:
+            content = ""
+        self._vfile.content = content + "\n".join([line for line in stream])
         self._vfile.size_bytes = len(self._vfile.content.encode())
 
     def read_stream_get(self):
