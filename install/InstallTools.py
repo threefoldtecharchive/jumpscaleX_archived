@@ -3724,6 +3724,7 @@ class SSHAgent:
             hdir = Tools.text_replace("{DIR_HOME}/.ssh")
             if not Tools.exists(hdir):
                 print("cannot find home dir:%s" % hdir)
+                print("\n### Please get a ssh key or generate one using ssh-keygen\n")
                 sys.exit(1)
             choices = []
             for item in os.listdir(hdir):
