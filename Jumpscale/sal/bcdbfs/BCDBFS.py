@@ -167,7 +167,6 @@ class BCDBFS(j.application.JSBaseClass):
     def file_delete(self, path):
         return self._file_model.file_delete(path)
 
-
     def _destroy(self):
         """
         VERY DANGEROUS: deletes everything in bcdbfs
@@ -187,4 +186,4 @@ class BCDBFS(j.application.JSBaseClass):
 
         j.sal.bcdbfs.file_copy_form_bcdbfs("/test_0", "/test_copied")
         j.sal.fs.createEmptyFile("/tmp/test_bcdbfs")
-        j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local") 
+        j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local")

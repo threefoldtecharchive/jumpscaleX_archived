@@ -27,7 +27,7 @@ class BuilderCmake(j.builders.system._BaseClass):
         self.dir_list = j.sal.fs.listDirsInDir("/sandbox/share")
         self.share_src = [i for i in self.dir_list if i.startswith("/sandbox/share/cmake")][0]
         self.profile_sandbox_select()
-        self.env_set_part('LD_LIBRARY_PATH', '/sandbox/lib/')
+        self.env_set_part("LD_LIBRARY_PATH", "/sandbox/lib/")
 
     @builder_method()
     def sandbox(

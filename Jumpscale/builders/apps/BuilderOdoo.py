@@ -24,9 +24,10 @@ class BuilderOdoo(j.builders.system._BaseClass):
         pass
 
     @builder_method()
-    def install(self):
+    def install(self, start=True):
         """
         kosmos 'j.builders.apps.odoo.install()'
+        kosmos 'j.builders.apps.odoo.start()'
         install odoo
         """
         j.builders.db.postgres.install()
@@ -58,13 +59,20 @@ class BuilderOdoo(j.builders.system._BaseClass):
         fi
 
         cd odoo
-        sudo -H -u odoouser python3 -m pip install --user -r requirements.txt
+        # sudo -H -u odoouser python3 -m pip install --user -r requirements.txt
+        python3 setup.py  install
         chmod +x odoo-bin
         """
         )
 
         self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
         j.builders.runtimes.nodejs.npm_install("rtlcss")
+
+        if start:
+            self.start()
+
+        print("INSTALLED OK, PLEASE GO TO http://localhost:8069")
+        # print("INSTALLED OK, PLEASE GO TO http://localhost:8069/web/database/selector")
 
     @property
     def startup_cmds(self):

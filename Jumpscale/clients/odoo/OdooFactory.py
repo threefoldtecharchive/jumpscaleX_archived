@@ -8,4 +8,3 @@ class OdooFactory(JSConfigs):
 
     __jslocation__ = "j.clients.odoo"
     _CHILDCLASS = OdooClient
-

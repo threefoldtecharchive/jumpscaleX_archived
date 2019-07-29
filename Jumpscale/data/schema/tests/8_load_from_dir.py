@@ -1,5 +1,5 @@
 # Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
-# In case TF TECH NV ceases to exist (e.g. because of bankruptcy) 
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
 #   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
 #   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
 # This file is part of jumpscale at <https://github.com/threefoldtech>.
@@ -72,10 +72,3 @@ def main(self):
     assert s2 == j.data.schema.get_from_url_latest(s.url)
 
     self._log_info("load from dir ok")
-
-
-
-
-
-
-

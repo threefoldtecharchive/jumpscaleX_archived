@@ -1,5 +1,5 @@
 # Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
-# In case TF TECH NV ceases to exist (e.g. because of bankruptcy) 
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
 #   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
 #   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
 # This file is part of jumpscale at <https://github.com/threefoldtech>.
@@ -446,10 +446,3 @@ class Schema(j.application.JSBaseClass):
         return other._md5 == self._md5
 
     __repr__ = __str__
-
-
-
-
-
-
-

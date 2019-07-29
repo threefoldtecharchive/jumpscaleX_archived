@@ -23,9 +23,18 @@ class OdooClient(JSConfigBase):
     """
 
     def _init(self, **kwargs):
-        self.client = erppeek.Client(
-            "http://{}:{}".format(self.host, self.port), db=self.database, user=self.username, password=self.password_
-        )
+        self._client = None
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = erppeek.Client(
+                "http://{}:{}".format(self.host, self.port),
+                db=self.database,
+                user=self.username,
+                password=self.password_,
+            )
+        return self._client
 
     def install_module(self, module_name):
         return self.client.install(module_name)
@@ -46,4 +55,3 @@ class OdooClient(JSConfigBase):
 
     def login(self, user, password):
         return self.client.login(user, password)
-
