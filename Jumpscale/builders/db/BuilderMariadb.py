@@ -106,7 +106,6 @@ class BuilderMariadb(j.builders.system._BaseClass):
         cmd = j.servers.startupcmd.get("mysqld", cmd_start=cmd_start)
         return [cmd]
 
-    @builder_method()
     def stop(self):
         j.sal.process.killProcessByName("mysqld")
 
