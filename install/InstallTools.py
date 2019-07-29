@@ -1796,7 +1796,16 @@ class Tools:
                     cd {REPO_DIR}
                     git checkout {BRANCH} -f
                     """
-                    rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+                    try:
+                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+                    except Exception:
+                        script = """
+                        set -ex
+                        cd {REPO_DIR}
+                        git checkout development_jumpscale -f
+                        """
+                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+                        
                     if rc > 0:
                         return False
                     assert getbranch(args=args) == branch
