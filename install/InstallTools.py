@@ -1804,16 +1804,15 @@ class Tools:
                     cd {REPO_DIR}
                     git checkout {BRANCH} -f
                     """
-                    try:
-                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                    except Exception:
+                    rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+                    if err:
                         script = """
                         set -ex
                         cd {REPO_DIR}
                         git checkout development_jumpscale -f
                         """
                         rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                            
+
                         if rc > 0:
                             return False
                             
