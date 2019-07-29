@@ -143,16 +143,17 @@ class OdooServer(JSConfigClient):
             dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % self._database.name)
             j.sal.fs.createDir(dest)
 
-        with open(dest + "%s.zip" % self._database.name, "wb") as f:
+        with open(dest + "%s.zip" % name, "wb") as f:
             for c in res.iter_content():
                 f.write(c)
-        return dest + "%s.zip" % self._database.name
+        return dest + "%s.zip" % name
 
     def database_import(self, name, dest=None, copy=False):
         IMPORT_API = "http://{}:{}/web/database/restore".format(self.host, self.port)
 
         if not dest:
             dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % self.database.name)
+            dest += "%s.zip" % name
             # CHECK DIR EXISTS
             # look for newest one
         data = {"master_pwd": self.database.db_secret_, "backup_file": dest, "name": name, "copy": copy}
