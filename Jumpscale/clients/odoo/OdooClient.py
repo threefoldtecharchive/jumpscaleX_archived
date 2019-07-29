@@ -192,3 +192,6 @@ class OdooClient(JSConfigBase):
 
     def login(self, user, password):
         return self.client.login(user, password)
+
+    def databases_list(self):
+        return self.client.db.list()
