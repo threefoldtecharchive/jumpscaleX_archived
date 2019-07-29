@@ -97,13 +97,12 @@ class BuilderMariadb(j.builders.system._BaseClass):
     @property
     def startup_cmds(self):
 
-        cmd = """
+        cmd_start = """
         /sandbox/usr/local/mysql/bin/mysqld --datadir=/sandbox/usr/local/mysql/data\
             --basedir=/sandbox/usr/local/mysql --user=mysql
         """
-        cmd_start = cmd
-
-        cmd = j.servers.startupcmd.get("mysqld", cmd_start=cmd_start)
+        cmd_stop = "/sandbox/usr/local/mysql/bin/mysqld stop"
+        cmd = j.servers.startupcmd.get("mysqld", cmd_start=cmd_start, cmd_stop=cmd_stop)
         return [cmd]
 
     def stop(self):
