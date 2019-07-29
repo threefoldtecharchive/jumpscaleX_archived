@@ -59,6 +59,8 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         """
         C = """
         ln -s /sandbox/openresty/bin/resty /sandbox/bin/resty
+        ln -s /sandbox/openresty/bin/restydoc /sandbox/bin/restydoc
+        ln -s /sandbox/openresty/bin/restydoc-index /sandbox/bin/restydoc-index
         rm  -rf /sandbox/openresty/pod
         rm  -rf /sandbox/openresty/site
         """
@@ -86,10 +88,10 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         :type zhub_instance:str
         """
 
-        bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index", "lapis", "moon", "moonc"]
+        bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index"]
         dirs = {
-            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/openresty.cfg"): "sandbox/cfg/",
-            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/mime.types"): "sandbox/cfg/",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/nginx/openresty.cfg"): "sandbox/cfg/nginx",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/nginx/mime.types"): "sandbox/cfg/nginx",
             self.tools.joinpaths(j.core.dirs.BASEDIR, "openresty/"): "sandbox/openresty/",
             "/lib/x86_64-linux-gnu/libnss_files.so.2": "sandbox/lib/",
         }
@@ -155,6 +157,11 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
         """
         self._execute(C)
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
 
     def copy_to_github(self, reset=False):
         """

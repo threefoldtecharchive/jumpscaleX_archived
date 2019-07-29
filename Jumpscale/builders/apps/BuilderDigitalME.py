@@ -52,7 +52,8 @@ class BuilderDigitalME(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        cmd = j.servers.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
+        cmd = j.servers.startupcmd.get("openresty", cmd_start="openresty",
+                                       cmd_stop="openresty -s stop", path="/sandbox/bin")
         return [cmd]
 
     def gslides(self):

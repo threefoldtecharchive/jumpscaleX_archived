@@ -40,6 +40,7 @@ class group_clients(JSGroup):
         self._sendgrid = None
         self._email = None
         self._sendgrid = None
+        self._odoo = None
         self._digitalocean = None
         self._openvcloud = None
         self._intercom = None
@@ -233,6 +234,12 @@ class group_clients(JSGroup):
             from Jumpscale.clients.mail.sendgrid.SendGridClient import SendGridClient
             self._sendgrid =  SendGridClient()
         return self._sendgrid
+    @property
+    def odoo(self):
+        if self._odoo is None:
+            from Jumpscale.clients.odoo.OdooFactory import OdooFactory
+            self._odoo =  OdooFactory()
+        return self._odoo
     @property
     def digitalocean(self):
         if self._digitalocean is None:
@@ -1289,6 +1296,7 @@ class group_sal(JSGroup):
         self._disklayout = None
         self._nic = None
         self._nfs = None
+        self._bcdbfs = None
         self._sshd = None
         self._hostsfile = None
         self._rsync = None
@@ -1363,6 +1371,12 @@ class group_sal(JSGroup):
             from Jumpscale.sal.nfs.NFS import NFS
             self._nfs =  NFS()
         return self._nfs
+    @property
+    def bcdbfs(self):
+        if self._bcdbfs is None:
+            from Jumpscale.sal.bcdbfs.BCDBFS import BCDBFS
+            self._bcdbfs =  BCDBFS()
+        return self._bcdbfs
     @property
     def sshd(self):
         if self._sshd is None:
