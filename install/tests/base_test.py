@@ -1,80 +1,79 @@
 import unittest
 import subprocess
 from loguru import logger
-import uuid, platform
-from parameterized import parameterized
-
-CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
+import platform
 
 
 class BaseTest(unittest.TestCase):
     LOGGER = logger
     LOGGER.add("installtion_{time}.log")
+    REPO_LOCATION = "/opt/code/github/threefoldtech/jumpscaleX"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.repo_location = "/opt/code/github/threefoldtech/jumpscaleX"
         self.js_branch = self.get_js_branch()
-        self.ssh_key = self.get_loaded_key()
         self.os_type = self.get_os_type()
-        self.js_container = CONTAINER_NAME
 
-    def setUp(self):
-        pass
+    @staticmethod
+    def info(message):
+        BaseTest.LOGGER.info(message)
 
-    def info(self, message):
-        self.LOGGER.info(message)
-
-    def get_loaded_key(self):
+    @staticmethod
+    def get_loaded_key():
         command = "ssh-add -L"
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         output, error = process.communicate()
         return output.decode().strip()
 
-    def get_js_branch(self):
-        command = "cd {} && cat .git/HEAD".format(self.repo_location)
-        output, error = self.os_command(command)
-        branch = output.decode()[output.decode().find("head") + 6 : -1]
+    @staticmethod
+    def get_js_branch():
+        command = "cd {} && cat .git/HEAD".format(BaseTest.REPO_LOCATION)
+        output, error = BaseTest.os_command(command)
+        branch = output.decode()[output.decode().find("head") + 6: -1]
         return branch
 
-    def get_os_type(self):
+    @staticmethod
+    def get_os_type():
         os = platform.system()
         if os == "Darwin":
             return "Mac"
         return os
 
-    def os_command(self, command):
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    @staticmethod
+    def os_command(command):
+        BaseTest.info("Execute : {} ".format(command))
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output, error = process.communicate()
-        process.kill()
         return output, error
 
-    def jumpscale_installtion(self, install_type, options=" "):
-        self.info("copy installtion script to /tmp")
-        command = "cp {}/install/jsx.py  /tmp/jsx".format(self.repo_location)
-        self.os_command(command)
+    def docker_command(self, command):
+        command = "docker exec -i {} /bin/bash -c '{}'".format(self.CONTAINER_NAME, command)
+        return BaseTest.os_command(command)
 
-        self.info("Change installer script [/tmp/jsx]to be executed ")
+    @staticmethod
+    def jumpscale_installation(install_type, options=" "):
+        BaseTest.info("copy installation script to /tmp")
+        command = "cp {}/install/jsx.py  /tmp/jsx".format(BaseTest.REPO_LOCATION)
+        BaseTest.os_command(command)
+
+        BaseTest.info("Change installer script [/tmp/jsx] to be executed ")
         command = "chmod +x /tmp/jsx"
-        self.os_command(command)
-        self.info("Configure the non-interactive option")
-        command = "/tmp/jsx configure --no-interactive -s mysecret;"
-        output, error = self.os_command(command)
+        BaseTest.os_command(command)
+        BaseTest.info("Configure the no-interactive option")
+        command = "/tmp/jsx configure --no-interactive -s mysecret"
+        BaseTest.os_command(command)
 
-        self.info("Run script with {} with branch {}".format(install_type, self.js_branch))
-        command = "/tmp/jsx {}  --no-interactive -b {} {}".format(install_type, self.js_branch, options)
-        output, error = self.os_command(command)
+        BaseTest.info("Run script with {} with branch {}".format(install_type, BaseTest.get_js_branch()))
+        command = "/tmp/jsx {}  --no-interactive -b {} {}".format(install_type, BaseTest.get_js_branch(), options)
+        output, error = BaseTest.os_command(command)
         return output, error
 
-    def check_js_container_installtion(self):
-        self.info(" Check that js container exist ,should succeed")
+    @staticmethod
+    def is_js_container_installed():
+        BaseTest.info(" Check that js container exist ,should succeed")
         command = "/tmp/jsx container-kosmos"
-        output, error = self.os_command(command)
-        if error:
-            output, error = self.jumpscale_installtion("container-install", "-n {}".format(self.js_container))
-            if error:
-                return False
-            if "install succesfull" not in output.decode():
-                return False
-
-        return True
+        output, error = BaseTest.os_command(command)
+        if "install successful" in output.decode():
+            return True
+        else:
+            return False
