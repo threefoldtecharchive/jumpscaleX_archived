@@ -19,6 +19,8 @@ class OdooFactory(JSConfigs):
         cl.password_ = "1234"
         cl.database = "main"
 
+        # cl.reset()
+
         cl.modules_default_install()
 
         j.shell()
