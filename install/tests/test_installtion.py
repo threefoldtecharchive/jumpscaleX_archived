@@ -6,7 +6,8 @@ class TestInstallationInDocker(BaseTest):
     def setUp(self):
         self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
         self.info(
-            "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type()))
+            "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type())
+        )
         output, error = self.jumpscale_installation("container-install", "-n {}".format(self.CONTAINER_NAME))
         self.assertFalse(error)
         self.assertIn("install successful", output.decode())
@@ -87,27 +88,20 @@ class TestInstallationInDocker(BaseTest):
         self.info(" Check the branch of jumpscale code, should be same as installation branch.")
         command = "cat /sandbox/code/github/threefoldtech/jumpscaleX/.git/HEAD"
         output, _ = self.docker_command(command)
-        branch = output.decode()[output.decode().find("head") + 6: -2]
+        branch = output.decode()[output.decode().find("head") + 6 : -2]
         self.assertEqual(branch, self.js_branch)
 
-    def Test04_loaded_ssh_key_inside_jumpscale_docker(self):
-        """
-        TC52,TC57
-        ** Test that ssh key loaded successfully inside docker**
-
-        #. check  that ssh-key loaded in docker  successfully.
-        """
         self.info("check  that ssh-key loaded in docker successfully")
         command = "cat /root/.ssh/authorized_keys"
         output, error = self.docker_command(command)
         self.assertEqual(output.decode().strip("\n"), self.get_loaded_key())
 
-    def test05_verify_container_delete_option(self):
+    def test04_verify_container_delete_option(self):
         """
 
         **Verify that container-delete option will delete the running container**
         """
-        self.info('Delete the running jsx container using container-delete')
+        self.info("Delete the running jsx container using container-delete")
         command = "/tmp/jsx container-delete"
         self.os_command(command)
 
@@ -149,8 +143,11 @@ class TestInstallationInSystem(BaseTest):
         #. Run kosmos ,should succeed
         """
 
-        self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(self.js_branch,
-                                                                                                      self.os_type))
+        self.info(
+            "Install jumpscale from {} branch on {} using no_interactive and re-install".format(
+                self.js_branch, self.os_type
+            )
+        )
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
         self.assertIn("install successful", output.decode())

@@ -29,7 +29,7 @@ class BaseTest(unittest.TestCase):
     def get_js_branch():
         command = "cd {} && cat .git/HEAD".format(BaseTest.REPO_LOCATION)
         output, error = BaseTest.os_command(command)
-        branch = output.decode()[output.decode().find("head") + 6: -1]
+        branch = output.decode()[output.decode().find("head") + 6 : -1]
         return branch
 
     @staticmethod
@@ -60,11 +60,11 @@ class BaseTest(unittest.TestCase):
         command = "chmod +x /tmp/jsx"
         BaseTest.os_command(command)
         BaseTest.info("Configure the no-interactive option")
-        command = "/tmp/jsx configure --no-interactive -s mysecret"
+        command = "/tmp/jsx configure -s --secret mysecret"
         BaseTest.os_command(command)
 
         BaseTest.info("Run script with {} with branch {}".format(install_type, BaseTest.get_js_branch()))
-        command = "/tmp/jsx {}  --no-interactive -b {} {}".format(install_type, BaseTest.get_js_branch(), options)
+        command = "/tmp/jsx {}  -s -b {} {}".format(install_type, BaseTest.get_js_branch(), options)
         output, error = BaseTest.os_command(command)
         return output, error
 
