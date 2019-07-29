@@ -36,18 +36,50 @@ class OdooClient(JSConfigBase):
             )
         return self._client
 
-    def install_module(self, module_name):
+    def module_install(self, module_name):
         return self.client.install(module_name)
 
-    def uinstall_module(self, module_name):
+    def module_remove(self, module_name):
         return self.client.uninstall(module_name)
 
-    def add_user(self, username, password):
+    def modules_default_install(self):
+        modules = [
+            "web",
+            "portal",
+            "website",
+            "project",
+            "crm",
+            "inventory",
+            "invoicing",
+            "sales",
+            "nodes",
+            "ecommerce",
+            "purchase",
+            "employees",
+            "recruitment",
+            "expenses",
+            "dashboards",
+            "contacts",
+            "leaves",
+            "discuss",
+            "lunch",
+            "maintenance",
+            "slides",
+            "blogs",
+            "calendar",
+            "fleet",
+            "events",
+        ]
+        j.shell()
+        for module in modules:
+            self.module_install(module)
+
+    def user_add(self, username, password):
         new_user = self.client.model("res.users").create({"login": username, "name": username})
         new_user.password = password
         return new_user
 
-    def delete_user(self, user, password):
+    def user_delete(self, user, password):
         user_id = self.client.login(user, password)
         user = self.client.model("res.users").get(user_id)
         self.client.login(self.username, self.password_)

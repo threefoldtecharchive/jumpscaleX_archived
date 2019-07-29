@@ -8,3 +8,17 @@ class OdooFactory(JSConfigs):
 
     __jslocation__ = "j.clients.odoo"
     _CHILDCLASS = OdooClient
+
+    def test(self):
+        """
+        kosmos 'j.clients.odoo.test()'
+        :return:
+        """
+        cl = self.get()
+        cl.username = "kristof@incubaid.com"
+        cl.password_ = "1234"
+        cl.database = "main"
+
+        cl.modules_default_install()
+
+        j.shell()
