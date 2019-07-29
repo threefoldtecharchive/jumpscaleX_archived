@@ -1805,10 +1805,10 @@ class Tools:
                         git checkout development_jumpscale -f
                         """
                         rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                        
-                    if rc > 0:
-                        return False
-                    assert getbranch(args=args) == branch
+                            
+                        if rc > 0:
+                            return False
+                            
                 return True
 
             if checkoutbranch(args, branch):
