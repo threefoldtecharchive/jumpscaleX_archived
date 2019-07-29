@@ -29,6 +29,12 @@ class Licenser(j.application.JSBaseClass):
         :return:
         """
         if not path:
+            self.replacer.dir_process(
+                path="/sandbox/code/github/threefoldtech/jumpscaleX", write=True, addlicense=False
+            )
+            self.replacer.dir_process(
+                path="/sandbox/code/github/threefoldtech/digitalmeX", write=True, addlicense=False
+            )
             self.do("/sandbox/code/github/threefoldtech/jumpscaleX", write=write, addlicense=addlicense)
             self.do("/sandbox/code/github/threefoldtech/digitalmeX", write=write, addlicense=addlicense)
         else:

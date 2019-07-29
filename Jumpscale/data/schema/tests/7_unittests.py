@@ -1,6 +1,7 @@
-
-
-# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy) 
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
 # This file is part of jumpscale at <https://github.com/threefoldtech>.
 # jumpscale is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
 
 
 from Jumpscale import j
@@ -29,3 +31,10 @@ def main(self):
     return
     unittests_path = "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/tests/testsuite"
     assert pytest.main([unittests_path]) == 0
+
+
+
+
+
+
+

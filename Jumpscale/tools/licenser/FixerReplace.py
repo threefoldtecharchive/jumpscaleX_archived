@@ -12,7 +12,8 @@ TFTECH_OTHER = """
 
 GPL3 = """
 # In case TF TECH NV ceases to exist (e.g. because of bankruptcy) 
-#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018 
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
 # This file is part of jumpscale at <https://github.com/threefoldtech>.
 # jumpscale is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,6 +36,8 @@ JSBASE = j.application.JSBaseClass
 
 class FixerReplacer(j.application.JSBaseClass):
     def file_remove_license(self, C, tofind):
+        if C.find("file_remove_license") != -1:
+            return False, ""
         if C.find(tofind) != -1:
             out = ""
             state = "start"
@@ -62,7 +65,7 @@ class FixerReplacer(j.application.JSBaseClass):
             rc, C = self.file_remove_license(C, "# LICENSE END")
         rc = True
         while rc:
-            rc, C = self.file_remove_license(C, "# You should ")
+            rc, C = self.file_remove_license(C, "# You should have received")
         rc = True
         while rc:
             rc, C = self.file_remove_license(C, "# along with")
