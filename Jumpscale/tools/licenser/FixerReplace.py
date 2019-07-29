@@ -63,12 +63,12 @@ class FixerReplacer(j.application.JSBaseClass):
         rc = True
         while rc:
             rc, C = self.file_remove_license(C, "# LICENSE END")
-        rc = True
-        while rc:
-            rc, C = self.file_remove_license(C, "# You should have received")
-        rc = True
-        while rc:
-            rc, C = self.file_remove_license(C, "# along with")
+        # rc = True
+        # while rc:
+        #     rc, C = self.file_remove_license(C, "# You should have received")
+        # rc = True
+        # while rc:
+        #     rc, C = self.file_remove_license(C, "# along with")
         if addlicense:
             C4 = header + GPL3 + "\n\n" + C
         else:
