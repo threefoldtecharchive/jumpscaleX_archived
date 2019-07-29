@@ -1,5 +1,6 @@
 import os
 from Jumpscale import j
+import requests
 
 JSConfigClient = j.application.JSBaseConfigClass
 
@@ -10,7 +11,8 @@ class OdooServer(JSConfigClient):
            name* = "default" (S)
            host = "127.0.0.1" (S)
            port = 8069 (I)
-           admin_secret_ = "123456" (S)
+           username="admin"(S)
+           admin_secret_ = "admin" (S)
            Email = "bola@incubaid.com" (S)
            timeout = 300
            databases = (LO) !jumpscale.odoo.server.db.1
@@ -27,7 +29,7 @@ class OdooServer(JSConfigClient):
             self.host = " 127.0.0.1"
 
         self._default_client = None
-        self._databse = None
+        self._database = None
         self._postgres_cmd = j.servers.startupcmd.get("postgres-custom")
         self._odoo_cmd = j.servers.startupcmd.get("odoo")
 
@@ -44,6 +46,12 @@ class OdooServer(JSConfigClient):
         p = "%s/odoo_db/%s" % (j.core.myenv.config["DIR_VAR"], self.name)
         j.sal.fs.createDir(p)
         return p
+
+    @property
+    def database(self):
+        if not self._database:
+            self._database = self.databases.new()
+        return self._database
 
     def _write_config(self):
         cfg_template = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "odoo_config.conf")
@@ -68,21 +76,37 @@ class OdooServer(JSConfigClient):
             self._default_client.save()
         return self._default_client
 
-    def databases_reset(self):
+    def databases_reset(self, db_name=None):
         """
         remove all databases
         :return:
         """
-        pass
+        API_DROP = "http://{}:{}/web/database/drop".format(self.host, self.port)
+        if db_name:
+            data = {"master_pwd": self.database.db_secret_, "name": db_name}
+            res = requests.post(url=API_DROP, data=data)
+        else:
+            for db in self.databases_list():
+                data = {"master_pwd": self.database.db_secret_, "name": db}
+                res = requests.post(url=API_DROP, data=data)
+        return res
 
     def databases_list(self):
         """
         list databases from postgresql
         :return:
         """
-        raise RuntimeError()  # TODO
+        client = j.clients.odoo.get(
+            host=self.host,
+            port=self.port,
+            username=self.username,
+            password_=self.admin_secret_,
+            database=self.database.name,
+        )
+        dbs = client.databases_list()
+        return dbs
 
-    def databases_create(self, reset=True):
+    def databases_create(self, name, email, password, phone, lang="en_US", country_code="eg", reset=True):
         """
         remove the database if reset=True
         create db in postgresql
@@ -90,35 +114,50 @@ class OdooServer(JSConfigClient):
 
         :return:
         """
-
-        if reset:
-            self.databases_reset()
-        for db in self.databases:
-            if not db.name in self.databases_list():
-                # means does not exist yet, need to create
-                raise RuntimeError()  # TODO
+        API_CREATE = "http://{}:{}/web/database/create".format(self.host, self.port)
+        data = {
+            "master_pwd": self.database.db_secret_,
+            "name": name,
+            "login": email,
+            "password": password,
+            "phone": phone,
+            "lang": lang,
+            "country_code": country_code,
+        }
+        res = requests.post(url=API_CREATE, data=data)
+        if b"already exists" in res.content:
+            raise RuntimeError("it's already exist")
+        return True
 
     def _database_obj_get(self, name):
-        for db in self.databases:
-            if db.name == name:
+        for db in self.databases_list():
+            if db == name:
                 return db
         raise RuntimeError("could not find database :%s" % name)
 
     def database_export(self, name, dest=None):
-        db = self._database_obj_get(name)
+        BACKUP_API = "http://{}:{}/web/database/backup".format(self.host, self.port)
+        data = {"master_pwd": self.database.db_secret_, "name": name, "backup_format": "zip"}
+        res = requests.post(url=BACKUP_API, data=data, stream=True)
         if not dest:
-            dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % db.name)
+            dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % self._database.name)
             j.sal.fs.createDir(dest)
-            dest = dest + "/%s.tgz" % humantime
-        raise RuntimeError()  # TODO
 
-    def database_import(self, name, dest=None):
-        db = self._database_obj_get(name)
+        with open(dest + "%s.zip" % self._database.name, "wb") as f:
+            for c in res.iter_content():
+                f.write(c)
+        return dest + "%s.zip" % self._database.name
+
+    def database_import(self, name, dest=None, copy=False):
+        IMPORT_API = "http://{}:{}/web/database/restore".format(self.host, self.port)
+
         if not dest:
-            dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % db.name)
+            dest = j.core.tools.text_replace("{DIR_VAR}/odoo/exports/%s" % self.database.name)
             # CHECK DIR EXISTS
             # look for newest one
-        raise RuntimeError()  # TODO
+        data = {"master_pwd": self.database.db_secret_, "backup_file": dest, "name": name, "copy": copy}
+        res = requests.post(url=IMPORT_API, data=data)
+        return res
 
     def stop(self):
         self._log_info("stop odoo server")
