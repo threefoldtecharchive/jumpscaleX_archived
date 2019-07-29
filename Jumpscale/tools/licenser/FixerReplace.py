@@ -1,4 +1,7 @@
+from Jumpscale import j
 
+
+GPL3 = """
 
 # Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
 # This file is part of jumpscale at <https://github.com/threefoldtech>.
@@ -14,11 +17,26 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 
-from Jumpscale import j
+JSBASE = j.application.JSBaseClass
 
 
-class BLOCK(j.data.bcdb._BCDBModelClass):
-    def _schema_get(self):
-        return j.data.schema.get_from_url_latest("jumpscale.bcdb.fs.block.2")
+class FixerReplacer(j.application.JSBaseClass):
+    def file_process(self, path, write=False):
+        out = ""
+        C = j.sal.fs.readFile(path)
+        if C.find("Copyright (C) 2019") != -1:
+            return
+        C = GPL3 + "\n\n" + C
+        self._log_info("will copyright:%s" % path)
+        if write:
+            j.sal.fs.writeFile(path, C)
+
+    def dir_process(self, path, extensions=["py"], recursive=True, write=False):
+        path = j.sal.fs.pathNormalize(path)
+        for ext in extensions:
+            for p in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.%s" % ext, followSymlinks=False):
+                self._log_debug("process file:%s" % p)
+                self.file_process(path=p, write=write)

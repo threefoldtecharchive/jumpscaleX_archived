@@ -56,7 +56,6 @@ def generate():
     j.sal.fs.remove("/sandbox/var/cmds")
     from Jumpscale.core.generator.JSGenerator import JSGenerator
 
-    j.shell()
     g = JSGenerator(j)
     g.generate(methods_find=True)
     g.report()
