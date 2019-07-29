@@ -24,7 +24,7 @@ class OdooServer(JSConfigClient):
     def _init(self, **kwargs):
         self.config_path = j.sal.fs.joinPaths(j.dirs.CFGDIR, "odoo_config_%s.conf" % self.name)
         if self.host == "localhost":
-            self.host = "0.0.0.0"
+            self.host = " 127.0.0.1"
 
         self._default_client = None
         self._databse = None
@@ -36,7 +36,7 @@ class OdooServer(JSConfigClient):
         Starts odoo server in tmux
         """
         self._write_config()
-        for server in self.startupcmd(module_name):
+        for server in self.startupcmd:
             server.start()
 
     @property
@@ -67,11 +67,6 @@ class OdooServer(JSConfigClient):
             )
             self._default_client.save()
         return self._default_client
-
-    def _install_module(self, module_name):
-        if self._odoo_cmd.is_running():
-            self._odoo_cmd.stop()
-        self.start(module_name=module_name)
 
     def databases_reset(self):
         """
@@ -130,16 +125,10 @@ class OdooServer(JSConfigClient):
         for server in self.startupcmd:
             server.stop()
 
-    def startupcmd(self, module_name):
+    @property
+    def startupcmd(self):
 
-        if module_name:
-            cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {} -d {} -i {},{}".format(
-                self.config_path, self._database.name, module_name, module_name
-            )
-
-        # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
-        else:
-            cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {}".format(self.config_path)
+        cmd = "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {}".format(self.config_path)
 
         self._odoo_cmd.cmd_start = cmd
         self._odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
