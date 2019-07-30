@@ -2657,6 +2657,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "psycopg2-binary",
                 "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
@@ -2730,8 +2731,6 @@ class BaseInstaller:
             ],
             # level 2: full install
             2: [
-                # "psycopg2-binary",
-                # "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
                 # "SQLAlchemy>=1.1.9",
