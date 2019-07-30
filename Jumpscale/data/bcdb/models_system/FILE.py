@@ -150,6 +150,16 @@ class FILE(j.data.bcdb._BCDBModelClass):
         parent.files.remove(file.id)
         parent.save()
 
+    def file_read(self, path):
+        try:
+            file = self.find(name=path)[0]
+        except:
+            if not create:
+                raise RuntimeError("file with path {} does not exist".format(path))
+        path = j.sal.fs.pathClean(path)
+        fs = FileStream(file, self._block_model)
+        return fs.read_stream_get().read()
+
 
 class FileStream:
     # plain types are the the file types that will be stored as plain text in content
