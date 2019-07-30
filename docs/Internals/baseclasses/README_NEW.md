@@ -3,11 +3,11 @@
 ## Index
 - [Intro](#intro)
 - [Baseclasses](#base-classes)
-    - [JSBase](#jsbase)
-    - [JSAttr]()
-    - [JSConfigsFactory]()
-    - [JSConfigs]()
-    - [JSConfig]()
+    - [JSBase](#jsbase-class)
+    - [JSAttr](#jsattr-class)
+    - [JSConfigsFactory](#jsconfigsfactory-class)
+    - [JSConfigs](#jsconfigs-class)
+    - [JSConfig](#jsconfig-class)
 - [How to use]()
 - [Jumpscale generated]()
 - [Examples]()
@@ -28,7 +28,7 @@ So if need to know how a client comes from:<br>
 We will go through them in details the next parts
 
 ## Base Classes
-### JSBase
+## JSBase Class
 This is the baseclass used by all other base classes, Its the lowest level one. Every object in Jumpscale inherits from this one.
 
 ### JSBase main functions
@@ -67,10 +67,7 @@ __Logging Methods__<br/>
 - `_log_critical` : method to log a critical statement. <br/>
 </p>
 
-**3- Caching logic** <br/>
-
-
-**4- Logic for auto completion in shell** <br/>
+**3- Logic for auto completion in shell** <br/>
 - To make autocompeletion in kosmos shell, we need to know the children of each class and the methods or properties in it also the data if it contains, we will walk through the methods that do so.
 - `__name_get`: Gets each name for instances in factory.
 for example in `j.builders.db` it gets names in DBFactoryClass, zdb, mongo .. etc
@@ -79,8 +76,63 @@ for example in `j.builders.db` it gets names in DBFactoryClass, zdb, mongo .. et
 
 - Output is shown through `__str__` method.
 
-**5- State on execution of methods (the _done methods)** <br/>
+**4- State on execution of methods (the _done methods)** <br/>
 - We can consider it as a flag to save the state of execting methods.
 - `_done_set`: saves that this method had been executed so, it won't run again unless you change the state
 also there are other methods in this arena; `_done_delete`, `_done_reset`,`_done_check`, `_done_key`
 
+## JSAttr Class
+- Joins JSBase as a lower level class which objects inherit from. It Deals with set & get attributes as we deals with short names, via jumpscale generated<br>
+
+#### Methods:
+- `__getattr__` <br/>
+Gets class attriubte from child instances, doesn't return private or non child attributes
+
+
+- `__setattr__`: <br/>
+Takes key, value and set's the instance attribute
+
+## JSConfigsFactory Class
+This class is the factory for multiple JSConfig/JSConfigs baseclasses and its objects.
+It contains some methods that help both of them to make the config manager. It deals directly with BCDB (Block chain database) always uses the system BCDB, unless if this one implements something else.
+
+Can have a `__jslocation__`, meaning it will be attached somewhere in the Jumpscale namespace.
+
+It can optionally be a container for one or more config classes, that is why it is not `_CHILDCLASS` here but `_CHILDCLASSES`.
+
+The _CHILDCLASSES are one or more config(s) classes, always defined as a (Python) List.
+
+A childclass can be a singleton (means just add a JSConfig class)
+
+**Methods**
+- `delete()`: deletes the instance (child object).
+- `save()`: save new instance in bcdb with it's configurations.
+
+
+## JSConfigs Class
+Is the base class for the factories (a collection of config objects), allowing you to create instances of the _CHILDCLASS on the fly (composition).
+
+It has the base methods used in clients which deals with childclasses; creating, deleting, reseting, finding.
+
+**Methods**
+- `_process_schematext()`:  As configurations uses a schema, this methods rewrites the schema in such way there is always a parent_id and name.
+
+- `_bcdb_selector()`: select bcdb namespace, always uses the system BCDB, unless if this one implements something else.
+
+- `_childclass_selector()`: allow custom implementation of which child class to use.
+
+- `new()`: Create new config (instance) from a server, client must have a unique name and other configs could be entered later.
+
+- `get()`: Gets an object from the instance.
+
+- `exists()`: Checks if the instance already created.
+
+- `reset()`: will destroy all data in the DB, will delete all existed instances.
+
+- `find()`: Search for instance or list of instances by keys.
+
+- `count()`: Count the child instances and return its length.
+
+- `delete()`: Delete a specific instance.
+
+## JSConfig Class
