@@ -2,7 +2,7 @@ from Jumpscale import j
 from .peeweeClient import PeeweeClient
 
 import importlib
-from peewee import *
+from .peewee import *
 
 
 class PeeweeFactory(j.application.JSBaseConfigsClass):

@@ -321,7 +321,6 @@ if redis:
         def __init__(self, redis, key):
             self.__db = redis
             self.key = key
-            self.empty = False
 
         def qsize(self):
             """Return the approximate size of the queue.
