@@ -628,7 +628,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if not server_process:
             corex_server = j.servers.corex.get(name=self.corex_client_name, port=corex_client.port)
             corex_server.start()
-        return client
+        return corex_client
 
     def _corex_start(self, toexec):
         if self.state == "error":
