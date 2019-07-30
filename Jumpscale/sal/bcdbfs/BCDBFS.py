@@ -17,6 +17,14 @@ class BCDBFS(j.application.JSBaseClass):
         self._dir_model = self._bcdb.model_get_from_file("{}/models_system/DIR.py".format(self._bcdb._dirpath))
         self.dir_create('/')
 
+    def exists(self, path):
+        return self.dir_exists(path) or self.file_exists(path)
+
+    def is_dir(self, path):
+        return self.dir_exists(path)
+
+    def is_file(self, path):
+        return self.file_exists(path)
     #############################
     ######  DIR OPERATIONS ######
     #############################
@@ -148,6 +156,8 @@ class BCDBFS(j.application.JSBaseClass):
         :return: file object
         """
         source_file = self._file_model.find(name=path)[0]
+        if self.is_dir(dest):
+            dest = j.sal.fs.joinPaths(dest, j.sal.fs.getBaseName(path))
         dest_file = self.file_create_empty(dest)
         if source_file.blocks:
             dest_file.blocks = source_file.blocks
@@ -177,12 +187,13 @@ class BCDBFS(j.application.JSBaseClass):
         return self._file_model.find(name=path) != []
 
     def file_read(self, path):
+        """
+        read file from path
+        :param path: path to the file
+        :return: (string) file content
+        """
         path = j.sal.fs.pathClean(path)
-        file_obj = self._file_model.get_by_name(path)
-        if not file_obj:
-            raise RuntimeError('path {} does not exist'.format(path))
-        contents = file_obj[0].content
-        return contents
+        return self._file_model.file_read(path)
 
     #############################
     ###### LIST OPERATIONS ######
@@ -249,8 +260,6 @@ class BCDBFS(j.application.JSBaseClass):
         j.sal.bcdbfs.file_delete('/test_from_local')
         assert j.sal.bcdbfs.file_exists('/test_from_local') is False
 
-        # j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
-        # j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        # assert j.sal.bcdbfs.file_read('/test_with_content') == 'test contents'
-
-        print('TESTS PASSED')
+        j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
+        j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
+        assert j.sal.bcdbfs.file_read('/test_with_content') == b'test content'
