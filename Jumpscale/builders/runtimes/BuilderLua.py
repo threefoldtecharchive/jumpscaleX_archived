@@ -46,7 +46,7 @@ class BuilderLua(j.builders.system._BaseClass):
         """
 
         # set showout to False to avoid text_replace of output log
-        self._execute(C, showout=True)
+        self._execute(C, showout=False)
 
     def profile_installer_select(self):
         def _clean_env(env_paths):
