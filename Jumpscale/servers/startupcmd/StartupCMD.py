@@ -257,7 +257,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         else:
             raise RuntimeError("not supported")
 
-    def stop(self, force=False, waitstop=True, die=True):
+    def stop(self, force=True, waitstop=True, die=True):
         """
 
         :param force: will do a hardkill after the softkill even if it measures down

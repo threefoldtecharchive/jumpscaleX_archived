@@ -1115,7 +1115,7 @@ class Tools:
                 p(data.rstrip())
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=False, indent=0, end="\n", log=True):
+    def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=True, indent=0, end="\n", log=True):
         """
 
         :param content: what to print
@@ -1136,11 +1136,14 @@ class Tools:
                 "REVERSE"
 
         """
-
+        if not isinstance(content, str):
+            content = str(content)
         if args or colors or text_strip:
             content = Tools.text_replace(
                 content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, ignore_error=True
             )
+            for key, val in MyEnv.MYCOLORS.items():
+                content = content.replace("{%s}" % key, val)
         elif content.find("{RESET}") != -1:
             for key, val in MyEnv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)

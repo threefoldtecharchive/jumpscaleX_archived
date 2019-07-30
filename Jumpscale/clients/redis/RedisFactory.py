@@ -164,10 +164,10 @@ class RedisFactory(j.application.JSBaseClass):
 
         # if not fromcache:
         #     return RedisQueue(self.get(ipaddr, port, fromcache=False), name, namespace=namespace)
-        key = "%s_%s_%s" % (ipaddr, port, key)
-        if fromcache == False or key not in self._redisq:
-            self._redisq[key] = redisclient.queue_get(key)
-        return self._redisq[key]
+        key2 = "%s_%s_%s" % (ipaddr, port, key)
+        if fromcache == False or key2 not in self._redisq:
+            self._redisq[key2] = redisclient.queue_get(key)
+        return self._redisq[key2]
 
     def core_get(self, reset=False, tcp=True):
         """

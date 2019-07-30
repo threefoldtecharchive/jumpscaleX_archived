@@ -259,7 +259,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._config_write()
         self._load()
 
-        bcdb = self.get(name=name, reset=reset)
+        bcdb = self._get(name=name, reset=reset)
 
         if storclient:
             assert bcdb.storclient
