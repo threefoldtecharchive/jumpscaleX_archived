@@ -205,7 +205,7 @@ class JSBase:
                     else:
                         raise RuntimeError("find item can only have * at start or at end")
                 else:
-                    if self._key == finditem:
+                    if self._location == finditem:
                         return True
             return False
 

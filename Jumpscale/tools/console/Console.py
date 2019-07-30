@@ -275,7 +275,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         )
 
     def _check_interactive(self):
-        if not j.core.myenv.interactive:
+        if not j.application.interactive:
             raise j.exceptions.Input("Cannot use console in a non interactive mode.", "console.noninteractive")
 
     def askPassword(self, question, confirm=True, regex=None, retry=-1, validate=None):

@@ -79,7 +79,11 @@ class BCDBModelIndex(j.application.JSBaseClass):
         """
         self._key_index_destroy(nid=nid)
         self._ids_destroy(nid=nid)
-        self._text_index_destroy_()
+        if j.sal.nettools.tcpPortConnectionTest("localhost", 1491):
+            # means there is a sonic
+            self._text_index_destroy_()
+        else:
+            self._log_warning("there was no sonic server active, could not delete the index")
 
     def set(self, obj):
         """

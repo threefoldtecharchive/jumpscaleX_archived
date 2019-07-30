@@ -26,6 +26,7 @@ from .BCDBModel import BCDBModel
 import os
 import sys
 import redis
+import copy
 
 
 class BCDBFactory(j.application.JSBaseFactoryClass):
@@ -95,21 +96,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         res = []
 
         for name, data in self._config.items():
+            self._log_debug(data)
             if self.exists(name):
                 bcdb = self.get(name)
                 res.append(bcdb)
-            # SHOULD EXIST IN FIRST PLACE NO NEED TO DO NEW
-            # else:
-            #     if data["type"] == "zdb":
-            #         storclient = j.clients.zdb.client_get(**data)
-            #         bcdb = self.new(name=name, storclient=storclient)
-            #     elif data["type"] == "rdb":
-            #         storclient = j.clients.rdb.client_get(**data)
-            #         bcdb = self.new(name=name, storclient=storclient)
-            #     else:
-            #         bcdb = self.new(name=name)
-            #     res.append(bcdb)
-
         return res
 
     def index_rebuild(self):
@@ -142,26 +132,56 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             item.destroy()
 
     def exists(self, name):
-        b = self._get(name=name, reset=False, if_not_exist_die=False)
-        if b:
+        try:
+            b = self._get(name=name, reset=False, if_not_exist_die=False)
             return True
+        except Exception as e:
+            if str(e).find("Connection refused") != -1:
+                msg = "TRY to access BCDB:\n"
+                d = copy.copy(self._config[name])
+                d.pop("secret")
+                msg += str(d)
+                msg += "\nconnection refused (is ZDB started)\n"
+
+                if j.application.interactive:
+                    print(msg)
+                    if j.tools.console.askYesNo("Do you want to destroy the BCDB (CAREFUL)?", default=False):
+                        self.delete(name=name)
+                else:
+                    raise RuntimeError(msg)
         return False
 
-    def get(self, name, storclient=None, reset=False, if_not_exist_die=False):
+    def delete(self, name):
+        if name in self._bcdb_instances:
+            self._bcdb_instances.pop(name)
+        if name in self._config:
+            data = self._config[name]
+            # self._config.pop(name)
+            b = BCDB(storclient=None, name=name, reset=True)
+            b.destroy()
+            self._config_write()
+
+    def get(self, name, storclient=None, reset=False):
         """
         will create a new one or an existing one if it exists
         :param name:
         :param reset: will remove the data
+        :param storclient: optional
+            e.g. j.clients.rdb.client_get()  (would be the core redis
+            e.g. j.clients.zdb.client_get() would be a zdb client
         :return:
         """
-        return self._get(name=name, reset=reset, storclient=storclient, if_not_exist_die=if_not_exist_die)
+        if self.exists(name):
+            return self._get(name=name, reset=reset, storclient=storclient)
+        else:
+            return self.new(name=name, storclient=storclient, reset=reset)
 
     def _get_vfs(self):
         from .BCDBVFS import BCDBVFS
 
         return BCDBVFS(self._bcdb_instances)
 
-    def _get(self, name, reset=False, storclient=None, if_not_exist_die=False):
+    def _get(self, name, reset=False, storclient=None, if_not_exist_die=True):
         """[summary]
         get instance of bcdb
         :param name:
@@ -200,11 +220,13 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         data_encrypted = j.data.nacl.default.encryptSymmetric(data)
         j.sal.fs.writeFile(self._config_data_path, data_encrypted)
 
-    def new(self, name, storclient=None):
+    def new(self, name, storclient=None, reset=False):
         """
-        create a new instance (can also do this using self.new(...))
+        create a new instance
         :param name:
         :param storclient: optional
+            e.g. j.clients.rdb.client_get()  (would be the core redis
+            e.g. j.clients.zdb.client_get() would be a zdb client
         :return:
         """
 
@@ -216,6 +238,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         data = {}
 
         if storclient:
+            assert isinstance(storclient.type, str)
             if storclient.type == "RDB":
                 data["nsname"] = storclient.nsname
                 data["type"] = "rdb"
@@ -233,11 +256,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             data["type"] = "sqlite"
 
         self._config[name] = data
-
         self._config_write()
         self._load()
 
-        bcdb = self.get(name=name, if_not_exist_die=True)
+        bcdb = self.get(name=name, reset=reset)
 
         if storclient:
             assert bcdb.storclient
