@@ -12,7 +12,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
     @url = jumpscale.corex.client.1
     name* = "" (S)
     addr = "localhost" (S)
-    port = 7681 (I)
+    port = 1500 (I)
     login = "" (S)
     passwd_ = "" (S)
     

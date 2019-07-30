@@ -8,7 +8,7 @@ class CorexServer(JSConfigClient):
     _SCHEMATEXT = """
            @url =  jumpscale.servers.corex.1
            name* = "default" (S)
-           port = 1491 (I)
+           port = 1500 (I)
            user = "" (S)
            password = "" (S)
            chroot = false (B)
