@@ -164,7 +164,7 @@ class BuilderLua(j.builders.system._BaseClass):
         # luazen
 
         # alt-getopt
-        # lua-messagepack
+        lua-messagepack
 
         # lua-resty-qless
         # lua-geoip
