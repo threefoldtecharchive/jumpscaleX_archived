@@ -19,7 +19,7 @@ class BCDBFS(j.application.JSBaseClass):
     #############################
     ######  DIR OPERATIONS ######
     #############################
-    def mkdir(self, path):
+    def dir_create(self, path):
         """
         create a directory
         :param path: full path of the directory
@@ -27,7 +27,7 @@ class BCDBFS(j.application.JSBaseClass):
         """
         return self._dir_model.create_empty_dir(path)
 
-    def rmdir(self, path, recursive=True):
+    def dir_remove(self, path, recursive=True):
         """
         Remove directory
         :param path: directory path
@@ -61,7 +61,7 @@ class BCDBFS(j.application.JSBaseClass):
         if recursive:
             source_dirs = j.sal.fs.listDirsInDir(path)
             for dir in source_dirs:
-                self.mkdir(dir)
+                self.dir_create(dir)
                 basename = j.sal.fs.getBaseName(dir)
                 self.dir_copy_from_local(dir, j.sal.fs.joinPaths(dest, basename))
 
@@ -83,7 +83,7 @@ class BCDBFS(j.application.JSBaseClass):
             source_dirs = dir_source.dirs
             for dir_id in source_dirs:
                 dir = self._dir_model.get(dir_id)
-                self.mkdir(dir.name)
+                self.dir_create(dir.name)
                 basename = j.sal.fs.getBaseName(dir.name)
                 self.dir_copy_from_bcdbfs(dir.name, j.sal.fs.joinPaths(dest, basename))
 
@@ -131,7 +131,7 @@ class BCDBFS(j.application.JSBaseClass):
         """
         if not j.sal.fs.exists(path):
             raise RuntimeError("{} doesn't exist on local file system".format(path))
-        content = open(path)
+        content = j.sal.fs.readFile(path)
         return self.file_write(dest, content, append=False, create=True)
 
     def file_copy_form_bcdbfs(self, path, dest):
@@ -167,6 +167,17 @@ class BCDBFS(j.application.JSBaseClass):
     def file_delete(self, path):
         return self._file_model.file_delete(path)
 
+    def file_exists(self, path):
+        return self._file_model.find(name=path) != []
+
+    def file_read(self, path):
+        path = j.sal.fs.pathClean(path)
+        file_obj = self._file_model.get_by_name(path)
+        if not file_obj:
+            raise RuntimeError('path {} does not exist'.format(path))
+        contents = file_obj[0].content
+        return contents
+
     def _destroy(self):
         """
         VERY DANGEROUS: deletes everything in bcdbfs
@@ -177,9 +188,9 @@ class BCDBFS(j.application.JSBaseClass):
     def test(self):
         cl = j.clients.sonic.get_client_bcdb()
         cl.flush("bcdbfs")
-        j.sal.bcdbfs.mkdir("/")
+        j.sal.bcdbfs.dir_create("/")
         for i in range(5):
-            j.sal.bcdbfs.mkdir("/dir_{}".format(i))
+            j.sal.bcdbfs.dir_create("/dir_{}".format(i))
             j.sal.bcdbfs.file_create_empty("/test_{}".format(i))
             for k in range(5):
                 j.sal.bcdbfs.file_create_empty(("/dir_{}/test_{}".format(i, k)))
@@ -187,3 +198,12 @@ class BCDBFS(j.application.JSBaseClass):
         j.sal.bcdbfs.file_copy_form_bcdbfs("/test_0", "/test_copied")
         j.sal.fs.createEmptyFile("/tmp/test_bcdbfs")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local")
+
+        assert j.sal.bcdbfs.file_exists('/test_from_local')
+
+        j.sal.bcdbfs.file_delete('/test_from_local')
+        assert j.sal.bcdbfs.file_exists('/test_from_local') is False
+
+        j.sal.fs.writeFile('/tmp/test_bcdbfs', 'test contents')
+        j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local")
+        assert j.sal.bcdbfs.file_read('/test_from_local') == 'test contents'
