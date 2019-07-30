@@ -23,15 +23,21 @@ class PostgresClient(JSConfigClient):
     port = 5432 (ipport)
     login = "" (S)
     passwd_ = "" (S)
-    dbname = "" (S)
+    dbname = "postgres" (S)
     """
 
     def _init(self, **kwargs):
-        self.client = psycopg2.connect(
-            "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
-            % (self.dbname, self.login, self.ipaddr, self.passwd_, self.port)
-        )
+        self._client = None
         self.cursor = None
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = psycopg2.connect(
+                "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
+                % (self.dbname, self.login, self.ipaddr, self.passwd_, self.port)
+            )
+        return self._client
 
     def db_names_get(self):
         r = self.execute("SELECT * FROM pg_catalog.pg_database")
@@ -120,12 +126,8 @@ class PostgresClient(JSConfigClient):
         if not dbname:
             dbname = self.dbname
 
-        client = psycopg2.connect(
-            "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
-            % ("template1", self.login, self.ipaddr, self.passwd_, self.port)
-        )
-        cursor = client.cursor()
-        client.set_isolation_level(0)
+        cursor = self.client.cursor()
+        self.client.set_isolation_level(0)
         try:
             cursor.execute("create database %s;" % dbname)
         except Exception as e:
@@ -134,7 +136,7 @@ class PostgresClient(JSConfigClient):
                     raise ("database already exists:'%s'" % dbname)
             else:
                 raise j.exceptions.RuntimeError(e)
-        client.set_isolation_level(1)
+        self.client.set_isolation_level(1)
 
     def dump_tables(self, path=None, tables_ignore=[]):
         """Dump data from db to path/_schema.sql
