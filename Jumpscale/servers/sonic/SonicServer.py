@@ -30,7 +30,6 @@ class SonicServer(JSConfigClient):
         """
         Starts sonic server in tmux
         """
-        raise RuntimeError()
         self._write_config()
         self.startupcmd.start()
 
