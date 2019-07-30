@@ -8,9 +8,8 @@
     - [JSConfigsFactory](#jsconfigsfactory-class)
     - [JSConfigs](#jsconfigs-class)
     - [JSConfig](#jsconfig-class)
-- [How to use]()
-- [Jumpscale generated]()
-- [Examples]()
+- [Jumpscale generated](#jumpscale-generated)
+- [See More](#see-more)
 
 ## Intro
 In order to understand the jumpscaleX baseclasses we will take this simple example to figure out the hierarchy. BaseClasses are the parent of everything like config manager, clients, builders, servers .. etc.<br/>
@@ -136,3 +135,31 @@ It has the base methods used in clients which deals with childclasses; creating,
 - `delete()`: Delete a specific instance.
 
 ## JSConfig Class
+Is the base class for a config instance object could be a client, server, classes who use JSXObject for data storage but provide nice interface to enduser.
+
+**Methods**
+- `edit()`: edit data of object in editor. chosen editor in env var: "EDITOR" will be used
+
+- `_trigger_add`: Triggers are called with (jsconfigs, jsconfig, action)
+can register any method you want to respond on some change
+- jsconfigs: the obj coming from this class, the collection of jsconfigs = jsxconfig_object
+- jsconfig: the jsconfig object
+- action: e.g. new, delete, get,stop, ...
+
+- `_triggers_call()`: will go over all triggers and call them with arguments given
+
+- `_data_update()`: will not automatically save the data, don't forget to call self.save()
+
+## Jumpscale Generated
+
+- To make all short paths jumpscale is generating all its modules and files in `{DIR_BASE}/lib/jumpscale/Jumpscale/*` and fetches it via `{DIR_BASE}/lib/jumpscale/Jumpscale/jumpscale_generated.py`, so actually j.anything comes from this file. If you do new class don't forget to update it via `$ js_init generate`
+
+## See More
+**Nested clients**
+- Like [TFChain](https://github.com/threefoldtech/jumpscaleX/blob/development_jumpscale/Jumpscale/clients/blockchain/tfchain/TFChainClient.py) client relation with [Wallet](https://github.com/threefoldtech/jumpscaleX/blob/development_jumpscale/Jumpscale/clients/blockchain/tfchain/TFChainWallet.py) client<br/>
+    - TFChain Factory has a child object class of TFChain Client.
+    - Also TFChain Client has a child object of Wallet Factory
+    - Finally Wallet Factory has a child object class of Wallet Client.
+
+Explained more in this example from [Jumpscale Tutorials](https://github.com/threefoldtech/jumpscaleX/blob/development_jumpscale/Jumpscale/tutorials/base/tutorials/object_structure/1_object_structure.py)
+
