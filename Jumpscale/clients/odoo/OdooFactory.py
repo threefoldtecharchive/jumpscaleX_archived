@@ -15,7 +15,7 @@ class OdooFactory(JSConfigs):
         :return:
         """
         cl = self.get()
-        cl.username = "kristof@incubaid.com"
+        cl.login = "kristof@incubaid.com"
         cl.password_ = "1234"
         cl.database = "main"
 

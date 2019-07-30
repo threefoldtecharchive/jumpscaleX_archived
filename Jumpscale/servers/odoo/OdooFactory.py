@@ -32,14 +32,27 @@ class OdooFactory(JSConfigs):
         :return:
         """
         self.install()
-        s = self.get(name="test_instance")
+        s = self.get(name="test")
+        for x in range(2):
+            dbobj = s.databases.new(name="test%s" % x)
+            dbobj.admin_email = "info@example.com"
+            dbobj.admin_passwd_ = "1234"
+            dbobj.country_code = "be"
+            dbobj.lang = "en_US"
+            dbobj.phone = ""
+
+        s.databases_create()
+
         s.save()
         if start:
             s.start()
 
-        client = s.default_client
+        cl1 = s.client_get("test1")
+        cl2 = s.client_get("test2")
 
-        # TODO: ... start odoo, connect client to it
+        cl1.modules_default_install()
+        cl2.modules_default_install()
 
-        client.module_install
-        client.user_add
+        # TODO: test how to create a contact
+        # TODO: test how to get a contact & compare the content
+        # TODO: test how to delete a contact

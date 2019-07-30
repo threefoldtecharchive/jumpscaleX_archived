@@ -32,8 +32,6 @@ class OdooServer(JSConfigClient):
         if self.host == "localhost":
             self.host = " 127.0.0.1"
         self._client = None
-        if self.databases == []:
-            self.databases.new()
 
     @property
     def _path(self):
@@ -55,14 +53,18 @@ class OdooServer(JSConfigClient):
         args = self._data._ddict
         j.sal.fs.writeFile(self._config_path, j.core.tools.text_replace(C, args=args, strip=True))
 
-    @property
-    def client(self):
-        if not self._client:
-            self._client = j.clients.odoo.get(
-                name=self.name, host=self.host, port=self.port, secret_=self.admin_secret_
-            )
-            self._client.save()
-        return self._client
+    def client_get(self, name):
+        db = self._database_obj_get(name)
+        cl = j.clients.odoo.get(
+            name=db.name,
+            host=self.host,
+            port=self.port,
+            login=db.admin_email,
+            password_=db.admin_passwd_,
+            database=db.name,
+        )
+        cl.save()
+        return cl
 
     def databases_reset(self, db_name=None):
         """
@@ -97,6 +99,8 @@ class OdooServer(JSConfigClient):
         """
         if reset:
             self.databases_reset()
+        if self.databases == []:
+            self.databases.new()
         for db in self.databases:
             API_CREATE = "http://{}:{}/web/database/create".format(self.host, self.port)
             data = {
