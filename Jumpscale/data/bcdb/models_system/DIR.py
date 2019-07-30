@@ -35,13 +35,15 @@ class DIR(j.data.bcdb._BCDBModelClass):
 
     def create_empty_dir(self, name):
         new_dir = self.new()
-        new_dir.name = j.sal.fs.joinPaths(new_dir.name, name)
+        path = j.sal.fs.pathClean(j.sal.fs.joinPaths(new_dir.name, name))
+        new_dir.name = path
         new_dir.save()
         new_dir.dirs.append(new_dir.id)
         new_dir.save()
         return new_dir
 
     def delete_recursive(self, name):
+        name = j.sal.fs.pathClean(name)
         dir = self.find(name=name)[0]
         for file_id in dir.files:
             self._file_model.get(file_id).delete()

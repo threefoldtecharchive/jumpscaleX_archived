@@ -107,6 +107,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         :return: file object
         """
         new_file = self.new()
+        name = j.sal.fs.pathClean(name)
         new_file.name = name
         new_file.save()
         dir = self._dir_model.find(name=j.sal.fs.getParent(name))[0]
@@ -123,6 +124,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         :param create: create new if true and the file doesn't exist
         :return: file object
         """
+        path = j.sal.fs.pathClean(path)
         try:
             file = self.find(name=path)[0]
         except:
@@ -136,10 +138,16 @@ class FILE(j.data.bcdb._BCDBModelClass):
         return file
 
     def file_delete(self, path):
-        file = self.find(name=path)[0]
+        path = j.sal.fs.pathClean(path)
+        file = self.find(name=path)
+        if not file:
+            raise RuntimeError('file with {} does not exist'.format(file))
+        file = file[0]
         file.delete()
-        parent = self._dir_model.find(name=j.sal.fs.getDirName(path))[0]
-        parent.files.delete(file.id)
+        parent = j.sal.fs.getDirName(path)
+        parent = j.sal.fs.pathClean(parent)
+        parent = self._dir_model.find(name=parent)[0]
+        parent.files.remove(file.id)
         parent.save()
 
 
