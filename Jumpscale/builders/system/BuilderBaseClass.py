@@ -452,6 +452,15 @@ class BuilderBaseClass(BaseClass):
 
         j.sal.fs.remove(path)
 
+    def _exists(self, path):
+        """
+        will use the replace function on text and on path
+        :param path:
+        :return:
+        """
+        path = self._replace(path)
+        return j.sal.fs.exists(path)
+
     @property
     def system(self):
         return j.builders.system

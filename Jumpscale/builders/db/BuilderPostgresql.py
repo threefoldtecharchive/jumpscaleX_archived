@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 builder_method = j.builders.system.builder_method
+import time
 
 
 class BuilderPostgresql(j.builders.system._BaseClass):
@@ -8,7 +9,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
 
     def _init(self, **kwargs):
         self.DOWNLOAD_DIR = self.tools.joinpaths(self.DIR_BUILD, "build")
-        self.DATA_DIR = self._replace("{DIR_BASE}/apps/psql/data")
+        self.DATA_DIR = self._replace("{DIR_VAR}/psql/data")
 
     @builder_method()
     def build(self):
@@ -29,6 +30,7 @@ class BuilderPostgresql(j.builders.system._BaseClass):
     def install(self, port=5432):
         """
         kosmos 'j.builders.db.postgres.install()'
+        kosmos 'j.builders.db.postgres.stop()'
 
         :param port:
         :return:
@@ -45,13 +47,17 @@ class BuilderPostgresql(j.builders.system._BaseClass):
         )
         self._execute(cmd)
 
+        self._remove(self.DATA_DIR)
+
+        self.init()
+
+    def init(self):
+
         if not self.tools.group_exists("postgres"):
             self._execute(
                 'adduser --system --quiet --home {DIR_BASE} --no-create-home \
-        --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres'
+                --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres'
             )
-
-        self._remove(self.DATA_DIR)
 
         c = self._replace(
             """
@@ -66,18 +72,37 @@ class BuilderPostgresql(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
-        cmd_start = pg_ctl % "start"
-        cmd_stop = pg_ctl % "stop"
-        cmd = j.servers.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
+
+        if not self._exists("{DATA_DIR}"):
+            self.init()
+
+        # run the db with the same user when running odoo server
+        cmd = j.servers.startupcmd.get("postgres")
+        cmd.cmd_start = self._replace("sudo -u postgres {DIR_BIN}/postgres -D {DATA_DIR}")
+        cmd.cmd_stop = "sudo -u postgres {DIR_BIN}/pg_ctl stop -D {DATA_DIR}"
+        cmd.ports = [5432]
+        cmd.process_strings_regex = "^postgres.*"
+        cmd.process_strings = ""
+        cmd.path = "/tmp"
         return [cmd]
 
-    def test(self):
-        if self.running():
-            self.stop()
+    def start(self):
+        """
+        kosmos 'j.builders.db.postgres.start()'
+        :return:
+        """
+        j.builders.system._BaseClass.start(self)
+        time.sleep(1)
 
+    def test(self):
+        """
+        kosmos 'j.builders.db.postgres.test()'
+        :return:
+        """
+        self.stop()
         self.start()
-        _, response, _ = self._execute("pg_isready", showout=False)
+
+        _, response, _ = self._execute("pg_isready -h localhost -p 5432", showout=False)
         assert "accepting connections" in response
 
         self.stop()

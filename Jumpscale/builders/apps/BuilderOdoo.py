@@ -7,9 +7,9 @@ builder_method = j.builders.system.builder_method
 # /tmp is the default directory for postgres unix socket
 SIMPLE_CFG = """
 [options]
-admin_passwd = admin
-db_host = /tmp
-db_user = odoouser"""
+admin_passwd = rooter
+db_host = localhost
+db_user = root"""
 
 
 class BuilderOdoo(j.builders.system._BaseClass):
@@ -24,7 +24,7 @@ class BuilderOdoo(j.builders.system._BaseClass):
         pass
 
     @builder_method()
-    def install(self, start=True):
+    def install(self):
         """
         kosmos 'j.builders.apps.odoo.install()'
         kosmos 'j.builders.apps.odoo.start()'
@@ -34,17 +34,6 @@ class BuilderOdoo(j.builders.system._BaseClass):
         j.builders.runtimes.nodejs.install()
 
         self.tools.dir_ensure(self.APP_DIR)
-
-        # create user and related config
-        self._execute(
-            """
-            id -u odoouser &>/dev/null || (useradd odoouser --home {APP_DIR} --no-create-home --shell /bin/bash
-            sudo su - postgres -c "/sandbox/bin/createuser -s odoouser") || true
-            mkdir -p {APP_DIR}/data
-            chown -R odoouser:odoouser {APP_DIR}
-            sudo -H -u odoouser /sandbox/bin/initdb -D {APP_DIR}/data || true
-        """
-        )
 
         j.builders.system.package.install(
             "sudo libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev"
@@ -65,33 +54,40 @@ class BuilderOdoo(j.builders.system._BaseClass):
         """
         )
 
-        self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
         j.builders.runtimes.nodejs.npm_install("rtlcss")
-
-        if start:
-            self.start()
 
         print("INSTALLED OK, PLEASE GO TO http://localhost:8069")
         # print("INSTALLED OK, PLEASE GO TO http://localhost:8069/web/database/selector")
 
+    def start(self):
+        """
+        kosmos 'j.builders.apps.odoo.start()'
+        :return:
+        """
+        j.builders.db.postgres.start()
+        cl = j.clients.postgres.db_client_get()
+        self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
+        j.builders.system._BaseClass.start(self)
+        print("INSTALLED OK, PLEASE GO TO http://localhost:8069    masterpasswd:rooter")
+
+    def stop(self):
+        j.builders.db.postgres.stop()
+        j.builders.system._BaseClass.stop(self)
+
     @property
     def startup_cmds(self):
-        # run the db with the same user when running odoo server
-        pg_ctl = self._replace("sudo -u odoouser {DIR_BIN}/pg_ctl %s -D {APP_DIR}/data")
-        # WHY DONT WE USE POSTGRESQL START ON THAT BUILDER?
-        cmd_start = pg_ctl % "start"
-        cmd_stop = pg_ctl % "stop"
-        postgres_cmd = j.servers.startupcmd.get("postgres-custom")
-        postgres_cmd.cmd_start = cmd_start
-        postgres_cmd.cmd_stop = cmd_stop
-        postgres_cmd.ports = [5432]
-        postgres_cmd.path = "/sandbox/bin"
+        """
+        j.builders.apps.odoo.startup_cmds
+        :return:
+        """
 
-        odoo_start = self._replace(
-            "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
-        )
+        # odoo_start = self._replace(
+        #     "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
+        # )
+        odoo_start = self._replace("python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf")
         odoo_cmd = j.servers.startupcmd.get("odoo")
         odoo_cmd.cmd_start = odoo_start
         odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
         odoo_cmd.path = "/sandbox/bin"
-        return [postgres_cmd, odoo_cmd]
+        odoo_cmd.ports = [8069]
+        return [odoo_cmd]

@@ -2,9 +2,13 @@ from Jumpscale import j
 import psycopg2
 import time
 import datetime
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
+
+# try:
+#     from sqlalchemy.ext.automap import automap_base
+#     from sqlalchemy.orm import Session
+#     from sqlalchemy import create_engine
+# except:
+#     pass
 import binascii
 import copy
 
@@ -23,45 +27,73 @@ class PostgresClient(JSConfigClient):
     """
 
     def _init(self, **kwargs):
-        """
-        # needs psycopg2 sqlalchemy libtmux to be installed
-        """
         self.client = psycopg2.connect(
             "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
             % (self.dbname, self.login, self.ipaddr, self.passwd_, self.port)
         )
         self.cursor = None
 
+    def db_names_get(self):
+        r = self.execute("SELECT * FROM pg_catalog.pg_database")
+        r2 = [i[0] for i in r]
+        return r2
+
     def cursor_get(self):
         """Get client dict cursor
-        :return : clients
-        :rtype : dict cursor
         """
-        self.cursor = self.client.cursor()
+        return self.client.cursor()
 
-    def execute(self, sql):
+    def execute_cursor(self, sql):
         """Execute sql code
+
+        c=cl.execute("SELECT version();")
+        c.fetchone()
+
+
         :param sql: sql code to be executed
         :type sql: str
         :return: psycopg2 client
         :rtype: dict cursor
         """
-        if self.cursor is None:
-            self.cursor_get()
-        return self.cursor.execute(sql)
+        cursor = self.cursor_get()
+        cursor.execute(sql)
+        return cursor
 
-    def SQL_alchemy_client_get(self):
+    def execute(self, sql):
+        """
+        print(cl.execute("SELECT version();"))
+        :param sql:
+        :return:
+        """
+        r = self.execute_cursor(sql)
+        return r.fetchall()
+
+    def peewee_client_get(self):
+        cl = j.clients.peewee.get(**self._data._ddict)
+        return cl
+
+    def sqlalchemy_client_get(self):
         """ usage
-        base,session=client.initsqlalchemy()
+
+        base,session=client.sqlalchemy_client_get()
+        # engine, suppose it has two models 'user' and 'address' set up
         session.add(base.classes.address(email_address="foo@bar.com", user=(base.classes.user(name="foo")))
         session.commit()
         
         :return: Base, session
         """
+        try:
+            from sqlalchemy.ext.automap import automap_base
+        except:
+            j.builders.runtimes.python.pip_package_install("sqlalchemy")
+
+        from sqlalchemy.ext.automap import automap_base
+        from sqlalchemy.orm import Session
+        from sqlalchemy import create_engine
+
         Base = automap_base()
 
-        # engine, suppose it has two models 'user' and 'address' set up
-        engine = create_engine("postgresql://%(login)s:%(passwd)s@%(ipaddr)s:%(port)s/%(dbname)s" % self.__dict__)
+        engine = create_engine("postgresql://%(login)s:%(passwd_)s@%(ipaddr)s:%(port)s/%(dbname)s" % self._data._ddict)
 
         # reflect the models
         Base.prepare(engine, reflect=True)
@@ -70,19 +102,56 @@ class PostgresClient(JSConfigClient):
 
         return Base, session
 
-    def dump(self, path, tables_ignore=[]):
-        """Dump data from db to path/_shcema.sql
+    def db_drop(self, dbname=None):
+        """Drop a database
+        :param dbname: db name to be dropped, if None will be current database
+        """
+        args = self._data._ddict
+        if dbname:
+            args["dbname"] = dbname
+        cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (args)
+        j.sal.process.execute(cmd, showout=False, die=False)
 
-        :param path: path
+    def db_create(self, dbname=None, die=True):
+        """Create new database
+        :param dbname: db name to be dropped, if None will be current database
+        :raises j.exceptions.RuntimeError: Exception if db already exists
+        """
+        if not dbname:
+            dbname = self.dbname
+
+        client = psycopg2.connect(
+            "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
+            % ("template1", self.login, self.ipaddr, self.passwd_, self.port)
+        )
+        cursor = client.cursor()
+        client.set_isolation_level(0)
+        try:
+            cursor.execute("create database %s;" % dbname)
+        except Exception as e:
+            if str(e).find("already exists") != -1:
+                if die:
+                    raise ("database already exists:'%s'" % dbname)
+            else:
+                raise j.exceptions.RuntimeError(e)
+        client.set_isolation_level(1)
+
+    def dump_tables(self, path=None, tables_ignore=[]):
+        """Dump data from db to path/_schema.sql
+
+        TODO: not sure this always works because what if tables are dependent on each other?
+
+        :param path: path of dir where all will be dumped
         :type path: str
         :param tables_ignore: tables to be ignored and its records are not considered, defaults to []
         :type tables_ignore: list, optional
         """
-        args = copy.copy(self.__dict__)
+        args = self._data._ddict
         j.sal.fs.createDir(path)
-        base, session = self.initsqlalchemy()
-
-        args["path"] = "%s/_schema.sql" % (path)
+        base, session = self.sqlalchemy_client_get()
+        if not path:
+            path = "/tmp/postgresql_dump"
+        args["path"] = "%s/_schema.sql"
         cmd = (
             "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -s -O -d %(dbname)s -w > %(path)s"
             % (args)
@@ -102,29 +171,26 @@ class PostgresClient(JSConfigClient):
             )
             j.sal.process.execute(cmd, showout=False)
 
-    def restore(self, path, tables=[], schema=True):
+    def restore_tables(self, path, tables=[], schema=True):
         """Restore db
 
         :param path: path to import from
         :type path: str
-        :param tables: tables to be considered, defaults to []
+        :param tables: tables to be considered, defaults to [] which means all are imported
         :type tables: list, optional
         :param schema: schema exists, defaults to True
         :type schema: bool, optional
         :raises j.exceptions.Input: Path to import from not found
         """
+        if not path:
+            path = "/tmp/postgresql_dump"
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.Input("cannot find path %s to import from." % path)
-        args = copy.copy(self.__dict__)
+        args = self._data._ddict
         if schema:
             args["base"] = path
             # cmd="cd /opt/postgresql/bin;./pg_restore -1 -e -s -U %(login)s -h %(ipaddr)s -p %(port)s %(base)s/_schema.sql"%(args)
-            cmd = (
-                "cd /opt/postgresql/bin;./psql -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(base)s/_schema.sql"
-                % (args)
-            )
-            j.sal.process.execute(cmd, showout=False)
-
+            self.execute(j.sal.fs.readFile("%s/_schema.sql" % path))
         for item in j.sal.fs.listFilesInDir(
             path, recursive=False, filter="*.sql", followSymlinks=True, listSymlinks=True
         ):
@@ -132,13 +198,7 @@ class PostgresClient(JSConfigClient):
             if name.find("_") == 0:
                 continue
             if name in tables or tables == []:
-                args["path"] = item
-                # cmd="cd /opt/postgresql/bin;./pg_restore -1 -e -U %(login)s -h %(ipaddr)s -p %(port)s %(path)s"%(args)
-                cmd = (
-                    "cd /opt/postgresql/bin;./psql -1 -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(path)s"
-                    % (args)
-                )
-                j.sal.process.execute(cmd, showout=False)
+                self.execute(j.sal.fs.readFile("%s/%s.sql" % (path, name)))
 
     # def exportToYAML(self, path):
     #     """

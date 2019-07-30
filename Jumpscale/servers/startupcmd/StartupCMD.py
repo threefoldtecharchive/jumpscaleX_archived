@@ -305,10 +305,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def is_running(self):
 
-        if self._local and self.pid > 0:
-            self._notify_state("running")
-            return True
-
         if self._local and self.ports != []:
             for port in self.ports:
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:

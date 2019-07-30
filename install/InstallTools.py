@@ -1815,7 +1815,7 @@ class Tools:
 
                         if rc > 0:
                             return False
-                            
+
                 return True
 
             if checkoutbranch(args, branch):
@@ -2682,7 +2682,7 @@ class BaseInstaller:
                 "ssh2-python",
                 "paramiko>=2.2.3",
                 "path.py>=10.3.1",
-                # "peewee>=2.9.2",
+                "peewee",
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",

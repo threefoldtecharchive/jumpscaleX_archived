@@ -2,13 +2,6 @@ from Jumpscale import j
 import psycopg2
 from .PostgresqlClient import PostgresClient
 
-# import calendar
-# from htmllib import HTMLParser
-# from formatter import AbstractFormatter, DumbWriter
-# from io import StringIO
-# import lib.html
-
-
 JSConfigs = j.application.JSBaseConfigsClass
 
 
@@ -19,59 +12,11 @@ class PostgresqlFactory(JSConfigs):
     __jslocation__ = "j.clients.postgres"
     _CHILDCLASS = PostgresClient
 
-    def _init(self, **kwargs):
-        self.__imports__ = "sqlalchemy"
-
-    def db_create(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
-        """Create new database
-        :param db: db name to be created
-        :type db: str
-        :param ipaddr: ip address,  defaults to "localhost"
-        :type ipaddr: str
-        :param port: port, defaults to 5432
-        :type port: ipport
-        :param login : postgres login, defaults to "postgres"
-        :type login: str
-        :param passwd: password associated with login, defaults to "rooter"
-        :type passwd: str
-        :raises j.exceptions.RuntimeError: Exception if db already exists
+    def install(self):
         """
-        client = psycopg2.connect(
-            "dbname='%s' user='%s' host='%s' password='%s' port='%s'" % ("template1", login, ipaddr, passwd, port)
-        )
-        cursor = client.cursor()
-        client.set_isolation_level(0)
-        try:
-            cursor.execute("create database %s;" % db)
-        except Exception as e:
-            if str(e).find("already exists") != -1:
-                pass
-            else:
-                raise j.exceptions.RuntimeError(e)
-        client.set_isolation_level(1)
-
-    def db_drop(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
-        """Drop a database
-        :param db: db name to be dropped
-        :type db: str
-        :param ipaddr: ip address, defaults to "localhost"
-        :type ipaddr: str, optional
-        :param port: port, defaults to 5432
-        :type port: ipport, optional
-        :param login : postgres login, defaults to "postgres"
-        :type login: str, optional
-        :param passwd: password associated with login, defaults to "rooter"
-        :type passwd: str, optional
+        kosmos 'j.clients.postgres.install()'
+        :return:
         """
-        args = {}
-        args["db"] = db
-        args["port"] = port
-        args["login"] = login
-        args["passwd"] = passwd
-        args["ipaddr"] = ipaddr
-        args["dbname"] = db
-        cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (args)
-        j.sal.process.execute(cmd, showout=False, die=False)
 
     def start(self):
         j.builders.db.postgres.start()
@@ -79,22 +24,50 @@ class PostgresqlFactory(JSConfigs):
     def stop(self):
         j.builders.db.postgres.stop()
 
-    def test(self):
+    def db_client_get(self, name="test", dbname="main"):
         """
-        # needs psycopg2 sqlalchemy libtmux to be installed
+        returns database client
+
+        cl = j.clients.postgres.db_client_get()
+
+        login: root
+        passwd: rooter
+        dbname: main if not specified
+        :return:
         """
-        self.start()
+        try:
+            cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
+            r = cl.execute("SELECT version();")
+            return cl
+        except BaseException as e:
+            pass
+
+        # means could not return, lets now create the db
         j.sal.process.execute(
             """psql -h localhost -U postgres \
             --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
         )
-        self.db_create("main")
-        cl = j.clients.postgres.new(
-            name="cl", ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="main"
-        )
+        self.db_create(dbname)
+        cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
         cl.save()
         assert cl.client.status == True
         info = cl.client.info
         assert info.dbname == "main"
-        self.stop()
+        return cl
+
+    def test(self):
+        """
+        kosmos 'j.clients.postgres.test()'
+        """
+        self.install()
+        self.start()
+
+        cl = self.db_client_get()
+
+        base, session = cl.sqlalchemy_client_get()
+        j.shell()
+        session.add(base.classes.address(email_address="foo@bar.com", user=(base.classes.user(name="foo"))))
+        session.commit()
+
+        # self.stop()
         print("TEST OK")

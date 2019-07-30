@@ -2,9 +2,10 @@ from Jumpscale import j
 from .peeweeClient import PeeweeClient
 
 import importlib
+from peewee import *
 
 
-class PeeweeFactory(j.application.JSBaseClass):
+class PeeweeFactory(j.application.JSBaseConfigsClass):
     """
     """
 
@@ -28,6 +29,7 @@ class PeeweeFactory(j.application.JSBaseClass):
         )
 
         self.PrimaryKeyField = PrimaryKeyField
+        self.DateTimeField = DateTimeField
         self.BlobField = BlobField
         self.Model = Model
         self.BooleanField = BooleanField
@@ -36,26 +38,46 @@ class PeeweeFactory(j.application.JSBaseClass):
         self.IntegerField = IntegerField
         self.SqliteDatabase = SqliteDatabase
         self.FloatField = FloatField
+        self.ForeignKeyField = ForeignKeyField
 
-    # def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):
-    #     key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
-    #     if key not in self.clients:
-    #         self.clients[key] = PostgresClient(
-    #             ipaddr, port, login, passwd, dbname)
-    #     return self.clients[key]
+    def test_model_create(self, psqlclient):
+        pass
 
-    # def getModelDoesntWorkYet(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template", dbtype="postgres", schema=None, cache=True):
-    #     key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, dbname, dbtype)
-    #     if key not in self._cacheModel:
-    #         pw = Pwiz(host=ipaddr, port=port, user=login, passwd=passwd, dbtype=dbtype, schema=schema, dbname=dbname)
-    #         self._cacheModel[key] = pw.codeModel
-    #     code = self._cacheModel[key]
-    #     from IPython import embed
-    #     embed()
-    #     raise RuntimeError("stop debug here")
-
-    def resetCache(self):
-        """Remove peewee keys and items from db
+    def test(self):
         """
-        for item in j.core.db.keys("peewee.*"):
-            j.core.db.delete(item)
+        kosmos 'j.clients.peewee.test()'
+        :return:
+        """
+
+        j.builders.db.postgres.start()
+        cl = j.clients.postgres.db_client_get()
+        pw = cl.peewee_client_get()
+        db = pw.db
+
+        class BaseModel(self.Model):
+            class Meta:
+                database = db
+
+        class User(BaseModel):
+            username = self.TextField(unique=True)
+
+            class Meta:
+                table_name = "user"
+
+        class Tweet(BaseModel):
+            content = self.TextField()
+            timestamp = self.DateTimeField()
+            user = self.ForeignKeyField(column_name="user_id", field="id", model=User)
+
+            class Meta:
+                table_name = "tweet"
+
+        with db:
+            db.create_tables([User, Tweet])
+
+        u = User()
+        u.username = "sss"
+        u.save()
+
+        m = pw.model_get()
+        j.shell()
