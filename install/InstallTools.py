@@ -1090,7 +1090,7 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["LOGGER_PANEL_NRLINES"] or logdict.get("use_custom_printer"):
+        if MyEnv.config.get("LOGGER_PANEL_NRLINES") or logdict.get("use_custom_printer"):
             if Tools.custom_log_printer:
                 p = Tools.custom_log_printer
 
@@ -2377,9 +2377,6 @@ class MyEnv:
             MyEnv._config_load()
             if not "DIR_BASE" in MyEnv.config:
                 return
-
-            if not "LOGGER_PANEL_NRLINES" in MyEnv.config:
-                MyEnv.config["LOGGER_PANEL_NRLINES"] = 15
 
             MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
             MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
