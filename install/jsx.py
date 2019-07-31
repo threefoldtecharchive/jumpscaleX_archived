@@ -334,7 +334,7 @@ def container_import(name="3bot", path=None, imagename="despiegk/3bot", no_start
     :return:
     """
     start = not no_start
-    docker = container_get(existcheck=False)
+    docker = container_get(existcheck=False, name=name)
     docker.import_(path=path, imagename=imagename, start=start)
 
 
