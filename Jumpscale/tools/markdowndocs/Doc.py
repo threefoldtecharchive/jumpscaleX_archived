@@ -420,7 +420,7 @@ class Doc(j.application.JSBaseClass):
                 md = link.replace_in_txt(md)
 
         dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name) + ".md"
-        j.sal.fs.writeFile(dest, md)
+        j.sal.bcdbfs.file_write(dest, md)
 
     def _link_exists(self, link):
         for l in self._links:

@@ -239,8 +239,6 @@ class BCDBFS(j.application.JSBaseClass):
         assert j.sal.bcdbfs.is_dir("/dir_1")
         assert j.sal.bcdbfs.is_file("/dir_1/test_4")
 
-        print(1)
-
         assert j.sal.bcdbfs.list_files("/dir_1") == [
             "/dir_1/test_0",
             "/dir_1/test_1",
@@ -262,7 +260,6 @@ class BCDBFS(j.application.JSBaseClass):
             "/test_4",
         ]
 
-        print(2)
         j.sal.bcdbfs.file_copy_form_bcdbfs("/test_0", "/test_copied")
         j.sal.fs.createEmptyFile("/tmp/test_bcdbfs")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local")

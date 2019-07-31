@@ -48,7 +48,7 @@ class DocSite(j.application.JSBaseClass):
 
         self.error_file_path = self.path + "/errors.md"
 
-        self.outpath = j.core.tools.text_replace("{DIR_VAR}/docsites/{NAME}", args={"NAME": self.name})
+        self.outpath = j.core.tools.text_replace("/docsites/{NAME}", args={"NAME": self.name})
 
         self._log_level = 1
 
@@ -318,7 +318,7 @@ class DocSite(j.application.JSBaseClass):
             key = j.data.hash.md5_string("%s_%s" % (doc.name, errormsg))
             if not key in self._errors:
                 errormsg3 = "```\n%s\n```\n" % errormsg2
-                j.sal.fs.writeFile(filename=self.error_file_path, contents=errormsg3, append=True)
+                j.sal.bcdbfs.file_write(self.error_file_path, errormsg3, append=True)
                 self._log_error(errormsg2)
                 doc.errors.append(errormsg)
         else:
@@ -584,8 +584,8 @@ class DocSite(j.application.JSBaseClass):
         return current found errors
         """
         errors = "DID NOT FIND ERRORSFILE, RUN js_doc verify in the doc directory"
-        if j.sal.fs.exists(self.error_file_path):
-            errors = j.sal.fs.readFile(self.error_file_path)
+        if j.sal.bcdbfs.dir_exists(self.error_file_path):
+            errors = j.sal.bcdbfs.file_read(self.error_file_path)
         return errors
 
     def __repr__(self):
@@ -601,22 +601,22 @@ class DocSite(j.application.JSBaseClass):
             data["repo"] = "https://github.com/%s/%s" % (self.account, self.repo)
 
         data_json = j.data.serializers.json.dumps(data)
-        j.sal.fs.writeFile(filename=dest + "/.data", contents=data_json, append=False)
+        j.sal.bcdbfs.file_write(dest + "/.data", data_json, append=False)
 
     def write(self, reset=False):
         self.load()
         self.verify()
 
         if reset:
-            j.sal.fs.remove(self.outpath)
+            j.sal.bcdbfs.rmdir(self.outpath)
 
         # dest = j.sal.fs.joinPaths(self.outpath, "content")
         dest = self.outpath
-        j.sal.fs.createDir(dest)
+        j.sal.bcdbfs.dir_create(dest)
 
         # copy errors file into the generated docs to be able to serve it using /wiki/<WIKI_NAME>#/errors
-        if j.sal.fs.exists(self.error_file_path):
-            j.sal.fs.copyFile(self.error_file_path, dest)
+        if j.sal.bcdbfs.exists(self.error_file_path):
+            j.sal.bcdbfs.file_copy_form_bcdbfs(self.error_file_path, dest)
 
         # NO NEED (also the ignore does not work well)
         # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
