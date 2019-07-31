@@ -76,15 +76,12 @@ class Core:
         self._dir_home = None
         self._dir_jumpscaleX = None
         self._isSandbox = None
+        self.db = MyEnv.db
 
-    @property
-    def db(self):
-        return MyEnv.db
-
-    def db_reset(self):
+    def db_reset(self, j):
         if hasattr(j.data, "cache"):
             j.data.cache._cache = {}
-        self.db = None
+        self.db = j.clients.redis.core_get(fromcache=False)
 
     @property
     def dir_jumpscaleX(self):

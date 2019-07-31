@@ -61,11 +61,11 @@ class FileSystemMonitor:
 
         self._log_info("WE ARE MONITORING")
 
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            pass
+        # try:
+        #     while True:
+        #         time.sleep(1)
+        # except KeyboardInterrupt:
+        #     pass
 
     def __str__(self):
         return "FileSystemMonitor"

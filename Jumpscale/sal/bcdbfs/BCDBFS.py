@@ -15,7 +15,7 @@ class BCDBFS(j.application.JSBaseClass):
         self._bcdb = j.data.bcdb.get(bcdb_name)
         self._file_model = self._bcdb.model_get_from_file("{}/models_system/FILE.py".format(self._bcdb._dirpath))
         self._dir_model = self._bcdb.model_get_from_file("{}/models_system/DIR.py".format(self._bcdb._dirpath))
-        self.dir_create('/')
+        self.dir_create("/")
 
     #############################
     ######  DIR OPERATIONS ######
@@ -136,7 +136,7 @@ class BCDBFS(j.application.JSBaseClass):
         if not j.sal.fs.exists(path):
             raise RuntimeError("{} doesn't exist on local file system".format(path))
 
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             self.file_write(dest, f, append=False, create=True)
         return
 
@@ -180,7 +180,7 @@ class BCDBFS(j.application.JSBaseClass):
         path = j.sal.fs.pathClean(path)
         file_obj = self._file_model.get_by_name(path)
         if not file_obj:
-            raise RuntimeError('path {} does not exist'.format(path))
+            raise RuntimeError("path {} does not exist".format(path))
         contents = file_obj[0].content
         return contents
 
@@ -188,23 +188,23 @@ class BCDBFS(j.application.JSBaseClass):
     ###### LIST OPERATIONS ######
     #############################
 
-    def list_dirs(self, path='/'):
+    def list_dirs(self, path="/"):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError('path {} does not exist'.format(path))
+            raise RuntimeError("path {} does not exist".format(path))
         res = [self._dir_model.get(item).name for item in dir_obj[0].dirs]
         return res
 
-    def list_files(self, path='/'):
+    def list_files(self, path="/"):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError('path {} does not exist'.format(path))
+            raise RuntimeError("path {} does not exist".format(path))
         res = [self._file_model.get(item).name for item in dir_obj[0].files]
         return res
 
-    def list_files_and_dirs(self, path='/'):
+    def list_files_and_dirs(self, path="/"):
         dirs = self.list_dirs(path)
         files = self.list_files(path)
         res = dirs.extend(files)
@@ -227,30 +227,45 @@ class BCDBFS(j.application.JSBaseClass):
             for k in range(5):
                 j.sal.bcdbfs.file_create_empty(("/dir_{}/test_{}".format(i, k)))
 
-        assert j.sal.bcdbfs.file_exists('/test_1')
-        assert j.sal.bcdbfs.dir_exists('/dir_1')
-        assert j.sal.bcdbfs.file_exists('/dir_1/test_4')
+        assert j.sal.bcdbfs.file_exists("/test_1")
+        assert j.sal.bcdbfs.dir_exists("/dir_1")
+        assert j.sal.bcdbfs.file_exists("/dir_1/test_4")
 
         print(1)
 
-        assert j.sal.bcdbfs.list_files('/dir_1') == ['/dir_1/test_0',
-                                                     '/dir_1/test_1', '/dir_1/test_2', '/dir_1/test_3', '/dir_1/test_4']
-        assert j.sal.bcdbfs.list_dirs('/') == ['/dir_0', '/dir_1', '/dir_2', '/dir_3', '/dir_4']
-        assert j.sal.bcdb.fs.list_files_and_dirs(
-            '/') == ['/dir_0', '/dir_1', '/dir_2', '/dir_3', '/dir_4', '/test_0', '/test_1', '/test_2', '/test_3', '/test_4']
+        assert j.sal.bcdbfs.list_files("/dir_1") == [
+            "/dir_1/test_0",
+            "/dir_1/test_1",
+            "/dir_1/test_2",
+            "/dir_1/test_3",
+            "/dir_1/test_4",
+        ]
+        assert j.sal.bcdbfs.list_dirs("/") == ["/dir_0", "/dir_1", "/dir_2", "/dir_3", "/dir_4"]
+        assert j.sal.bcdb.fs.list_files_and_dirs("/") == [
+            "/dir_0",
+            "/dir_1",
+            "/dir_2",
+            "/dir_3",
+            "/dir_4",
+            "/test_0",
+            "/test_1",
+            "/test_2",
+            "/test_3",
+            "/test_4",
+        ]
 
         print(2)
         j.sal.bcdbfs.file_copy_form_bcdbfs("/test_0", "/test_copied")
         j.sal.fs.createEmptyFile("/tmp/test_bcdbfs")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_from_local")
 
-        assert j.sal.bcdbfs.file_exists('/test_from_local')
+        assert j.sal.bcdbfs.file_exists("/test_from_local")
 
-        j.sal.bcdbfs.file_delete('/test_from_local')
-        assert j.sal.bcdbfs.file_exists('/test_from_local') is False
+        j.sal.bcdbfs.file_delete("/test_from_local")
+        assert j.sal.bcdbfs.file_exists("/test_from_local") is False
 
         # j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
         # j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
         # assert j.sal.bcdbfs.file_read('/test_with_content') == 'test contents'
 
-        print('TESTS PASSED')
+        print("TESTS PASSED")

@@ -143,7 +143,7 @@ class JSModule:
 
             if line.find("__jslocation__") != -1:
                 if classobj is None:
-                    raise RuntimeError("Could not find class in %s while loading jumpscale lib." % path)
+                    raise RuntimeError("Could not find class in '%s' while loading jumpscale lib." % line)
                 if line.find("=") != -1 and line.find("IGNORELOCATION") == -1:
                     location = line.split("=", 1)[1].replace('"', "").replace("'", "").strip()
                     if _check_jlocation(location):

@@ -7,14 +7,15 @@ class RedisConfigFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.redis_config"
     _CHILDCLASS = RedisConfig
 
-    def get_client(self, name):
+    def get_client(self, name, fromcache=True):
         """
         get redis client
         :param name:
         :return:
         """
         if name.lower() == "core":
-            return j.clients.redis.core_get()
+            return j.clients.redis.core_get(fromcache=fromcache)
+        # implement fromcache TODO:
         cl = self.get(name=name)
         return cl.redis
 

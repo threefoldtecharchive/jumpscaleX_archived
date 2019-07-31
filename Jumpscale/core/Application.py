@@ -135,6 +135,12 @@ class Application(object):
         self._j.data.bcdb.get_system(reset=True)
         self._bcdb_system = None
 
+    def subprocess_prepare(self):
+        self._bcdb_system = None
+        self._debug = None
+        self._systempid = None
+        self._j.core.db_reset(self._j)
+
     # def bcdb_system_configure(self, addr, port, namespace, secret):
     #     """
     #     will remember that this bcdb is being used

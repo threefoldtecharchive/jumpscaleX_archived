@@ -319,7 +319,7 @@ if redis:
 
     class RedisQueue:
         def __init__(self, redis, key):
-            self.__db = redis
+            self._db_ = redis
             self.key = key
 
         def qsize(self):
@@ -328,7 +328,7 @@ if redis:
             :return: approximate size of queue
             :rtype: int
             """
-            return self.__db.llen(self.key)
+            return self._db_.llen(self.key)
 
         @property
         def empty(self):
@@ -346,28 +346,28 @@ if redis:
 
         def put(self, item):
             """Put item into the queue."""
-            self.__db.rpush(self.key, item)
+            self._db_.rpush(self.key, item)
 
         def get(self, timeout=20):
             """Remove and return an item from the queue."""
             if timeout > 0:
-                item = self.__db.blpop(self.key, timeout=timeout)
+                item = self._db_.blpop(self.key, timeout=timeout)
                 if item:
                     item = item[1]
             else:
-                item = self.__db.lpop(self.key)
+                item = self._db_.lpop(self.key)
             return item
 
         def fetch(self, block=True, timeout=None):
             """Return an item from the queue without removing"""
             if block:
-                item = self.__db.brpoplpush(self.key, self.key, timeout)
+                item = self._db_.brpoplpush(self.key, self.key, timeout)
             else:
-                item = self.__db.lindex(self.key, 0)
+                item = self._db_.lindex(self.key, 0)
             return item
 
         def set_expire(self, time):
-            self.__db.expire(self.key, time)
+            self._db_.expire(self.key, time)
 
         def get_nowait(self):
             """Equivalent to get(False)."""

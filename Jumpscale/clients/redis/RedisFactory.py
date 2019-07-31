@@ -169,10 +169,11 @@ class RedisFactory(j.application.JSBaseClass):
             self._redisq[key2] = redisclient.queue_get(key)
         return self._redisq[key2]
 
-    def core_get(self, reset=False, tcp=True):
+    def core_get(self, reset=False, tcp=True, fromcache=True):
         """
 
         kosmos 'j.clients.redis.core_get(reset=False)'
+        j.clients.redis.core_get(fromcache=False)
 
         will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
         if that doesn't work then will look for std redis port
@@ -188,7 +189,11 @@ class RedisFactory(j.application.JSBaseClass):
         :return: redis instance
         :rtype: Redis
         """
-        j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
+        if fromcache:
+            j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
+        else:
+            # means we need to get a client, no need to check if core was already started
+            j.core.myenv.db = RedisTools.client_core_get(fake_ok=False)
         return j.core.myenv.db
 
     def core_stop(self):

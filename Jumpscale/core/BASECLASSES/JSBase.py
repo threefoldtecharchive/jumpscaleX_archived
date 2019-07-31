@@ -715,10 +715,13 @@ class JSBase:
         )
 
         def add(name, color, items, out):
+            self._log_debug(items)
             if len(items) > 0:
                 out += "{%s}### %s:\n" % (color, name)
                 if len(items) < 20:
                     for item in items:
+                        self._log_debug(item)
+
                         if name in ["data", "properties"]:
                             try:
                                 out += " - %-20s : %s\n" % (item, getattr(self, item))
