@@ -467,7 +467,7 @@ def ptconfig(repl):
 
     repl._completer.__class__.get_completions = custom_get_completions
 
-    j.core.myenv.config["log_printer"] = add_logs_to_pane
+    j.core.tools.custom_log_printer = add_logs_to_pane
 
     parent_container = get_ptpython_parent_container(repl)
     # remove ptpython docstring containers, we have ours now
@@ -475,3 +475,4 @@ def ptconfig(repl):
     # setup docstring and logging containers
     setup_docstring_containers(repl)
     setup_logging_containers(repl)
+

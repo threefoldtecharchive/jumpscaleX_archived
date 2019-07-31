@@ -542,6 +542,7 @@ class Tools:
     _supported_editors = ["micro", "mcedit", "joe", "vim", "vi"]  # DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
+    custom_log_printer = None
 
     @staticmethod
     def traceback_text_get(tb=None, stdout=False):
@@ -1090,9 +1091,8 @@ class Tools:
 
         p = print
         if MyEnv.config["LOGGER_PANEL_NRLINES"] or logdict.get("use_custom_printer"):
-            custom_printer = MyEnv.config.get("log_printer")
-            if custom_printer:
-                p = custom_printer
+            if Tools.custom_log_printer:
+                p = Tools.custom_log_printer
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
         msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
