@@ -71,7 +71,7 @@ class Sandboxer(j.application.JSBaseClass):
                 return result
 
         for line in out.split("\n"):
-            if "not found" or "statically linked" in line:
+            if "not found" in line or "statically linked" in line:
                 continue
 
             parts = [part.strip() for part in line.split()]
