@@ -248,6 +248,12 @@ class ExecutorBase(j.application.JSBaseClass):
     # def executeRaw(self, cmd, die=True, showout=False):
     #     raise NotImplementedError()
 
+    def execute_jumpscale(self, script):
+        script = j.core.tools.text_replace(script)
+        # push over scp to temp
+        # use /sandbox/env and call python3 ... with the script
+        j.shell()
+
     @property
     def isDebug(self):
         return (

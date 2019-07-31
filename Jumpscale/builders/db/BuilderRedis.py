@@ -71,7 +71,8 @@ class BuilderRedis(j.builders.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builders.web.openresty.sandbox(reset=reset)
+        raise RuntimeError("why openrestu sanbox?")
+        j.builders.web.openresty.sandbox(reset=reset)  # TODO: why is this?
 
         bins = ["redis-server", "redis-cli"]
         for bin_name in bins:
