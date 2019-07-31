@@ -74,6 +74,8 @@ class BuilderMariadb(j.builders.system._BaseClass):
         Keyword Arguments:
             reset {bool} -- flag to specify whether to force install (default: {False})
         """
+        j.builders.system.package.ensure("libaio1")
+        j.builders.system.package.ensure("libaio-dev")
 
         install_cmd = """
         cd {}/server
@@ -130,21 +132,19 @@ class BuilderMariadb(j.builders.system._BaseClass):
         :type zhub_client:str
         """
 
-        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "")
         self.tools.dir_ensure(sandbox_dir)
         install_cmd = """
         cd {}/server
         make install DESTDIR={}
         """.format(
-            self.code_dir, sandbox_dir
+            self.code_dir, self.DIR_SANDBOX
         )
         self._execute(install_cmd)
 
-        # add libraries if missing
-        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
-        self.tools.dir_ensure(lib_dest)
-        dir_src = self.tools.joinpaths(sandbox_dir)
-        j.tools.sandboxer.libs_clone_under(dir_src, lib_dest)
+        mysql_bin_content = j.sal.fs.listFilesAndDirsInDir("/tmp/package/mariadb/usr/local/mysql/bin")
+        for bin_src in mysql_bin_content:
+            j.tools.sandboxer.libs_clone_under(bin_src, self.DIR_SANDBOX)
 
         # startup.toml
         templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
