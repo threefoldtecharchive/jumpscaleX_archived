@@ -84,14 +84,14 @@ class BuilderPostgresql(j.builders.system._BaseClass):
         cmd.process_strings_regex = "^postgres.*"
         cmd.process_strings = ""
         cmd.path = "/tmp"
-        return [cmd]
+        return cmd
 
     def start(self):
         """
         kosmos 'j.builders.db.postgres.start()'
         :return:
         """
-        j.builders.system._BaseClass.start(self)
+        self.startup_cmds.start()
         time.sleep(1)
 
     def test(self):

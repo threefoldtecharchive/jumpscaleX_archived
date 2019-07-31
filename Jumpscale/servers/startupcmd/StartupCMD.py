@@ -584,7 +584,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             return True
         return self._corex_local
 
-    #### TMUX
+    # TMUX
 
     @property
     def _pane(self):
@@ -612,18 +612,23 @@ class StartupCMD(j.application.JSBaseConfigClass):
         else:
             self._pane.execute(path)
 
-    ####BACKGROUND
+    # BACKGROUND
 
     def _background_start(self, path):
         cmd = "nohup %s >/dev/null 2>/dev/null &" % path
         self._log_debug(cmd)
         j.core.tools.execute(cmd)
 
-    ####COREX
+    # COREX
 
     @property
     def _corex_client(self):
-        return j.clients.corex.get(name=self.corex_client_name)
+        corex_client = j.clients.corex.get(name=self.corex_client_name)
+        server_process = j.sal.process.getProcessByPort(corex_client.port)
+        if not server_process:
+            corex_server = j.servers.corex.get(name=self.corex_client_name, port=corex_client.port)
+            corex_server.start()
+        return corex_client
 
     def _corex_start(self, toexec):
         if self.state == "error":

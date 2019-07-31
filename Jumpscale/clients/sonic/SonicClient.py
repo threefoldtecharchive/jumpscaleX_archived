@@ -6,9 +6,9 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SonicClient(JSConfigClient):
     """
     Sonic server client
-    
+
     usage example:-
-    
+
     data = { 
          'post:1': "this is some test text hello", 
          'post:2': 'this is a hello world post', 

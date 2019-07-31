@@ -129,7 +129,8 @@ class BCDBModelIndex(j.application.JSBaseClass):
     def _text_index_set_(self, property_name, val, obj_id, nid=1):
         args = self.bcdbmodel._text_index_content_pre_(property_name, val, obj_id, nid)
         keys = self._text_index_keys_get_(*args)
-        self.sonic.push(*keys)
+        if isinstance(args[-1], str) and args[-1].strip() and not args[-1].startswith("`"):
+            self.sonic.push(*keys)
 
     def _text_index_delete_(self, property_name, val, obj_id, nid=1):
         keys = self._text_index_keys_get_(property_name, None, obj_id, nid)

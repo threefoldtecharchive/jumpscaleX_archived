@@ -30,8 +30,8 @@ class BuilderOdoo(j.builders.system._BaseClass):
         kosmos 'j.builders.apps.odoo.start()'
         install odoo
         """
-        j.builders.db.postgres.install()
-        j.builders.runtimes.nodejs.install()
+        j.builders.db.postgres.install(reset=True)
+        j.builders.runtimes.nodejs.install(reset=True)
 
         self.tools.dir_ensure(self.APP_DIR)
 
@@ -67,12 +67,12 @@ class BuilderOdoo(j.builders.system._BaseClass):
         j.builders.db.postgres.start()
         cl = j.clients.postgres.db_client_get()
         self._write("{DIR_CFG}/odoo.conf", SIMPLE_CFG)
-        j.builders.system._BaseClass.start(self)
+        self.startup_cmds.start()
         print("INSTALLED OK, PLEASE GO TO http://localhost:8069    masterpasswd:rooter")
 
     def stop(self):
         j.builders.db.postgres.stop()
-        j.builders.system._BaseClass.stop(self)
+        self.startup_cmds.stop()
 
     @property
     def startup_cmds(self):
@@ -90,4 +90,4 @@ class BuilderOdoo(j.builders.system._BaseClass):
         odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"
         odoo_cmd.path = "/sandbox/bin"
         odoo_cmd.ports = [8069]
-        return [odoo_cmd]
+        return odoo_cmd

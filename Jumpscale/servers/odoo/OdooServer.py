@@ -13,7 +13,8 @@ class OdooServer(JSConfigClient):
            port = 8069 (I)
            admin_login = "admin"(S)
            admin_passwd_ = "rooter" (S)
-           db_login = "root"
+           admin_email = "info@example.com" (S) 
+           db_login = "odoouser"
            db_passwd_ = "rooter"            
            databases = (LO) !jumpscale.odoo.server.db.1
            
@@ -40,6 +41,7 @@ class OdooServer(JSConfigClient):
         return p
 
     def _write_config(self):
+        db = self.databases.new()
         C = """
         [options]
         admin_passwd = {admin_passwd_}
@@ -49,9 +51,9 @@ class OdooServer(JSConfigClient):
         port = {port}
         email_from = "{admin_email}"
         """
-        db = self.databases.new()
         args = self._data._ddict
-        j.sal.fs.writeFile(self._config_path, j.core.tools.text_replace(C, args=args, strip=True))
+        j.sal.fs.writeFile(self._config_path, j.core.tools.text_replace(C, args=args, text_strip=True))
+        j.sal.fs.copyFile(self._config_path, "/sandbox/cfg/odoo.conf")
 
     def client_get(self, name):
         db = self._database_obj_get(name)
@@ -158,12 +160,12 @@ class OdooServer(JSConfigClient):
         self._write_config()
         j.builders.db.postgres.start()
         cl = j.clients.postgres.db_client_get()
-        JSConfigClient.start(self)
+        self.startupcmd.start()
 
     def stop(self):
         self._log_info("stop odoo server and postgresql")
         j.builders.db.postgres.stop()
-        JSConfigClient.stop(self)
+        self.startupcmd.stop()
 
     @property
     def startupcmd(self):

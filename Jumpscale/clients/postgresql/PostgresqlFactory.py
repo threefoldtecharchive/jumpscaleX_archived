@@ -17,6 +17,7 @@ class PostgresqlFactory(JSConfigs):
         kosmos 'j.clients.postgres.install()'
         :return:
         """
+        j.builders.db.postgres.install()
 
     def start(self):
         j.builders.db.postgres.start()
@@ -47,12 +48,12 @@ class PostgresqlFactory(JSConfigs):
             """psql -h localhost -U postgres \
             --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
         )
-        self.db_create(dbname)
+        cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="postgres")
+        cl.db_create(dbname)
         cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
         cl.save()
         assert cl.client.status == True
         info = cl.client.info
-        assert info.dbname == "main"
         return cl
 
     def test(self):
