@@ -37,7 +37,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
 
         # install golang
         j.builders.runtimes.golang.install()
-        j.builders.db.etcd.install()
+        # j.builders.db.etcd.install()
         self.tools.dir_ensure(self.package_path)
         # redis as backend
         j.builders.db.redis.sandbox()
