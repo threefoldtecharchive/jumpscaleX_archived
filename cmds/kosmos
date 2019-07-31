@@ -16,9 +16,6 @@ import os
 import sys
 from Jumpscale import j
 
-# needs to be changed to the command for pannel only but today no distinction
-j.tools.logger.debug = True
-
 
 # j.tools.bash.get().profile.locale_check()
 
@@ -26,6 +23,9 @@ j.tools.logger.debug = True
 import argparse
 import pudb
 import traceback
+
+# default is 12 lines or get from config
+LOGGER_PANEL_LINES = j.core.myenv.config.get("LOGGER_PANEL_NRLINES", 12)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-q", "--quiet", default=False, action="store_true", help="Turn off debug mode and logging")
@@ -47,7 +47,7 @@ parser.add_argument("--debug", default=False, action="store_true", help="will go
 parser.add_argument(
     "--logging-panel-lines",
     type=int,
-    default=-1,
+    default=LOGGER_PANEL_LINES,
     help="set the line count for logging panel (0 means disabled), default: -1 (auto)",
 )
 

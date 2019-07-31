@@ -1090,7 +1090,7 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["LOGGER_PANEL_NRLINES"] or logdict.get("use_custom_printer"):
+        if MyEnv.config.get("LOGGER_PANEL_NRLINES") or logdict.get("use_custom_printer"):
             if Tools.custom_log_printer:
                 p = Tools.custom_log_printer
 
@@ -2383,9 +2383,6 @@ class MyEnv:
             if not "DIR_BASE" in MyEnv.config:
                 return
 
-            if not "LOGGER_PANEL_NRLINES" in MyEnv.config:
-                MyEnv.config["LOGGER_PANEL_NRLINES"] = 15
-
             MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
             MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
             MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
@@ -2911,7 +2908,7 @@ class UbuntuInstaller:
             return
         script = """
         apt update
-        apt upgrade -y
+        apt upgrade -y --force-yes
         apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -2990,9 +2987,11 @@ class JumpscaleInstaller:
     def install(self, sandboxed=False, force=False, gitpull=False):
 
         MyEnv.check_platform()
-
-        if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+        # will check if there's already a key loaded (forwarded) will continue installation with it
+        rc, _, _ = Tools.execute("ssh-add -L")
+        if not rc:
+            if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
+                MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
@@ -3443,7 +3442,7 @@ class DockerContainer:
             if baseinstall:
                 print(" - Upgrade ubuntu")
                 self.dexec("apt update")
-                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
+                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --force-yes")
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
