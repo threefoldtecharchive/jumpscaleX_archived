@@ -2903,7 +2903,7 @@ class UbuntuInstaller:
             return
         script = """
         apt update
-        apt upgrade -y
+        apt upgrade -y --force-yes
         apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -3435,7 +3435,7 @@ class DockerContainer:
             if baseinstall:
                 print(" - Upgrade ubuntu")
                 self.dexec("apt update")
-                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
+                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --force-yes")
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
