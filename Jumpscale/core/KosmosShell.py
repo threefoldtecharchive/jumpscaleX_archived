@@ -471,4 +471,3 @@ def ptconfig(repl):
     # setup docstring and logging containers
     setup_docstring_containers(repl)
     setup_logging_containers(repl)
-

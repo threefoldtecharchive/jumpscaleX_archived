@@ -2312,9 +2312,14 @@ class MyEnv:
 
     @staticmethod
     def secret_set(secret=None):
-        while not secret:  # keep asking till the secret is not empty
-            secret = Tools.ask_password("provide secret to use for encrypting private key")
-        secret = secret.encode()
+        if MyEnv.interactive:
+            while not secret:  # keep asking till the secret is not empty
+                secret = Tools.ask_password("provide secret to use for encrypting private key")
+            secret = secret.encode()
+        else:
+            from random import randint
+
+            secret = str(random.randint(1, 100000000)).encode()
 
         import hashlib
 
@@ -3608,6 +3613,10 @@ class DockerContainer:
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
+            Tools.execute(
+                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
+                % j.core.myenv.sshagent.key_default
+            )
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")
@@ -3619,7 +3628,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx install"
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % j.core.myenv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
