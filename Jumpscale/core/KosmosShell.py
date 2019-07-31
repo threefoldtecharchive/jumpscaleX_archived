@@ -225,7 +225,7 @@ class HasLogs(PythonInputFilter):
         j = KosmosShellConfig.j
         panel_enabled = bool(j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1))
         in_autocomplete = j.application._in_autocomplete
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show and panel_enabled and not in_autocomplete
+        return LogPane.Show and panel_enabled and not in_autocomplete
 
 
 class IsInsideString(PythonInputFilter):
@@ -262,9 +262,9 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
     LogPane.Buffer.insert_text(data=msg, fire_event=False)
     LogPane.Buffer.newline()
+    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
 
 
 def setup_logging_containers(repl):
@@ -291,16 +291,12 @@ def setup_logging_containers(repl):
                         preview_search=True,
                     ),
                     wrap_lines=True,
-                    height=Dimension(max=panel_line_count),
+                    height=Dimension.exact(panel_line_count),
                 ),
                 filter=HasLogs(repl) & ~is_done,
             ),
         ]
     )
-
-    if not auto:
-        for _ in range(panel_line_count):
-            add_logs_to_pane("")
 
 
 def ptconfig(repl):
@@ -467,7 +463,7 @@ def ptconfig(repl):
 
     repl._completer.__class__.get_completions = custom_get_completions
 
-    j.core.myenv.config["log_printer"] = add_logs_to_pane
+    j.core.tools.custom_log_printer = add_logs_to_pane
 
     parent_container = get_ptpython_parent_container(repl)
     # remove ptpython docstring containers, we have ours now
@@ -475,3 +471,4 @@ def ptconfig(repl):
     # setup docstring and logging containers
     setup_docstring_containers(repl)
     setup_logging_containers(repl)
+
