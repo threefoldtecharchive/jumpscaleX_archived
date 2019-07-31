@@ -2982,9 +2982,11 @@ class JumpscaleInstaller:
     def install(self, sandboxed=False, force=False, gitpull=False):
 
         MyEnv.check_platform()
-
-        if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+        # will check if there's already a key loaded (forwarded) will continue installation with it
+        rc, _, _ = Tools.execute("ssh-add -L")
+        if not rc:
+            if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
+                MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
