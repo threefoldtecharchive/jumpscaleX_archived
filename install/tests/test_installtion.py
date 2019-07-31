@@ -1,7 +1,6 @@
 from .base_test import BaseTest
 import uuid
 
-
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
         self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
@@ -13,6 +12,9 @@ class TestInstallationInDocker(BaseTest):
         self.assertIn("install successful", output.decode())
 
     def tearDown(self):
+        self.info("Clean the installation")
+        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        self.os_command(command)
         self.info("Delete jumpscale created container.")
         command = "docker rm {}".format(self.CONTAINER_NAME)
         self.os_command(command)
@@ -113,7 +115,7 @@ class TestInstallationInDocker(BaseTest):
 class TestInstallationInSystem(BaseTest):
     def tearDown(self):
         self.info("Clean the installation")
-        command = "rm -rf ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
         self.os_command(command)
 
     def test01_install_jumpscale_insystem_no_interactive(self):
