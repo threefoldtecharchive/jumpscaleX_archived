@@ -223,7 +223,7 @@ class FormatANSIText(Processor):
 class HasLogs(PythonInputFilter):
     def __call__(self):
         j = KosmosShellConfig.j
-        panel_enabled = bool(j.core.myenv.config.get("logging_panel_lines", -1))
+        panel_enabled = bool(j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1))
         in_autocomplete = j.application._in_autocomplete
         return len(LogPane.Buffer.text) > 0 and LogPane.Show and panel_enabled and not in_autocomplete
 
@@ -270,7 +270,7 @@ def add_logs_to_pane(msg):
 def setup_logging_containers(repl):
     j = KosmosShellConfig.j
 
-    panel_line_count = j.core.myenv.config.get("logging_panel_lines", -1)
+    panel_line_count = j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1)
     auto = panel_line_count < 0
     if auto:
         panel_line_count = 12  # default

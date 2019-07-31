@@ -1089,7 +1089,7 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["logging_panel_lines"] or logdict.get("use_custom_printer"):
+        if MyEnv.config["LOGGER_PANEL_NRLINES"] or logdict.get("use_custom_printer"):
             custom_printer = MyEnv.config.get("log_printer")
             if custom_printer:
                 p = custom_printer

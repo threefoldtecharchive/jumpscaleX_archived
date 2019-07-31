@@ -40,7 +40,7 @@ parser.add_argument(
 
 parser.add_argument("--debug", default=False, action="store_true", help="will go in debug session when error")
 parser.add_argument(
-    "--logging_panel_lines",
+    "--logging-panel-lines",
     type=int,
     default=-1,
     help="set the line count for logging panel (0 means disabled), default: -1 (auto)",
@@ -63,7 +63,7 @@ if options.debug:
     j.tools.logger.debug = True
 
 
-j.core.myenv.config["logging_panel_lines"] = options.logging_panel_lines
+j.core.myenv.config["LOGGER_PANEL_NRLINES"] = options.logging_panel_lines
 
 
 def instruction_process(ddict):
