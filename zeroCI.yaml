@@ -1,6 +1,6 @@
 prequisties: docker
 install:
-  - apt-get update; apt-get install -y python3.6 curl locales language-pack-en rsync unzip python3-pip
+  - apt-get update; apt-get install -y python3.6 curl locales language-pack-en rsync unzip python3-pip software-properties-common;
   - pip3 install -r /opt/code/github/threefoldtech/jumpscaleX/install/tests/linux_requirements.txt
   - eval `ssh-agent -s`; ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa ; ssh-add
   - cp -r /opt/code/github/threefoldtech/jumpscaleX /opt/code/github/threefoldtech/jumpscaleX_test
