@@ -17,6 +17,9 @@ class TestInstallationInDocker(BaseTest):
         command = "docker rm {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
+        command = "rm -rf /sandbox; rm -rf ~/sandbox"
+        self.os_command(command)
+
     def Test01_verify_container_kosmos_option(self):
         """
         TC54
