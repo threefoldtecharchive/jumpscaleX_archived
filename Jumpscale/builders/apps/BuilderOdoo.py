@@ -17,6 +17,7 @@ class BuilderOdoo(j.builders.system._BaseClass):
 
     def _init(self, **kwargs):
         self.VERSION = "12.0"
+        self.dbname = None
         self.APP_DIR = self._replace("{DIR_BASE}/apps/odoo")
 
     @builder_method()
@@ -83,6 +84,9 @@ class BuilderOdoo(j.builders.system._BaseClass):
         j.builders.db.postgres.stop()
         self.startup_cmds.stop()
 
+    def set_dbname(self, name):
+        self.dbname = name
+
     @property
     def startup_cmds(self):
         """
@@ -93,7 +97,12 @@ class BuilderOdoo(j.builders.system._BaseClass):
         # odoo_start = self._replace(
         #     "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
         # )
-        odoo_start = self._replace("python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf")
+        if not self.dbname:
+            raise ValueError("invalid DB Name, use set_dbname with the correct database")
+        odoo_start = self._replace(
+            "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf -d %s -i base"
+            % self.dbname
+        )
         odoo_cmd = j.servers.startupcmd.get("odoo")
         odoo_cmd.cmd_start = odoo_start
         odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"

@@ -21,9 +21,9 @@ class PostgresClient(JSConfigClient):
     name* = "" (S)
     ipaddr = "" (S)
     port = 5432 (ipport)
-    login = "odoouser" (S)
+    login = "root" (S)
     passwd_ = "" (S)
-    dbname = "user" (S)
+    dbname = "odoo_test" (S)
     """
 
     def _init(self, **kwargs):
@@ -35,7 +35,7 @@ class PostgresClient(JSConfigClient):
         if not self._client:
             self._client = psycopg2.connect(
                 "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
-                % (self.dbname, self.login, self.ipaddr, self.passwd_, self.port)
+                % ("postgres", self.login, self.ipaddr, self.passwd_, self.port)
             )
         return self._client
 
@@ -118,7 +118,7 @@ class PostgresClient(JSConfigClient):
         cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (args)
         j.sal.process.execute(cmd, showout=False, die=False)
 
-    def db_create(self, dbname=None, die=True):
+    def db_create(self, dbname=None, die=False):
         """Create new database
         :param dbname: db name to be dropped, if None will be current database
         :raises j.exceptions.RuntimeError: Exception if db already exists
