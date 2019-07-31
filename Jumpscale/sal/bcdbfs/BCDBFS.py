@@ -187,21 +187,8 @@ class BCDBFS(j.application.JSBaseClass):
         return self._file_model.find(name=path) != []
 
     def file_read(self, path):
-        """
-        read file from path
-        :param path: path to the file
-        :return: (string) file content
-        """
         path = j.sal.fs.pathClean(path)
-<<<<<<< HEAD
-        file_obj = self._file_model.get_by_name(path)
-        if not file_obj:
-            raise RuntimeError("path {} does not exist".format(path))
-        contents = file_obj[0].content
-        return contents
-=======
         return self._file_model.file_read(path)
->>>>>>> a9275b33e53e0ed2167151ad47d6c8922ed1f48c
 
     #############################
     ###### LIST OPERATIONS ######
@@ -226,8 +213,7 @@ class BCDBFS(j.application.JSBaseClass):
     def list_files_and_dirs(self, path="/"):
         dirs = self.list_dirs(path)
         files = self.list_files(path)
-        res = dirs.extend(files)
-        return res
+        return dirs + files 
 
     def _destroy(self):
         """
@@ -250,6 +236,9 @@ class BCDBFS(j.application.JSBaseClass):
         assert j.sal.bcdbfs.dir_exists("/dir_1")
         assert j.sal.bcdbfs.file_exists("/dir_1/test_4")
 
+        assert j.sal.bcdbfs.is_dir("/dir_1")
+        assert j.sal.bcdbfs.is_file("/dir_1/test_4")
+
         print(1)
 
         assert j.sal.bcdbfs.list_files("/dir_1") == [
@@ -260,7 +249,7 @@ class BCDBFS(j.application.JSBaseClass):
             "/dir_1/test_4",
         ]
         assert j.sal.bcdbfs.list_dirs("/") == ["/dir_0", "/dir_1", "/dir_2", "/dir_3", "/dir_4"]
-        assert j.sal.bcdb.fs.list_files_and_dirs("/") == [
+        assert j.sal.bcdbfs.list_files_and_dirs("/") == [
             "/dir_0",
             "/dir_1",
             "/dir_2",
@@ -283,14 +272,8 @@ class BCDBFS(j.application.JSBaseClass):
         j.sal.bcdbfs.file_delete("/test_from_local")
         assert j.sal.bcdbfs.file_exists("/test_from_local") is False
 
-<<<<<<< HEAD
-        # j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
-        # j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        # assert j.sal.bcdbfs.file_read('/test_with_content') == 'test contents'
-
-        print("TESTS PASSED")
-=======
         j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
         assert j.sal.bcdbfs.file_read('/test_with_content') == b'test content'
->>>>>>> a9275b33e53e0ed2167151ad47d6c8922ed1f48c
+        j.sal.bcdbfs.dir_remove("/")
+        print("TESTS PASSED")

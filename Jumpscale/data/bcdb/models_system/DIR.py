@@ -33,13 +33,30 @@ class DIR(j.data.bcdb._BCDBModelClass):
             self._file_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.file.2")
         return self._file_model_
 
-    def create_empty_dir(self, name):
+    def _create_root_dir(self):
         new_dir = self.new()
-        path = j.sal.fs.pathClean(j.sal.fs.joinPaths(new_dir.name, name))
+        new_dir.name = "/"
+        new_dir.save()
+        return new_dir
+
+    def create_empty_dir(self, name, create_parent=True):
+        if name == "/" and not len(self.find(name="/")) > 0:
+            return self._create_root_dir()
+        if name == "/":
+            return self.find("/")[0]
+        parent_path = j.sal.fs.getParent(name)
+        parent = self.find(name=parent_path)
+        if len(parent) == 0 and create_parent:
+            parent = [self.create_empty_dir(parent_path, create_parent=True)]
+        if len(parent) == 0:
+            raise RuntimeError("can't find {}".format(parent_path))
+        parent = parent[0]
+        new_dir = self.new()
+        path = j.sal.fs.pathClean(j.sal.fs.joinPaths(parent.name, name))
         new_dir.name = path
         new_dir.save()
-        new_dir.dirs.append(new_dir.id)
-        new_dir.save()
+        parent.dirs.append(new_dir.id)
+        parent.save()
         return new_dir
 
     def delete_recursive(self, name):
@@ -49,6 +66,6 @@ class DIR(j.data.bcdb._BCDBModelClass):
             self._file_model.get(file_id).delete()
 
         for dir_id in dir.dirs:
-            self.get(dir_id).delete_recursive()
+            self.delete_recursive(self.get(dir_id).name)
 
         dir.delete()
