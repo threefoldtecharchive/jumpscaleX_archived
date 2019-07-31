@@ -37,7 +37,8 @@ class OdooFactory(JSConfigs):
             s.start()
 
         for x in range(2):
-            dbobj = s.databases.new(name="test%s" % x)
+            dbobj = s.databases.new()
+            dbobj.name = "test%s" % x
             dbobj.admin_email = "info@example.com"
             dbobj.admin_passwd_ = "1234"
             dbobj.country_code = "be"

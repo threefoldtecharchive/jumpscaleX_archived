@@ -43,5 +43,23 @@ server =j.servers.odoo.get(databases=[{"name":"odoo_client"}])
 server.databases_create() 
 ```
 
+### to add new user 
+```
+cl = j.clients.odoo.get(name="test",password_="admin",login_admin="admin")
+cl.user_add("test","123456")
+```
+
+### to install module
+```
+cl = j.clients.odoo.get(name="test",password_="admin",login_admin="admin")
+cl.module_install("MODULE_NAME")
+```
+
+### to list all database 
+```
+cl = j.clients.odoo.get(name="test",password_="admin",login_admin="admin")
+cl.module_install("MODULE_NAME")
+```
+
            
 

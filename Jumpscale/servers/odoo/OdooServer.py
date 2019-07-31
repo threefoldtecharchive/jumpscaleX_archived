@@ -38,7 +38,7 @@ class OdooServer(JSConfigClient):
     def client(self):
         if not self._client:
             self._client = j.clients.odoo.get(
-                name=self.name, host=self.host, port=self.port, login=self.admin_login, password_=self.db_passwd_
+                name=self.name, host=self.host, port=self.port, login_admin=self.admin_login, password_=self.db_passwd_
             )
         return self._client
 
@@ -69,7 +69,7 @@ class OdooServer(JSConfigClient):
             name=db.name,
             host=self.host,
             port=self.port,
-            login=db.admin_email,
+            login_admin=db.admin_email,
             password_=db.admin_passwd_,
             database=db.name,
         )

@@ -56,7 +56,7 @@ class PostgresqlFactory(JSConfigs):
                 --command='DROP ROLE IF EXISTS odoouser; CREATE ROLE odoouser superuser ; ALTER ROLE odoouser WITH LOGIN; ALTER USER odoouser WITH SUPERUSER;' """
             )
             j.sal.process.execute("createdb -O odoouser %s" % dbname)
-        except BaseException as e:
+        except:
             pass
 
         cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
