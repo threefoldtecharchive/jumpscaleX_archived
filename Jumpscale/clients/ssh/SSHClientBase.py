@@ -126,7 +126,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         script = j.core.tools.text_replace(script)
         script = "from jumpscale import j\n{}".format(script)
         scriptname = j.data.hash.md5_string(script)
-        j.sal.fs.writeFile(j.core.tools.text_replace("{TMP_DIR}/{scriptname}", contents=script))
+        j.sal.fs.writeFile(j.core.tools.text_replace("{TMP_DIR}/{scriptname}"), contents=script)
         self.file_copy("{TMP_DIR}/{scriptname}", "{TMP_DIR}/{scriptname}")
         self.execute("source /sandbox/env && python3 {TMP_DIR}/{scriptname}")
 
