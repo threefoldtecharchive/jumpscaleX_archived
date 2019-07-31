@@ -44,6 +44,12 @@ parser.add_argument(
 )
 
 parser.add_argument("--debug", default=False, action="store_true", help="will go in debug session when error")
+parser.add_argument(
+    "--logging-panel-lines",
+    type=int,
+    default=-1,
+    help="set the line count for logging panel (0 means disabled), default: -1 (auto)",
+)
 
 parser.add_argument("-p", "--patch", default=False, action="store_true", help="Monkeypatch the system for gevent")
 
@@ -61,6 +67,9 @@ if options.debug:
     j.core.myenv.config["LOGGER_INCLUDE"] = ["*"]
     j.tools.logger.reload()
     j.tools.logger.debug = True
+
+
+j.core.myenv.config["LOGGER_PANEL_NRLINES"] = options.logging_panel_lines
 
 
 def instruction_process(ddict):
