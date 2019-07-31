@@ -225,7 +225,7 @@ class HasLogs(PythonInputFilter):
         j = KosmosShellConfig.j
         panel_enabled = bool(j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1))
         in_autocomplete = j.application._in_autocomplete
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show and panel_enabled and not in_autocomplete
+        return LogPane.Show and panel_enabled and not in_autocomplete
 
 
 class IsInsideString(PythonInputFilter):
@@ -262,9 +262,9 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
     LogPane.Buffer.insert_text(data=msg, fire_event=False)
     LogPane.Buffer.newline()
+    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
 
 
 def setup_logging_containers(repl):
@@ -291,16 +291,12 @@ def setup_logging_containers(repl):
                         preview_search=True,
                     ),
                     wrap_lines=True,
-                    height=Dimension(max=panel_line_count),
+                    height=Dimension.exact(panel_line_count),
                 ),
                 filter=HasLogs(repl) & ~is_done,
             ),
         ]
     )
-
-    if not auto:
-        for _ in range(panel_line_count):
-            add_logs_to_pane("")
 
 
 def ptconfig(repl):
