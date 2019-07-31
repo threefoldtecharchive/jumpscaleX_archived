@@ -301,6 +301,13 @@ class JSBase:
         for key, obj in self.__dict__.items():
             del obj
 
+    def _obj_reset(self):
+        """
+        to remove property underlying values, good for mem reclaim or sub process management
+        :return:
+        """
+        pass
+
     @property
     def _dirpath(self):
         if self.__class__._dirpath_ == "":

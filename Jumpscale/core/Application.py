@@ -140,6 +140,10 @@ class Application(object):
         self._debug = None
         self._systempid = None
         self._j.core.db_reset(self._j)
+        for obj in self.obj_interator:
+            obj._children = {}
+            obj._obj_cache_reset()
+            obj._obj_reset()
 
     # def bcdb_system_configure(self, addr, port, namespace, secret):
     #     """
@@ -362,6 +366,22 @@ class Application(object):
     #         # del sys.modules[key]
     #         # exec("del %s"%key)
     #         # sys.modules.pop(key)
+
+    @property
+    def obj_interator(self):
+        """
+        iterates over all loaded objects in kosmos space (which inherits of JSBase class)
+        e.g.
+        objnames = [i._name for i in j.application.obj_interator]
+
+        :return:
+        """
+        for item in self._iterate_rootobj():
+            print(item)
+            if isinstance(item, self.JSBaseClass):
+                yield item
+                for item in item._children_recursive_get():
+                    yield item
 
     def _iterate_rootobj(self, obj=None):
         if obj is None:
