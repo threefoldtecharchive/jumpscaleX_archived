@@ -2091,6 +2091,7 @@ class MyEnv:
         config["LOGGER_LEVEL"] = 15  # means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
+        config["LOGGER_PANEL_NRLINES"] = 15
 
         if MyEnv.readonly:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"
@@ -2376,6 +2377,9 @@ class MyEnv:
             MyEnv._config_load()
             if not "DIR_BASE" in MyEnv.config:
                 return
+
+            if not "LOGGER_PANEL_NRLINES" in MyEnv.config:
+                MyEnv.config["LOGGER_PANEL_NRLINES"] = 15
 
             MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
             MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
