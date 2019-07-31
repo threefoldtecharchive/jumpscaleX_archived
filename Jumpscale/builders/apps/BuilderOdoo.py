@@ -37,6 +37,15 @@ class BuilderOdoo(j.builders.system._BaseClass):
 
         j.builders.system.package.install(
             "sudo libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev"
+        )  # create user and related config
+        self._execute(
+            """
+            id -u odoouser &>/dev/null || (useradd odoouser --home {APP_DIR} --no-create-home --shell /bin/bash
+            sudo su - postgres -c "/sandbox/bin/createuser -s odoouser") || true
+            mkdir -p {APP_DIR}/data
+            chown -R odoouser:odoouser {APP_DIR}
+            sudo -H -u odoouser /sandbox/bin/initdb -D {APP_DIR}/data || true
+        """
         )
 
         self._execute(

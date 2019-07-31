@@ -12,16 +12,16 @@ class OdooServer(JSConfigClient):
            host = "127.0.0.1" (S)
            port = 8069 (I)
            admin_login = "admin"(S)
-           admin_passwd_ = "rooter" (S)
+           admin_passwd_ = "admin" (S)
            admin_email = "info@example.com" (S) 
            db_login = "odoouser"
-           db_passwd_ = "rooter"            
+           db_passwd_ = "123456"            
            databases = (LO) !jumpscale.odoo.server.db.1
            
            @url =  jumpscale.odoo.server.db.1
-           name* = "test" (S)
+           name* = "user" (S)
            admin_email = "info@example.com" (S)                      
-           admin_passwd_ = "1234" (S)
+           admin_passwd_ = "123456" (S)
            country_code = "be"
            lang="en_US"
            phone = ""

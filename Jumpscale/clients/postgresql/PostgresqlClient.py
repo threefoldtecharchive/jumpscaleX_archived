@@ -21,9 +21,9 @@ class PostgresClient(JSConfigClient):
     name* = "" (S)
     ipaddr = "" (S)
     port = 5432 (ipport)
-    login = "" (S)
+    login = "odoouser" (S)
     passwd_ = "" (S)
-    dbname = "postgres" (S)
+    dbname = "user" (S)
     """
 
     def _init(self, **kwargs):

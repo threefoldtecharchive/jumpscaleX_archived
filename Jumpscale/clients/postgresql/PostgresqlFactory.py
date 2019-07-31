@@ -48,7 +48,11 @@ class PostgresqlFactory(JSConfigs):
             """psql -h localhost -U postgres \
             --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
         )
-        cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="postgres")
+        j.sal.process.execute(
+            """psql -h localhost -U postgres \
+            --command='DROP ROLE IF EXISTS odoouser; CREATE ROLE odoouser ; ALTER ROLE odoouser WITH LOGIN;' """
+        )
+        cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="user")
         cl.db_create(dbname)
         cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
         cl.save()
