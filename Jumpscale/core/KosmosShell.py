@@ -223,9 +223,9 @@ class FormatANSIText(Processor):
 class HasLogs(PythonInputFilter):
     def __call__(self):
         j = KosmosShellConfig.j
-        debug = j.core.myenv.config.get("DEBUG", False)
+        panel_enabled = bool(j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1))
         in_autocomplete = j.application._in_autocomplete
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug and not in_autocomplete
+        return len(LogPane.Buffer.text) > 0 and LogPane.Show and panel_enabled and not in_autocomplete
 
 
 class IsInsideString(PythonInputFilter):
@@ -268,6 +268,13 @@ def add_logs_to_pane(msg):
 
 
 def setup_logging_containers(repl):
+    j = KosmosShellConfig.j
+
+    panel_line_count = j.core.myenv.config.get("LOGGER_PANEL_NRLINES", -1)
+    auto = panel_line_count < 0
+    if auto:
+        panel_line_count = 12  # default
+
     parent_container = get_ptpython_parent_container(repl)
     parent_container.children.extend(
         [
@@ -284,12 +291,16 @@ def setup_logging_containers(repl):
                         preview_search=True,
                     ),
                     wrap_lines=True,
-                    height=Dimension(max=12),
+                    height=Dimension(max=panel_line_count),
                 ),
                 filter=HasLogs(repl) & ~is_done,
             ),
         ]
     )
+
+    if not auto:
+        for _ in range(panel_line_count):
+            add_logs_to_pane("")
 
 
 def ptconfig(repl):

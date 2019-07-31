@@ -1089,7 +1089,7 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config["DEBUG"] or logdict.get("use_custom_printer"):
+        if MyEnv.config["LOGGER_PANEL_NRLINES"] or logdict.get("use_custom_printer"):
             custom_printer = MyEnv.config.get("log_printer")
             if custom_printer:
                 p = custom_printer
@@ -2922,7 +2922,7 @@ class UbuntuInstaller:
 
         script = """
         cd /tmp
-        apt-get install -y mc wget python3 git tmux 
+        apt-get install -y mc wget python3 git tmux
         set +ex
         apt-get install python3-distutils -y
         set -ex
