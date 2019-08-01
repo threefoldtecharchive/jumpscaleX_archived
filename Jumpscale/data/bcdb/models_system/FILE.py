@@ -155,7 +155,6 @@ class FILE(j.data.bcdb._BCDBModelClass):
         parent.save()
 
     def file_read(self, path):
-        import ipdb; ipdb.set_trace()
         try:
             path = j.sal.fs.pathClean(path)
             file = self.find(name=path)[0]
@@ -200,7 +199,8 @@ class FileStream:
                 block.delete()
             self._vfile.blocks.clear()
             self._vfile.save()
-        for block in stream:
+        block = stream.read1(8192)
+        while block:
             hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
             exists = self._block_model.find(md5=hash)
             #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
@@ -217,6 +217,7 @@ class FileStream:
             else:
                 self._vfile.size_bytes += exists[0].size
                 self._vfile.blocks.append(exists[0].id)
+            block = stream.read1(8192)
         self._vfile.save()
 
     def _save_plain(self, stream, append=True):

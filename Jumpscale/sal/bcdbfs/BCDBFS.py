@@ -168,7 +168,7 @@ class BCDBFS(j.application.JSBaseClass):
         dest_file.save()
         return dest_file
 
-    def file_copy(self, path, dest):
+    def file_copy(self, path, dest, override=False):
         """
         copies file either from the local file system or from another location in bcdbfs
         :param path: full path to the file
@@ -176,6 +176,8 @@ class BCDBFS(j.application.JSBaseClass):
         :return: file object
         """
         # first check if path exists on the file system
+        if self.exists(dest) and not override:
+            return
         if j.sal.fs.exists(path):
             return self.file_copy_from_local(path, dest)
         else:
