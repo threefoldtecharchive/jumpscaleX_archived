@@ -10,11 +10,14 @@ class TestInstallationInDocker(BaseTest):
         )
         output, error = self.jumpscale_installation("container-install", "-n {}".format(self.CONTAINER_NAME))
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
     def tearDown(self):
         self.info("Delete jumpscale created container.")
         command = "docker rm {}".format(self.CONTAINER_NAME)
+        self.os_command(command)
+
+        command = "rm -rf /sandbox; rm -rf ~/sandbox"
         self.os_command(command)
 
     def Test01_verify_container_kosmos_option(self):
@@ -221,7 +224,7 @@ class TestInstallationInSystem(BaseTest):
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
         output, error = self.jumpscale_installation("install")
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
         command = "source /sandbox/env.sh && kosmos"
@@ -244,7 +247,7 @@ class TestInstallationInSystem(BaseTest):
         )
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = "source /sandbox/env.sh && kosmos"
