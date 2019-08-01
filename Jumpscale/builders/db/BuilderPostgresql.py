@@ -78,12 +78,10 @@ class BuilderPostgresql(j.builders.system._BaseClass):
 
         # run the db with the same user when running odoo server
         cmd = j.servers.startupcmd.get("postgres")
-        cmd.cmd_start = self._replace("sudo -u postgres {DIR_BIN}/postgres -D {DATA_DIR}")
+        cmd.cmd_start = self._replace("sudo -u postgres  {DIR_BIN}/postgres -D {DATA_DIR}")
         cmd.cmd_stop = "sudo -u postgres {DIR_BIN}/pg_ctl stop -D {DATA_DIR}"
         cmd.ports = [5432]
-        cmd.process_strings_regex = "^postgres.*"
-        cmd.process_strings = ""
-        cmd.path = "/tmp"
+        cmd.path = "/sandbox/bin"
         return cmd
 
     def start(self):

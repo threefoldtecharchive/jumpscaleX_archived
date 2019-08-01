@@ -33,8 +33,12 @@ class OdooFactory(JSConfigs):
         """
         self.install()
         s = self.get(name="test")
+        if start:
+            s.start()
+
         for x in range(2):
-            dbobj = s.databases.new(name="test%s" % x)
+            dbobj = s.databases.new()
+            dbobj.name = "test%s" % x
             dbobj.admin_email = "info@example.com"
             dbobj.admin_passwd_ = "1234"
             dbobj.country_code = "be"
@@ -44,8 +48,6 @@ class OdooFactory(JSConfigs):
         s.databases_create()
 
         s.save()
-        if start:
-            s.start()
 
         cl1 = s.client_get("test1")
         cl2 = s.client_get("test2")

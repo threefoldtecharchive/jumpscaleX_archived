@@ -97,10 +97,10 @@ class FILE(j.data.bcdb._BCDBModelClass):
         else:
             return set(res)
 
-    def filestream_get(self, vfile, model):
-        return FileStream(vfile, model)
+    def filestream_get(self, vfile):
+        return FileStream(vfile)
 
-    def file_create_empty(self, name):
+    def file_create_empty(self, name, create_parent=True):
         """
         create new file inside a directory
         :param name: file name
@@ -110,7 +110,10 @@ class FILE(j.data.bcdb._BCDBModelClass):
         name = j.sal.fs.pathClean(name)
         new_file.name = name
         new_file.save()
-        dir = self._dir_model.find(name=j.sal.fs.getParent(name))[0]
+        dir = self._dir_model.find(name=j.sal.fs.getParent(name))
+        if len(dir) == 0:
+            dir = [self._dir_model.create_empty_dir(j.sal.fs.getParent(name))]
+        dir = dir[0]
         dir.files.append(new_file.id)
         dir.save()
         return new_file
@@ -133,7 +136,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
                     "file with path {} doesn't exist, if you want to create it pass create = True".format(path)
                 )
             file = self.file_create_empty(path)
-        fs = FileStream(file, self._block_model)
+        fs = FileStream(file)
         fs.writelines(content, append=append)
         return file
 
@@ -141,7 +144,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         path = j.sal.fs.pathClean(path)
         file = self.find(name=path)
         if not file:
-            raise RuntimeError("file with {} does not exist".format(file))
+            raise RuntimeError('file with {} does not exist'.format(file))
         file = file[0]
         file.delete()
         parent = j.sal.fs.getDirName(path)
@@ -152,12 +155,11 @@ class FILE(j.data.bcdb._BCDBModelClass):
 
     def file_read(self, path):
         try:
+            path = j.sal.fs.pathClean(path)
             file = self.find(name=path)[0]
         except:
-            if not create:
-                raise RuntimeError("file with path {} does not exist".format(path))
-        path = j.sal.fs.pathClean(path)
-        fs = FileStream(file, self._block_model)
+            raise RuntimeError("file with path {} does not exist".format(path))
+        fs = FileStream(file)
         return fs.read_stream_get().read()
 
 
@@ -166,9 +168,17 @@ class FileStream:
     # other types will be saved in blocks
     PLAIN_TYPES = ["md", "txt", "json", "toml"]
 
-    def __init__(self, vfile, model):
+    def __init__(self, vfile):
         self._vfile = vfile
-        self._block_model = model
+        self._bcdb = self._vfile._model.bcdb
+
+    _block_model_ = None
+
+    @property
+    def _block_model(self):
+        if not self._block_model_:
+            self._block_model_ = self._bcdb.model_get_from_url("jumpscale.bcdb.fs.block.2")
+        return self._block_model_
 
     def writelines(self, stream, append=True):
         ext = self._vfile.extension or self._vfile.name.split(".")[-1]
@@ -183,29 +193,30 @@ class FileStream:
 
     def _save_blocks(self, stream, append=True):
         if not append:
-            self._vfile.blocks = []
+            for block_id in self._vfile.blocks:
+                block = self._block_model.get(block_id)
+                block.delete()
+            self.blocks = []
             self._vfile.save()
         for block in stream:
-            hash = j.data.hash.md5_string(block)
+            hash = j.data.hash.md5_string(block + str(self._vfile.id))
             exists = self._block_model.find(md5=hash)
-            if exists:
-                b = exists[0]
-            else:
+            if not exists:
                 b = self._block_model.new()
                 b.md5 = hash
                 b.content = block
                 b.size = len(block)
                 b.epoch = j.data.time.epoch
                 b.save()
-            self._vfile.size_bytes += b.size
-            self._vfile.blocks.append(b.id)
+                self._vfile.size_bytes += b.size
+                self._vfile.blocks.append(b.id)
 
     def _save_plain(self, stream, append=True):
         if append:
             content = self._vfile.content
         else:
             content = ""
-        self._vfile.content = content + "\n".join([line for line in stream])
+        self._vfile.content = content + "\n" + stream
         self._vfile.size_bytes = len(self._vfile.content.encode())
 
     def read_stream_get(self):

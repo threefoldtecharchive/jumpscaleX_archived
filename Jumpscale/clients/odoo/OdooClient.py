@@ -17,9 +17,9 @@ class OdooClient(JSConfigBase):
     name* = "main" (S)
     host = "127.0.0.1" (S)
     port = "8069"
-    login="admin" (S)
+    login_admin="admin" (S)
     password_ = "admin" (S)
-    database = "user" (S)
+    database = "odoo_test" (S)
     """
 
     def _init(self, **kwargs):
@@ -29,7 +29,10 @@ class OdooClient(JSConfigBase):
     def client(self):
         if not self._client:
             self._client = erppeek.Client(
-                "http://{}:{}".format(self.host, self.port), db=self.database, user=self.login, password=self.password_
+                "http://{}:{}".format(self.host, self.port),
+                db=self.database,
+                user=self.login_admin,
+                password=self.password_,
             )
         return self._client
 

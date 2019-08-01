@@ -12,19 +12,19 @@ class OdooServer(JSConfigClient):
            host = "127.0.0.1" (S)
            port = 8069 (I)
            admin_login = "admin"(S)
-           admin_passwd_ = "rooter" (S)
-           admin_email = "info@example.com" (S) 
+           admin_passwd_ = "admin" (S)
+           admin_email = "info@example.com" (S)
            db_login = "odoouser"
-           db_passwd_ = "rooter"            
+           db_passwd_ = "admin"            
            databases = (LO) !jumpscale.odoo.server.db.1
            
            @url =  jumpscale.odoo.server.db.1
-           name* = "test" (S)
+           name* = "odoo_test" (S)
            admin_email = "info@example.com" (S)                      
-           admin_passwd_ = "1234" (S)
+           admin_passwd_ = "123456" (S)
            country_code = "be"
            lang="en_US"
-           phone = ""
+           phone = "0100425887"
            
            """
 
@@ -33,6 +33,14 @@ class OdooServer(JSConfigClient):
         if self.host == "localhost":
             self.host = " 127.0.0.1"
         self._client = None
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = j.clients.odoo.get(
+                name=self.name, host=self.host, port=self.port, login_admin=self.admin_login, password_=self.db_passwd_
+            )
+        return self._client
 
     @property
     def _path(self):
@@ -61,7 +69,7 @@ class OdooServer(JSConfigClient):
             name=db.name,
             host=self.host,
             port=self.port,
-            login=db.admin_email,
+            login_admin=db.admin_email,
             password_=db.admin_passwd_,
             database=db.name,
         )
@@ -91,7 +99,7 @@ class OdooServer(JSConfigClient):
         """
         return self.client.databases_list()
 
-    def databases_create(self, reset=True):
+    def databases_create(self, reset=False):
         """
         remove the database if reset=True
         create db in postgresql
@@ -106,7 +114,7 @@ class OdooServer(JSConfigClient):
         for db in self.databases:
             API_CREATE = "http://{}:{}/web/database/create".format(self.host, self.port)
             data = {
-                "master_pwd": db.db_secret_,
+                "master_pwd": self.db_passwd_,
                 "name": db.name,
                 "login": db.admin_email,
                 "password": db.admin_passwd_,
@@ -159,7 +167,9 @@ class OdooServer(JSConfigClient):
         self._log_info("start odoo server")
         self._write_config()
         j.builders.db.postgres.start()
-        cl = j.clients.postgres.db_client_get()
+        db = self.databases.new()
+        cl = j.clients.postgres.db_client_get(dbname=db.name)
+        j.builders.apps.odoo.set_dbname(db.name)
         self.startupcmd.start()
 
     def stop(self):

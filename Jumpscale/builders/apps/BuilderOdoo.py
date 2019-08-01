@@ -17,6 +17,8 @@ class BuilderOdoo(j.builders.system._BaseClass):
 
     def _init(self, **kwargs):
         self.VERSION = "12.0"
+        self.dbname = None
+        self.intialize = False
         self.APP_DIR = self._replace("{DIR_BASE}/apps/odoo")
 
     @builder_method()
@@ -37,6 +39,15 @@ class BuilderOdoo(j.builders.system._BaseClass):
 
         j.builders.system.package.install(
             "sudo libxml2-dev libxslt1-dev libsasl2-dev python3-dev libldap2-dev libssl-dev"
+        )  # create user and related config
+        self._execute(
+            """
+            id -u odoouser &>/dev/null || (useradd odoouser --home {APP_DIR} --no-create-home --shell /bin/bash
+            sudo su - postgres -c "/sandbox/bin/createuser -s odoouser") || true
+            mkdir -p {APP_DIR}/data
+            chown -R odoouser:odoouser {APP_DIR}
+            sudo -H -u odoouser /sandbox/bin/initdb -D {APP_DIR}/data || true
+        """
         )
 
         self._execute(
@@ -74,6 +85,9 @@ class BuilderOdoo(j.builders.system._BaseClass):
         j.builders.db.postgres.stop()
         self.startup_cmds.stop()
 
+    def set_dbname(self, name):
+        self.dbname = name
+
     @property
     def startup_cmds(self):
         """
@@ -84,7 +98,18 @@ class BuilderOdoo(j.builders.system._BaseClass):
         # odoo_start = self._replace(
         #     "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
         # )
-        odoo_start = self._replace("python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf")
+        if not self.dbname:
+            raise ValueError("invalid DB Name, use set_dbname with the correct database")
+        if not self.intialize:
+            odoo_start = self._replace(
+                "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf -d %s -i base"
+                % self.dbname
+            )
+            self.intialize = True
+        else:
+            odoo_start = self._replace(
+                "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
+            )
         odoo_cmd = j.servers.startupcmd.get("odoo")
         odoo_cmd.cmd_start = odoo_start
         odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"

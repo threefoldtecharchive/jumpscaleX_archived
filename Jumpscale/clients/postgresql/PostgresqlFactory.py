@@ -37,23 +37,30 @@ class PostgresqlFactory(JSConfigs):
         :return:
         """
         try:
-            cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
+            cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="admin", dbname=dbname)
             r = cl.execute("SELECT version();")
             return cl
         except BaseException as e:
             pass
 
         # means could not return, lets now create the db
-        j.sal.process.execute(
-            """psql -h localhost -U postgres \
-            --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
-        )
-        cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname="postgres")
-        cl.db_create(dbname)
+        try:
+
+            j.sal.process.execute(
+                """psql -h localhost -U postgres \
+                --command='DROP ROLE IF EXISTS root; CREATE ROLE root superuser; ALTER ROLE root WITH LOGIN;' """
+            )
+
+            j.sal.process.execute(
+                """psql -h localhost -U postgres \
+                --command='DROP ROLE IF EXISTS odoouser; CREATE ROLE odoouser superuser ; ALTER ROLE odoouser WITH LOGIN; ALTER USER odoouser WITH SUPERUSER;' """
+            )
+            j.sal.process.execute("createdb -O odoouser %s" % dbname)
+        except:
+            pass
+
         cl = self.get(name=name, ipaddr="localhost", port=5432, login="root", passwd_="rooter", dbname=dbname)
         cl.save()
-        assert cl.client.status == True
-        info = cl.client.info
         return cl
 
     def test(self):
