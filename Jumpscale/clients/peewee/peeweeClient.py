@@ -39,11 +39,10 @@ class PeeweeClient(JSConfigClient):
         if not self._peewee_model:
             key = "%s_%s_%s_%s_%s" % (self.ipaddr, self.port, self.login, self.dbname, self.dbtype)
 
-            cmd = 'pwiz.py -e postgresql -H %s -p %s   -u "%s" -P "%s" -i %s' % (
+            cmd = 'pwiz.py -e postgresql -H %s -p %s   -u "%s"  -i %s' % (
                 self.ipaddr,
                 self.port,
                 self.login,
-                self.passwd_,
                 self.dbname,
             )
             print(cmd)

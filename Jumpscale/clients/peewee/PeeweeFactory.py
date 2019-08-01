@@ -2,7 +2,8 @@ from Jumpscale import j
 from .peeweeClient import PeeweeClient
 
 import importlib
-from .peewee import *
+from peewee import *
+import uuid
 
 
 class PeeweeFactory(j.application.JSBaseConfigsClass):
@@ -16,7 +17,7 @@ class PeeweeFactory(j.application.JSBaseConfigsClass):
         self.__imports__ = "peewee"
         self.clients = {}
 
-        from .peewee import (
+        from peewee import (
             PrimaryKeyField,
             BlobField,
             Model,
@@ -26,6 +27,8 @@ class PeeweeFactory(j.application.JSBaseConfigsClass):
             IntegerField,
             SqliteDatabase,
             FloatField,
+            DateTimeField,
+            ForeignKeyField,
         )
 
         self.PrimaryKeyField = PrimaryKeyField
@@ -51,8 +54,10 @@ class PeeweeFactory(j.application.JSBaseConfigsClass):
 
         j.builders.db.postgres.start()
         cl = j.clients.postgres.db_client_get()
-        pw = cl.peewee_client_get()
+        cl.db_create("pewee_test")
+        pw = self.get(name="test", dbname="pewee_test", passwd_="123456")
         db = pw.db
+        pw.save()
 
         class BaseModel(self.Model):
             class Meta:
@@ -76,8 +81,7 @@ class PeeweeFactory(j.application.JSBaseConfigsClass):
             db.create_tables([User, Tweet])
 
         u = User()
-        u.username = "sss"
+        u.username = uuid.uuid4().hex[:6].upper()
         u.save()
-
         m = pw.model_get()
-        j.shell()
+        return "TESTS OK"
