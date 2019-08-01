@@ -183,7 +183,7 @@ class FileStream:
 
     def writelines(self, stream, append=True):
         ext = self._vfile.extension or self._vfile.name.split(".")[-1]
-        if ext in self.PLAIN_TYPES:
+        if ext in self.PLAIN_TYPES or isinstance(stream, str):
             self._save_plain(stream, append=append)
         else:
             self._save_blocks(stream, append=append)
@@ -201,11 +201,11 @@ class FileStream:
             self._vfile.save()
         block = stream.read1(8192)
         while block:
-            hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
-            exists = self._block_model.find(md5=hash)
+            # hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
+            # exists = self._block_model.find(md5=hash)
             #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
             #so we will disable block caching till we fix this
-            if not exists or True:
+            if True:
                 b = self._block_model.new()
                 b.md5 = hash
                 b.content = block
