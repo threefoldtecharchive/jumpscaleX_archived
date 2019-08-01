@@ -88,7 +88,10 @@ class ExecutorInstallers(j.application.JSBaseClass):
     def base(self):
         self.executor.execute("apt update")
         self.executor.execute(
-            "apt upgrade -y -o Dpkg::Options::=--force-confold  -o Dpkg::Options::=--force-confdef", interactive=True)
+            'DEBIAN_FRONTEND=noninteractive apt upgrade -y -q -o DEBIAN_PRIORITY=critical -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold"',
+            interactive=True,
+        )
+        self.executor.execute("mkdir -p /tmp/jumpscale")
 
     @executor_method()
     def mosh(self):
@@ -111,6 +114,18 @@ class ExecutorInstallers(j.application.JSBaseClass):
         )
         self.executor.execute("chmod 777 /tmp/jsx")
         self.executor.execute("/tmp/jsx container_install", interactive=True)
+
+    @executor_method()
+    def wireguard_go(self):
+        self.base()
+        C = """
+        apt install golang-go -y       
+        cd {DIR_TEMP}
+        git clone https://git.zx2c4.com/wireguard-go
+        cd wireguard-go
+        make
+        """
+        self.executor.execute(C)
 
     def _check_base(self):
         if not self.__check_base:

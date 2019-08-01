@@ -116,12 +116,12 @@ class JSConfigs(JSBase, Attr):
         self._children[name] = jsconfig
         return self._children[name]
 
-    def get(self, name="main", **kwargs):
+    def get(self, name="main", needexist=False, **kwargs):
         """
         :param name: of the object
         """
 
-        jsconfig = self._get(name=name, die=False)
+        jsconfig = self._get(name=name, die=needexist)
         if not jsconfig:
             self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
             jsconfig = self._new(name=name, **kwargs)

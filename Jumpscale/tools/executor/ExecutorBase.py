@@ -6,7 +6,7 @@ from .ExecutorInstallers import ExecutorInstallers
 JSBASE = j.application.JSBaseClass
 
 
-class ExecutorBase(j.application.JSBaseClass):
+class ExecutorBase(JSBASE):
     def __init__(self, debug=False, checkok=True):
         self.debug = debug
         self.checkok = checkok
@@ -21,11 +21,16 @@ class ExecutorBase(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        self.installer = ExecutorInstallers(executor=self)
+        self._installer = None
 
         self._env_on_system = None
 
         self._init3()
+
+    def installer(self):
+        if not self._installer:
+            self._installer = ExecutorInstallers(executor=self)
+        return self._installer
 
     def reset(self):
         self.state_reset()

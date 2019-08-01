@@ -73,6 +73,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
 
     def process_log_get(self, corex_id):
         r = self._query("/process/logs", params={"id": corex_id}, json=False)
+        return r
 
     def process_info_get(self, corex_id=None, pid=None):
         res = self.process_list()

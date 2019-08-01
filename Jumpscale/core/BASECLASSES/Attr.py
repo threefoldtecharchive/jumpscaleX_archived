@@ -59,7 +59,7 @@ class Attr:
                 whereami = self._key
             except:
                 whereami = self._name
-            msg = "could not find attribute:%s in %s" % (name, whereami)
+            msg = "could not find attribute:%s in %s (error was:%s)" % (name, whereami, e)
             raise RuntimeError(msg)
 
         return self.__getattribute__(name)
