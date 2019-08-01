@@ -88,7 +88,7 @@ class ExecutorInstallers(j.application.JSBaseClass):
     def base(self):
         self.executor.execute("apt update")
         self.executor.execute(
-            "apt upgrade -y -o Dpkg::Options::=--force-confold  -o Dpkg::Options::=--force-confdef", interactive=True)
+            'DEBIAN_FRONTEND=noninteractive apt upgrade -y -q -o DEBIAN_PRIORITY=critical -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold"', interactive=True)
 
     @executor_method()
     def mosh(self):
