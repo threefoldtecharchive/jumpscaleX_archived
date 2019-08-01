@@ -409,7 +409,7 @@ class Doc(j.application.JSBaseClass):
                 dest_file = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, link.filename)
 
                 if link.filepath:
-                    j.sal.fs.copyFile(link.filepath, dest_file)
+                    j.sal.bcdbfs.file_copy(link.filepath, dest_file)
                 else:
                     if link.source.startswith("!"):
                         link.download(dest=dest_file)

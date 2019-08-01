@@ -100,16 +100,26 @@ class BuilderOdoo(j.builders.system._BaseClass):
         # )
         if not self.dbname:
             raise ValueError("invalid DB Name, use set_dbname with the correct database")
-        if not self.intialize:
+
+        search = j.sal.process.execute(
+            """psql -h localhost -U postgres \
+                --command="SELECT * FROM initialize_table WHERE available = 'yes';" """
+        )
+        if int(search[1].split("\n")[-3].split(" ")[0].split("(")[1]) > 0:
+            odoo_start = self._replace(
+                "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
+            )
+        else:
             odoo_start = self._replace(
                 "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf -d %s -i base"
                 % self.dbname
             )
-            self.intialize = True
-        else:
-            odoo_start = self._replace(
-                "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
+
+            j.sal.process.execute(
+                """psql -h localhost -U postgres \
+                --command='INSERT INTO initialize_table (available) VALUES (TRUE);' """
             )
+
         odoo_cmd = j.servers.startupcmd.get("odoo")
         odoo_cmd.cmd_start = odoo_start
         odoo_cmd.process_strings = "/sandbox/apps/odoo/odoo/odoo-bin -c"

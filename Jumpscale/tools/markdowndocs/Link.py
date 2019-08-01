@@ -451,8 +451,8 @@ class Link(j.application.JSBaseClass):
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
             # cannot use primitive something wrong sometimes with ssl verification
-            cmd = "cd %s;rm -f %s;curl '%s' -o '%s'" % (ddir, dest, self.link_source_original, dest)
-            j.sal.process.execute(cmd, die=False)
+            content = j.sal.nettools.download(self.link_source_original)
+            j.sal.bcdb.file_write(dest, content, append=False)
 
     def should_skip(self):
         return any(link in self.link_source for link in SKIPPED_LINKS)
