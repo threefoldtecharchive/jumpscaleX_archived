@@ -145,7 +145,7 @@ class BCDBFS(j.application.JSBaseClass):
         if not j.sal.fs.exists(path):
             raise RuntimeError("{} doesn't exist on local file system".format(path))
 
-        with open(path, "r") as f:
+        with open(path, "rb") as f:
             self.file_write(dest, f, append=False, create=True)
         return
 
@@ -272,6 +272,6 @@ class BCDBFS(j.application.JSBaseClass):
 
         j.sal.fs.writeFile("/tmp/test_bcdbfs", "\ntest content\n\n\n")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        assert j.sal.bcdbfs.file_read("/test_with_content") == b"test content"
+        assert j.sal.bcdbfs.file_read('/test_with_content') == b'\ntest content\n'
         j.sal.bcdbfs.dir_remove("/")
         print("TESTS PASSED")

@@ -138,6 +138,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
             file = self.file_create_empty(path)
         fs = FileStream(file)
         fs.writelines(content, append=append)
+        fs.close()
         return file
 
     def file_delete(self, path):
@@ -154,6 +155,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         parent.save()
 
     def file_read(self, path):
+        import ipdb; ipdb.set_trace()
         try:
             path = j.sal.fs.pathClean(path)
             file = self.find(name=path)[0]
@@ -196,12 +198,14 @@ class FileStream:
             for block_id in self._vfile.blocks:
                 block = self._block_model.get(block_id)
                 block.delete()
-            self.blocks = []
+            self._vfile.blocks.clear()
             self._vfile.save()
         for block in stream:
-            hash = j.data.hash.md5_string(block + str(self._vfile.id))
+            hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
             exists = self._block_model.find(md5=hash)
-            if not exists:
+            #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
+            #so we will disable block caching till we fix this
+            if not exists or True:
                 b = self._block_model.new()
                 b.md5 = hash
                 b.content = block
@@ -210,14 +214,24 @@ class FileStream:
                 b.save()
                 self._vfile.size_bytes += b.size
                 self._vfile.blocks.append(b.id)
+            else:
+                self._vfile.size_bytes += exists[0].size
+                self._vfile.blocks.append(exists[0].id)
+        self._vfile.save()
 
     def _save_plain(self, stream, append=True):
         if append:
             content = self._vfile.content
         else:
             content = ""
-        self._vfile.content = content + "\n" + stream
+        if isinstance(stream, str):
+            content = content + stream
+        else:
+            for line in stream.readlines():
+                content = content + line + "\n"
+        self._vfile.content = content
         self._vfile.size_bytes = len(self._vfile.content.encode())
+        self._vfile.save()
 
     def read_stream_get(self):
         if self._vfile.content:
