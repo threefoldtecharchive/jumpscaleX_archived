@@ -2317,9 +2317,8 @@ class MyEnv:
                 secret = Tools.ask_password("provide secret to use for encrypting private key")
             secret = secret.encode()
         else:
-            from random import randint
-
-            secret = str(random.randint(1, 100000000)).encode()
+            if not secret:
+                secret = str(random.randint(1, 100000000))
 
         import hashlib
 
