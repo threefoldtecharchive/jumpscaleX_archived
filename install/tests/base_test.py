@@ -73,7 +73,7 @@ class BaseTest(unittest.TestCase):
         BaseTest.info(" Check that js container exist ,should succeed")
         command = "/tmp/jsx container-kosmos"
         output, error = BaseTest.os_command(command)
-        if "install successful" in output.decode():
+        if "installed successfully" in output.decode():
             return True
         else:
             return False

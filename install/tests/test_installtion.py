@@ -10,7 +10,7 @@ class TestInstallationInDocker(BaseTest):
         )
         output, error = self.jumpscale_installation("container-install", "-n {}".format(self.CONTAINER_NAME))
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -18,6 +18,9 @@ class TestInstallationInDocker(BaseTest):
         self.os_command(command)
         self.info("Delete jumpscale created container.")
         command = "docker rm {}".format(self.CONTAINER_NAME)
+        self.os_command(command)
+
+        command = "rm -rf /sandbox; rm -rf ~/sandbox"
         self.os_command(command)
 
     def Test01_verify_container_kosmos_option(self):
@@ -112,6 +115,96 @@ class TestInstallationInDocker(BaseTest):
         output, error = self.os_command(command)
         self.assertFalse(output)
 
+    def test05_verify_containers_reset_option(self):
+        """
+
+        **Verify that containers-reset option will delete running container and image**
+        """
+        self.info("Reset the running container and image using container-reset")
+        command = "/tmp/jsx container-reset"
+        self.os_command(command)
+
+        self.info("Check that running containers have been deleted")
+        command = "docker ps -a -q "
+        output, error = self.os_command(command)
+        self.assertFalse(output)
+
+        self.info("Check that containers image have been deleted")
+        command = "docker images -a -q "
+        output, error = self.os_command(command)
+        self.assertFalse(output)
+
+    def test06_verify_cotianer_import_export_options(self):
+        """
+
+        **Verify that container-import and container-export works successfully **
+        """
+        self.info("Use container-export ,should export the running container image .")
+        command = "/tmp/jsx container-export -n {}".format(self.CONTAINER_NAME)
+        self.os_command(command)
+
+        self.info("Delete the runnnng container")
+        command = "docker rm {}".format(self.CONTAINER_NAME)
+        self.os_command(command)
+
+        self.info("Use container-import, should run container with exported image ")
+        command = "/tmp/jsx container-import  -p {} -n {} ".format(image_location, self.CONTAINER_NAME)
+        output, error = self.os_command(command)
+        command = "docker ps -a -f status=running  | grep {}".format(self.CONTAINER_NAME)
+        output, error = self.os_command(command)
+        self.assertIn(self.CONTAINER_NAME, output.decode())
+
+    def test07_verify_container_clean_options(self):
+        """
+
+        **Verify that container-clean works successfully **
+        """
+        command = 'docker ps -a | grep {} | awk "{print \$2}"'.format(self.CONTAINER_NAME)
+        output, error = self.os_command(command)
+        container_image = output.decode()
+
+        self.info("Run container stop ")
+        command = "/tmp/jsx container-stop"
+        self.os_command(command)
+
+        self.info("Run container-clean with new name")
+        new_container = str(uuid.uuid4()).replace("-", "")[:10]
+        command = "/tmp/jsx container-clean -n {}".format(new_container)
+        output, error = self.os_command(command)
+        self.assertIn("import docker", output.decode())
+
+        self.info("Check that new container created with same image")
+        command = "ls /sandbox/var/containers/{}/exports/".format(new_container)
+        output, error = self.os_command(command)
+        self.assertFalse(error)
+        self.assertIn("tar", output.decode())
+
+        command = 'docker ps -a -f status=running  | grep {} | awk "{print \$2}"'.format(self.CONTAINER_NAME)
+        output, error = self.os_command(command)
+        new_container_image = output.decode()
+        self.assertEqual(container_image, new_container_image)
+
+    def test08_verify_reinstall_d_option(self):
+        """
+
+        **Verify that container-install -d  works successfully **
+        """
+
+        self.info("Create file in existing jumpscale container")
+        file_name = str(uuid.uuid4()).replace("-", "")[:10]
+        command = "cd / && touch {}".format()
+        self.docker_command(command)
+
+        self.info("Run container-install -d ")
+        command = "/tmp/jsx container-install -s -n {} -d  ".format(self.CONTAINER_NAME)
+        output, error = self.os_command(command)
+        self.assertIn("install succesfull", output.decode())
+
+        self.info("Check that new container created with same name and created file doesn't exist")
+        command = "ls / "
+        output, error = self.docker_command(command)
+        self.assertNotIn(file_name, output.decode())
+
 
 class TestInstallationInSystem(BaseTest):
     def setUp(self):
@@ -177,7 +270,7 @@ class TestInstallationInSystem(BaseTest):
 
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = "source /sandbox/env.sh && kosmos"
@@ -201,7 +294,7 @@ class TestInstallationInSystem(BaseTest):
 
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
         command = "source /sandbox/env.sh && kosmos"
