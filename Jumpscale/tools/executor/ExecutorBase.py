@@ -248,8 +248,6 @@ class ExecutorBase(j.application.JSBaseClass):
     # def executeRaw(self, cmd, die=True, showout=False):
     #     raise NotImplementedError()
 
-
-
     @property
     def isDebug(self):
         return (

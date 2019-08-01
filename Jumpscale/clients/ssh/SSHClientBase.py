@@ -131,7 +131,6 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.file_copy(filename, filename)  # local -> remote
         self.execute("source /sandbox/env && python3 {}".format(filename))
 
-
     @property
     def addr_variable(self):
         return self.addr
@@ -166,7 +165,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             self._ftpclient = None
         return self._connected
 
-    def ssh_authorize(self, user, pubkey=None):
+    def ssh_authorize(self, pubkeys=None, homedir="/root"):
         """add key to authorized users, if key is specified will get public key from sshkey client,
         or can directly specify the public key. If both are specified key name instance will override public key.
 
@@ -175,11 +174,13 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :param pubkey: public key to authorize, defaults to None
         :type pubkey: str, optional
         """
-        if not pubkey:
-            pubkey = self.sshkey_obj.pubkey
-        if not pubkey:
-            raise RuntimeError("pubkey not given")
-        j.builders.system.ssh.authorize(user=user, key=pubkey)
+        if not pubkeys:
+            pubkeys = [self.sshkey_obj.pubkey]
+        if isinstance(pubkeys, str):
+            pubkeys = [pubkeys]
+        for sshkey in pubkeys:
+            # TODO: need to make sure its only 1 time
+            self.execute('echo "{sshkey}" >> {homedir}/.ssh/authorized_keys'.format(**locals()))
 
     def shell(self, cmd=None):
         if cmd:

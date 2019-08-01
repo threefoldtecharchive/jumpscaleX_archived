@@ -72,17 +72,17 @@ class CoreXClient(j.application.JSBaseConfigClass):
             raise ValueError("Http state {} - {}".format(response.status_code, response.content))
 
     def process_log_get(self, corex_id):
-        r = self._corex_client._query("/process/logs", params={"id": corex_id}, json=False)
+        r = self._query("/process/logs", params={"id": corex_id}, json=False)
 
     def process_info_get(self, corex_id=None, pid=None):
         res = self.process_list()
         if corex_id:
             for item in res:
-                if int(item["id"]) == corex_id:
+                if int(item["id"]) == int(corex_id):
                     return item
         if pid:
             for item in res:
-                if int(item["pid"]) == pid:
+                if int(item["pid"]) == int(pid):
                     return item
 
     def ui_link_print(self, corex_id):

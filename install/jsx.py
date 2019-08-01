@@ -476,7 +476,7 @@ def container_shell(name="3bot", configdir=None):
     """
     IT.MyEnv
     docker = container_get(name=name)
-    IT.Tools.execute('ssh-keygen -f "/root/.ssh/known_hosts" -R "[localhost]:9122"')
+    IT.Tools.execute('ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:9122"' % IT.MyEnv.config["DIR_HOME"])
     os.execv(
         shutil.which("ssh"),
         ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.config.sshport)],
@@ -542,6 +542,7 @@ def generate():
 def check():
     from Jumpscale import j
 
+    j.application.interactive = True
     j.application.check()
 
 
@@ -549,6 +550,7 @@ def check():
 def bcdb_system_delete():
     from Jumpscale import j
 
+    j.application.interactive = True
     j.application.bcdb_system_destroy()
 
 

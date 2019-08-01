@@ -90,8 +90,6 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = self._j.core.myenv.interactive
-
         self.schemas = None
 
         self.errors_init = []
@@ -123,6 +121,14 @@ class Application(object):
     @appname.setter
     def appname(self, val):
         self._j.core.myenv.appname = val
+
+    @property
+    def interactive(self):
+        return self._j.core.myenv.interactive
+
+    @interactive.setter
+    def interactive(self, val):
+        self._j.core.myenv.interactive = val
 
     @property
     def bcdb_system(self):

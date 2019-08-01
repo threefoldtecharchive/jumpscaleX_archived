@@ -132,24 +132,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             item.destroy()
 
     def exists(self, name):
-        try:
-            b = self._get(name=name, reset=False, if_not_exist_die=False)
+        if name in self._bcdb_instances:
+            assert name in self._config
             return True
-        except Exception as e:
-            if str(e).find("Connection refused") != -1:
-                msg = "TRY to access BCDB:\n"
-                d = copy.copy(self._config[name])
-                d.pop("secret")
-                msg += str(d)
-                msg += "\nconnection refused (is ZDB started)\n"
 
-                if j.application.interactive:
-                    print(msg)
-                    if j.tools.console.askYesNo("Do you want to destroy the BCDB (CAREFUL)?", default=False):
-                        self.delete(name=name)
-                else:
-                    raise RuntimeError(msg)
-        return False
+        return name in self._config
 
     def delete(self, name):
         if name in self._bcdb_instances:
@@ -161,7 +148,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             b.destroy()
             self._config_write()
 
-    def get(self, name, storclient=None, reset=False):
+    def get(self, name, storclient=None, reset=False, fromcache=True):
         """
         will create a new one or an existing one if it exists
         :param name:
@@ -171,6 +158,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             e.g. j.clients.zdb.client_get() would be a zdb client
         :return:
         """
+        if not fromcache:
+            if name in self._bcdb_instances:
+                self._bcdb_instances.pop(name)
         if self.exists(name):
             return self._get(name=name, reset=reset, storclient=storclient)
         else:
@@ -181,7 +171,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         return BCDBVFS(self._bcdb_instances)
 
-    def _get(self, name, reset=False, storclient=None, if_not_exist_die=True):
+    def _get(self, name, reset=False, storclient=None):
         """[summary]
         get instance of bcdb
         :param name:
@@ -196,20 +186,21 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 bcdb.reset()
             return bcdb
         elif name in self._config:
-            data = self._config[name]
-            if "type" not in data or data["type"] == "zdb":
-                if "admin" in data:
-                    if data["admin"]:
-                        raise RuntimeError("can only use ZDB connection which is not admin")
-                    data.pop("admin")
-                if "type" in data:
-                    data.pop("type")
-                storclient = j.clients.zdb.client_get(**data)
-            elif data["type"] == "rdb":
-                storclient = j.clients.rdb.client_get(**data)
-            else:
-                storclient = None
-        elif if_not_exist_die:
+            if not storclient:
+                data = self._config[name]
+                if "type" not in data or data["type"] == "zdb":
+                    if "admin" in data:
+                        if data["admin"]:
+                            raise RuntimeError("can only use ZDB connection which is not admin")
+                        data.pop("admin")
+                    if "type" in data:
+                        data.pop("type")
+                    storclient = j.clients.zdb.client_get(**data)
+                elif data["type"] == "rdb":
+                    storclient = j.clients.rdb.client_get(**data)
+                else:
+                    storclient = None
+        else:
             raise RuntimeError("did not find bcdb with name:%s" % name)
 
         self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)

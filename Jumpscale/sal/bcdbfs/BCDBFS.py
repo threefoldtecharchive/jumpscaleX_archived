@@ -25,6 +25,7 @@ class BCDBFS(j.application.JSBaseClass):
 
     def is_file(self, path):
         return self.file_exists(path)
+
     #############################
     ######  DIR OPERATIONS ######
     #############################
@@ -213,7 +214,7 @@ class BCDBFS(j.application.JSBaseClass):
     def list_files_and_dirs(self, path="/"):
         dirs = self.list_dirs(path)
         files = self.list_files(path)
-        return dirs + files 
+        return dirs + files
 
     def _destroy(self):
         """
@@ -269,8 +270,8 @@ class BCDBFS(j.application.JSBaseClass):
         j.sal.bcdbfs.file_delete("/test_from_local")
         assert j.sal.bcdbfs.file_exists("/test_from_local") is False
 
-        j.sal.fs.writeFile('/tmp/test_bcdbfs', '\ntest content\n\n\n')
+        j.sal.fs.writeFile("/tmp/test_bcdbfs", "\ntest content\n\n\n")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        assert j.sal.bcdbfs.file_read('/test_with_content') == b'test content'
+        assert j.sal.bcdbfs.file_read("/test_with_content") == b"test content"
         j.sal.bcdbfs.dir_remove("/")
         print("TESTS PASSED")

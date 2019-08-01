@@ -375,7 +375,7 @@ class BCDBModel(j.application.JSBaseClass):
                     obj.id = self.storclient.set(data)
                 if self.readonly:
                     obj.readonly = True
-                self._log_debug("NEW:\n%s" % obj)
+                # self._log_debug("NEW:\n%s" % obj)
             else:
                 if not self.storclient:
                     self.bcdb.sqlclient.set(key=obj.id, val=data)
@@ -487,7 +487,7 @@ class BCDBModel(j.application.JSBaseClass):
         walk over objects which are of type of this model
         """
         for obj_id in self.index._id_iterator(nid=nid):
-            self._log_debug("iterate:%s" % obj_id)
+            # self._log_debug("iterate:%s" % obj_id)
             assert obj_id > 0
             o = self.get(obj_id, die=False)
             if not o:

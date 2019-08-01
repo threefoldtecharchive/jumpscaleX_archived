@@ -163,7 +163,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
 
     @property
     def _ddict(self):
-        self._log_debug("DDICT")
+        # self._log_debug("DDICT")
         d={}
 
         {% for prop in obj.properties %}

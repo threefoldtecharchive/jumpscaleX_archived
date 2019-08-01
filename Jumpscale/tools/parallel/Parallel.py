@@ -15,7 +15,7 @@ class Parallel:
     def __init__(self):
         self.jobs = []
 
-    def add_task(self, fun, *args, **kwargs):
+    def task_add(self, fun, *args, **kwargs):
         self.jobs.append(Job(fun, *args, **kwargs))
 
     def run(self, die=True):
@@ -39,7 +39,7 @@ class Parallel:
                 gevent.sleep(i)
 
         for i in range(5):
-            self.add_task(sleepf, i, name="fun{}".format(i))
+            self.task_add(sleepf, i, name="fun{}".format(i))
 
         self.run()
 
@@ -60,9 +60,9 @@ class Parallel:
             raise RuntimeError("error here in sleepf_with_error")
 
         for i in range(5):
-            self.add_task(sleepf, i, name="fun{}".format(i))
+            self.task_add(sleepf, i, name="fun{}".format(i))
 
-        self.add_task(sleepf_with_error, i, name="error_fun")
+        self.task_add(sleepf_with_error, i, name="error_fun")
 
         try:
             self.run()
@@ -80,7 +80,7 @@ class Parallel:
             return 7
 
         for i in range(5):
-            self.add_task(sleepf, i, name="fun{}".format(i))
+            self.task_add(sleepf, i, name="fun{}".format(i))
 
         greenlets = self.run()
         results = [greenlet.value for greenlet in greenlets]

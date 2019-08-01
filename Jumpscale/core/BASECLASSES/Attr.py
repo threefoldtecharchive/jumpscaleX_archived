@@ -76,7 +76,7 @@ class Attr:
 
             if "_data" in self.__dict__ and key in self._model.schema.propertynames:
                 # if value != self._data.__getattribute__(key):
-                self._log_debug("SET:%s:%s" % (key, value))
+                # self._log_debug("SET:%s:%s" % (key, value))
                 self._data.__setattr__(key, value)
                 return
 

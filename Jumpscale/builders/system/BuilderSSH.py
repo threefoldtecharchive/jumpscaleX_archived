@@ -249,8 +249,8 @@ class BuilderSSH(j.builders.system._BaseClass):
         """
         self._log_info("clean known hosts/autorized keys")
         j.core.tools.dir_ensure("/root/.ssh")
-        j.builders.tools.dir_remove("/root/.ssh/known_hosts")
-        j.builders.tools.dir_remove("/root/.ssh/authorized_keys")
+        j.builders.tools.dir_remove("%s/.ssh/known_hosts" % j.core.myenv.config["DIR_HOME"])
+        j.builders.tools.dir_remove("%s/.ssh/authorized_keys" % j.core.myenv.config["DIR_HOME"])
 
     def enableAccess(self, keys, backdoorpasswd, backdoorlogin="backdoor", user="root"):
         """Enable access for a list of keys
@@ -307,8 +307,8 @@ class BuilderSSH(j.builders.system._BaseClass):
             self.authorize("root", pub)
 
         self._log_info("add git repos to known hosts")
-        j.sal.process.execute("ssh-keyscan github.com >> /root/.ssh/known_hosts")
-        j.sal.process.execute("ssh-keyscan git.aydo.com >> /root/.ssh/known_hosts")
+        j.sal.process.execute("ssh-keyscan github.com >> %s/.ssh/known_hosts" % j.core.myenv.config["DIR_HOME"])
+        j.sal.process.execute("ssh-keyscan git.aydo.com >> %s/.ssh/known_hosts" % j.core.myenv.config["DIR_HOME"])
 
         self._log_info("enable access done.")
 

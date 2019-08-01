@@ -246,7 +246,6 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if self.executor == "corex":
             self._corex_refresh()
             if self._local:
-                # self.is_running()  # will refresh the state automatically
                 self.process
 
         elif self.executor == "tmux" or self.executor == "background":
@@ -267,7 +266,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         """
         self._log_warning("stop: %s" % self.name)
 
-        if self.is_running() == False:  # if we don't know it will be -1
+        if self.is_running() == False and force == False:  # if we don't know it will be -1
             return
 
         self._notify_state("stopping")
@@ -326,6 +325,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
             if not self.pid and not self.corex_id:
                 return self._error_raise("cannot check running don't have pid or corex_id")
             self.refresh()
+            if not self._corex_client.process_info_get(self.corex_id):
+                return False
 
         if self._local:
             p = self.process
@@ -424,9 +425,33 @@ class StartupCMD(j.application.JSBaseConfigClass):
         while j.data.time.epoch < end:
             if self._local:
                 r = self.is_running()
-                # self._log_debug("check run: now:%s end:%s" % (j.data.time.epoch, end))
-                if r is True:
+                if r:
                     return True
+                if self.executor == "corex" and not r:
+                    if not self.pid and not self.corex_id:
+                        return self._error_raise("cannot check running don't have pid or corex_id")
+                    if not self._corex_client.process_info_get(self.corex_id):
+                        time.sleep(0.5)
+                        r = self._corex_client.process_info_get(self.corex_id)
+                        if r:
+                            return r
+                        else:
+                            j.shell()
+                            out = self._corex_client.process_log_get(self.corex_id)
+                            return self._error_raise(
+                                "could not start because core-x did not return pid, probably issue in start script.\n%s"
+                                % out
+                            )
+                elif self.executor == "tmux" and not r:
+                    if (
+                        self.process_strings == []
+                        and self.process_strings_regex == []
+                        and self.pid == 0
+                        and self.ports == []
+                        and self.ports_udp == []
+                    ):
+                        return True
+
             else:
                 r = self._corex_client.process_info_get(pid=self.pid)
                 time.sleep(1)
@@ -443,7 +468,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         else:
             return False
 
-    def start(self, reset=False, checkrunning=True):
+    def start(self, reset=False):
         """
 
         :param reset:
@@ -455,10 +480,14 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if self.executor != "foreground":
             if reset:
-                self.stop()
-                self._hardkill()
+                if self.executor == "corex" and not self.pid and not self.corex_id:
+                    # means when corex and nor pid nor corex id specified we can't ask for a stop
+                    pass
+                else:
+                    self.stop(force=True)
+                # self._hardkill()
 
-        if self.is_running() == True:
+        if not reset and self.is_running() == True:
             self._log_info("no need to start was already started:%s" % self.name)
             return
 
