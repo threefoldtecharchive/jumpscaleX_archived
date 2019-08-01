@@ -87,7 +87,8 @@ class ExecutorInstallers(j.application.JSBaseClass):
     @executor_method()
     def base(self):
         self.executor.execute("apt update")
-        self.executor.execute("apt upgrade -y", interactive=True)
+        self.executor.execute(
+            "apt upgrade -y -o Dpkg::Options::=--force-confold  -o Dpkg::Options::=--force-confdef", interactive=True)
 
     @executor_method()
     def mosh(self):
@@ -98,7 +99,7 @@ class ExecutorInstallers(j.application.JSBaseClass):
         self.executor.execute(
             "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py\?$RANDOM > /tmp/jsx"
         )
-        self.executor.execute("chmod 777 /tmp/jsx")
+        self.executor.execute("chmod +x /tmp/jsx")
         cmd = "cd /tmp;python3 jsx configure --sshkey %s -s" % j.core.myenv.sshagent.key_default
         self.executor.execute(cmd, interactive=True)
         self.executor.execute("/tmp/jsx install -s", interactive=True)
