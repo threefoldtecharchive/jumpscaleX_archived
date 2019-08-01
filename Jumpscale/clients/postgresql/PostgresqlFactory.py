@@ -56,6 +56,10 @@ class PostgresqlFactory(JSConfigs):
                 --command='DROP ROLE IF EXISTS odoouser; CREATE ROLE odoouser superuser ; ALTER ROLE odoouser WITH LOGIN; ALTER USER odoouser WITH SUPERUSER;' """
             )
             j.sal.process.execute("createdb -O odoouser %s" % dbname)
+            j.sal.process.execute(
+                """psql -h localhost -U postgres \
+                --command='CREATE TABLE initialize_table (available BOOLEAN NOT NULL );' """
+            )
         except:
             pass
 

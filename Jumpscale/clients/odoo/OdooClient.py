@@ -185,7 +185,7 @@ class OdooClient(JSConfigBase):
     def user_delete(self, user, password):
         user_id = self.client.login(user, password)
         user = self.client.model("res.users").get(user_id)
-        self.client.login(self.username, self.password_)
+        self.client.login(self.login_admin, self.password_)
         return user.unlink()
 
     def login(self, user, password):

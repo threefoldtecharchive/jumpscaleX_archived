@@ -35,26 +35,42 @@ class OdooFactory(JSConfigs):
         s = self.get(name="test")
         if start:
             s.start()
-
-        for x in range(2):
-            dbobj = s.databases.new()
-            dbobj.name = "test%s" % x
-            dbobj.admin_email = "info@example.com"
-            dbobj.admin_passwd_ = "1234"
-            dbobj.country_code = "be"
-            dbobj.lang = "en_US"
-            dbobj.phone = ""
+        dbobj = s.databases.new()
+        dbobj.name = "test1"
+        dbobj.admin_email = "info1@example.com"
+        dbobj.admin_passwd_ = "123456"
+        dbobj.country_code = "be"
+        dbobj.lang = "en_US"
+        dbobj.phone = ""
 
         s.databases_create()
 
         s.save()
 
         cl1 = s.client_get("test1")
-        cl2 = s.client_get("test2")
 
         cl1.modules_default_install()
-        cl2.modules_default_install()
+        cl1.user_add("odoo_test", "test1234")
+        cl1.login("odoo_test", "test1234")
+        cl1.user_delete("odoo_test", "test1234")
+        try:
+            cl1.login("odoo_test", "test1234")
+        except:
+            pass
 
-        # TODO: test how to create a contact
-        # TODO: test how to get a contact & compare the content
-        # TODO: test how to delete a contact
+        databases = cl1.databases_list()
+        dbexists = False
+        for i in databases:
+            if dbexists:
+                break
+            if i == "test1":
+                dbexists = True
+
+        if not dbexists:
+            raise ValueError("db doesn't exist")
+
+        cl1.module_install("note")
+
+        cl1.module_remove("note")
+
+        return "TESTS OK"
