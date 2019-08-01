@@ -145,7 +145,7 @@ class TestInstallationInDocker(BaseTest):
         self.os_command(command)
 
         self.info("Use container-import, should run container with exported image ")
-         command = "/tmp/jsx container-import  -p {} -n {} ".format(image_location, self.CONTAINER_NAME)
+        command = "/tmp/jsx container-import  -p {} -n {} ".format(image_location, self.CONTAINER_NAME)
         output, error = self.os_command(command)
         command = "docker ps -a -f status=running  | grep {}".format(self.CONTAINER_NAME)
         output, error = self.os_command(command)
@@ -181,16 +181,11 @@ class TestInstallationInDocker(BaseTest):
         new_container_image = output.decode()
         self.assertEqual(container_image, new_container_image)
 
-
     def test08_verify_reinstall_d_option(self):
         """
 
         **Verify that container-install -d  works successfully **
         """
-
-        command = 'docker ps -a | grep {} | awk "{print \$2}"'.format(self.CONTAINER_NAME)
-        output, error = self.os_command(command)
-        container_image = output.decode()
 
         self.info("Create file in existing jumpscale container")
         file_name = str(uuid.uuid4()).replace("-", "")[:10]
@@ -202,10 +197,11 @@ class TestInstallationInDocker(BaseTest):
         output, error = self.os_command(command)
         self.assertIn("install succesfull", output.decode())
 
-        self.info("Check that new container created with same name")
+        self.info("Check that new container created with same name and created file doesn't exist")
         command = "ls / "
         output, error = self.docker_command(command)
-        self.assertNotIn(file_name, output.decode()
+        self.assertNotIn(file_name, output.decode())
+
 
 class TestInstallationInSystem(BaseTest):
     def tearDown(self):
