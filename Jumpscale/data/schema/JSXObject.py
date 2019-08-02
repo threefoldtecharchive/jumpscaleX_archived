@@ -233,11 +233,12 @@ class JSXObject(j.application.JSBaseClass):
         # WHY DO WE NEED THIS?
 
     def __str__(self):
-        out = self._str_get(ansi=True)
-        out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
-        # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
-        # IS UGLY WORKAROUND
-        print(out)
+        # FIXME: breaks in some cases in docsites generation needs to be cleanly implemented
+        # out = self._str_get(ansi=True)
+        # out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+        # # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
+        # # IS UGLY WORKAROUND
+        # print(out)
         return ""
 
     __repr__ = __str__
