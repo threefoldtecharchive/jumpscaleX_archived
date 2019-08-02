@@ -216,7 +216,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        raise j.exceptions.Base("cannot use lapis here, need openresty allone")
         cmd = """
         rm -rf {DIR_TEMP}/lapis_test
         mkdir -p {DIR_TEMP}/lapis_test 
@@ -235,6 +234,8 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         server is running on port 8080
 
         """
+        j.builders.web.openresty.install()
+        j.builders.runtimes.lua.install()
 
         if self.running():
             self.stop()
@@ -242,7 +243,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         self._log_info("openresty is running on port 8080")
         # we now have done a tcp test, lets do a http client connection
         out = j.clients.http.get("http://localhost:8080")
-        raise j.exceptions.Base("need other test")
         assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
         self.stop()
 
