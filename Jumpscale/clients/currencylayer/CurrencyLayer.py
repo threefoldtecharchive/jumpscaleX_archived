@@ -81,7 +81,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                     self._log_error("fetch currency from internet")
                     return data
                 elif not self.fallback:
-                    raise RuntimeError("api key for currency layer " "needs to be specified")
+                    raise j.exceptions.Base("api key for currency layer " "needs to be specified")
                 else:
                     self._log_warning("currencylayer api_key not set, " "use fake local data.")
                     return self._load_default()
@@ -89,7 +89,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
             if self.fake or self.fallback:
                 self._log_warning("cannot reach: currencylayer.com, " "use fake local data.")
                 return self._load_default()
-            raise RuntimeError("could not data from currencylayers")
+            raise j.exceptions.Base("could not data from currencylayers")
 
         data = self._cache.get("currency_data", get, expire=3600 * 24)
         for key, item in data.items():

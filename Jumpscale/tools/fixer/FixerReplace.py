@@ -48,7 +48,7 @@ class FixerReplacer(j.application.JSBaseClass):
             elif cmd.lower().strip() == "r":
                 self.rules.append(ReplaceNormal(from_, to_))
             else:
-                raise RuntimeError("unknown rule:%s" % rule)
+                raise j.exceptions.Base("unknown rule:%s" % rule)
 
     def line_process(self, line):
         changed = False

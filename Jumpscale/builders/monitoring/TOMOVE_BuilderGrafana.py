@@ -20,7 +20,7 @@ class BuilderGrafana(j.builders.system._BaseClass):
             """
             j.sal.process.execute(C, profile=True)
         else:
-            raise RuntimeError("platform not supported")
+            raise j.exceptions.Base("platform not supported")
 
     def install(self, start=False, influx_addr="127.0.0.1", influx_port=8086, port=3000):
         j.core.tools.dir_ensure("{DIR_BIN}")

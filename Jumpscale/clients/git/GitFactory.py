@@ -50,7 +50,7 @@ class GitFactory(j.application.JSBaseClass):
         elif ssh or ssh is False:
             pass
         else:
-            raise RuntimeError("ssh needs to be auto, first or True or False: here:'%s'" % ssh)
+            raise j.exceptions.Base("ssh needs to be auto, first or True or False: here:'%s'" % ssh)
 
         if url.startswith("ssh://"):
             url = url.replace("ssh://", "")
@@ -80,7 +80,7 @@ class GitFactory(j.application.JSBaseClass):
             match = httpmatch
             url_ssh = False
         else:
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "Url is invalid. Must be in the form of 'http(s)://hostname/account/repo' or 'git@hostname:account/repo'\nnow:\n%s"
                 % url
             )
@@ -170,9 +170,9 @@ class GitFactory(j.application.JSBaseClass):
         url = url.strip()
         if url == "":
             if dest is None:
-                raise RuntimeError("dest cannot be None (url is also '')")
+                raise j.exceptions.Base("dest cannot be None (url is also '')")
             if not j.sal.exists(dest):
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Could not find git repo path:%s, url was not specified so git destination needs to be specified."
                     % (dest)
                 )
@@ -262,7 +262,7 @@ class GitFactory(j.application.JSBaseClass):
         if branch == "":
             branch = None
         if branch is not None and tag is not None:
-            raise RuntimeError("only branch or tag can be set")
+            raise j.exceptions.Base("only branch or tag can be set")
 
         if ssh == "first" or ssh == "auto":
             try:
@@ -320,7 +320,7 @@ class GitFactory(j.application.JSBaseClass):
 
         if existsDir:
             if not existsGit:
-                raise RuntimeError("found directory but .git not found in %s" % dest)
+                raise j.exceptions.Base("found directory but .git not found in %s" % dest)
 
             # if we don't specify the branch, try to find the currently
             # checkedout branch
@@ -329,9 +329,9 @@ class GitFactory(j.application.JSBaseClass):
                 branchFound = currentBranch
             else:  # if we can't retreive current branch, use master as default
                 branchFound = "master"
-                # raise RuntimeError("Cannot retrieve branch:\n%s\n" % cmd)
+                # raise j.exceptions.Base("Cannot retrieve branch:\n%s\n" % cmd)
             if branch is not None and branch != branchFound and ignorelocalchanges is False:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Cannot pull repo '%s', branch on filesystem is not same as branch asked for.\n"
                     "Branch asked for: %s\n"
                     "Branch found: %s\n"
@@ -379,7 +379,9 @@ class GitFactory(j.application.JSBaseClass):
                                         print("ERROR: Could not add/commit changes in :%s, please do manual." % dest)
                                         sys.exit(1)
                             else:
-                                raise RuntimeError("Could not pull git dir because uncommitted changes in:'%s'" % dest)
+                                raise j.exceptions.Base(
+                                    "Could not pull git dir because uncommitted changes in:'%s'" % dest
+                                )
                         else:
                             if "permission denied" in err.lower():
                                 raise j.exceptions.OPERATIONS(
@@ -393,7 +395,7 @@ class GitFactory(j.application.JSBaseClass):
                                 "git pull rc>0, need to implement further, check what usecase is & build interactivity around"
                             )
 
-                            raise RuntimeError("could not push/pull: %s\n%s\n%s" % (url, out, err))
+                            raise j.exceptions.Base("could not push/pull: %s\n%s\n%s" % (url, out, err))
 
         else:
             self._log_info(("git clone %s -> %s" % (url, dest)))
@@ -754,7 +756,7 @@ class GitFactory(j.application.JSBaseClass):
         """
         path = j.sal.fs.joinPaths(repopath, ".git", "config")
         if not j.sal.fs.exists(path=path):
-            raise RuntimeError("cannot find %s" % path)
+            raise j.exceptions.Base("cannot find %s" % path)
         config = j.sal.fs.readFile(path)
         state = "start"
         for line in config.split("\n"):
@@ -801,7 +803,7 @@ class GitFactory(j.application.JSBaseClass):
                     # syncer to work
                     repos[reponame] = repodir
         if len(list(repos.keys())) == 0 and errorIfNone:
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "Cannot find git repo for search criteria provider:'%s' account:'%s' name:'%s'"
                 % (provider, account, name)
             )

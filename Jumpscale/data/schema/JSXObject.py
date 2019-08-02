@@ -64,7 +64,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def _data_update(self, datadict):
         if not isinstance(datadict, dict):
-            raise RuntimeError("need to be dict, was:\n%s" % datadict)
+            raise j.exceptions.Base("need to be dict, was:\n%s" % datadict)
         if self._model is not None:
             data = self._model._dict_process_in(datadict)
         for key, val in datadict.items():
@@ -85,7 +85,7 @@ class JSXObject(j.application.JSBaseClass):
         """
 
         if self._model is not None and self._model.readonly:
-            raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
+            raise j.exceptions.Base("cannot load from data, model stor for obj is readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
             self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
@@ -135,7 +135,7 @@ class JSXObject(j.application.JSBaseClass):
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
             if self._model.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
+                raise j.exceptions.Base("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
                 if self.acl.id is None:
@@ -172,17 +172,17 @@ class JSXObject(j.application.JSBaseClass):
                 return o
             return self
 
-        raise RuntimeError("cannot save, model not known")
+        raise j.exceptions.Base("cannot save, model not known")
 
     def delete(self):
         if self._model:
             if self._model.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
+                raise j.exceptions.Base("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
             return self
 
-        raise RuntimeError("cannot save, model not known")
+        raise j.exceptions.Base("cannot save, model not known")
 
     def _check(self):
         self._ddict

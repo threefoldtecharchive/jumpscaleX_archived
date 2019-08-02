@@ -113,6 +113,9 @@ class Application(object):
         self.JSConfigClass = JSConfig
         self.JSConfigsClass = JSConfigs
         self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
+        self.loghandlers = self._j.core.myenv.loghandlers
+        self.errorhandlers = self._j.core.myenv.errorhandlers
+        self.exception_handle = self._j.core.myenv.exception_handle
 
     @property
     def appname(self):
@@ -192,7 +195,7 @@ class Application(object):
         if not self._check_debug():
             msg = "%s:%s:%s" % (cat, obj, error)
             # self.report_errors()
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return "%s:%s:%s" % (cat, obj, error)
 
     def reset(self):
@@ -428,7 +431,7 @@ class Application(object):
 
     def _setWriteExitcodeOnExit(self, value):
         if not self._j.data.types.bool.check(value):
-            raise TypeError
+            raise j.exceptions.Value
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):

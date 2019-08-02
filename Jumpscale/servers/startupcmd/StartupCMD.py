@@ -85,7 +85,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
     def _error_raise(self, msg):
         msg = "error in startupcmd :%s\n%s\n" % (self.name, msg)
-        raise RuntimeError(msg)
+        raise j.exceptions.Base(msg)
 
     def delete(self):
         j.application.JSBaseConfigClass.delete(self)
@@ -185,7 +185,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 self._corex_clean()
                 self._corex_refresh()
                 if not self.corex_id:
-                    raise RuntimeError("corexid cannot be empty")
+                    raise j.exceptions.Base("corexid cannot be empty")
             r = self._corex_client.process_stop(self.corex_id)
             return True
         if self._local:
@@ -222,7 +222,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 self._corex_clean()
                 self._corex_refresh()
                 if not self.corex_id:
-                    raise RuntimeError("corexid cannot be empty")
+                    raise j.exceptions.Base("corexid cannot be empty")
             r = self._corex_client.process_kill(self.corex_id)
             self._notify_state("stopped")
             return True
@@ -254,7 +254,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         elif self.executor == "foreground":
             pass
         else:
-            raise RuntimeError("not supported")
+            raise j.exceptions.Base("not supported")
 
     def stop(self, force=True, waitstop=True, die=True):
         """
@@ -492,7 +492,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
             return
 
         if not self.cmd_start:
-            raise ValueError("please make sure self.cmd_start has been specified")
+            raise j.exceptions.Value("please make sure self.cmd_start has been specified")
 
         if "\n" in self.cmd_start.strip():
             C = self.cmd_start
@@ -636,7 +636,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 path = path[5:]
                 self._pane.execute("source %s" % path)
             else:
-                raise RuntimeError()
+                raise j.exceptions.Base()
 
         else:
             self._pane.execute(path)

@@ -260,7 +260,7 @@ class BlockLexer(object):
                 text = text[len(m.group(0)) :]
                 continue
             if text:  # pragma: no cover
-                raise RuntimeError("Infinite loop at: %s" % text)
+                raise j.exceptions.Base("Infinite loop at: %s" % text)
         return self.tokens
 
     def parse_newline(self, m):
@@ -576,7 +576,7 @@ class InlineLexer(object):
                 text = text[len(m.group(0)) :]
                 continue
             if text:  # pragma: no cover
-                raise RuntimeError("Infinite loop at: %s" % text)
+                raise j.exceptions.Base("Infinite loop at: %s" % text)
 
         return output
 

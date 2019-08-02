@@ -66,16 +66,16 @@ class Tmux(j.application.JSBaseClass):
                     rc, out, err = j.core.tools.execute("tmux ls", die=False)
 
             if rc > 0:
-                raise RuntimeError("could not execute tmux ls\n%s" % err)
+                raise j.exceptions.Base("could not execute tmux ls\n%s" % err)
 
             if out.strip().count("\n") > 0:
                 j.shell()
-                raise RuntimeError("found too many tmux sessions, there should only be 1")
+                raise j.exceptions.Base("found too many tmux sessions, there should only be 1")
 
             rc, out, err = j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main", die=False)
             if rc > 0:
                 j.shell()
-                raise RuntimeError("did not find tmux session -t main")
+                raise j.exceptions.Base("did not find tmux session -t main")
 
             self._server = tmuxp.Server()
             time.sleep(1)

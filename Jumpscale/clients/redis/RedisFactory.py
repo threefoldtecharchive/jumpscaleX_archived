@@ -137,7 +137,7 @@ class RedisFactory(j.application.JSBaseClass):
                     if die == False:
                         return None
                     else:
-                        raise RuntimeError("Redis on %s:%s did not answer" % (ipaddr, port))
+                        raise j.exceptions.Base("Redis on %s:%s did not answer" % (ipaddr, port))
                 else:
                     raise e
 

@@ -55,7 +55,7 @@ class TransactionV128(TransactionBaseClass):
         elif isinstance(value, str):
             value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
             )
         self._data = BinaryData(value=value, strencoding="base64")
@@ -75,7 +75,7 @@ class TransactionV128(TransactionBaseClass):
             self._mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "MintDefinition (v128) Transaction's mint condition has to be a subtype of ConditionBaseClass, not {}".format(
                     type(value)
                 )
@@ -97,7 +97,7 @@ class TransactionV128(TransactionBaseClass):
             self._parent_mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "MintDefinition (v128) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(
                     type(value)
                 )
@@ -122,7 +122,7 @@ class TransactionV128(TransactionBaseClass):
             self._mint_fulfillment = None
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "MintDefinition (v128) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(
                     type(value)
                 )
@@ -246,7 +246,7 @@ class TransactionV129(TransactionBaseClass):
         elif isinstance(value, str):
             value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
             )
         self._data = BinaryData(value=value, strencoding="base64")
@@ -293,7 +293,7 @@ class TransactionV129(TransactionBaseClass):
             self._mint_fulfillment = None
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "CoinCreation (v129) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(
                     type(value)
                 )
@@ -315,7 +315,7 @@ class TransactionV129(TransactionBaseClass):
             self._parent_mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "CoinCreation (v129) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(
                     type(value)
                 )

@@ -73,11 +73,13 @@ class ZeroRobot:
         while not self.container.is_port_listening(self.port, 300):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start 0-robot.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise j.exceptions.Base(
+                    "Could not start 0-robot.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr)
+                )
             if time.time() > start + timeout:
                 container_client.job.kill(self.id, signal=9)
                 result = cmd.get()
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Zero robot failed to start within %s seconds!\nstdout: %s\nstderr: %s",
                     (timeout, result.stdout, result.stdout),
                 )

@@ -203,7 +203,7 @@ class JSBase:
                         if self._key.endswith(finditem[1:]):
                             return True
                     else:
-                        raise RuntimeError("find item can only have * at start or at end")
+                        raise j.exceptions.Base("find item can only have * at start or at end")
                 else:
                     try:
                         if self._location == finditem:
@@ -368,7 +368,7 @@ class JSBase:
     def __check(self):
         for key in self.__dict__.keys():
             if key not in self.__class__._names_properties_:
-                raise RuntimeError("a property was inserted which should not be there")
+                raise j.exceptions.Base("a property was inserted which should not be there")
 
     ################
 
@@ -619,7 +619,7 @@ class JSBase:
                 if item.id == id:
                     return item
             else:
-                raise RuntimeError("need to specify name or id")
+                raise j.exceptions.Base("need to specify name or id")
         return None
 
     def _dataprops_names_get(self, filter=None):

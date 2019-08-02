@@ -41,7 +41,7 @@ class BuilderSmartmontools(j.builders.system._BaseClass):
         j.builders.tools.dir_remove(tmp_location)
 
         if not self.isInstalled():
-            raise RuntimeError("Failed to install Smartmontools")
+            raise j.exceptions.Base("Failed to install Smartmontools")
 
     def isInstalled(self):
         """

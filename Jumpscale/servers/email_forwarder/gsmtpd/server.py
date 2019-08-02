@@ -173,7 +173,7 @@ class SMTPServer(StreamServer):
         otherwise it returns the desired response string in RFC 821 format.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     # API that handle rcpt
     def process_rcpt(self, address):

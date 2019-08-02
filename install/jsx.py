@@ -33,14 +33,13 @@ def load_install_tools(branch=None):
 
             with urlopen(url) as resp:
                 if resp.status != 200:
-                    raise RuntimeError("fail to download InstallTools.py")
+                    raise j.exceptions.Base("fail to download InstallTools.py")
                 with open(path, "w+") as f:
                     f.write(resp.read().decode("utf-8"))
                 print("DOWNLOADED INSTALLTOOLS TO %s" % path)
 
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
-    sys.excepthook = IT.my_excepthook
     IT.MyEnv.init()
     # if path.find("/code/") != -1:  # means we are getting the installtools from code dir
     #     check_branch(IT)

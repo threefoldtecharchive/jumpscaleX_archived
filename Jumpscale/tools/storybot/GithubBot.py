@@ -26,7 +26,7 @@ class GithubBot:
         """
         data = {}
         if not token:
-            raise ValueError("Token was not provided and is mandatory")
+            raise j.exceptions.Value("Token was not provided and is mandatory")
 
         data["token_"] = token
         self.client = j.clients.github.get(data=data, interactive=False)

@@ -49,7 +49,7 @@ class DIR(j.data.bcdb._BCDBModelClass):
         if len(parent) == 0 and create_parent:
             parent = [self.create_empty_dir(parent_path, create_parent=True)]
         if len(parent) == 0:
-            raise RuntimeError("can't find {}".format(parent_path))
+            raise j.exceptions.Base("can't find {}".format(parent_path))
         parent = parent[0]
         new_dir = self.new()
         path = j.sal.fs.pathClean(j.sal.fs.joinPaths(parent.name, name))

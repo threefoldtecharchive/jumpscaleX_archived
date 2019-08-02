@@ -30,7 +30,7 @@ class BuilderZerotier(j.builders.system._BaseClass):
         """
 
         if j.core.platformtype.myplatform.platform_is_osx:
-            raise RuntimeError("not supported yet")
+            raise j.exceptions.Base("not supported yet")
 
             # j.sal.process.execute("xcode-select --install", die=False, showout=True)
         # elif j.core.platformtype.myplatform.platform_is_ubuntu:

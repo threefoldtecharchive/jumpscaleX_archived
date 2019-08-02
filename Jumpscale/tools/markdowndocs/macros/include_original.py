@@ -56,7 +56,7 @@ def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
                 out += "%s\n" % line
 
     else:
-        raise RuntimeError("start of docstring needs to be specified")
+        raise j.exceptions.Base("start of docstring needs to be specified")
     return out
 
 
@@ -93,9 +93,9 @@ def include_original(
                 if item.lower().find(tofind) != -1:
                     res.append(item)
             if len(res) > 1:
-                raise RuntimeError("found more than 1 document for:%s %s" % (path, name))
+                raise j.exceptions.Base("found more than 1 document for:%s %s" % (path, name))
             if len(res) == 0:
-                raise RuntimeError("could not find document in repo:%s name:%s" % (path, name))
+                raise j.exceptions.Base("could not find document in repo:%s name:%s" % (path, name))
             content = j.sal.fs.readFile(res[0])
             content = j.core.text.strip(content)
             content2 = _file_process(
@@ -118,7 +118,7 @@ def include_original(
                 elif extlower in ["bash", "sh"]:
                     lang = "bash"
                 else:
-                    raise RuntimeError("did not find extension to define which code language")
+                    raise j.exceptions.Base("did not find extension to define which code language")
 
                 content3 = content2.replace("```", "'''")
                 content4 = "```%s\n\n%s\n\n```\n\n" % (lang, content3)
@@ -156,7 +156,7 @@ def include_original(
         if doc != None:
             newcontent = doc.markdown
         else:
-            raise RuntimeError("ERROR: COULD NOT INCLUDE:%s (not found)" % name)
+            raise j.exceptions.Base("ERROR: COULD NOT INCLUDE:%s (not found)" % name)
 
     else:
         docsiteName, name = name.split(":")
@@ -165,6 +165,6 @@ def include_original(
         if doc != None:
             newcontent = doc.markdown
         else:
-            raise RuntimeError("ERROR: COULD NOT INCLUDE:%s:%s (not found)" % (docsiteName, name))
+            raise j.exceptions.Base("ERROR: COULD NOT INCLUDE:%s:%s (not found)" % (docsiteName, name))
 
     return newcontent

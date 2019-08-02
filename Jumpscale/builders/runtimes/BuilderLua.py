@@ -316,7 +316,7 @@ class BuilderLua(j.builders.system._BaseClass):
                 "git@github.com:threefoldtech/sandbox_osx.git"
             )
         else:
-            raise RuntimeError("only ubuntu & osx support")
+            raise j.exceptions.Base("only ubuntu & osx support")
 
         dest = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
             "git@github.com:threefoldtech/sandbox_base.git"
@@ -329,7 +329,7 @@ class BuilderLua(j.builders.system._BaseClass):
             elif j.sal.fs.getFileExtension(item) == "lua":
                 d2 = dest
             else:
-                raise RuntimeError(item)
+                raise j.exceptions.Base(item)
             dir_dest_full = j.sal.fs.getDirName(self.tools.joinpaths(d2, rdest))
             self.tools.dir_ensure(dir_dest_full)
             dest_full = self.tools.joinpaths(d2, rdest)

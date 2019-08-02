@@ -57,19 +57,6 @@ from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
 from .core.InstallTools import RedisTools
 
-import pudb
-
-
-def my_excepthook(exception_type, exception_obj, tb):
-    Tools.log(msg=exception_obj, tb=tb, level=40)
-    if MyEnv.debug:
-        pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE in __init__{RESET}")
-    sys.exit(1)
-
-
-sys.excepthook = my_excepthook
-
 
 class Core:
     def __init__(self, j):

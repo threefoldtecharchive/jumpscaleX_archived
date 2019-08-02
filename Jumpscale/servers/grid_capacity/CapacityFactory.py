@@ -23,6 +23,6 @@ class CapacityFactory(JSConfigBase):
             )
             res = j.sal.nettools.waitConnectionTest("localhost", int(server.config.data["port"]), timeoutTotal=1000)
             if res == False:
-                raise RuntimeError("Could not start capacity server on port:%s" % int(server.config.data["port"]))
+                raise j.exceptions.Base("Could not start capacity server on port:%s" % int(server.config.data["port"]))
         else:
             server.start()

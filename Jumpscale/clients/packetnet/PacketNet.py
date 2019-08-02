@@ -35,7 +35,7 @@ class PacketNet(JSConfigBase):
 
         if not self._client:
             if not self.auth_token_:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(
                         self.name
                     )
@@ -58,13 +58,13 @@ class PacketNet(JSConfigBase):
                     if item.name == self.projectname:
                         self._projectid = item.id
                         return self._projectid
-                raise RuntimeError("did not find project with name:%s" % self.projectname)
+                raise j.exceptions.Base("did not find project with name:%s" % self.projectname)
             else:
                 res = [item[0] for key, item in self.getProjects().items()]
                 if len(res) == 1:
                     self._projectid = res[0]
                 else:
-                    raise RuntimeError("found more than 1 project")
+                    raise j.exceptions.Base("found more than 1 project")
         return self._projectid
 
     @property
@@ -207,7 +207,7 @@ class PacketNet(JSConfigBase):
         else:
             return self.client.get_device(id)
 
-        raise RuntimeError("could not find device:%s" % name)
+        raise j.exceptions.Base("could not find device:%s" % name)
 
     def removeDevice(self, name):
         """Remove a specific device
@@ -319,9 +319,9 @@ class PacketNet(JSConfigBase):
             "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
         )
         if zerotierId.strip() == "" or zerotierId is None:
-            raise RuntimeError("zerotierId needs to be specified")
+            raise j.exceptions.Base("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
-            raise RuntimeError("zerotierAPI needs to be specified")
+            raise j.exceptions.Base("zerotierAPI needs to be specified")
         ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
 
         if params is not None:

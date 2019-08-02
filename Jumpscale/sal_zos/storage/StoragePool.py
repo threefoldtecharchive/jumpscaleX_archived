@@ -15,12 +15,12 @@ def _prepare_device(node, devicename):
     j.tools.logger._log_debug("prepare device %s", devicename)
     ss = devicename.split("/")
     if len(ss) < 3:
-        raise RuntimeError("bad device name: {}".format(devicename))
+        raise j.exceptions.Base("bad device name: {}".format(devicename))
     name = ss[2]
 
     disk = node.disks.get(name)
     if disk is None:
-        raise ValueError("device {} not found".format(name))
+        raise j.exceptions.Value("device {} not found".format(name))
 
     node.client.system("parted -s /dev/{} mklabel gpt mkpart primary 1m 100%".format(name)).get()
     now = time.time()
@@ -39,7 +39,7 @@ def _prepare_device(node, devicename):
             time.sleep(1)
             continue
     else:
-        raise RuntimeError("Failed to create partition")
+        raise j.exceptions.Base("Failed to create partition")
 
 
 class StoragePools:
@@ -72,11 +72,11 @@ class StoragePools:
         for pool in self.list():
             if pool.name == name:
                 return pool
-        raise ValueError("Could not find StoragePool with name {}".format(name))
+        raise j.exceptions.Value("Could not find StoragePool with name {}".format(name))
 
     def create(self, name, device, metadata_profile, data_profile, overwrite=False):
         if not isinstance(device, str):
-            raise ValueError("device must be a string not %s" % type(device))
+            raise j.exceptions.Value("device must be a string not %s" % type(device))
 
         label = "sp_{}".format(name)
         j.tools.logger._log_debug("create storagepool %s", label)
@@ -107,7 +107,7 @@ class StoragePool(Mountable):
         elif isinstance(medium, Partition):
             return medium.disk.type
 
-        raise RuntimeError("unsupported device type")
+        raise j.exceptions.Base("unsupported device type")
 
     @property
     def devicename(self):
@@ -157,7 +157,7 @@ class StoragePool(Mountable):
     @property
     def fsinfo(self):
         if self.mountpoint is None:
-            raise ValueError("can't get fsinfo if storagepool is not mounted")
+            raise j.exceptions.Value("can't get fsinfo if storagepool is not mounted")
         return self.client.btrfs.info(self.mountpoint)
 
     @mountpoint.setter
@@ -168,7 +168,7 @@ class StoragePool(Mountable):
     def _get_mountpoint(self):
         mountpoint = self.mountpoint
         if not mountpoint:
-            raise RuntimeError("Can not perform action when filesystem is not mounted")
+            raise j.exceptions.Base("Can not perform action when filesystem is not mounted")
         return mountpoint
 
     @property
@@ -213,7 +213,7 @@ class StoragePool(Mountable):
             device = {"device": self.device, "partUUID": info["partuuid"] or "" if info else "", "status": status}
 
             return device, pool_status
-        raise RuntimeError("Failed to find device {}".format(self.device))
+        raise j.exceptions.Base("Failed to find device {}".format(self.device))
 
     def list(self):
         subvolumes = []
@@ -231,7 +231,7 @@ class StoragePool(Mountable):
         for filesystem in self.list():
             if filesystem.name == name:
                 return filesystem
-        raise ValueError("Could not find filesystem with name {}".format(name))
+        raise j.exceptions.Value("Could not find filesystem with name {}".format(name))
 
     def exists(self, name):
         """
@@ -320,7 +320,7 @@ class FileSystem:
         for snap in self.list():
             if snap.name == name:
                 return snap
-        raise ValueError("Could not find snapshot {}".format(name))
+        raise j.exceptions.Value("Could not find snapshot {}".format(name))
 
     def list(self):
         """
@@ -346,7 +346,7 @@ class FileSystem:
         j.tools.logger._log_debug("create snapshot %s on %s", name, self.pool)
         snapshot = Snapshot(name, self)
         if self.exists(name):
-            raise RuntimeError("Snapshot path {} exists.")
+            raise j.exceptions.Base("Snapshot path {} exists.")
         self.client.filesystem.mkdir(self.snapshotspath)
         self.client.btrfs.subvol_snapshot(self.path, snapshot.path)
         return snapshot

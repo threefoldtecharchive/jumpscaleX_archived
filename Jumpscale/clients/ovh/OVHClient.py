@@ -53,7 +53,7 @@ class OVHClient(JSConfigBase):
 
     def ovh_id_check(self, ovh_id):
         if "ns302912" in ovh_id:
-            raise RuntimeError("Cannot use server:%s" % ovh_id)
+            raise j.exceptions.Base("Cannot use server:%s" % ovh_id)
 
     def reset(self):
         """
@@ -205,7 +205,7 @@ class OVHClient(JSConfigBase):
         if sshKeyName == None:
             items = j.clients.sshkey.list()
             # if len(items) != 1:
-            #     raise RuntimeError(
+            #     raise j.exceptions.Base(
             #         "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
             sshKeyName = items[0]
             sshKeyName = j.sal.fs.getBaseName(sshKeyName)
@@ -354,7 +354,7 @@ class OVHClient(JSConfigBase):
             msg = "ERROR: zerohub server does not respond\nError:\n%s\n" % e
             raise (msg)
         if script.status_code != 200:
-            raise RuntimeError("Invalid script URL")
+            raise j.exceptions.Base("Invalid script URL")
 
         # going unsecure, because ovh
         fixed = script.text.replace("https://bootstrap.", "http://unsecure.bootstrap.")

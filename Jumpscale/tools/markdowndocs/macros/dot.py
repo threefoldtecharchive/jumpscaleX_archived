@@ -4,7 +4,7 @@ def dot(doc, **kwargs):
 
     content = kwargs.get("content", "")
     if content.strip() == "":
-        raise RuntimeError("no content given for dot macro for:%s" % doc)
+        raise j.exceptions.Base("no content given for dot macro for:%s" % doc)
 
     md5 = j.data.hash.md5_string(content)
     md5 = bytes(md5.encode())

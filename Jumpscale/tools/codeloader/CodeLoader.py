@@ -21,7 +21,7 @@ class CodeLoader(j.application.JSBaseClass):
         if obj_key.endswith(".py"):
             obj_key = obj_key[:-3]
         if obj_key[0] in "0123456789":
-            raise RuntimeError("obj key cannot start with nr: now:'%s'" % obj_key)
+            raise j.exceptions.Base("obj key cannot start with nr: now:'%s'" % obj_key)
         return obj_key
 
     def load_text(self, obj_key=None, text=None, dest=None, reload=False, md5=None):
@@ -64,9 +64,9 @@ class CodeLoader(j.application.JSBaseClass):
             obj_key = self._basename(path)
 
         if not j.data.types.string.check(path):
-            raise RuntimeError("path needs to be string")
+            raise j.exceptions.Base("path needs to be string")
         if path is not None and not j.sal.fs.exists(path):
-            raise RuntimeError("path:%s does not exist" % path)
+            raise j.exceptions.Base("path:%s does not exist" % path)
 
         if md5 is None:
             txt = j.sal.fs.readFile(path)
@@ -82,7 +82,7 @@ class CodeLoader(j.application.JSBaseClass):
                 msg += "---------------------------------\n"
                 msg += "COULD not load source:%s\n" % path
                 msg += "ERROR WAS:%s\n\n" % e
-                raise RuntimeError(msg)
+                raise j.exceptions.Base(msg)
             try:
                 obj = eval("m.%s" % obj_key)
             except Exception as e:
@@ -92,7 +92,7 @@ class CodeLoader(j.application.JSBaseClass):
                 msg += "ERROR:COULD not import source:%s\n" % path
                 msg += "ERROR WAS:%s\n\n" % e
                 msg += "obj_key:%s\n" % obj_key
-                raise RuntimeError(msg)
+                raise j.exceptions.Base(msg)
 
             self._hash_to_codeobj[md5] = obj
 

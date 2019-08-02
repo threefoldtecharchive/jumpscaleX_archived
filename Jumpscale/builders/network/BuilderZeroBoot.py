@@ -71,7 +71,7 @@ class BuilderZeroBoot(j.builders.system._BaseClass):
             except KeyError:
                 time.sleep(5)
         else:
-            raise RuntimeError("Unable to join network within 60 seconds!")
+            raise j.exceptions.Base("Unable to join network within 60 seconds!")
         j.sal.process.execute("uci set network.{0}=interface".format(network_device_name))
         j.sal.process.execute("uci set network.{0}.proto='none'".format(network_device_name))
         j.sal.process.execute("uci set network.{0}.ifname='{0}'".format(network_device_name))
@@ -103,7 +103,7 @@ class BuilderZeroBoot(j.builders.system._BaseClass):
             m = ZEROTIER_FIREWALL_ZONE_REGEX.match(line)
             if m:
                 return int(m.group(1))
-        raise KeyError("Zerotier zone in firewall configuration was not found!")
+        raise j.exceptions.NotFound("Zerotier zone in firewall configuration was not found!")
 
     def add_forwarding(self, dest, src):
         _, out, _ = j.sal.process.execute("uci show firewall")

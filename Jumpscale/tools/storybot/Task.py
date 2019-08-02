@@ -24,9 +24,9 @@ class Task:
         """
 
         if description == "":
-            raise ValueError("description was not provided and is mandatory")
+            raise j.exceptions.Value("description was not provided and is mandatory")
         if url == "":
-            raise ValueError("url was not provided and is mandatory")
+            raise j.exceptions.Value("url was not provided and is mandatory")
 
         self.url = url
         self.description = description

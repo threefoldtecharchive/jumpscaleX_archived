@@ -102,7 +102,7 @@ class Schema(j.application.JSBaseClass):
         if e is not None:
             out += "\nERROR:\n"
             out += j.core.text.prefix("        ", str(e))
-        raise RuntimeError(out)
+        raise j.exceptions.Base(out)
 
     def _proptype_get(self, txt):
         """
@@ -130,7 +130,7 @@ class Schema(j.application.JSBaseClass):
         if j.data.types.int.checkString(txt):  # means is digit
             return j.data.types.get("i", default=txt)
         else:
-            raise RuntimeError("cannot find type for:%s" % txt)
+            raise j.exceptions.Base("cannot find type for:%s" % txt)
 
     def _schema_from_text(self, text):
         """
@@ -259,7 +259,7 @@ class Schema(j.application.JSBaseClass):
             p = process(line)
 
             if p.jumpscaletype.NAME is "list":
-                raise RuntimeError("no longer used")
+                raise j.exceptions.Base("no longer used")
                 # j.shell()
                 # print(p.capnp_schema)
                 # self.lists.append(p)
@@ -284,7 +284,7 @@ class Schema(j.application.JSBaseClass):
     @property
     def _capnp_id(self):
         if self._md5 == "":
-            raise RuntimeError("hash cannot be empty")
+            raise j.exceptions.Base("hash cannot be empty")
         return "f" + self._md5[1:16]  # first bit needs to be 1
 
     @property
@@ -305,7 +305,7 @@ class Schema(j.application.JSBaseClass):
         if self._obj_class is None:
 
             if self._md5 in [None, ""]:
-                raise RuntimeError("md5 cannot be None")
+                raise j.exceptions.Base("md5 cannot be None")
 
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
@@ -348,7 +348,7 @@ class Schema(j.application.JSBaseClass):
         elif capnpdata is None and serializeddata is None and datadict == None:
             return self.objclass(schema=self, model=model)
         else:
-            raise RuntimeError("wrong arguments to new on schema")
+            raise j.exceptions.Base("wrong arguments to new on schema")
         if model is not None:
             model._triggers_call(r, "new")
 

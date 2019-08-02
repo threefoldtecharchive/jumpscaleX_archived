@@ -107,16 +107,18 @@ def path_check(**arguments):
     """
     for argument, validators in arguments.items():
         if not isinstance(validators, set):
-            raise ValueError("Expected tuple of validators for argument %s" % argument)
+            raise j.exceptions.Value("Expected tuple of validators for argument %s" % argument)
         for validator in validators:
             if validator not in {"required", "exists", "file", "dir", "pureFile", "pureDir", "replace", "multiple"}:
-                raise ValueError("Unsupported validator '%s' for argument %s" % (validator, argument))
+                raise j.exceptions.Value("Unsupported validator '%s' for argument %s" % (validator, argument))
 
     def decorator(func):
         signature = inspect.signature(func)
         for argument in arguments:
             if signature.parameters.get(argument) is None:
-                raise ValueError("Argument %s not found in function declaration of %s" % (argument, func.__name__))
+                raise j.exceptions.Value(
+                    "Argument %s not found in function declaration of %s" % (argument, func.__name__)
+                )
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -151,9 +153,9 @@ def path_check(**arguments):
                             func.__name__,
                             value,
                         )
-                        raise ValueError(msg)
+                        raise j.exceptions.Value(msg)
                     if "required" in validators and (value is None or value.strip() == ""):
-                        raise ValueError(
+                        raise j.exceptions.Value(
                             "Argument %s in %s%s should not be None or empty string!"
                             % (parameter.name, jslocation(), func.__name__)
                         )
@@ -175,29 +177,29 @@ def path_check(**arguments):
                             kwargs[parameter.name] = value
 
                     if value and validators.intersection({"file", "pureFile"}) and not os.path.isfile(value):
-                        raise ValueError(
+                        raise j.exceptions.Value(
                             "Argument %s in %s%s expects a file path! %s is not a file."
                             % (parameter.name, jslocation(), func.__name__, value)
                         )
                     if value and "pureFile" in validators and os.path.islink(value):
-                        raise ValueError(
+                        raise j.exceptions.Value(
                             "Argument %s in %s%s expects a file path! %s is not a file but a link."
                             % (parameter.name, jslocation(), func.__name__, value)
                         )
                     if value and validators.intersection({"dir", "pureDir"}) and not os.path.isdir(value):
-                        raise ValueError(
+                        raise j.exceptions.Value(
                             "Argument %s in %s%s expects a directory path! %s is not a directory."
                             % (parameter.name, jslocation(), func.__name__, value)
                         )
                     if value and "pureDir" in validators and os.path.islink(value):
-                        raise ValueError(
+                        raise j.exceptions.Value(
                             "Argument %s in %s%s expects a directory path! %s is not a directory but a link."
                             % (parameter.name, jslocation(), func.__name__, value)
                         )
 
                     if "multiple" in validators:
                         if j.data.types.list.check(value) or "," in value:
-                            raise RuntimeError(
+                            raise j.exceptions.Base(
                                 "need to implement support for multiple times execution, is more difficult"
                             )
                             # replace THE PATH

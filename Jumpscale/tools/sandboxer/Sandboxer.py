@@ -147,7 +147,7 @@ class Sandboxer(j.application.JSBaseClass):
             cmd = "otool -L %s" % path
             rc, out, err = j.sal.process.execute(cmd, die=False)
             if rc > 0:
-                raise RuntimeError(err)
+                raise j.exceptions.Base(err)
 
             for line in out.split("\n"):
 
@@ -299,7 +299,7 @@ class Sandboxer(j.application.JSBaseClass):
     #     _, out, _ = j.sal.process.execute(cmd, die=False)
     #
     #     if not j.sal.fs.exists(path):
-    #         raise RuntimeError('bin path "{}" not found'.format(path))
+    #         raise j.exceptions.Base('bin path "{}" not found'.format(path))
     #
     #     cmd = 'ldd "{}" | egrep -o "/lib.*\.[0-9]" '.format(path)
     #     _, out, _ = j.sal.process.execute(cmd, die=False)

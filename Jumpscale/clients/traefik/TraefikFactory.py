@@ -47,7 +47,7 @@ class TraefikFactory(JSConfigBaseFactory):
         :rtype: Traefik
         """
         if "etcd_instance" not in kwargs:
-            raise ValueError("New or existing etcd_instance name required")
+            raise j.exceptions.Value("New or existing etcd_instance name required")
         j.clients.etcd.get(name=kwargs["etcd_instance"], host=host, port=port, user=user, password_=password)
         return JSConfigBaseFactory.get(
             self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs
@@ -61,7 +61,7 @@ class TraefikFactory(JSConfigBaseFactory):
             # build etcd
             # start etcd
 
-            raise RuntimeError("not implemented")
+            raise j.exceptions.Base("not implemented")
 
         # make client connection to it
 

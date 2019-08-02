@@ -66,7 +66,7 @@ class GiteaOrg(j.application.JSBaseClass):
 
         self._log_info("repo:get:%s" % name)
         if name not in self._repos_get().keys():
-            raise RuntimeError("cannot find repo with name:%s in %s" % (name, self))
+            raise j.exceptions.Base("cannot find repo with name:%s in %s" % (name, self))
         data = self._repos_get()[name]
         return GiteaRepo(self, name, data)
 

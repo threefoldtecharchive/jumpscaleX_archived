@@ -138,7 +138,7 @@ def _get_type_and_rdata(record):
                 return rtype, rrdata
             except (AddressValueError, NetmaskValueError):
                 pass
-    raise KeyError("cannot identify record type %s" % repr(record))
+    raise j.exceptions.NotFound("cannot identify record type %s" % repr(record))
 
 
 def _sanitize_domain(domain):

@@ -25,7 +25,7 @@ class CorexServer(JSConfigClient):
         """
         self._log_info("start corex server")
         if not j.core.tools.cmd_installed("corex"):
-            raise RuntimeError("install corex: 'j.servers.corex.install()'")
+            raise j.exceptions.Base("install corex: 'j.servers.corex.install()'")
         self.startupcmd.start()
 
     @property
@@ -42,7 +42,7 @@ class CorexServer(JSConfigClient):
     def startupcmd(self):
         if not self._startupcmd:
             if not j.core.tools.cmd_installed("corex"):
-                raise RuntimeError("cannot find command corex, please install")
+                raise j.exceptions.Base("cannot find command corex, please install")
             cmd = "corex -p %s" % (self.port)
             if self.readonly:
                 cmd += " -R"
@@ -59,4 +59,4 @@ class CorexServer(JSConfigClient):
         if not j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=self.port):
             self.start()
         if not j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=self.port):
-            raise RuntimeError("could not start corex server")
+            raise j.exceptions.Base("could not start corex server")

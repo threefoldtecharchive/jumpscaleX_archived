@@ -356,7 +356,7 @@ class Row(j.application.JSBaseClass):
 
         def custom2rowvalues(data):
             if str(data).find(",") == -1 and str(data).find(":") == -1:
-                raise RuntimeError("not properly formatted needs to be 5:1,10:2")
+                raise j.exceptions.Base("not properly formatted needs to be 5:1,10:2")
             data = data.replace("'", "").strip()
             splitted = data.split(",")
             for item in splitted:
@@ -373,7 +373,7 @@ class Row(j.application.JSBaseClass):
                     out += "error in parsing input data for %s\n" % value
                     out += "error in element %s\n" % data
                     out += "row:%s\n" % self.name
-                    raise RuntimeError(out)
+                    raise j.exceptions.Base(out)
                 self.cells[pos] = value
 
         if defval is not None:
@@ -384,7 +384,7 @@ class Row(j.application.JSBaseClass):
                 self.cells[x] = self.defval
 
         if not j.data.types.string.check(data):
-            raise RuntimeError("needs to be string")
+            raise j.exceptions.Base("needs to be string")
 
         if str(data).find(",") == -1 and str(data).find(":") == -1:
             # is only 1 value so set all data

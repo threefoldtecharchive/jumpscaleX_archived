@@ -33,7 +33,7 @@ class JSConfigsFactory(JSBase, Attr):
     def __init_class_post(self):
 
         if not hasattr(self.__class__, "_CHILDCLASSES"):
-            raise RuntimeError("_CHILDCLASSES needs to be specified")
+            raise j.exceptions.Base("_CHILDCLASSES needs to be specified")
 
     def _init_pre2(self, **kwargs):
 
@@ -59,7 +59,7 @@ class JSConfigsFactory(JSBase, Attr):
                 obj = kl(parent=self, name=name)
                 assert obj._parent
             else:
-                raise RuntimeError("wrong childclass:%s" % kl)
+                raise j.exceptions.Base("wrong childclass:%s" % kl)
             self._children[name] = obj
 
     def _init_post(self, **kwargs):

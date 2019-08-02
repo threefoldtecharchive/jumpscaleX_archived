@@ -86,7 +86,7 @@ class BaseClient:
         :param id: job id. Generated if not supplied
         :return: Response object
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def sync(self, command, arguments, tags=None, id=None):
         """
@@ -116,7 +116,7 @@ class BaseClient:
         """
         result = self.sync(command, arguments, tags=tags, id=id)
         if result.level != 20:
-            raise RuntimeError("invalid result level, expecting json(20) got (%d)" % result.level)
+            raise j.exceptions.Base("invalid result level, expecting json(20) got (%d)" % result.level)
 
         return json.loads(result.data)
 
@@ -153,7 +153,7 @@ class BaseClient:
         """
         parts = shlex.split(command)
         if len(parts) == 0:
-            raise ValueError("invalid command")
+            raise j.exceptions.Value("invalid command")
 
         args = {"name": parts[0], "args": parts[1:], "dir": dir, "stdin": stdin, "env": env}
 

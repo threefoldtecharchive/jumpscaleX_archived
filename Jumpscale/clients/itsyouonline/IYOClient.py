@@ -4,7 +4,7 @@ import requests
 try:
     import jose.jwt
 except ImportError:
-    raise RuntimeError("jose not installed ")
+    raise j.exceptions.Base("jose not installed ")
 
 from jose import jwt
 from time import time
@@ -85,7 +85,7 @@ class IYOClient(j.application.JSBaseConfigClass):
         """
 
         if self.application_id == "" or self.secret == "":
-            raise RuntimeError("please go to j.clients.itsyouonline.get() to get a new client")
+            raise j.exceptions.Base("please go to j.clients.itsyouonline.get() to get a new client")
         x = 0
         for item in self.jwt_list:
             if item.name == name:
@@ -97,7 +97,7 @@ class IYOClient(j.application.JSBaseConfigClass):
                     return item
             x += 1
         if die:
-            raise RuntimeError("could not find jwt with name:%s" % name)
+            raise j.exceptions.Base("could not find jwt with name:%s" % name)
 
         jwt_obj = self.jwt_list.new()
         jwt_obj.name = name

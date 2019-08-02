@@ -46,7 +46,7 @@ class BCDBFS(j.application.JSBaseClass):
         """
         dir = self._dir_model.find(name=path)[0]
         if not recursive and dir.dirs:
-            raise RuntimeError("this dir contains other dirs you must pass recursive = True")
+            raise j.exceptions.Base("this dir contains other dirs you must pass recursive = True")
         elif not recursive and not dir.dirs:
             for file_id in dir.files:
                 file = self._file_model.get(file_id)
@@ -143,7 +143,7 @@ class BCDBFS(j.application.JSBaseClass):
         :return: file object
         """
         if not j.sal.fs.exists(path):
-            raise RuntimeError("{} doesn't exist on local file system".format(path))
+            raise j.exceptions.Base("{} doesn't exist on local file system".format(path))
 
         with open(path, "rb") as f:
             self.file_write(dest, f, append=False, create=True)
@@ -199,7 +199,7 @@ class BCDBFS(j.application.JSBaseClass):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError("path {} does not exist".format(path))
+            raise j.exceptions.Base("path {} does not exist".format(path))
         res = [self._dir_model.get(item).name for item in dir_obj[0].dirs]
         return res
 
@@ -207,7 +207,7 @@ class BCDBFS(j.application.JSBaseClass):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError("path {} does not exist".format(path))
+            raise j.exceptions.Base("path {} does not exist".format(path))
         res = [self._file_model.get(item).name for item in dir_obj[0].files]
         return res
 
@@ -272,6 +272,6 @@ class BCDBFS(j.application.JSBaseClass):
 
         j.sal.fs.writeFile("/tmp/test_bcdbfs", "\ntest content\n\n\n")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        assert j.sal.bcdbfs.file_read('/test_with_content') == b'\ntest content\n'
+        assert j.sal.bcdbfs.file_read("/test_with_content") == b"\ntest content\n"
         j.sal.bcdbfs.dir_remove("/")
         print("TESTS PASSED")

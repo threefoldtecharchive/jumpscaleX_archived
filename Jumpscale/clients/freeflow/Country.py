@@ -254,5 +254,5 @@ class Country(object):
         if country is None:
             return None
         if country not in Country.COUNTRIES:
-            raise RuntimeError("Unrecognized country")
+            raise j.exceptions.Base("Unrecognized country")
         return Country.COUNTRIES[country]

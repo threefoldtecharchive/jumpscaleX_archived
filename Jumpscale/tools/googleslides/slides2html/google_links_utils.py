@@ -28,9 +28,9 @@ def get_slide_id(url):
 
 def link_info(url):
     if not url.startswith("http"):
-        raise ValueError("invalid url.")
+        raise j.exceptions.Value("invalid url.")
     presentation_id = get_presentation_id(url)
     slide_id = get_slide_id(url)
     if presentation_id is None:
-        raise ValueError("invalid presentation url.")
+        raise j.exceptions.Value("invalid presentation url.")
     return presentation_id, slide_id

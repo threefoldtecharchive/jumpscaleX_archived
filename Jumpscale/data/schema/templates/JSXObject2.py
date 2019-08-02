@@ -64,7 +64,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
         if self._model is not None and self._model.readonly:
-            raise RuntimeError("object readonly, cannot set.\n%s"%self)
+            raise j.exceptions.Base("object readonly, cannot set.\n%s"%self)
         #CLEAN THE OBJ
         {% if prop.has_jsxobject %}
         val = {{prop.js_typelocation}}.clean(val,model=self._model)
@@ -156,7 +156,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             msg+="schema:\n"
             msg+=j.core.text.indent(str(self._schema._capnp_schema),4)+"\n"
             msg+="error was:\n%s\n"%e
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
 
         return self._capnp_obj_
 

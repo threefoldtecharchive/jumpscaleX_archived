@@ -86,7 +86,7 @@ class RedisConfig(j.application.JSBaseConfigClass):
                 password = None
 
             if self.ssl:
-                raise RuntimeError("not supported")
+                raise j.exceptions.Base("not supported")
                 self._redis = j.clients.redis.get(
                     ipaddr=addr,
                     port=port,

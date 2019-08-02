@@ -36,7 +36,7 @@ class YAML(String):
         if value is None:
             value = self._default_get()
         elif not self.check(value):
-            raise ValueError("Invalid value for yaml: %s" % value)
+            raise j.exceptions.Value("Invalid value for yaml: %s" % value)
         value = j.data.types.string.clean(value)
         return value
 
@@ -81,7 +81,7 @@ class JSON(StringMultiLine):
         if value is None:
             return self._default_get()
         if not self.check(v):
-            raise RuntimeError("Valid serialized json string is required")
+            raise j.exceptions.Base("Valid serialized json string is required")
         return v
 
     def fromString(self, v):
@@ -143,7 +143,7 @@ class Dictionary(TypeBaseClass):
         elif j.data.types.string.check(v):
             v = j.data.serializers.json.loads(v)
         if not self.check(v):
-            raise RuntimeError("dict for clean needs to be bytes, string or dict")
+            raise j.exceptions.Base("dict for clean needs to be bytes, string or dict")
         return v
 
     def toString(self, v):
@@ -186,7 +186,7 @@ class Set(TypeBaseClass):
         return string from a string (is basically no more than a check)
         """
         if not isinstance(s, str):
-            raise ValueError("Should be string:%s" % s)
+            raise j.exceptions.Value("Should be string:%s" % s)
         s = self.clean(s)
         return s
 
@@ -212,7 +212,7 @@ class Set(TypeBaseClass):
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:
-                    raise RuntimeError("hash parts can only be 4 bytes")
+                    raise j.exceptions.Base("hash parts can only be 4 bytes")
                 return struct.unpack("I", val)
             else:
                 return int(val)
@@ -226,27 +226,27 @@ class Set(TypeBaseClass):
         elif j.data.types.list.check(value):  # or j.data.types.set.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
-                raise RuntimeError("hash can only be list/set of 2")
+                raise j.exceptions.Base("hash can only be list/set of 2")
             v0 = bytesToInt(value[0])
             v1 = bytesToInt(value[1])
             return (v0, v1)
 
         elif j.data.types.bytes.check(value):
             if len(value) is not 8:
-                raise RuntimeError("bytes should be len 8")
+                raise j.exceptions.Base("bytes should be len 8")
             r = struct.unpack("II", value)
             return r[1], r[0]
 
         elif j.data.types.string.check(value):
             if ":" not in value:
-                raise RuntimeError("when string, needs to have : inside %s" % value)
+                raise j.exceptions.Base("when string, needs to have : inside %s" % value)
             v0, v1 = value.split(":")
             v0 = int(v0)
             v1 = int(v1)
             return (v0, v1)
 
         else:
-            raise RuntimeError("unrecognized format for hash:%s" % value)
+            raise j.exceptions.Base("unrecognized format for hash:%s" % value)
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
@@ -310,7 +310,7 @@ class Set(TypeBaseClass):
 #
 #     def clean(self, value):
 #         if not self.check(value):
-#             raise ValueError("Valid set is required")
+#             raise j.exceptions.Value("Valid set is required")
 #         return value
 #
 #     def python_code_get(self, value, sort=False):

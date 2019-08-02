@@ -94,7 +94,7 @@ class BlkInfo(j.application.JSBaseClass):
         """
         path = self.mountpoint
         if path == "":
-            raise RuntimeError("path cannot be empty")
+            raise j.exceptions.Base("path cannot be empty")
         self._executor.prefab.core.dir_ensure(path)
 
         fstab = self._executor.prefab.core.file_read("/etc/fstab").splitlines()

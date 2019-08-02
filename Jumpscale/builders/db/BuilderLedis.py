@@ -37,7 +37,7 @@ class BuilderLedis(j.builders.system._BaseClass):
             elif backend == "leveldb":
                 rc, out, err = self._prepareleveldb()
             else:
-                raise NotImplementedError
+                raise j.exceptions.NotImplemented
             configcontent.replace('db_name = "leveldb"', 'db_name = "%s"' % backend)
 
             j.sal.fs.writeFile("/tmp/ledisconfig.toml", configcontent)
@@ -59,7 +59,7 @@ class BuilderLedis(j.builders.system._BaseClass):
         return rc, out, err
 
     def _preparerocksdb(self):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def install(self, start=True):
         if self._done_check("install", reset):

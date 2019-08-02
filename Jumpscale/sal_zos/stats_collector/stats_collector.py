@@ -38,7 +38,7 @@ class StatsCollector:
             if self.is_running():
                 return
             time.sleep(0.5)
-        raise RuntimeError("Failed to start stats_collector")
+        raise j.exceptions.Base("Failed to start stats_collector")
 
     def is_running(self):
         for job in self.container.client.job.list():

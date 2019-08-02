@@ -53,7 +53,7 @@ class IPAddress(String):
         if value is None or value is "":
             return self.default_get()
         if not self.check(value):
-            raise ValueError("invalid ip address %s" % value)
+            raise j.exceptions.Value("invalid ip address %s" % value)
         else:
             if value.lower() == "localhost":
                 value = "127.0.0.1"
@@ -66,8 +66,8 @@ class IPAddress(String):
 
     def fromString(self, v):
         if not j.data.types.string.check(v):
-            raise ValueError("Input needs to be string:%s" % v)
+            raise j.exceptions.Value("Input needs to be string:%s" % v)
         if self.check(v):
             return v
         else:
-            raise ValueError("%s not a valid ip'" % (v))
+            raise j.exceptions.Value("%s not a valid ip'" % (v))

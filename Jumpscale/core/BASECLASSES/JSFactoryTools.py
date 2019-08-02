@@ -107,7 +107,7 @@ class JSFactoryTools:
             bname = get_shortname(bname)
             if bname == get_shortname(name):
                 return item
-        raise RuntimeError("Could not find code: '%s' in %s" % (name, path))
+        raise j.exceptions.Base("Could not find code: '%s' in %s" % (name, path))
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 

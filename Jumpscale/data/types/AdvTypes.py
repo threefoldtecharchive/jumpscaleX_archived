@@ -30,7 +30,7 @@ class Guid(String):
         if value is None or value == "":
             return self.default_get()
         if not self.check(value):
-            raise ValueError("invalid guid :%s" % value)
+            raise j.exceptions.Value("invalid guid :%s" % value)
         else:
             return value
 
@@ -48,11 +48,11 @@ class Guid(String):
 
     def fromString(self, v):
         if not j.data.types.string.check(v):
-            raise ValueError("Input needs to be string:%s" % v)
+            raise j.exceptions.Value("Input needs to be string:%s" % v)
         if self.check(v):
             return v
         else:
-            raise ValueError("%s not properly formatted: '%s'" % (Guid.NAME, v))
+            raise j.exceptions.Value("%s not properly formatted: '%s'" % (Guid.NAME, v))
 
     toString = fromString
 
@@ -90,7 +90,7 @@ class Email(String):
             return self.default_get()
         v = j.data.types.string.clean(v)
         if not self.check(v):
-            raise ValueError("Invalid email :%s" % v)
+            raise j.exceptions.Value("Invalid email :%s" % v)
         v = v.lower()
         return v
 
@@ -131,7 +131,7 @@ class Url(String):
         if value is None or value == "None" or value == "":
             return self.default_get()
         if not self.check(value):
-            raise ValueError("invalid url :%s" % value)
+            raise j.exceptions.Value("invalid url :%s" % value)
         else:
             return value
 
@@ -175,7 +175,7 @@ class Tel(String):
         v = v.replace(")", "")
         v = v.replace(" ", "")
         if not self.check(v):
-            raise ValueError("Invalid mobile number :%s" % v)
+            raise j.exceptions.Value("Invalid mobile number :%s" % v)
         return v
 
     def default_get(self):
@@ -206,7 +206,7 @@ class IPRange(String):
         if value is None or value == "None" or value == "":
             return self.default_get()
         if not self.check(value):
-            raise ValueError("invalid ip range %s" % value)
+            raise j.exceptions.Value("invalid ip range %s" % value)
         else:
             return value
 
@@ -244,7 +244,7 @@ class IPPort(Integer):
         if not value:
             return self.default_get()
         if not self.check(value):
-            raise ValueError("invalid port: %s" % value)
+            raise j.exceptions.Value("invalid port: %s" % value)
         else:
             return int(value)
 
@@ -343,7 +343,7 @@ class Numeric(TypeBaseObjFactory):
                 val = int(val)
 
         # if curtype0 not in j.clients.currencylayer.id2cur:
-        #     raise RuntimeError("need to specify valid curtype, was:%s"%curtype)
+        #     raise j.exceptions.Base("need to specify valid curtype, was:%s"%curtype)
         currency = j.clients.currencylayer
         curcode0 = currency.id2cur[curtype0]
         if not curcode0 == curcode:
@@ -547,7 +547,7 @@ class Numeric(TypeBaseObjFactory):
         if isinstance(data, bytes):
             return NumericObject(self, data)
         else:
-            raise RuntimeError("was not able to clean numeric : %s" % data)
+            raise j.exceptions.Base("was not able to clean numeric : %s" % data)
 
     def toData(self, data):
         data = self.clean(data)
@@ -564,7 +564,7 @@ class Numeric(TypeBaseObjFactory):
     #         data = self.str2bytes(str(data))
     #     else:
     #         j.shell()
-    #         raise RuntimeError("could not clean data, did not find supported type:%s"%data)
+    #         raise j.exceptions.Base("could not clean data, did not find supported type:%s"%data)
     #
     #     return data
 
@@ -704,7 +704,7 @@ class DateTime(Integer):
             epoch = int(time.mktime(time.strptime(hrdatetime, fstr)))
             return epoch
         else:
-            raise ValueError("Input needs to be string:%s" % v)
+            raise j.exceptions.Value("Input needs to be string:%s" % v)
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)
@@ -842,7 +842,7 @@ class Duration(String):
                 return int(v)  # shortcut for when string is an integer
             parts = self._RE.match(v)
             if parts is None:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "Could not parse any time information from '{}'.  Examples of valid strings: '8h', '2d8h5m20s', '2m4s'".format(
                         v
                     )
@@ -852,7 +852,7 @@ class Duration(String):
         elif j.data.types.int.check(v):
             return v
         else:
-            raise ValueError("Input needs to be string or int: {} ({})".format(v, type(v)))
+            raise j.exceptions.Value("Input needs to be string or int: {} ({})".format(v, type(v)))
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)

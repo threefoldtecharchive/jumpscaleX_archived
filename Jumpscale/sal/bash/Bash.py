@@ -63,6 +63,6 @@ class Bash(object):
 
         out = out.strip()
         if out == "":
-            raise RuntimeError("did not find cmd:%s" % cmd)
+            raise j.exceptions.Base("did not find cmd:%s" % cmd)
 
         return out

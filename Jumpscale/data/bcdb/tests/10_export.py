@@ -77,7 +77,7 @@ def main(self):
 
         try:
             m2.get(13)
-            raise RuntimeError("should not exist")
+            raise j.exceptions.Base("should not exist")
         except:
             pass
 

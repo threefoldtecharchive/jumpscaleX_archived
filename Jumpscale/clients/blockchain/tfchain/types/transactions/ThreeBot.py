@@ -49,20 +49,20 @@ class BotTransactionBaseClass(TransactionBaseClass, SignatureCallbackBase):
 class BotMonthsAndFlagsData(j.data.rivine.BaseSiaObjectEncoder, j.data.rivine.BaseRivineObjectEncoder):
     def __init__(self, number_of_months, has_addresses, has_names, has_refund):
         if not isinstance(number_of_months, int) or number_of_months < 0 or number_of_months > 24:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "{} ({}) is not a valid number of months, has to be a integer in the [0,24] range".format(
                     number_of_months, type(number_of_months)
                 )
             )
         self._number_of_months = number_of_months
         if not isinstance(has_addresses, bool):
-            raise TypeError("has_addresses has to be a bool, not {}".format(type(has_addresses)))
+            raise j.exceptions.Value("has_addresses has to be a bool, not {}".format(type(has_addresses)))
         self._has_addresses = has_addresses
         if not isinstance(has_names, bool):
-            raise TypeError("has_names has to be a bool, not {}".format(type(has_names)))
+            raise j.exceptions.Value("has_names has to be a bool, not {}".format(type(has_names)))
         self._has_names = has_names
         if not isinstance(has_refund, bool):
-            raise TypeError("has_refund has to be a bool, not {}".format(type(has_refund)))
+            raise j.exceptions.Value("has_refund has to be a bool, not {}".format(type(has_refund)))
         self._has_refund = has_refund
 
     @property
@@ -180,14 +180,14 @@ class TransactionV144(BotTransactionBaseClass):
             elif lvalue == 1:
                 value = value[0]
             else:
-                raise ValueError("ThreeBot only can have one coin output, a refund coin output")
+                raise j.exceptions.Value("ThreeBot only can have one coin output, a refund coin output")
         if value is None:
             self._refund_coin_output = None
         elif isinstance(value, CoinOutput):
             self._refund_coin_output = CoinOutput(value=value.value, condition=value.condition)
             self._refund_coin_output.id = value.id
         else:
-            raise TypeError("cannot assign a value of type {} to coin outputs".format(type(value)))
+            raise j.exceptions.Value("cannot assign a value of type {} to coin outputs".format(type(value)))
 
     def coin_input_add(self, parentid, fulfillment, parent_output=None):
         ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
@@ -279,7 +279,7 @@ class TransactionV144(BotTransactionBaseClass):
     @number_of_months.setter
     def number_of_months(self, n):
         if n < 1 or n > 24:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "number of months for a 3Bot Registration Transaction has to be in the inclusive range [1,24]"
             )
         self._number_of_months = n
@@ -309,7 +309,7 @@ class TransactionV144(BotTransactionBaseClass):
             self._public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -321,7 +321,7 @@ class TransactionV144(BotTransactionBaseClass):
         Implements SignatureCallbackBase.
         """
         if self._public_key.unlockhash != public_key.unlockhash:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "given public key ({}) does not equal public key ({})".format(
                     str(self._public_key.unlockhash), str(public_key.unlockhash)
                 )
@@ -519,10 +519,10 @@ class TransactionV145(BotTransactionBaseClass):
             self._botid = None
         elif isinstance(value, int):
             if value <= 0:
-                raise ValueError("a bot identifier has to be at least equal to 1: {} is invalid".format(value))
+                raise j.exceptions.Value("a bot identifier has to be at least equal to 1: {} is invalid".format(value))
             self._botid = value
         else:
-            raise TypeError("a bot identifier has to be an integer, cannot be of type {}".format(type(value)))
+            raise j.exceptions.Value("a bot identifier has to be an integer, cannot be of type {}".format(type(value)))
 
     @property
     def coin_inputs(self):
@@ -564,14 +564,14 @@ class TransactionV145(BotTransactionBaseClass):
             elif lvalue == 1:
                 value = value[0]
             else:
-                raise ValueError("ThreeBot only can have one coin output, a refund coin output")
+                raise j.exceptions.Value("ThreeBot only can have one coin output, a refund coin output")
         if value is None:
             self._refund_coin_output = None
         elif isinstance(value, CoinOutput):
             self._refund_coin_output = CoinOutput(value=value.value, condition=value.condition)
             self._refund_coin_output.id = value.id
         else:
-            raise TypeError("cannot assign a value of type {} to coin outputs".format(type(value)))
+            raise j.exceptions.Value("cannot assign a value of type {} to coin outputs".format(type(value)))
 
     def coin_input_add(self, parentid, fulfillment, parent_output=None):
         ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
@@ -717,7 +717,9 @@ class TransactionV145(BotTransactionBaseClass):
     @number_of_months.setter
     def number_of_months(self, n):
         if n < 0 or n > 24:
-            raise ValueError("number of months for a 3Bot Record Update has to be in the inclusive range [0,24]")
+            raise j.exceptions.Value(
+                "number of months for a 3Bot Record Update has to be in the inclusive range [0,24]"
+            )
         self._number_of_months = n
 
     @property
@@ -745,7 +747,7 @@ class TransactionV145(BotTransactionBaseClass):
             self._parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as BotRecordUpdateTransactions's parent public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -757,7 +759,7 @@ class TransactionV145(BotTransactionBaseClass):
         Implements SignatureCallbackBase.
         """
         if self._parent_public_key.unlockhash != public_key.unlockhash:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "given public key ({}) does not equal parent public key ({})".format(
                     str(self._parent_public_key.unlockhash), str(public_key.unlockhash)
                 )
@@ -975,10 +977,14 @@ class TransactionV146(BotTransactionBaseClass):
             self._sender_botid = None
         elif isinstance(value, int):
             if value <= 0:
-                raise ValueError("a (sender) bot identifier has to be at least equal to 1: {} is invalid".format(value))
+                raise j.exceptions.Value(
+                    "a (sender) bot identifier has to be at least equal to 1: {} is invalid".format(value)
+                )
             self._sender_botid = value
         else:
-            raise TypeError("a (sender) bot identifier has to be an integer, cannot be of type {}".format(type(value)))
+            raise j.exceptions.Value(
+                "a (sender) bot identifier has to be an integer, cannot be of type {}".format(type(value))
+            )
 
     @property
     def receiver_botid(self):
@@ -992,12 +998,12 @@ class TransactionV146(BotTransactionBaseClass):
             self._receiver_botid = None
         elif isinstance(value, int):
             if value <= 0:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "a (receiver) bot identifier has to be at least equal to 1: {} is invalid".format(value)
                 )
             self._receiver_botid = value
         else:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "a (receiver) bot identifier has to be an integer, cannot be of type {}".format(type(value))
             )
 
@@ -1041,14 +1047,14 @@ class TransactionV146(BotTransactionBaseClass):
             elif lvalue == 1:
                 value = value[0]
             else:
-                raise ValueError("ThreeBot only can have one coin output, a refund coin output")
+                raise j.exceptions.Value("ThreeBot only can have one coin output, a refund coin output")
         if value is None:
             self._refund_coin_output = None
         elif isinstance(value, CoinOutput):
             self._refund_coin_output = CoinOutput(value=value.value, condition=value.condition)
             self._refund_coin_output.id = value.id
         else:
-            raise TypeError("cannot assign a value of type {} to coin outputs".format(type(value)))
+            raise j.exceptions.Value("cannot assign a value of type {} to coin outputs".format(type(value)))
 
     def coin_input_add(self, parentid, fulfillment, parent_output=None):
         ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
@@ -1144,7 +1150,7 @@ class TransactionV146(BotTransactionBaseClass):
             self._sender_parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as BotNameTransferTransaction's sender parent public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -1163,7 +1169,7 @@ class TransactionV146(BotTransactionBaseClass):
             self._receiver_parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as BotNameTransferTransaction's receiver parent public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -1180,7 +1186,7 @@ class TransactionV146(BotTransactionBaseClass):
         elif unlockhash == self.receiver_parent_public_key.unlockhash:
             self.receiver_signature = signature
         else:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "given public key (unlockhash: {}) is not linked to this BotNameTransfer Transaction".format(
                     str(unlockhash)
                 )

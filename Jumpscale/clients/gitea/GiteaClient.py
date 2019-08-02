@@ -77,7 +77,7 @@ class GiteaClient(JSConfigBase):
         """
         self._log_info("org:get:%s" % name)
         if name not in self.orgs_currentuser_list().keys():
-            raise RuntimeError("Could not find %s in orgs on gitea" % name)
+            raise j.exceptions.Base("Could not find %s in orgs on gitea" % name)
         return GiteaOrg(self, name)
 
     def labels_milestones_set(self, orgname="*", reponame="*", remove_old=False):

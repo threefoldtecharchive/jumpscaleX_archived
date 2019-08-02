@@ -66,12 +66,12 @@ class RDBClient(j.application.JSBaseClass):
 
     def exists(self, key):
         if not key or not isinstance(key, int):
-            raise ValueError("key must be provided, and must be an int")
+            raise j.exceptions.Value("key must be provided, and must be an int")
         return self._redis.execute_command("HEXISTS", self._hsetkey, key) == 1
 
     def delete(self, key):
         if not key or not isinstance(key, int):
-            raise ValueError("key must be provided, and must be an int")
+            raise j.exceptions.Value("key must be provided, and must be an int")
         self._redis.execute_command("HDEL", self._hsetkey, key)
 
     def _flush(self):

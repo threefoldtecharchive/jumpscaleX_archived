@@ -114,7 +114,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         assert isinstance(height, int)
         assert isinstance(resp, str)
         if not force and height in self._blocks:
-            raise KeyError("{} already exists in explorer blocks".format(height))
+            raise j.exceptions.NotFound("{} already exists in explorer blocks".format(height))
         self._blocks[height] = resp
 
     def hash_get(self, hash):
@@ -135,7 +135,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         assert isinstance(hash, str)
         assert isinstance(resp, str)
         if not force and hash in self._hashes:
-            raise KeyError("{} already exists in explorer hashes".format(hash))
+            raise j.exceptions.NotFound("{} already exists in explorer hashes".format(hash))
         self._hashes[hash] = resp
 
     def threebot_record_add(self, record, force=False):
@@ -144,7 +144,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(record, ThreeBotRecord)
         if not force and record.identifier in self._threebot_records:
-            raise KeyError("3Bot {} already exists in explorer threebot records".format(record.identifier))
+            raise j.exceptions.NotFound("3Bot {} already exists in explorer threebot records".format(record.identifier))
         self._threebot_records[record.identifier] = record
 
     def threebot_record_get(self, identifier, endpoint):
@@ -178,15 +178,17 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
 
     def mint_condition_add(self, condition, height, force=False):
         if not (isinstance(height, int) and not isinstance(height, bool)):
-            raise TypeError("height has to be None or an int: {} is an invalid height type".format(type(height)))
+            raise j.exceptions.Value(
+                "height has to be None or an int: {} is an invalid height type".format(type(height))
+            )
         if height < 0:
-            raise ValueError("height cannot be negative")
+            raise j.exceptions.Value("height cannot be negative")
         if height in self._mint_conditions and not force:
-            raise KeyError(
+            raise j.exceptions.NotFound(
                 "{} already exists in explorer mint conditions on height {}".format(str(condition.unlockhash), height)
             )
         if not isinstance(condition, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "condition is expected to be a subtype of ConditionBaseClass: {} is an invalid type".format(
                     type(condition)
                 )
@@ -205,7 +207,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
             condition = self._mint_conditions[heights[0]]
         elif isinstance(height, int) and not isinstance(height, bool):
             if height < 0:
-                raise ValueError("height cannot be negative")
+                raise j.exceptions.Value("height cannot be negative")
             heights = list(self._mint_conditions.keys())
             heights.sort()
             condition_height = heights[0]
@@ -216,7 +218,9 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
                     break
             condition = self._mint_conditions[condition_height]
         else:
-            raise TypeError("height has to be None or an int: {} is an invalid height type".format(type(height)))
+            raise j.exceptions.Value(
+                "height has to be None or an int: {} is an invalid height type".format(type(height))
+            )
 
         # return it as a JSON string
         return j.data.serializers.json.dumps({"mintcondition": condition.json()})

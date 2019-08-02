@@ -42,7 +42,7 @@ def main(self):
             sqlitestor = True
             rdbstor = False
         else:
-            raise RuntimeError("not supported type")
+            raise j.exceptions.Base("not supported type")
 
         def load():
 

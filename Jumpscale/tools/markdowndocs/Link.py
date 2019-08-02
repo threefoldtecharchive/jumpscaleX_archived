@@ -179,16 +179,16 @@ class Linker:
         return j.sal.fs.joinPaths(*args)
 
     def issue(self, _id):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def pull_request(self, _id):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def tree(self, path, branch="master"):
         pass
 
     def to_custom_link(self):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
 
 class GithubLinker(Linker):
@@ -238,7 +238,7 @@ class GithubLinker(Linker):
     def to_custom_link(cls, url):
         match = cls.GITHUB_LINK_RE.match(url)
         if not match:
-            raise ValueError("not a valid github url")
+            raise j.exceptions.Value("not a valid github url")
 
         account, repo, branch, path = match.groups()
         link = "%s:%s" % (account, repo)
@@ -314,7 +314,7 @@ class Link(j.application.JSBaseClass):
         if match:
             match = match.groups()
             return map(self.remove_quotes, match)
-        raise ValueError("not a link markdown")
+        raise j.exceptions.Value("not a link markdown")
 
     def get_docsite(self, external_link, name):
         url = urlparse(external_link)
@@ -475,7 +475,7 @@ class Link(j.application.JSBaseClass):
     def replace_in_txt(self, txt):
         if len(self.source) < 4:
             j.shell()
-            raise RuntimeError("something wrong with original source")
+            raise j.exceptions.Base("something wrong with original source")
         txt = txt.replace(self.source, self.markdown)
         # self.source = self.markdown #there is a new source now
         return txt

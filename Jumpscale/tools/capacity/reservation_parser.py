@@ -67,16 +67,16 @@ def _parser_vm(vm_data):
 
     for k in ["memory", "cpu"]:
         if k not in vm_data:
-            raise ValueError("vm_data doesn't contain %s" % k)
+            raise j.exceptions.Value("vm_data doesn't contain %s" % k)
 
     cpu = int(vm_data["cpu"])
     memory = int(vm_data["memory"])
 
     if memory < 0:
-        raise TypeError("memory cannot be negative")
+        raise j.exceptions.Value("memory cannot be negative")
 
     if cpu < 0:
-        raise TypeError("cpu cannot be negative")
+        raise j.exceptions.Value("cpu cannot be negative")
 
     return {"mru": (memory * MiB) / GiB, "cru": cpu, "hru": 0, "sru": 0}
 
@@ -98,14 +98,14 @@ def _parse_vdisk(disk_data):
 
     for k in ["size", "diskType"]:
         if k not in disk_data:
-            raise ValueError("disk_data doesn't contain %s" % k)
+            raise j.exceptions.Value("disk_data doesn't contain %s" % k)
 
     if disk_data["diskType"] == "ssd":
         ressource["sru"] = int(disk_data["size"])
     elif disk_data["diskType"] == "hdd":
         ressource["hru"] = int(disk_data["size"])
     else:
-        raise ValueError("disk type %s is not valid" % disk_data["diskType"])
+        raise j.exceptions.Value("disk type %s is not valid" % disk_data["diskType"])
 
     return ressource
 

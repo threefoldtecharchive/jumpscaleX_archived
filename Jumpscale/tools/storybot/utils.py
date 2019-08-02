@@ -91,7 +91,7 @@ def _get_indexes_list(body, title="Stories"):
             start_index = i
 
         elif start_index != -1 and (not line.startswith("- [") or line.strip() == ""):
-            raise RuntimeError("Story list is wrongfully formatted")
+            raise j.exceptions.Base("Story list is wrongfully formatted")
 
     if title_line != -1 and start_index == -1:
         start_index = title_line
@@ -162,7 +162,7 @@ def _repoowner_reponame(repo_str, username):
         user = split[0]
         repo = split[1]
     else:
-        raise ValueError(
+        raise j.exceptions.Value(
             "Repo %s is made of %s parts, only 1 and 2 part repo names are supported" % (repo, str(len(repo)))
         )
 
@@ -226,13 +226,13 @@ def _check_broken_links(body, title, iss_url):
             continue
         # if not empty line, it should be  a list item
         if not line.startswith("- ["):
-            raise RuntimeError("List item is could be wrongly formatted: '%s'\n At: %s" % (line, iss_url))
+            raise j.exceptions.Base("List item is could be wrongly formatted: '%s'\n At: %s" % (line, iss_url))
 
         # get url
         try:
             url = line[line.index("(") + 1 : line.index(")")]
         except ValueError:
-            raise RuntimeError("List item does not contain an url: '%s'\n At: %s" % (line, iss_url))
+            raise j.exceptions.Base("List item does not contain an url: '%s'\n At: %s" % (line, iss_url))
 
         # remove broken flag if present
         line = line.replace("***Broken url***", "")

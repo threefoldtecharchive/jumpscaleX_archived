@@ -29,7 +29,7 @@ def get_zt_ip(nics, network=False, network_range=""):
     :rtype: [type]
     """
     if network and not network_range:
-        raise RuntimeError("Invalid network range")
+        raise j.exceptions.Base("Invalid network range")
 
     for nic in nics:
         if nic["name"].startswith("zt"):

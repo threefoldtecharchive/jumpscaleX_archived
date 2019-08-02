@@ -99,7 +99,7 @@ class SerializerTOML(SerializerBase):
             out += "%s\n" % (ttype.toml_string_get(val, key=key))
 
             # else:
-            #     raise RuntimeError("error in fancydumps for %s in %s"%(key,obj))
+            #     raise j.exceptions.Base("error in fancydumps for %s in %s"%(key,obj))
 
         out = out.replace("\n\n\n", "\n\n")
 
@@ -114,7 +114,7 @@ class SerializerTOML(SerializerBase):
         try:
             val = pytoml.loads(s)
         except Exception as e:
-            raise RuntimeError("Toml deserialization failed for:\n%s.\nMsg:%s" % (j.core.text.indent(s), str(e)))
+            raise j.exceptions.Base("Toml deserialization failed for:\n%s.\nMsg:%s" % (j.core.text.indent(s), str(e)))
         if secure and j.data.types.dict.check(val):
             res = {}
             for key, item in val.items():
@@ -151,14 +151,14 @@ class SerializerTOML(SerializerBase):
             try:
                 dictsource = self.loads(tomlsource)
             except Exception:
-                raise RuntimeError("toml file source is not properly formatted.")
+                raise j.exceptions.Base("toml file source is not properly formatted.")
         else:
             dictsource = tomlsource
         if j.data.types.string.check(tomlupdate):
             try:
                 dictupdate = self.loads(tomlupdate)
             except Exception:
-                raise RuntimeError("toml file source is not properly formatted.")
+                raise j.exceptions.Base("toml file source is not properly formatted.")
         else:
             dictupdate = tomlupdate
 

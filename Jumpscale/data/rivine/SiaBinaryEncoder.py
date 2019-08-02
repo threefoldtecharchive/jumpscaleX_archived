@@ -54,7 +54,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in maximum 8 bytes
         """
         if not isinstance(value, int):
-            raise TypeError("value is not an integer")
+            raise j.exceptions.Value("value is not an integer")
         if value < 0:
             raise IntegerOutOfRange("integer {} is out of lower range of 0".format(value))
         if value > _INT_UPPERLIMIT:
@@ -79,7 +79,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
                     self.add(element)
                 return result
             except TypeError:
-                raise TypeError("value cannot be encoded as an array")
+                raise j.exceptions.Value("value cannot be encoded as an array")
 
     def add_slice(self, value):
         """
@@ -109,15 +109,17 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         """
         if isinstance(value, int):
             if value < 0 or value > 255:
-                raise ValueError("byte overflow: invaid value of {}".format(value))
+                raise j.exceptions.Value("byte overflow: invaid value of {}".format(value))
             self._data += value.to_bytes(1, byteorder="little")
         else:
             if isinstance(value, str):
                 value = value.encode("utf-8")
             elif not isinstance(value, (bytes, bytearray)):
-                raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
+                raise j.exceptions.Value("value of type {} cannot be added as a single byte".format(type(value)))
             if len(value) != 1:
-                raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
+                raise j.exceptions.Value(
+                    "a single byte has to be accepted, amount of bytes given: {}".format(len(value))
+                )
             self._data += value
 
     def add(self, value):
@@ -149,7 +151,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
                 return self.add_slice(value)
             except TypeError:
                 pass
-            raise ValueError("cannot siabin-encode value with unsupported type {}".format(type(value)))
+            raise j.exceptions.Value("cannot siabin-encode value with unsupported type {}".format(type(value)))
 
     def add_all(self, *values):
         """

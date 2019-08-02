@@ -46,7 +46,7 @@ class Attr:
 
             r = self._get(name=name, die=False)
             if not r:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
                     % (name, self._key)
                 )
@@ -60,7 +60,7 @@ class Attr:
             except:
                 whereami = self._name
             msg = "could not find attribute:%s in %s (error was:%s)" % (name, whereami, e)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
 
         return self.__getattribute__(name)
 
@@ -83,4 +83,4 @@ class Attr:
         if not self._protected or key in self._properties:
             self.__dict__[key] = value
         else:
-            raise RuntimeError("protected property:%s" % key)
+            raise j.exceptions.Base("protected property:%s" % key)

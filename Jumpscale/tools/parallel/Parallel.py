@@ -57,7 +57,7 @@ class Parallel:
             for i in range(howlong):
                 print("{} is sleeping slept for {}".format(name, howlong - i))
                 gevent.sleep(i)
-            raise RuntimeError("error here in sleepf_with_error")
+            raise j.exceptions.Base("error here in sleepf_with_error")
 
         for i in range(5):
             self.task_add(sleepf, i, name="fun{}".format(i))

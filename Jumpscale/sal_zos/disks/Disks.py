@@ -58,7 +58,7 @@ class Disks:
             for partition in disk.partitions:
                 if partition.devicename == name:
                     return partition
-        raise LookupError("Could not find device with name {}".format(name))
+        raise j.exceptions.NotFound("Could not find device with name {}".format(name))
 
 
 class Disk(Mountable):

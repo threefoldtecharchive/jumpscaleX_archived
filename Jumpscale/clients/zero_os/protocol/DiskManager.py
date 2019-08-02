@@ -47,10 +47,10 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to list disks: %s" % result.stderr)
+            raise j.exceptions.Base("failed to list disks: %s" % result.stderr)
 
         if result.level != 20:  # 20 is JSON output.
-            raise RuntimeError("invalid response type from disk.list command")
+            raise j.exceptions.Base("invalid response type from disk.list command")
 
         data = result.data.strip()
         if data:
@@ -77,7 +77,7 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to create table: %s" % result.stderr)
+            raise j.exceptions.Base("failed to create table: %s" % result.stderr)
 
     def getinfo(self, disk, part=""):
         """
@@ -96,10 +96,10 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to get info: %s" % result.data)
+            raise j.exceptions.Base("failed to get info: %s" % result.data)
 
         if result.level != 20:  # 20 is JSON output.
-            raise RuntimeError("invalid response type from disk.getinfo command")
+            raise j.exceptions.Base("invalid response type from disk.getinfo command")
 
         data = result.data.strip()
         if data:
@@ -124,7 +124,7 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to create partition: %s" % result.stderr)
+            raise j.exceptions.Base("failed to create partition: %s" % result.stderr)
 
     def rmpart(self, disk, number):
         """
@@ -141,7 +141,7 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to remove partition: %s" % result.stderr)
+            raise j.exceptions.Base("failed to remove partition: %s" % result.stderr)
 
     def mount(self, source, target, options=[]):
         """
@@ -162,7 +162,7 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to mount partition: %s" % result.stderr)
+            raise j.exceptions.Base("failed to mount partition: %s" % result.stderr)
 
     def umount(self, source):
         """
@@ -178,7 +178,7 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to umount partition: %s" % result.stderr)
+            raise j.exceptions.Base("failed to umount partition: %s" % result.stderr)
 
     def mounts(self):
         """
@@ -189,10 +189,10 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to list disks: %s" % result.stderr)
+            raise j.exceptions.Base("failed to list disks: %s" % result.stderr)
 
         if result.level != 20:  # 20 is JSON output.
-            raise RuntimeError("invalid response type from disk.list command")
+            raise j.exceptions.Base("invalid response type from disk.list command")
 
         data = result.data.strip()
         if data:
@@ -214,10 +214,10 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to get smartctl info: %s" % result.stderr)
+            raise j.exceptions.Base("failed to get smartctl info: %s" % result.stderr)
 
         if result.level != 20:  # 20 is JSON output.
-            raise RuntimeError("invalid response type from disk.list command")
+            raise j.exceptions.Base("invalid response type from disk.list command")
 
         data = result.data.strip()
         if data:
@@ -239,10 +239,10 @@ class DiskManager:
         result = response.get()
 
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to get smartctl info: %s" % result.stderr)
+            raise j.exceptions.Base("failed to get smartctl info: %s" % result.stderr)
 
         if result.level != 20:  # 20 is JSON output.
-            raise RuntimeError("invalid response type from disk.list command")
+            raise j.exceptions.Base("invalid response type from disk.list command")
 
         data = result.data.strip()
         if data:
@@ -262,7 +262,7 @@ class DiskManager:
 
         result = response.get()
         if result.state != "SUCCESS":
-            raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
+            raise j.exceptions.Base("Failed to spindown disk {} to {}.".format(disk, spindown))
 
     def isstandby(self, disk):
         """

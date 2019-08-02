@@ -72,7 +72,7 @@ class Connection(JSBASE):
             handle = urllib.request.urlopen(req)
             return handle
         except IOError as e:
-            raise RuntimeError("could not do simple auth.\n%s" % e)
+            raise j.exceptions.Base("could not do simple auth.\n%s" % e)
 
     def get_reponse(self, url, data=None, headers=None, **params):
         """
@@ -93,7 +93,7 @@ class Connection(JSBASE):
         r = self._http_request(url=url, data=data, headers=headers, **params)
         if r.status != 200:
             if die:
-                raise RuntimeError("could not retrieve:%s, status of response:%s" % (url, r.status))
+                raise j.exceptions.Base("could not retrieve:%s, status of response:%s" % (url, r.status))
             else:
                 return r.status
         out = b"".join(r.readlines())
@@ -298,7 +298,7 @@ class HttpClient(j.application.JSBaseClass):
         r = self.get_response(url=url, headers=headers)
         if r.status != 200:
             if die:
-                raise RuntimeError("could not retrieve:%s, status of response:%s" % (url, r.status))
+                raise j.exceptions.Base("could not retrieve:%s, status of response:%s" % (url, r.status))
             else:
                 return r.status
         out = b"".join(r.readlines())

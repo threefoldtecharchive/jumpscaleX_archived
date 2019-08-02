@@ -32,7 +32,7 @@ class PeeweeClient(JSConfigClient):
                     self.dbname, user=self.login, password=self.passwd_, host=self.ipaddr, port=self.port
                 )
             else:
-                raise RuntimeError()
+                raise j.exceptions.Base()
         return self._peewee
 
     def model_get(self):

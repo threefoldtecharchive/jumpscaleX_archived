@@ -58,7 +58,7 @@ class Traefik(Service):
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
-            raise RuntimeError("Failed to get zt ip for traefik {}".format(self.name))
+            raise j.exceptions.Base("Failed to get zt ip for traefik {}".format(self.name))
 
     def container_port(self, port):
 
@@ -97,11 +97,11 @@ class Traefik(Service):
         cmd = "/usr/bin/traefik storeconfig -c {}".format(self._config_path)
         result = self.container.client.system(cmd).get()
         if result.state != "SUCCESS":
-            raise RuntimeError("fail to store traefik configuration in etcd: %s" % result.stderr)
+            raise j.exceptions.Base("fail to store traefik configuration in etcd: %s" % result.stderr)
 
         # wait for traefik to start
         cmd = "/usr/bin/traefik -c {}".format(self._config_path)
         job = self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
-            raise RuntimeError("Failed to start Traefik server {}: {}".format(self.name, result.stderr))
+            raise j.exceptions.Base("Failed to start Traefik server {}: {}".format(self.name, result.stderr))

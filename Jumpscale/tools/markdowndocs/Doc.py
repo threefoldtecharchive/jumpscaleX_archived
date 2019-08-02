@@ -29,7 +29,7 @@ class Doc(j.application.JSBaseClass):
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
         if self.name == "":
-            raise RuntimeError("name cannot be empty")
+            raise j.exceptions.Base("name cannot be empty")
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
@@ -280,12 +280,12 @@ class Doc(j.application.JSBaseClass):
         res = self.links_get(filename=filename, cat=cat)
         if len(res) == 0:
             if die:
-                raise RuntimeError("could not find link %s:%s" % (filename, cat))
+                raise j.exceptions.Base("could not find link %s:%s" % (filename, cat))
             else:
                 return None
         if nr > len(res):
             if die:
-                raise RuntimeError("could not find link %s:%s at position:%s" % (filename, cat, nr))
+                raise j.exceptions.Base("could not find link %s:%s at position:%s" % (filename, cat, nr))
             else:
                 return None
         return res[nr]

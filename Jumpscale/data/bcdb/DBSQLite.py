@@ -28,7 +28,7 @@ class DBSQLite(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         if bcdb.storclient and bcdb.storclient.type == "RDB":
-            raise RuntimeError("cannot use sqlite for RDB")
+            raise j.exceptions.Base("cannot use sqlite for RDB")
 
         self.bcdb = bcdb
 
@@ -82,7 +82,7 @@ class DBSQLite(j.application.JSBaseClass):
         if len(res) == 0:
             return None
         elif len(res) > 1:
-            raise RuntimeError("error, can only be 1 item")
+            raise j.exceptions.Base("error, can only be 1 item")
         return res[0].value
 
     def delete(self, key):

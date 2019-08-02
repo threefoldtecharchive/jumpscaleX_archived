@@ -354,7 +354,7 @@ class BuilderProxyClassic(j.builders.system._BaseClass):
             f += "\n%s\n" % config
             j.sal.fs.writeFile("/etc/apt/apt.conf", f)
         else:
-            raise RuntimeError("not implemented yet")
+            raise j.exceptions.Base("not implemented yet")
 
     def __str__(self):
         return "prefab.proxy:%s:%s" % (getattr(self.executor, "addr", "local"), getattr(self.executor, "port", ""))

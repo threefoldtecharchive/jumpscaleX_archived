@@ -169,7 +169,7 @@ class Bytes(TypeBaseClass):
             value = self.fromString(value)
         else:
             if not self.check(value):
-                raise RuntimeError("byte input required")
+                raise j.exceptions.Base("byte input required")
         return value
 
     def python_code_get(self, value):
@@ -308,7 +308,7 @@ class Integer(TypeBaseClass):
             else:
                 value = int(value)
         if not self.check(value):
-            raise ValueError("Invalid value for integer: '%s'" % value)
+            raise j.exceptions.Value("Invalid value for integer: '%s'" % value)
         return value
 
     def toml_string_get(self, value, key=""):
@@ -422,7 +422,7 @@ class Percent(Float):
         elif isinstance(value, int) or isinstance(value, float):
             value = float(value)
         else:
-            raise RuntimeError("could not convert input to percent, input was:%s" % value)
+            raise j.exceptions.Base("could not convert input to percent, input was:%s" % value)
 
         assert value < 1.00001
         return value

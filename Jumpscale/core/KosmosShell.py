@@ -138,7 +138,7 @@ def get_current_line(document):
         else:
             prefix = ""
         return parent, member, prefix
-    raise ValueError("nothing is written")
+    raise j.exceptions.Value("nothing is written")
 
 
 def get_completions(self, document, complete_event):
@@ -185,7 +185,7 @@ def get_completions(self, document, complete_event):
 def get_doc_string(tbc, locals_, globals_):
     obj = eval_code(tbc, locals_=locals_, globals_=globals_)
     if not obj:
-        raise ValueError("cannot get docstring of %s, not an object" % tbc)
+        raise j.exceptions.Value("cannot get docstring of %s, not an object" % tbc)
 
     signature = ""
     try:

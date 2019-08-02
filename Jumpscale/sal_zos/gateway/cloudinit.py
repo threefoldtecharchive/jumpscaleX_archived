@@ -42,7 +42,7 @@ class CloudInit:
             )
 
         if not j.tools.timer.execute_until(self.is_running, 10, 0.5):
-            raise RuntimeError("Failed to start cloudinit server")
+            raise j.exceptions.Base("Failed to start cloudinit server")
 
     def is_running(self):
         for port in self.container.client.info.port():

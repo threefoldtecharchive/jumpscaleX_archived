@@ -132,7 +132,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
             file = self.find(name=path)[0]
         except:
             if not create:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "file with path {} doesn't exist, if you want to create it pass create = True".format(path)
                 )
             file = self.file_create_empty(path)
@@ -145,7 +145,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         path = j.sal.fs.pathClean(path)
         file = self.find(name=path)
         if not file:
-            raise RuntimeError("file with {} does not exist".format(file))
+            raise j.exceptions.Base("file with {} does not exist".format(file))
         file = file[0]
         file.delete()
         parent = j.sal.fs.getDirName(path)
@@ -155,12 +155,14 @@ class FILE(j.data.bcdb._BCDBModelClass):
         parent.save()
 
     def file_read(self, path):
-        import ipdb; ipdb.set_trace()
+        import ipdb
+
+        ipdb.set_trace()
         try:
             path = j.sal.fs.pathClean(path)
             file = self.find(name=path)[0]
         except:
-            raise RuntimeError("file with path {} does not exist".format(path))
+            raise j.exceptions.Base("file with path {} does not exist".format(path))
         fs = FileStream(file)
         return fs.read_stream_get().read()
 
@@ -203,8 +205,8 @@ class FileStream:
         for block in stream:
             hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
             exists = self._block_model.find(md5=hash)
-            #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
-            #so we will disable block caching till we fix this
+            # TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
+            # so we will disable block caching till we fix this
             if not exists or True:
                 b = self._block_model.new()
                 b.md5 = hash

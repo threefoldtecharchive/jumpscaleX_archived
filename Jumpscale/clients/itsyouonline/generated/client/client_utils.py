@@ -22,7 +22,7 @@ def generate_rfc3339(d, local_tz=True):
         pass
 
     if not isinstance(d, datetime.date):
-        raise TypeError("Not timestamp or date object. Got %r." % type(d))
+        raise j.exceptions.Value("Not timestamp or date object. Got %r." % type(d))
 
     if not isinstance(d, datetime.datetime):
         d = datetime.datetime(*d.timetuple()[:3])

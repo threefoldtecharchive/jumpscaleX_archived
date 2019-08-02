@@ -26,7 +26,7 @@ class RDBAdminClient(ZDBClientBase):
             return True
         except Exception as e:
             if not "Namespace not found" in str(e):
-                raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
+                raise j.exceptions.Base("could not check namespace:%s, error:%s" % (name, e))
             # self._log_debug("namespace_NOTexists:%s" % name)
             return False
 
@@ -48,7 +48,7 @@ class RDBAdminClient(ZDBClientBase):
         if self.namespace_exists(name):
             self._log_debug("namespace exists")
             if die:
-                raise RuntimeError("namespace already exists:%s" % name)
+                raise j.exceptions.Base("namespace already exists:%s" % name)
             # now return std client
             return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 

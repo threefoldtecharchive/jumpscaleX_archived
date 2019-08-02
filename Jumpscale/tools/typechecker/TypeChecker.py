@@ -63,10 +63,10 @@ class Tracker(Exception, JSBASE):
 class Option(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def check(self, object, t):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
 
 class Or(Option):
@@ -118,7 +118,7 @@ class Length(Option):
         Option.__init__(self)
         self._checker = Checker(typ)
         if min is None and max is None:
-            raise ValueError("you have to pass wither min or max to the length type checker")
+            raise j.exceptions.Value("you have to pass wither min or max to the length type checker")
         self._min = min
         self._max = max
 

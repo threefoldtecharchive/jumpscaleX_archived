@@ -346,7 +346,7 @@ class Teammgr(j.application.JSBaseClass):
                 break
             path0 = j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
         if not found:
-            raise RuntimeError("could not find /team in one of the parent dir's (or this dir):'%s'" % path)
+            raise j.exceptions.Base("could not find /team in one of the parent dir's (or this dir):'%s'" % path)
 
         self.path = "%s/team" % path0
 

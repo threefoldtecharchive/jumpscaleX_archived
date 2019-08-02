@@ -278,7 +278,7 @@ class Zerodb(Service):
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
-            raise RuntimeError("Failed to start zerodb server: {}".format(self.name))
+            raise j.exceptions.Base("Failed to start zerodb server: {}".format(self.name))
 
     def _live_namespaces(self):
         """
@@ -318,9 +318,9 @@ class Zerodb(Service):
     @path.setter
     def path(self, value):
         if not value:
-            raise ValueError("path can't be empty")
+            raise j.exceptions.Value("path can't be empty")
         if type(value) != str:
-            raise ValueError("path must be a string")
+            raise j.exceptions.Value("path must be a string")
         self._path = value
 
     @property
@@ -338,7 +338,7 @@ class Zerodb(Service):
     @sync.setter
     def sync(self, value):
         if type(value) != bool:
-            raise ValueError("sync must be a boolen")
+            raise j.exceptions.Value("sync must be a boolen")
         self._sync = value
 
     @property
@@ -348,7 +348,7 @@ class Zerodb(Service):
     @mode.setter
     def mode(self, value):
         if value not in ["user", "seq", "direct"]:
-            raise ValueError("mode must be user, seq or direct")
+            raise j.exceptions.Value("mode must be user, seq or direct")
         self._mode = value
 
     def __str__(self):

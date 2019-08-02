@@ -51,7 +51,7 @@ class InfluxDB:
             is_running, _ = self.is_running()
 
         if is_running:
-            raise RuntimeError("Failed to stop influxd.")
+            raise j.exceptions.Base("Failed to stop influxd.")
 
         if self.container.node.client.nft.rule_exists(self.port):
             self.container.node.client.nft.drop_port(self.port)
@@ -79,7 +79,7 @@ class InfluxDB:
         if not is_running:
             if self.container.node.client.nft.rule_exists(self.port):
                 self.container.node.client.nft.drop_port(self.port)
-            raise RuntimeError("Failed to start influxd.")
+            raise j.exceptions.Base("Failed to start influxd.")
 
     def list_databases(self):
         return self.client.get_list_database()

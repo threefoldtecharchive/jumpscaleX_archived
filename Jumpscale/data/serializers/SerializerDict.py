@@ -79,18 +79,20 @@ class SerializerDict(j.application.JSBaseClass):
             try:
                 dictsource[key] = int(val)
             except ValueError:
-                raise ValueError('Expected value of "{}" should be of type int or a string of int.'.format(key))
+                raise j.exceptions.Value('Expected value of "{}" should be of type int or a string of int.'.format(key))
         elif j.data.types.float.check(dictsource[key]):
             try:
                 dictsource[key] = float(val)
             except ValueError:
-                raise ValueError('Expected value of "{}" should be of type float or a string of float.'.format(key))
+                raise j.exceptions.Value(
+                    'Expected value of "{}" should be of type float or a string of float.'.format(key)
+                )
         elif j.data.types.string.check(dictsource[key]):
             if not j.data.types.string.check(val):
-                raise ValueError('Expected value of "{}" should be of type string.'.format(key))
+                raise j.exceptions.Value('Expected value of "{}" should be of type string.'.format(key))
             dictsource[key] = j.core.text.strip(str(val))
         else:
-            raise ValueError("could not find type of:%s" % dictsource[key])
+            raise j.exceptions.Value("could not find type of:%s" % dictsource[key])
 
         return dictsource, errors
 

@@ -70,7 +70,7 @@ class Pwiz(j.application.JSBaseClass):
                 kwargs["password"] = self.schema
                 db = DatabaseClass(self.dbname, **kwargs)
             else:
-                raise RuntimeError("not implemented")
+                raise j.exceptions.Base("not implemented")
             self._introspector = Introspector.from_database(db, schema=self.schema)
         return self._introspector
 

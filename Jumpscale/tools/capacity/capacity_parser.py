@@ -288,7 +288,7 @@ def _parse_dmi(data):
                 continue
 
     if not output_data:
-        raise RuntimeError("Unable to parse 'dmidecode' output")
+        raise j.exceptions.Base("Unable to parse 'dmidecode' output")
 
     return output_data
 
