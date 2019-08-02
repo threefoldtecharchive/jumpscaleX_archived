@@ -169,7 +169,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         js_shell 'j.builders.web.openresty.copy_to_github()'
         :return:
         """
-        raise RuntimeError("check despiegk: not immplemented yet")
+        raise j.exceptions.Base("check despiegk: not immplemented yet")
         self.build(reset=reset)
 
         if j.core.platformtype.myplatform.platform_is_ubuntu:
@@ -177,7 +177,7 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         elif j.core.platformtype.myplatform.platform_is_osx:
             CODE_SB_BIN = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
-            raise RuntimeError("only ubuntu & osx support")
+            raise j.exceptions.Base("only ubuntu & osx support")
 
         CODE_SB_BASE = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
 
@@ -216,7 +216,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        raise RuntimeError("cannot use lapis here, need openresty allone")
         cmd = """
         rm -rf {DIR_TEMP}/lapis_test
         mkdir -p {DIR_TEMP}/lapis_test 
@@ -235,6 +234,8 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         server is running on port 8080
 
         """
+        j.builders.web.openresty.install()
+        j.builders.runtimes.lua.install()
 
         if self.running():
             self.stop()
@@ -242,7 +243,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         self._log_info("openresty is running on port 8080")
         # we now have done a tcp test, lets do a http client connection
         out = j.clients.http.get("http://localhost:8080")
-        raise RuntimeError("need other test")
         assert out.find("Welcome to Lapis 1.7.0") != -1  # means message is there
         self.stop()
 
