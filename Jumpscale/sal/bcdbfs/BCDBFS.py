@@ -225,6 +225,9 @@ class BCDBFS(j.application.JSBaseClass):
         """
         self._bcdb.reset()
 
+    def search(self, text):
+        return [obj.name for obj in self._file_model.search(text)]
+
     def test(self):
         cl = j.clients.sonic.get_client_bcdb()
         cl.flush("bcdbfs")
@@ -274,6 +277,6 @@ class BCDBFS(j.application.JSBaseClass):
 
         j.sal.fs.writeFile("/tmp/test_bcdbfs", "\ntest content\n\n\n")
         j.sal.bcdbfs.file_copy_from_local("/tmp/test_bcdbfs", "/test_with_content")
-        assert j.sal.bcdbfs.file_read('/test_with_content') == b'\ntest content\n'
+        assert j.sal.bcdbfs.file_read("/test_with_content") == b"\ntest content\n"
         j.sal.bcdbfs.dir_remove("/")
         print("TESTS PASSED")
