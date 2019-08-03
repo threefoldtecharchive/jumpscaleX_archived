@@ -252,7 +252,7 @@ class Doc(j.application.JSBaseClass):
 
     @property
     def markdown_clean_summary(self):
-        c = self.markdown_clean
+        c = self.markdown_source
         lines = c.split("\n")
         counter = 0
         out = ""

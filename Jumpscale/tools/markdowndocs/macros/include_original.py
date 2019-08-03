@@ -75,9 +75,7 @@ def include_original(
     :param docstring: will look for def $name or class $name and include the docstring directly specified after it as markdown
     :return:
     """
-
     name = name.lower()
-
     j = doc.docsite._j
 
     if repo != "":
@@ -154,7 +152,10 @@ def include_original(
                 doc = None
 
         if doc != None:
-            newcontent = doc.markdown
+
+            newcontent = _file_process(
+                j=j, content=doc.markdown, start=start, end=end, paragraph=paragraph, docstring=docstring
+            )
         else:
             raise RuntimeError("ERROR: COULD NOT INCLUDE:%s (not found)" % name)
 
@@ -163,7 +164,10 @@ def include_original(
         docsite = j.tools.markdowndocs.docsite_get(docsiteName)
         doc = docsite.doc_get(name, die=False)
         if doc != None:
-            newcontent = doc.markdown
+
+            newcontent = _file_process(
+                j=j, content=doc.markdown, start=start, end=end, paragraph=paragraph, docstring=docstring
+            )
         else:
             raise RuntimeError("ERROR: COULD NOT INCLUDE:%s:%s (not found)" % (docsiteName, name))
 
