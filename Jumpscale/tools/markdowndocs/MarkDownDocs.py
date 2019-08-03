@@ -336,8 +336,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         ff_event_wiki.write()
 
     def test2(self):
-        j.builders.runtimes.pip.install("webbrowser")
-
         url = "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/"
         examples = j.tools.markdowndocs.load(url, name="examples")
         examples.write()
