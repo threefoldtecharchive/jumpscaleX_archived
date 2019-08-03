@@ -343,7 +343,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         j.servers.threebot.get('test').start(background=True)
 
         import webbrowser
-        webbrowser.open('localhost:8090/wiki/examples#/test_include')
+        webbrowser.open('http://localhost:8090/wiki/examples#/test_include')
 
     def test(self, watch=False):
         """
