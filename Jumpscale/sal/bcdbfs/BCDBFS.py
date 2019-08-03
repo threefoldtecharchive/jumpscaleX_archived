@@ -225,8 +225,8 @@ class BCDBFS(j.application.JSBaseClass):
         """
         self._bcdb.reset()
 
-    def search(self, text):
-        return [obj.name for obj in self._file_model.search(text)]
+    def search(self, text, location=""):
+        return [obj.name[len(location) + 1:-3] for obj in self._file_model.search(text) if obj.name.startswith(location)]
 
     def test(self):
         cl = j.clients.sonic.get_client_bcdb()

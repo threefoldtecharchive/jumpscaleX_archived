@@ -112,6 +112,19 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._text_index_delete(obj)
 
     ###### Full text indexing
+    def _chunks(self, txt, length):
+        if not txt:
+            return None
+        for i in range(0, len(txt), length):
+            if i + length > len(txt):
+                yield txt[i:]
+            else:
+                yield txt[i : i + length]
+    def _clean_text_for_sonic(self, text):
+        if not isinstance(text, str) or not text or text.startswith("{") or text.startswith("`"):
+            return None
+        else:
+            return text.replace("\n", " ")
 
     def _text_index_keys_get_(self, property_name, val, obj_id, nid=1):
         """
@@ -122,15 +135,20 @@ class BCDBModelIndex(j.application.JSBaseClass):
         Data: {value}
         """
         if val:
-            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.sid), "{}:{}".format(obj_id, property_name), val
+            return (
+                self.bcdb.name,
+                "{}:{}".format(nid, self.bcdbmodel.sid),
+                "{}:{}".format(obj_id, property_name),
+                self._clean_text_for_sonic(val),
+            )
         else:
             return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.sid), "{}:{}".format(obj_id, property_name)
 
     def _text_index_set_(self, property_name, val, obj_id, nid=1):
         args = self.bcdbmodel._text_index_content_pre_(property_name, val, obj_id, nid)
-        keys = self._text_index_keys_get_(*args)
-        if isinstance(args[-1], str) and args[-1].strip() and not args[-1].startswith("`"):
-            self.sonic.push(*keys)
+        bucket, collection, object_tag, text = self._text_index_keys_get_(*args)
+        for chunk in self._chunks(text, int(self.sonic.bufsize) // 2):
+            self.sonic.push(bucket, collection, object_tag, chunk)
 
     def _text_index_delete_(self, property_name, val, obj_id, nid=1):
         keys = self._text_index_keys_get_(property_name, None, obj_id, nid)
