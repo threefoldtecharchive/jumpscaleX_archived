@@ -71,7 +71,7 @@ def team(doc, link, order="random", projects=None, contribution_types=None, **kw
             elif extname in ("png", "jpg", "jpeg"):
                 person_data["avatar"] = j.sal.fs.joinPaths(doc.path_dir_rel, basename)
                 dest = j.sal.fs.joinPaths(doc.docsite.outpath, doc.path_dir_rel, basename)
-                j.sal.fs.copyFile(filepath, dest, createDirIfNeeded=True)
+                j.sal.bcdbfs.file_copy(filepath, dest)
 
         if person_data:
             data.append(person_data)

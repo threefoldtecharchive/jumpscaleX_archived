@@ -137,7 +137,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
                 elif subobj_format == "H":
                     res.append(item._ddict_hr)
                 else:
-                    raise j.exceptions.Base("only support type J,D,H")
+                    raise j.exceptions.Value("only support type J,D,H")
             else:
                 if subobj_format == "H":
                     res.append(self._child_type.toHR(item))
@@ -146,7 +146,7 @@ class ListObject(TypeBaseObjClass, MutableSequence):
                 elif subobj_format == "D":
                     res.append(self._child_type.toData(item))
                 else:
-                    raise j.exceptions.Base("only support type J,D,H")
+                    raise j.exceptions.Value("only support type J,D,H")
         return res
 
     def new(self, data=None):
@@ -166,10 +166,10 @@ class ListObject(TypeBaseObjClass, MutableSequence):
         """
         if self._child_type_ is None:
             if len(self._inner_list) == 0:
-                raise j.exceptions.Base("cannot auto detect which type used in the list")
+                raise j.exceptions.Value("cannot auto detect which type used in the list")
             type1 = j.data.types.list.list_check_1type(self._inner_list)
             if not type1:
-                raise j.exceptions.Base("cannot auto detect which type used in the list, found more than 1 type")
+                raise j.exceptions.Value("cannot auto detect which type used in the list, found more than 1 type")
             self._child_type_ = j.data.types.type_detect(self._inner_list[0])
         return self._child_type_
 
@@ -226,7 +226,7 @@ class List(TypeBaseObjFactory):
                 self._SUBTYPE = j.data.types.string
             else:
                 if not self.list_check_1type(self._default):
-                    raise j.exceptions.Base("default values need to be of 1 type")
+                    raise j.exceptions.Value("default values need to be of 1 type")
                 self._SUBTYPE = j.data.types.type_detect(self._default[0])
         return self._SUBTYPE
 
@@ -242,7 +242,7 @@ class List(TypeBaseObjFactory):
             res = ttype.check(item)
             if not res:
                 if die:
-                    raise j.exceptions.Base("List is not of 1 type.")
+                    raise j.exceptions.Value("List is not of 1 type.")
                 else:
                     return False
         return True

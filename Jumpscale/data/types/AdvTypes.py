@@ -343,7 +343,7 @@ class Numeric(TypeBaseObjFactory):
                 val = int(val)
 
         # if curtype0 not in j.clients.currencylayer.id2cur:
-        #     raise j.exceptions.Base("need to specify valid curtype, was:%s"%curtype)
+        #     raise j.exceptions.Value("need to specify valid curtype, was:%s"%curtype)
         currency = j.clients.currencylayer
         curcode0 = currency.id2cur[curtype0]
         if not curcode0 == curcode:
@@ -547,7 +547,7 @@ class Numeric(TypeBaseObjFactory):
         if isinstance(data, bytes):
             return NumericObject(self, data)
         else:
-            raise j.exceptions.Base("was not able to clean numeric : %s" % data)
+            raise j.exceptions.Value("was not able to clean numeric : %s" % data)
 
     def toData(self, data):
         data = self.clean(data)
@@ -564,7 +564,7 @@ class Numeric(TypeBaseObjFactory):
     #         data = self.str2bytes(str(data))
     #     else:
     #         j.shell()
-    #         raise j.exceptions.Base("could not clean data, did not find supported type:%s"%data)
+    #         raise j.exceptions.Value("could not clean data, did not find supported type:%s"%data)
     #
     #     return data
 

@@ -31,6 +31,7 @@ class Types(j.application.JSBaseFactoryClass):
             IPPort,
             Tel,
             YAML,
+            MSGPACK,
             JSON,
             Email,
             Date,
@@ -63,7 +64,7 @@ class Types(j.application.JSBaseFactoryClass):
 
             o = self.__attach(name, typeclass)
             if name in self._type_check_list:
-                raise j.exceptions.Base("there is duplicate type:%s" % name)
+                raise j.exceptions.Value("there is duplicate type:%s" % name)
             if not hasattr(o, "NOCHECK") or o.NOCHECK is False:
                 if not hasattr(typeclass, "CUSTOM") or typeclass.CUSTOM is False:
                     self._type_check_list.append(name)
@@ -96,7 +97,7 @@ class Types(j.application.JSBaseFactoryClass):
             ttype = self.__dict__[key]
             if ttype.check(val):
                 return ttype
-        raise j.exceptions.Base("did not detect val for :%s" % val)
+        raise j.exceptions.Value("did not detect val for :%s" % val)
 
     def get(self, ttype, default=None, cache=True):
         """
@@ -131,6 +132,9 @@ class Types(j.application.JSBaseFactoryClass):
         - a, acl
         - u, user
         - g, group
+        - json
+        - yaml
+        - msgpack
 
         !!!TYPES!!!
 
@@ -151,7 +155,7 @@ class Types(j.application.JSBaseFactoryClass):
 
         klasstype = "_%s" % ttype
         if klasstype not in self.__dict__:
-            raise j.exceptions.Base("did not find type class:%s" % klasstype)
+            raise j.exceptions.Value("did not find type class:%s" % klasstype)
         tt_class = self.__dict__[klasstype]  # is the class
 
         if default:

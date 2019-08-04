@@ -17,7 +17,7 @@ def main(self):
 
     try:
         e.clean(4)
-        raise j.exceptions.Base("should not work")
+        raise j.exceptions.Value("should not work")
     except Exception:
         pass
 

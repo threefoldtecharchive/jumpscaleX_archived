@@ -9,7 +9,7 @@
 always do as follows:
 
 ```python
- try:
+try:
     print("DO SOMETHING WHICH MAYBE GIVES ERROR")
 except Exception as e:    
     j.errorhandler.exception_handle(e,die=True) #or die =False if you don't want to stop
@@ -53,7 +53,7 @@ We use the logdict as generic format for the handling.
 the initialization for them all
 
 ```python
-BaseJSException(message="something", level=None, cat=None, msgpub=None,context=None)
+BaseJSException(message="something", level=None, cat=None, msgpub=None,context=None,parent_exception=None)
 ```
 
 - context is e.g. location where something happened
@@ -94,6 +94,46 @@ raise j.exceptions.SSHTimeout("")
 ## best practice
 
 - do not do ```raise RuntimeError...``` always call one of above
+
+## exception properties
+
+- exception levels  (are the same as the log levels)
+  - CRITICAL 	50
+  - ERROR 	40
+  - WARNING 	30
+  - INFO 	    20
+  - STDOUT 	15
+  - DEBUG 	10
+
+- parent_exception is the exception which comes from e.g. a try except, its to log the original exception (the parent)
+
+```python
+try:
+    dosomething_which_gives_error(data=data)
+except Exception as e:
+    raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,original_exception=e)
+```
+
+arguments
+- **message**: message a meaningful message
+- **level**: see above
+- **cat**: dot notation can be used, just to put your error in a good category
+- **context**: e.g. methodname, location id, ... the context (area) where the error happened (exception)
+- **data**: any data worth keeping 
+- **parent_exception**: see above
+
+```python
+class BaseJSException(Exception):
+  
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, parent_exception=None):
+
+```
+
+to check if an exception is of this base (jumpscale Exception)
+
+```python
+isinstance(exception,j.exceptions.Base)
+```
 
 ## create your own exceptions
 

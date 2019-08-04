@@ -1,6 +1,7 @@
 import toml
 import re
 import copy
+import io
 
 from urllib.parse import urlparse
 from Jumpscale import j
@@ -450,9 +451,10 @@ class Link(j.application.JSBaseClass):
         self._log_info("download:%s\n%s" % (self.link_source_original, dest))
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
-            # cannot use primitive something wrong sometimes with ssl verification
-            content = j.sal.nettools.download(self.link_source_original)
-            j.sal.bcdb.file_write(dest, content, append=False)
+            import requests
+
+            response = requests.get(self.link_source_original, stream=True)
+            j.sal.bcdbfs.file_write(dest, response, append=False)
 
     def should_skip(self):
         return any(link in self.link_source for link in SKIPPED_LINKS)

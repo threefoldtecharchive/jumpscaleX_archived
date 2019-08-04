@@ -98,7 +98,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key):
-        raise j.exceptions.Base("not implemented")
+        raise j.exceptions.Value("not implemented")
 
 
 # class JSConfigObjectFactory(TypeBaseObjFactory):

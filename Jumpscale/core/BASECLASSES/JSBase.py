@@ -456,8 +456,6 @@ class JSBase:
                     pass  # TODO:*1 is not good
             logdict["cat"] = cat
 
-            logdict["use_custom_printer"] = j.application._in_autocomplete
-
             logdict["data"] = data
             if data and isinstance(data, dict):
                 # shallow copy the data to avoid changing the original data
@@ -747,7 +745,7 @@ class JSBase:
 
         out += "{RESET}"
 
-        out = j.core.tools.text_replace(out, ignore_error=True)
+        out = j.core.tools.text_replace(out, check_no_args_left=False)
         print(out)
 
         # TODO: *1 dirty hack, the ansi codes are not printed, need to check why

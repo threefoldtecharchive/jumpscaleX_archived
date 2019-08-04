@@ -16,7 +16,7 @@ def main(self):
     """
 
     # create a tfchain client for devnet
-    c = j.clients.tfchain.new("mydevclient", network_type="DEV")
+    c = j.clients.tfchain.get("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
 
     # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)

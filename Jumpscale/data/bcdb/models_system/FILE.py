@@ -118,7 +118,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         dir.save()
         return new_file
 
-    def file_write(self, path, content, append=True, create=True):
+    def file_write(self, path, content, append=False, create=True):
         """
         writes a file to bcdb
         :param path: the path to store the file
@@ -132,7 +132,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
             file = self.find(name=path)[0]
         except:
             if not create:
-                raise j.exceptions.Base(
+                raise RuntimeError(
                     "file with path {} doesn't exist, if you want to create it pass create = True".format(path)
                 )
             file = self.file_create_empty(path)
@@ -145,7 +145,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         path = j.sal.fs.pathClean(path)
         file = self.find(name=path)
         if not file:
-            raise j.exceptions.Base("file with {} does not exist".format(file))
+            raise RuntimeError("file with {} does not exist".format(file))
         file = file[0]
         file.delete()
         parent = j.sal.fs.getDirName(path)
@@ -155,14 +155,11 @@ class FILE(j.data.bcdb._BCDBModelClass):
         parent.save()
 
     def file_read(self, path):
-        import ipdb
-
-        ipdb.set_trace()
         try:
             path = j.sal.fs.pathClean(path)
             file = self.find(name=path)[0]
         except:
-            raise j.exceptions.Base("file with path {} does not exist".format(path))
+            raise RuntimeError("file with path {} does not exist".format(path))
         fs = FileStream(file)
         return fs.read_stream_get().read()
 
@@ -171,6 +168,7 @@ class FileStream:
     # plain types are the the file types that will be stored as plain text in content
     # other types will be saved in blocks
     PLAIN_TYPES = ["md", "txt", "json", "toml"]
+    BLOCK_SIZE = 8192
 
     def __init__(self, vfile):
         self._vfile = vfile
@@ -186,7 +184,7 @@ class FileStream:
 
     def writelines(self, stream, append=True):
         ext = self._vfile.extension or self._vfile.name.split(".")[-1]
-        if ext in self.PLAIN_TYPES:
+        if ext in self.PLAIN_TYPES or isinstance(stream, str):
             self._save_plain(stream, append=append)
         else:
             self._save_blocks(stream, append=append)
@@ -195,6 +193,21 @@ class FileStream:
             self._vfile.extension = ext
             self._vfile.save()
 
+    def _drain_response(self, response):
+        response_generator = response.iter_content(self.BLOCK_SIZE)
+        while True:
+            try:
+                yield next(response_generator)
+            except StopIteration:
+                yield None
+
+    def _drain_stream(self, stream):
+        block = stream.read(self.BLOCK_SIZE)
+        while block:
+            yield block
+            block = stream.read(self.BLOCK_SIZE)
+        yield None
+
     def _save_blocks(self, stream, append=True):
         if not append:
             for block_id in self._vfile.blocks:
@@ -202,12 +215,18 @@ class FileStream:
                 block.delete()
             self._vfile.blocks.clear()
             self._vfile.save()
-        for block in stream:
-            hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
-            exists = self._block_model.find(md5=hash)
-            # TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
-            # so we will disable block caching till we fix this
-            if not exists or True:
+
+        if hasattr(stream, "iter_content"):
+            blocks_generator = self._drain_response(stream)
+        else:
+            blocks_generator = self._drain_stream(stream)
+        block = next(blocks_generator)
+        while block:
+            # hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
+            # exists = self._block_model.find(md5=hash)
+            #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
+            #so we will disable block caching till we fix this
+            if True:
                 b = self._block_model.new()
                 b.md5 = hash
                 b.content = block
@@ -219,6 +238,7 @@ class FileStream:
             else:
                 self._vfile.size_bytes += exists[0].size
                 self._vfile.blocks.append(exists[0].id)
+            block = next(blocks_generator)
         self._vfile.save()
 
     def _save_plain(self, stream, append=True):

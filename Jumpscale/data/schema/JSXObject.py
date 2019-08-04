@@ -134,8 +134,6 @@ class JSXObject(j.application.JSBaseClass):
             if serialize:
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
-            if self._model.readonly:
-                raise j.exceptions.Base("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
                 if self.acl.id is None:
@@ -166,9 +164,10 @@ class JSXObject(j.application.JSBaseClass):
                                 assert self._model.sid == r[0]._model.sid
                                 return self  # means data was not changed
 
-                o = self._model.set(self)
+                if not self._model.readonly:
+                    o = self._model.set(self)
+                self._model._triggers_call(obj=self, action="save", propertyname=None)
                 self.id = o.id
-                # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
             return self
 
@@ -233,10 +232,10 @@ class JSXObject(j.application.JSBaseClass):
         # WHY DO WE NEED THIS?
 
     def __str__(self):
+        # FIXME: breaks in some cases in docsites generation needs to be cleanly implemented
         out = self._str_get(ansi=True)
-        out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
-        # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
-        # IS UGLY WORKAROUND
+        # # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
+        # # IS UGLY WORKAROUND
         print(out)
         return ""
 

@@ -11,8 +11,10 @@ from .types.Errors import ErrorTypes
 from .TFChainTypesFactory import TFChainTypesFactory
 from .TFChainTime import TFChainTime
 
+JSConfigBaseFactory = j.application.JSFactoryConfigsBaseClass
 
-class TFChainClientFactory(j.application.JSBaseConfigsClass):
+
+class TFChainClientFactory(JSConfigBaseFactory):
     """
     Factory class to get a tfchain client object
     """

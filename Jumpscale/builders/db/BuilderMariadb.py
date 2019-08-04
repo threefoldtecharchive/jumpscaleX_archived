@@ -132,17 +132,17 @@ class BuilderMariadb(j.builders.system._BaseClass):
         :type zhub_client:str
         """
 
-        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "")
+        sandbox_dir = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(sandbox_dir)
         install_cmd = """
         cd {}/server
         make install DESTDIR={}
         """.format(
-            self.code_dir, self.DIR_SANDBOX
+            self.code_dir, sandbox_dir
         )
         self._execute(install_cmd)
 
-        mysql_bin_content = j.sal.fs.listFilesAndDirsInDir(j.sal.fs.joinPaths(self.DIR_SANDBOX, "usr/local/mysql/bin"))
+        mysql_bin_content = j.sal.fs.listFilesAndDirsInDir(j.sal.fs.joinPaths(sandbox_dir, "usr/local/mysql/bin"))
         for bin_src in mysql_bin_content:
             j.tools.sandboxer.libs_clone_under(bin_src, self.DIR_SANDBOX)
 

@@ -247,7 +247,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         {% endfor %}
         if ansi:
             out += "{RESET}"
-        out = j.core.tools.text_strip(out, replace=True,ignore_error=True)
+        out = j.core.tools.text_strip(out, replace=True,check_no_args_left=False)
         return out
 
 

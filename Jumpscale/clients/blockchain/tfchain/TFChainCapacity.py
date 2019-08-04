@@ -216,7 +216,7 @@ class TFChainCapacity:
         :rtype: tuple
         """
         reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
-            data={
+            datadict={
                 "size": size,
                 "email": email,
                 "created": j.data.time.epoch,

@@ -532,7 +532,7 @@ if redis:
 
 class BaseJSException(Exception):
     """
-    ## log (error) levels
+    ## log (exception) levels
 
         - CRITICAL 	50
         - ERROR 	40
@@ -541,9 +541,25 @@ class BaseJSException(Exception):
         - STDOUT 	15
         - DEBUG 	10
 
+    parent_exception is the exception which comes from e.g. a try except, its to log the original exception
+
+    e.g.
+
+    try:
+        dosomething_which_gives_error(data=data)
+    except Exception as e:
+        raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,parent_exception=e)
+
+    :param: message a meaningful message
+    :level: see above
+    :cat: dot notation can be used, just to put your error in a good category
+    :context: e.g. methodname, location id, ... the context (area) where the error happened (exception)
+    :data: any data worth keeping
+
+
     """
 
-    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None):
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, parent_exception=None):
 
         if level:
             if isinstance(level, str):
@@ -551,7 +567,7 @@ class BaseJSException(Exception):
             elif isinstance(level, int):
                 pass
             else:
-                raise Tools.exceptions.JSBUG("level needs to be int or str")
+                raise Tools.exceptions.JSBUG("level needs to be int or str", data=locals())
             assert level > 9
             assert level < 51
 
@@ -560,14 +576,17 @@ class BaseJSException(Exception):
         self.message_pub = msgpub
         self.level = level
         self.context = context
-        self._trace_do = True
         self.cat = cat  # is a dot notation category, to make simple no more tags
         self.data = data
+        self.parent_exception = parent_exception
 
-        self._init(message=message, level=level, cat=cat, msgpub=msgpub, context=context)
+        self._init(
+            message=message, level=level, cat=cat, msgpub=msgpub, context=context, parent_exception=parent_exception
+        )
 
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        self._tb = traceback.extract_tb(exc_traceback)
+        # self._tb = traceback.extract_tb(exc_traceback)
+        self._tb = exc_traceback
         self._exc_traceback = exc_traceback
         self._exc_value = exc_value
         self._exc_type = exc_type
@@ -582,7 +601,7 @@ class BaseJSException(Exception):
     @property
     def str_1_line(self):
         """
-        1 line representation of error
+        1 line representation of exception
 
         """
         msg = ""
@@ -594,11 +613,13 @@ class BaseJSException(Exception):
         return msg.strip()
 
     def __str__(self):
-        if self.cat:
-            out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
-        else:
-            out = "ERROR: %s\n" % (self.message)
-        return out
+        raise RuntimeError()
+        return Tools.log(exception=self, stdout=False, replace=True)
+        # if self.cat:
+        #     out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
+        # else:
+        #     out = "ERROR: %s\n" % (self.message)
+        # return out
 
     __repr__ = __str__
 
@@ -830,16 +851,17 @@ class Tools:
 
     @staticmethod
     def log(
-        msg,
-        cat="",
+        msg="",
+        cat=None,
         level=10,
         data=None,
         context=None,
         _deeper=False,
-        stdout=True,
         tb=None,
         data_show=True,
-        error=None,  # is jumpscale error
+        exception=None,  # is jumpscale/python exception
+        replace=True,  # to replace the color variables for stdout
+        stdout=True,  # return as text or send to stdount
     ):
         """
 
@@ -857,24 +879,40 @@ class Tools:
         logdict = {}
 
         if isinstance(msg, Exception):
-            Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
-            msg = "{RED}EXCEPTION: {RESET}%s" % str(msg)
+            raise Tools.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
+
+        # first deal with traceback
+        if exception and not tb:
+            if isinstance(exception, BaseJSException):
+                tb = exception._tb
+            else:
+                extype_, value_, tb = sys.exc_info()
+
+        if exception:
+            # make sure exceptions get the right priority
+            if not msg:
+                if isinstance(exception, BaseJSException):
+                    msg = exception.message
+                else:
+                    Tools.shell()
+                    msg = exception.__repr__()
+            msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg, 4) + "{RESET}"
             level = 50
             if cat is "":
                 cat = "exception"
 
-        logdict["message"] = msg
+            if isinstance(exception, BaseJSException):
+                if not data:
+                    # copy data from the exception
+                    data = exception.data
+                if exception.parent_exception:
+                    if isinstance(exception.parent_exception, BaseJSException):
+                        parent_exception = "      " + exception.parent_exception.str_1_line
+                    else:
+                        parent_exception = Tools.text_indent(exception.parent_exception, 6)
+                    msg += "\n - original Exception: %s" % parent_exception
 
-        if error:
-            if not tb:
-                extype, value, tb = sys.exc_info()
-            if msg:
-                logdict["public"] = msg
-                logdict["error"] = str(error)
-            else:
-                logdict["message"] = str(error)
-            if hasattr(error, "data") and not data:
-                data = error.data
+        logdict["message"] = msg
 
         if tb:
             logdict["traceback"] = Tools.traceback_format(tb)
@@ -917,7 +955,7 @@ class Tools:
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
 
-        if tb or error:
+        if tb or exception:
             for handler in MyEnv.errorhandlers:
                 try:
                     handler.handle(logdict)
@@ -931,20 +969,7 @@ class Tools:
                 except Exception as e:
                     MyEnv.exception_handle(e)
 
-    # @staticmethod
-    # def error_raise(msg, pythonerror=None):
-    #     print ("** ERROR **")
-    #     Tools.log(msg)
-    #     if MyEnv.debug and traceback and pudb:
-    #         extype, value, tb = sys.exc_info()
-    #         if tb is not None:
-    #             traceback.print_exc()
-    #             pudb.post_mortem(tb,e_value=pythonerror)
-    #         else:
-    #             from pudb import set_trace
-    #             set_trace()
-    #         sys.exit(1)
-    #     raise Tools.exceptions.Base(msg)
+        return logdict
 
     @staticmethod
     def _execute_interactive(cmd=None, args=None, die=True, original_command=None):
@@ -1204,7 +1229,7 @@ class Tools:
 
     @staticmethod
     def text_strip(
-        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, ignore_error=False
+        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, check_no_args_left=False
     ):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
@@ -1244,7 +1269,7 @@ class Tools:
 
         if replace:
             content = Tools.text_replace(
-                content=content, args=args, executor=executor, text_strip=False, ignore_error=ignore_error
+                content=content, args=args, executor=executor, text_strip=False, check_no_args_left=check_no_args_left
             )
         else:
             if colors and "{" in content:
@@ -1254,21 +1279,17 @@ class Tools:
         return content
 
     @staticmethod
-    def text_replace(content, args=None, executor=None, ignorecomments=False, text_strip=True, ignore_error=False):
+    def text_replace(
+        content, args=None, executor=None, ignorecomments=False, text_strip=True, check_no_args_left=False
+    ):
         """
 
         Tools.text_replace
 
-        args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
-        MyEnv.config will also be given to the format function
-
         content example:
 
         "{name!s:>10} {val} {n:<10.2f}"  #floating point rounded to 2 decimals
-
-        performance is +100k per sec
-
-        will call the strip if
+        format as in str.format_map() function from
 
         following colors will be replaced e.g. use {RED} to get red color.
 
@@ -1284,56 +1305,77 @@ class Tools:
 
         """
 
-        class format_dict(dict):
-            def __missing__(self, key):
-                return "{%s}" % key
-
         if args is None:
             args = {}
+
+        if not "{" in content:
+            return content
+
+        if executor and executor.config:
+            content2 = Tools.args_replace(content, args, executor.config, MyEnv.MYCOLORS)
         else:
-            args = copy.copy(args)  # make sure we don't change the original
+            content2 = Tools.args_replace(content, args, MyEnv.config, MyEnv.MYCOLORS)
 
-        if "{" in content:
-
-            if args is None:
-                args = {}
-
-            if executor:
-                args.update(executor.config)
-            else:
-                for key, val in MyEnv.config.items():
-                    if key not in args:
-                        args[key] = val
-
-            args.update(MyEnv.MYCOLORS)
-
-            replace_args = format_dict(args)
-            try:
-                content = content.format_map(replace_args)
-            except ValueError as e:
-                if ignore_error:
-                    pass  # e.g. if { is
-                else:
-                    sorted = [i for i in args.keys()]
-                    # raise Tools.exceptions.Base("could not replace \n%s \nin \n%s" % (sorted, content))
-            if not ignore_error:
-                if "{" in content:
-                    try:
-                        content = content.format_map(replace_args)  # this to deal with nested {
-                    except ValueError as e:
-                        sorted = [i for i in args.keys()]
-                        raise Tools.exceptions.Base(
-                            "could not replace \n%s \nin \n%s\n, remaining {, if you want to ignore the error use ignore_error=True"
-                            % (sorted, content)
-                        )
+        if check_no_args_left:
+            if "{" in content:
+                raise Tools.exceptions.Input("{ found in %s" % content2, data=args)
 
         if text_strip:
-            content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
+            content = Tools.text_strip(content2, ignorecomments=ignorecomments, replace=False)
 
-        return content
+        return content2
+
+    @staticmethod
+    def args_replace(content, *args_list):
+        """
+
+        :param content:
+        :param args_list: add all dicts you want to replace
+        :return:
+        """
+        assert isinstance(content, str)
+        if content == "":
+            return content
+        args_new = {}
+        for replace_args in args_list:
+            for key, val in replace_args.items():
+                if key not in args_new:
+                    args_new[key] = val
+
+        def process_line(line, args_new):
+            try:
+                line = line.format_map(args_new)
+            except KeyError as e:
+                raise Tools.exceptions.Input("Cannot replace args in %s" % line, data=args_new, parent_exception=e)
+            except ValueError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    line = line.replace("{%s}" % arg, val)
+            return line
+
+        for replace_args in args_list:
+            if not isinstance(replace_args, dict):
+                raise j.exceptions.Input("replace args need to be dict", data=replace_args)
+        out = ""
+        for line in content.split("\n"):
+            if "{" in line:
+                line = process_line(line, args_new)
+            out += "%s\n" % line
+
+        out = out[:-1]  # needs to remove the last one, is because of the split there is no last \n
+        return out
 
     @staticmethod
     def log2stdout(logdict, data_show=True):
+        text = Tools.log2str(logdict, data_show=True, replace=True)
+        p = print
+        if MyEnv.config.get("LOGGER_PANEL_NRLINES"):
+            if Tools.custom_log_printer:
+                p = Tools.custom_log_printer
+        p(text)
+
+    @staticmethod
+    def log2str(logdict, data_show=True, replace=True):
         """
 
         :param logdict:
@@ -1385,13 +1427,10 @@ class Tools:
         # elif logdict["context"].startswith(":"):
         #     logdict["context"] = ""
 
-        p = print
-        if MyEnv.config.get("LOGGER_PANEL_NRLINES") or logdict.get("use_custom_printer"):
-            if Tools.custom_log_printer:
-                p = Tools.custom_log_printer
+        out = ""
 
         if "traceback" in logdict and logdict["traceback"]:
-            p(Tools.text_replace("{RED}--TRACEBACK------------------{RESET}"))
+            out += Tools.text_replace("{RED}--TRACEBACK------------------{RESET}\n")
             for tb_path, tb_name, tb_lnr, tb_line, tb_locals in logdict["traceback"]:
                 C = "{GREEN}{tb_path}{RESET} in {BLUE}{tb_name}{RESET}\n"
                 C += "    {GREEN}{tb_lnr}{RESET}    {tb_code}{RESET}"
@@ -1400,13 +1439,9 @@ class Tools:
                         tb_line, Tools.pygments_pylexer, Tools.pygments_formatter
                     ).rstrip()
                 tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
-                C = Tools.text_replace(C.lstrip(), args=tbdict, ignore_error=True, text_strip=True)
-                p(C)
-            p(Tools.text_replace("{RED}-----------------------------\n{RESET}"))
-
-        msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
-        msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
-        p(msg)
+                C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
+                out += C.rstrip() + "\n"
+            out += Tools.text_replace("{RED}-----------------------------\n{RESET}")
 
         if data_show:
             if logdict["data"] != None:
@@ -1418,13 +1453,28 @@ class Tools:
                 else:
                     data = logdict["data"]
                 data = Tools.text_indent(data, 2, strip=True)
-                p(Tools.text_replace("{YELLOW}--DATA---------------------"))
-                p(data.rstrip())
-                p(Tools.text_replace("-----------------------------\n{RESET}"))
+                out += Tools.text_replace("{YELLOW}--DATA-----------------------\n")
+                out += data.rstrip() + "\n"
+                out += Tools.text_replace("-----------------------------\n{RESET}\n")
+
+        msg = Tools.text_replace(LOGFORMAT, args=logdict, check_no_args_left=False).rstrip()
+        out += msg
+
+        if logdict["level"] > 39:
+            # means is error
+            if "public" in logdict and logdict["public"]:
+                out += (
+                    "{YELLOW}" + Tools.text_indent(logdict["public"].rstrip(), nspaces=2, prefix="* ") + "{RESET}\n\n"
+                )
 
         # restore the logdict
         logdict.pop("TIME")
         logdict.pop("filename")
+
+        if replace:
+            out = Tools.text_replace(out)
+
+        return out
 
     @staticmethod
     def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=True, indent=0, end="\n", log=True):
@@ -1452,7 +1502,7 @@ class Tools:
             content = str(content)
         if args or colors or text_strip:
             content = Tools.text_replace(
-                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, ignore_error=True
+                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, check_no_args_left=False
             )
             for key, val in MyEnv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)
@@ -1476,7 +1526,7 @@ class Tools:
         return impl.hexdigest()
 
     @staticmethod
-    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
+    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", prefix=None, args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -1495,6 +1545,10 @@ class Tools:
         """
         if content is None:
             raise Tools.exceptions.Base("content cannot be None")
+        if content == "":
+            return content
+        if not prefix:
+            prefix = ""
         content = str(content)
         if args is not None:
             content = Tools.text_replace(content, args=args)
@@ -1507,7 +1561,12 @@ class Tools:
         ind = indentchar * nspaces
         out = ""
         for line in content.split("\n"):
-            out += "%s%s\n" % (ind, line)
+            if line.strip() == "":
+                out += "\n"
+            else:
+                out += "%s%s%s\n" % (ind, prefix, line)
+        if content[-1] == "\n":
+            out = out[:-1]
         return out
 
     @staticmethod
@@ -2653,16 +2712,22 @@ class MyEnv:
 
     @staticmethod
     def excepthook(exception_type, exception_obj, tb, die=True):
+
         try:
-            Tools.log(msg=exception_obj, tb=tb, level=40, error=exception_obj)
+            Tools.log(tb=tb, level=50, exception=exception_obj)
         except Exception as e:
-            print(exception_obj)
-            MyEnv.exception_handle(e)
+            Tools.pprint("{RED}ERROR IN LOG HANDLER")
+            print(e)
+            ttype, msg, tb = sys.exc_info()
+            traceback.print_exception(etype=ttype, tb=tb, value=msg)
+            Tools.pprint("{RESET}")
+            sys.exit(1)
+
         if MyEnv.debug and traceback and pudb:
             # exception_type, exception_obj, tb = sys.exc_info()
             pudb.post_mortem(tb)
-        Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
-        if str(exception_obj).find("!DONTDIE") != -1 or die == False:
+        # Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+        if die == False:
             return
         else:
             sys.exit(1)
@@ -2675,7 +2740,6 @@ class MyEnv:
         :return:
         """
         ttype, msg, tb = sys.exc_info()
-        Tools.shell()
         return MyEnv.excepthook(ttype, e, tb, die=die)
 
     @staticmethod
