@@ -143,7 +143,6 @@ class {{BASENAME}}(BCDBModelIndex):
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
-            self._log_debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
             self._text_index_delete_("{{property_name}}",val,obj.id,nid=obj.nid)
         {%- endfor %}
 
