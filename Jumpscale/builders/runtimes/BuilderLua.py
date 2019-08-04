@@ -284,9 +284,9 @@ class BuilderLua(j.builders.system._BaseClass):
         :type zhub_client:str
         """
         dest_path = self.DIR_SANDBOX
-        j.builders.web.openresty.sandbox(reset=reset)
+        j.builders.web.openresty.sandbox()
 
-        bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua", "lapis", "moon", "moonc"]
+        bins = ["lua", "lapis", "moon", "moonc"]
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
