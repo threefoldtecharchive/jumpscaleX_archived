@@ -40,7 +40,7 @@ class BuilderSonic(j.builders.system._BaseClass):
         self._execute("cp %s/sonic /sandbox/bin/" % j.builders.runtimes.rust.DIR_CARGOBIN)
 
     @builder_method()
-    def sandbox(self, zhub_client=None, flist_create=True):
+    def sandbox(self, zhub_client=None):
         """Copy built bins to dest_path and reate flist if create_flist = True
 
         :param dest_path: destination path to copy files into
@@ -58,7 +58,7 @@ class BuilderSonic(j.builders.system._BaseClass):
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
 
-        # sandbox zdb
+        # sandbox sonic
         bins = ["sonic"]
         for bin in bins:
             self._copy("{DIR_BIN}/" + bin, bin_dest)
