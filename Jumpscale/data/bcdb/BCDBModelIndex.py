@@ -120,7 +120,13 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 yield txt[i:]
             else:
                 yield txt[i : i + length]
+
     def _clean_text_for_sonic(self, text):
+        """
+        cleaning the text and ignore json files and code blocks
+        :param text: raw text to be indexed in sonic
+        :return: clean text (str) or None
+        """
         if not isinstance(text, str) or not text or text.startswith("{") or text.startswith("`"):
             return None
         else:
