@@ -2318,7 +2318,9 @@ class MyEnv:
             secret = secret.encode()
         else:
             if not secret:
-                secret = str(random.randint(1, 100000000))
+                secret = str(random.randint(1, 100000000)).encode()
+            else:
+                secret = secret.encode()
 
         import hashlib
 
