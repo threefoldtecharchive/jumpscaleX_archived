@@ -3617,7 +3617,7 @@ class DockerContainer:
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             Tools.execute(
                 "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
-                % j.core.myenv.sshagent.key_default
+                % MyEnv.sshagent.key_default
             )
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
@@ -3630,7 +3630,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % j.core.myenv.sshagent.key_default
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % MyEnv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
