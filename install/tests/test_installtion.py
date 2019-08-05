@@ -1,6 +1,6 @@
-from .base_test import BaseTest
+import os
 import uuid
-
+from .base_test import BaseTest
 
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
@@ -13,6 +13,9 @@ class TestInstallationInDocker(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
     def tearDown(self):
+        self.info("Clean the installation")
+        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        self.os_command(command)
         self.info("Delete jumpscale created container.")
         command = "docker rm -f {}".format(self.CONTAINER_NAME)
         self.os_command(command)
@@ -204,43 +207,67 @@ class TestInstallationInDocker(BaseTest):
 
 
 class TestInstallationInSystem(BaseTest):
+    def setUp(self):
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("install successful", output.decode())
+
     def tearDown(self):
         self.info("Clean the installation")
-        command = "rm -rf ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
         self.os_command(command)
 
-    def test01_install_jumpscale_insystem_no_interactive(self):
+    def Test01_install_jumpscale_insystem_no_interactive(self):
         """
-        test TC63, TC64
+        test TC58
         ** Test installation of Jumpscale using insystem non-interactive option on Linux or mac OS **
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
 
-        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installation("install")
-        self.assertFalse(error)
-        self.assertIn("installed successfully", output.decode())
-
         self.info("Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos"
+        command = "jsx kosmos"
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("BCDB INIT DONE", output.decode())
 
-    def test02_verify_insystem_installation_with_r_option(self):
+    def Test02_verify_jsx_working_insystem(self):
         """
-        test TC65, TC66
+        test TC59
+        **  test jumpscale inssystem on mac or linux depending on os_type. **
+        #. Run jsx generate command, should run successfully, and generate.
+        """
+
+        self.info("Check generate option, using jsx generate cmd")
+
+        self.info("remove jumpscale_generated file")
+        os.remove("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py")
+
+        self.info("Check generate option")    
+        command = "jsx generate"
+        self.os_command(command)
+
+        self.info("make sure that jumpscale_generated file is generated again")
+        os.path.exists("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py")
+
+    def Test03_insystem_installation_r_option_no_jsx_before(self):
+        """
+        test TC73, TC85
         ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
+        ** with no JSX installed before **
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
+    
+        self.info("Clean the installation")
+        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
+        self.os_command(command)
 
         self.info(
             "Install jumpscale from {} branch on {} using no_interactive and re-install".format(
-                self.js_branch, self.os_type
-            )
-        )
+                self.js_branch, self.os_type ))
+
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
         self.assertIn("installed successfully", output.decode())
@@ -248,7 +275,66 @@ class TestInstallationInSystem(BaseTest):
         self.info(" Run kosmos shell,should succeed")
         command = "source /sandbox/env.sh && kosmos"
         output, error = self.os_command(command)
-        self.info("Check the re-installation has been done successfully")
+        
         self.assertFalse(error)
-        self.assertIn("Distributor ID", output.decode())
+
         self.assertIn("BCDB INIT DONE", output.decode())
+
+    def Test04__insystem_installation_r_option_jsx_installed_before(self):
+        """
+        test TC74, TC86
+        ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
+        ** with JSX installed before **
+        #. Install jumpscale from specific branch
+        #. Run kosmos ,should succeed
+        """
+
+        self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
+                self.js_branch, self.os_type ))
+
+        output, error = self.jumpscale_installation("install", "-r")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
+
+        self.info(" Run kosmos shell,should succeed")
+        command = "source /sandbox/env.sh && kosmos"
+        output, error = self.os_command(command)
+        
+        self.assertFalse(error)
+        self.assertIn("BCDB INIT DONE", output.decode())
+
+    def Test05_bcdb_system_delete_option(self):
+        """
+        test TC203, TC204
+        ** test bcdb_system_delete option on Linux and Mac OS **
+        #. Create an instance from github client; get it
+        #.  destroy; make sure it doesn't exist
+        """
+
+        self.info("use kosmos to create github client, make sure that there is no error")
+        command = "kosmos 'j.clients.github.new(\"hamada\", token=\"hamada\")'"
+        output, error = self.os_command(command)
+        assert not error
+
+        self.info("check that the client is exists")
+        command = "kosmos 'j.clients.github.get(\"hamada\").name"
+        output, error = self.os_command(command)
+        assert output == "hamada"; assert not error
+
+        self.info("use bcdb_system_delete option to delete database, and check if the client still exists or not")
+        command = "jsx bcdb-system-delete"
+        output, error =  self.os_command("kosmos 'j.clients.github.get(\"hamada\").name")
+        assert error
+
+    def Test05_check_option(self):
+        """
+        test TC205, TC206
+        ** test check option on Linux and Mac OS **
+        #. test that check option is working correctly.  
+        #. check option ,ake sure that secret, private key, bcdband kosmos are working fine.
+        """
+            
+        self.info("test jsx check option ")
+        command = "jsx check"
+        output, error = self.os_command(command)
+        assert not error
