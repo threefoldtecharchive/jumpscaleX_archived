@@ -14,7 +14,7 @@ class TestInstallationInDocker(BaseTest):
 
     def tearDown(self):
         self.info("Delete jumpscale created container.")
-        command = "docker rm {}".format(self.CONTAINER_NAME)
+        command = "docker rm -f {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         command = "rm -rf /sandbox; rm -rf ~/sandbox"
