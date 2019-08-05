@@ -148,7 +148,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
             raise RuntimeError("file with {} does not exist".format(file))
         file = file[0]
         file.delete()
-        parent = j.sal.fs.getDirName(path)
+        parent = j.sal.fs.getParent(path)
         parent = j.sal.fs.pathClean(parent)
         parent = self._dir_model.get_by_name(name=parent)[0]
         parent.files.remove(file.id)
