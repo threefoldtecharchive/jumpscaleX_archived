@@ -2,6 +2,7 @@ import os
 import uuid
 from .base_test import BaseTest
 
+
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
         self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
@@ -34,7 +35,7 @@ class TestInstallationInDocker(BaseTest):
         #. Run container-kosmos ,should succeed
         """
         self.info("Run container_kosmos ,should succeed")
-        command = "/tmp/jsx container-kosmos"
+        command = " echo 'from Jumpscale import j' | /tmp/jsx container-kosmos -n {}".format(self.CONTAINER_NAME)
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("BCDB INIT DONE", output.decode())
@@ -54,7 +55,7 @@ class TestInstallationInDocker(BaseTest):
         self.info(" Running on {} os type".format(self.os_type))
 
         self.info("Run container stop ")
-        command = "/tmp/jsx container-stop"
+        command = "/tmp/jsx container-stop -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Check that container stopped successfully")
@@ -63,7 +64,7 @@ class TestInstallationInDocker(BaseTest):
         self.assertFalse(output)
 
         self.info("Run container started ")
-        command = "/tmp/jsx container-start"
+        command = "/tmp/jsx container-start -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Check that container started successfully")
@@ -81,7 +82,7 @@ class TestInstallationInDocker(BaseTest):
         #. Check the branch of jumpscale code, should be same as installation branch.
         """
         self.info("Run kosmos command inside docker,should start kosmos shell")
-        command = "source /sandbox/env.sh && kosmos"
+        command = """source /sandbox/env.sh && kosmos "from Jumpscale import j" """
         output, error = self.docker_command(command)
         self.assertIn("BCDB INIT DONE", output.decode())
 
@@ -108,7 +109,7 @@ class TestInstallationInDocker(BaseTest):
         **Verify that container-delete option will delete the running container**
         """
         self.info("Delete the running jsx container using container-delete")
-        command = "/tmp/jsx container-delete"
+        command = "/tmp/jsx container-delete -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         command = "docker ps -a | grep {}".format(self.CONTAINER_NAME)
@@ -121,7 +122,7 @@ class TestInstallationInDocker(BaseTest):
         **Verify that containers-reset option will delete running container and image**
         """
         self.info("Reset the running container and image using container-reset")
-        command = "/tmp/jsx container-reset"
+        command = "/tmp/jsx container-reset -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Check that running containers have been deleted")
@@ -143,14 +144,14 @@ class TestInstallationInDocker(BaseTest):
         command = "/tmp/jsx container-export -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
-        self.info("Delete the runnnng container")
+        self.info("Delete the running container")
         command = "docker rm {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Use container-import, should run container with exported image ")
-        command = "/tmp/jsx container-import  -p {} -n {} ".format(image_location, self.CONTAINER_NAME)
-        output, error = self.os_command(command)
-        command = "docker ps -a -f status=running  | grep {}".format(self.CONTAINER_NAME)
+        command = "/tmp/jsx container-import -n {}".format(self.CONTAINER_NAME)
+        self.os_command(command)
+        command = "docker ps -a -f status=running | grep {}".format(self.CONTAINER_NAME)
         output, error = self.os_command(command)
         self.assertIn(self.CONTAINER_NAME, output.decode())
 
@@ -164,7 +165,7 @@ class TestInstallationInDocker(BaseTest):
         container_image = output.decode()
 
         self.info("Run container stop ")
-        command = "/tmp/jsx container-stop"
+        command = "/tmp/jsx container-stop -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Run container-clean with new name")
@@ -198,7 +199,7 @@ class TestInstallationInDocker(BaseTest):
         self.info("Run container-install -d ")
         command = "/tmp/jsx container-install -s -n {} -d  ".format(self.CONTAINER_NAME)
         output, error = self.os_command(command)
-        self.assertIn("install succesfull", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
         self.info("Check that new container created with same name and created file doesn't exist")
         command = "ls / "
@@ -228,7 +229,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
-        command = "jsx kosmos"
+        command = "jsx kosmos 'from Jumpscale import j' "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("BCDB INIT DONE", output.decode())
@@ -254,7 +255,7 @@ class TestInstallationInSystem(BaseTest):
         self.os_command(command)
 
         self.info("make sure that jumpscale_generated file is generated again")
-        os.path.exists("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py")
+        self.assertTrue(os.path.exists("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py"))
 
     def Test03_insystem_installation_r_option_no_jsx_before(self):
         """
@@ -273,11 +274,9 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos"
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j' "
         output, error = self.os_command(command)
-        
         self.assertFalse(error)
-
         self.assertIn("BCDB INIT DONE", output.decode())
 
     def Test04_insystem_installation_r_option_jsx_installed_before(self):
@@ -302,9 +301,8 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos"
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j'"
         output, error = self.os_command(command)
-        
         self.assertFalse(error)
         self.assertIn("BCDB INIT DONE", output.decode())
 
@@ -322,19 +320,25 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("use kosmos to create github client, make sure that there is no error")
-        command = "kosmos 'j.clients.github.new(\"test_bcdb_delete_option\", token=\"test_bcdb_delete_option\")'"
+        command = """kosmos 'c=j.clients.github.new("test_bcdb_delete_option", token="test_bcdb_delete_option"); c.save()'"""
         output, error = self.os_command(command)
         self.assertFalse(error)
 
-        self.info("check that the client is exists")
-        command = "kosmos 'j.clients.github.get(\"test_bcdb_delete_option\").name"
+        self.info("check that the client is existing")
+        command = """kosmos 'print(j.clients.github.get("test_bcdb_delete_option").name)'"""
         output, error = self.os_command(command)
-        assert output == "test_bcdb_delete_option"; assert not error
+        self.assertFalse(error)
+        self.assertIn("test_bcdb_delete_option", output)
 
         self.info("use bcdb_system_delete option to delete database, and check if the client still exists or not")
         command = "jsx bcdb-system-delete"
-        output, error =  self.os_command("kosmos 'j.clients.github.get(\"test_bcdb_delete_option\").name")
+        output, error = self.os_command(command)
         self.assertTrue(error) 
+
+        self.info("check that the client is not existing")
+        command = """kosmos 'print(j.clients.github.get("test_bcdb_delete_option").name)'"""
+        output, error = self.os_command(command)
+        self.assertTrue(error)
 
     def Test05_check_option(self):
         """
@@ -354,4 +358,3 @@ class TestInstallationInSystem(BaseTest):
         output, error = self.os_command(command)
         self.assertFalse(error)
 
-        
