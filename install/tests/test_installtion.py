@@ -211,7 +211,7 @@ class TestInstallationInSystem(BaseTest):
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
         output, error = self.jumpscale_installation("install")
         self.assertFalse(error)
-        self.assertIn("install successful", output.decode())
+        self.assertIn("installed successfully", output.decode())
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -280,7 +280,7 @@ class TestInstallationInSystem(BaseTest):
 
         self.assertIn("BCDB INIT DONE", output.decode())
 
-    def Test04__insystem_installation_r_option_jsx_installed_before(self):
+    def Test04_insystem_installation_r_option_jsx_installed_before(self):
         """
         test TC74, TC86
         ** Test installation of Jumpscale using insystem non-interactive and re_install option on Linux or mac OS **
@@ -312,19 +312,19 @@ class TestInstallationInSystem(BaseTest):
         """
 
         self.info("use kosmos to create github client, make sure that there is no error")
-        command = "kosmos 'j.clients.github.new(\"hamada\", token=\"hamada\")'"
+        command = "kosmos 'j.clients.github.new(\"test_bcdb_delete_option\", token=\"test_bcdb_delete_option\")'"
         output, error = self.os_command(command)
-        assert not error
+        self.assertFalse(error)
 
         self.info("check that the client is exists")
-        command = "kosmos 'j.clients.github.get(\"hamada\").name"
+        command = "kosmos 'j.clients.github.get(\"test_bcdb_delete_option\").name"
         output, error = self.os_command(command)
-        assert output == "hamada"; assert not error
+        assert output == "test_bcdb_delete_option"; assert not error
 
         self.info("use bcdb_system_delete option to delete database, and check if the client still exists or not")
         command = "jsx bcdb-system-delete"
-        output, error =  self.os_command("kosmos 'j.clients.github.get(\"hamada\").name")
-        assert error
+        output, error =  self.os_command("kosmos 'j.clients.github.get(\"test_bcdb_delete_option\").name")
+        self.assertTrue(error) 
 
     def Test05_check_option(self):
         """
@@ -337,4 +337,4 @@ class TestInstallationInSystem(BaseTest):
         self.info("test jsx check option ")
         command = "jsx check"
         output, error = self.os_command(command)
-        assert not error
+        self.assertFalse(error)
