@@ -3447,10 +3447,10 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
+            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
             Tools.execute(
                 'ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:%s"' % (MyEnv.config["DIR_HOME"], args["PORT"])
             )
-            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
@@ -3616,8 +3616,7 @@ class DockerContainer:
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             Tools.execute(
-                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
-                % MyEnv.sshagent.key_default
+                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure -s"
             )
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
@@ -3630,7 +3629,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % MyEnv.sshagent.key_default
+            cmd = "cd /tmp;python3 jsx configure -s;python3 jsx install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
