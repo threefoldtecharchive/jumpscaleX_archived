@@ -208,10 +208,7 @@ class TestInstallationInDocker(BaseTest):
 
 class TestInstallationInSystem(BaseTest):
     def setUp(self):
-        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
-        output, error = self.jumpscale_installation("install")
-        self.assertFalse(error)
-        self.assertIn("installed successfully", output.decode())
+        pass
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -225,6 +222,10 @@ class TestInstallationInSystem(BaseTest):
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
         command = "jsx kosmos"
@@ -238,6 +239,10 @@ class TestInstallationInSystem(BaseTest):
         **  test jumpscale inssystem on mac or linux depending on os_type. **
         #. Run jsx generate command, should run successfully, and generate.
         """
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
 
         self.info("Check generate option, using jsx generate cmd")
 
@@ -260,13 +265,8 @@ class TestInstallationInSystem(BaseTest):
         #. Run kosmos ,should succeed
         """
     
-        self.info("Clean the installation")
-        command = "rm -rf /sandbox/ ~/sandbox/ /tmp/jsx /tmp/jumpscale/ /tmp/InstallTools.py"
-        self.os_command(command)
-
-        self.info(
-            "Install jumpscale from {} branch on {} using no_interactive and re-install".format(
-                self.js_branch, self.os_type ))
+        self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
+            self.js_branch, self.os_type ))
 
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
@@ -288,6 +288,11 @@ class TestInstallationInSystem(BaseTest):
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
+        
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
 
         self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
                 self.js_branch, self.os_type ))
@@ -311,6 +316,11 @@ class TestInstallationInSystem(BaseTest):
         #.  destroy; make sure it doesn't exist
         """
 
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
+
         self.info("use kosmos to create github client, make sure that there is no error")
         command = "kosmos 'j.clients.github.new(\"test_bcdb_delete_option\", token=\"test_bcdb_delete_option\")'"
         output, error = self.os_command(command)
@@ -333,8 +343,15 @@ class TestInstallationInSystem(BaseTest):
         #. test that check option is working correctly.  
         #. check option ,ake sure that secret, private key, bcdband kosmos are working fine.
         """
-            
+
+        self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
+        output, error = self.jumpscale_installation("install")
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
+
         self.info("test jsx check option ")
         command = "jsx check"
         output, error = self.os_command(command)
         self.assertFalse(error)
+
+        
