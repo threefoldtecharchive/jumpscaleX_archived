@@ -21,7 +21,7 @@ nosetests-3.4 -v -s test_installtion:TestInstallationInSystem
 you can check the options tests cover from here
 https://docs.google.com/spreadsheets/d/1-VjAoOtl4rasbbTdu1KK_th-lvWeAU_lpRqC0KhoPAs/edit#gid=746161841
 
-### test cases Requirement Traceability Matrix: 
+### Test cases Requirement Traceability Matrix: 
 
 |  **ID** | **Requiements** |  |  |  | **TC ID** | **TC URL** | **TC Title** | **Execute Type** |
 | :---: | :---: | --- | --- | --- | :---: | :---: | :---: | :---: |
