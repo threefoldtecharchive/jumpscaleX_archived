@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .CorexServer import CorexServer
 
-JSConfigs = j.application.JSBaseConfigsClass
+JSConfigs = j.application.JSFactoryConfigsBaseClass
 
 
 class CorexFactory(JSConfigs):

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from .GedisWebsocketServer import GedisWebsocketServer
 
-JSConfigClient = j.application.JSBaseConfigsClass
+JSConfigClient = j.application.JSFactoryConfigsBaseClass
 
 
 class GedisWebsocketFactory(JSConfigClient):
