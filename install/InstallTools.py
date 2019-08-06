@@ -1350,11 +1350,14 @@ class Tools:
                 except KeyError as e:
                     # means the format map did not work,lets fall back on something more failsafe
                     for arg, val in replace_args.items():
+                        assert arg
                         line = line.replace("{%s}" % arg, val)
                 except Exception as e:
-                    j.exceptions.Runtime("failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new)
+                    j.exceptions.Runtime(
+                        "failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new
+                    )
             line = line.replace(">>EMPTYDICT<<", "{}")
-            
+
             return line
 
         for replace_args in args_list:
