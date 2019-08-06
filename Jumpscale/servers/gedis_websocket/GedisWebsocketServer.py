@@ -66,6 +66,10 @@ class Application(WebSocketApplication):
             self.ws.send(j.data.serializers.json.dumps(response))
         elif hasattr(response, "_json"):
             self.ws.send(j.data.serializers.json.dumps(response._ddict_hr))
+        elif isinstance(response, bytes):
+            self.ws.send(response.decode())
+        elif response is None:
+            self.ws.send("")
         else:
             self.ws.send(response)
 
