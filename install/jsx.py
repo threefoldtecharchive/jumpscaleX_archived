@@ -553,6 +553,16 @@ def bcdb_system_delete():
     j.application.bcdb_system_destroy()
 
 
+@click.command()
+@click.option("--name", default="system", help="specify which bcdb you want to fix, if not specified will use all")
+def bcdb_check(name=None):
+    """
+    will erase the indexes and rebuild it from the BCDB original data
+    :return:
+    """
+    j.shell()
+
+
 def _generate(path=None):
     j = jumpscale_get(die=True)
     j.application.generate(path)
@@ -568,7 +578,7 @@ if __name__ == "__main__":
     cli.add_command(wireguard)
     cli.add_command(modules_install, "modules-install")
     cli.add_command(bcdb_system_delete, "bcdb-system-delete")
-    # cli.add_command(bcdb_indexrebuild)
+    cli.add_command(bcdb_check, "bcdb-check")
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     if not IT.DockerFactory.indocker():

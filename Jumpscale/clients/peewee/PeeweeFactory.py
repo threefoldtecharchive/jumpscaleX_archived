@@ -2,7 +2,10 @@ from Jumpscale import j
 from .peeweeClient import PeeweeClient
 
 import importlib
-from peewee import *
+
+# dont use the system one
+# from .peewee import *
+
 import uuid
 
 
@@ -17,7 +20,7 @@ class PeeweeFactory(j.application.JSBaseConfigsClass):
         self.__imports__ = "peewee"
         self.clients = {}
 
-        from peewee import (
+        from .peewee import (
             PrimaryKeyField,
             BlobField,
             Model,

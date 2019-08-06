@@ -1346,8 +1346,6 @@ class Tools:
             try:
                 line = line.format_map(args_new)
             except KeyError as e:
-                raise Tools.exceptions.Input("Cannot replace args in %s" % line, data=args_new, parent_exception=e)
-            except ValueError as e:
                 # means the format map did not work,lets fall back on something more failsafe
                 for arg, val in replace_args.items():
                     line = line.replace("{%s}" % arg, val)
