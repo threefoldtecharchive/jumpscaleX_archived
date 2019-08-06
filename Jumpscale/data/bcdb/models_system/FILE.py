@@ -110,7 +110,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         name = j.sal.fs.pathClean(name)
         new_file.name = name
         new_file.save()
-        dir = self._dir_model.find(name=j.sal.fs.getParent(name))
+        dir = self._dir_model.get_by_name(name=j.sal.fs.getParent(name))
         if len(dir) == 0:
             dir = [self._dir_model.create_empty_dir(j.sal.fs.getParent(name))]
         dir = dir[0]
@@ -129,7 +129,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
         """
         path = j.sal.fs.pathClean(path)
         try:
-            file = self.find(name=path)[0]
+            file = self.get_by_name(name=path)[0]
         except:
             if not create:
                 raise RuntimeError(
@@ -143,21 +143,21 @@ class FILE(j.data.bcdb._BCDBModelClass):
 
     def file_delete(self, path):
         path = j.sal.fs.pathClean(path)
-        file = self.find(name=path)
+        file = self.get_by_name(name=path)
         if not file:
             raise RuntimeError("file with {} does not exist".format(file))
         file = file[0]
         file.delete()
-        parent = j.sal.fs.getDirName(path)
+        parent = j.sal.fs.getParent(path)
         parent = j.sal.fs.pathClean(parent)
-        parent = self._dir_model.find(name=parent)[0]
+        parent = self._dir_model.get_by_name(name=parent)[0]
         parent.files.remove(file.id)
         parent.save()
 
     def file_read(self, path):
         try:
             path = j.sal.fs.pathClean(path)
-            file = self.find(name=path)[0]
+            file = self.get_by_name(name=path)[0]
         except:
             raise RuntimeError("file with path {} does not exist".format(path))
         fs = FileStream(file)
@@ -223,7 +223,11 @@ class FileStream:
         block = next(blocks_generator)
         while block:
             # hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
+<<<<<<< HEAD
             # exists = self._block_model.find(md5=hash)
+=======
+            # exists = self._block_model.get_by_name(md5=hash)
+>>>>>>> development_jumpscale
             # TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
             # so we will disable block caching till we fix this
             if True:

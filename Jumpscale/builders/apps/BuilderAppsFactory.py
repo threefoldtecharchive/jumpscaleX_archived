@@ -16,6 +16,15 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._hub = None
         self._sockexec = None
         self._graphql = None
+        self._threebot = None
+
+    @property
+    def threebot(self):
+        if self._threebot is None:
+            from .BuilderThreebot import BuilderThreebot
+
+            self._threebot = BuilderThreebot()
+        return self._threebot
 
     @property
     def sockexec(self):
@@ -81,6 +90,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
             self._sonic = BuilderSonic()
         return self._sonic
 
+    @property
     def hub(self):
         if self._hub is None:
             from .BuilderHub import BuilderHub

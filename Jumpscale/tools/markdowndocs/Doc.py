@@ -252,7 +252,7 @@ class Doc(j.application.JSBaseClass):
 
     @property
     def markdown_clean_summary(self):
-        c = self.markdown_clean
+        c = self.markdown_source
         lines = c.split("\n")
         counter = 0
         out = ""
@@ -420,7 +420,7 @@ class Doc(j.application.JSBaseClass):
                 md = link.replace_in_txt(md)
 
         dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name) + ".md"
-        j.sal.bcdbfs.file_write(dest, md)
+        j.sal.bcdbfs.file_write(dest, md, append=False)
 
     def _link_exists(self, link):
         for l in self._links:

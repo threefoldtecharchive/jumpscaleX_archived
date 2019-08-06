@@ -615,7 +615,7 @@ class BaseJSException(Exception):
     def __str__(self):
         # raise RuntimeError()
         d = Tools.log(exception=self, stdout=False, replace=True)
-        return d['message']
+        return d["message"]
         # if self.cat:
         #     out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
         # else:
@@ -895,7 +895,6 @@ class Tools:
                 if isinstance(exception, BaseJSException):
                     msg = exception.message
                 else:
-                    Tools.shell()
                     msg = exception.__repr__()
             msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg, 4) + "{RESET}"
             level = 50
@@ -2693,7 +2692,9 @@ class MyEnv:
             secret = secret.encode()
         else:
             if not secret:
-                secret = str(random.randint(1, 100000000))
+                secret = str(random.randint(1, 100000000)).encode()
+            else:
+                secret = secret.encode()
 
         import hashlib
 

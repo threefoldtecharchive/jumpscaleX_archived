@@ -56,7 +56,7 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
         self._forwarder.run()
 
 
-class JSMailForwarderFactory(j.application.JSBaseConfigsClass):
+class JSMailForwarderFactory(j.application.JSFactoryConfigsBaseClass):
     """Factory class
     """
 

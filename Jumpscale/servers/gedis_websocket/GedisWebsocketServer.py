@@ -51,6 +51,9 @@ class Application(WebSocketApplication):
 
         data = json.loads(message)
         commands = data["command"].split(".")
+        if data["command"].casefold() == "system.ping":
+            self.ws.send(j.data.serializers.json.dumps(self.client_gedis.ping()))
+            return
         cl = getattr(self.client_gedis.actors, commands[0])
 
         for attr in commands[1:]:
@@ -59,8 +62,12 @@ class Application(WebSocketApplication):
         args = data.get("args", {})
 
         response = cl(**args)
-
-        self.ws.send(j.data.serializers.json.dumps(response))
+        if isinstance(response, dict):
+            self.ws.send(j.data.serializers.json.dumps(response))
+        elif hasattr(response, "_json"):
+            self.ws.send(j.data.serializers.json.dumps(response._ddict_hr))
+        else:
+            self.ws.send(response)
 
     def on_close(self, reason):
         print(reason)

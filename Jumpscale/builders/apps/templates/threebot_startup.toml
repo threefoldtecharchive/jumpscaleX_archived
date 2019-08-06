@@ -1,0 +1,33 @@
+[startup.threebot]
+name = "bash"
+protected = true #set protected to true to respawn the container if it crashed
+
+[startup.threebot.args]
+script = """
+# start zdb
+tmux new-session -d -s 0-db '/sandbox/bin/zdb';
+# start sonic
+tmux new-session -d -s sonic 'sonic -c /sandbox/sonic_config.cfg';
+"""
+# startup sonic
+[startup.sonic]
+name = "bash"
+
+[startup.sonic.args]
+script = """
+tmux new-session -d -s sonic 'sonic -c /sandbox/sonic_config.cfg';
+"""
+
+# startup openresty
+[startup.openresty]
+name = "core.system"
+
+[startup.openresty.args]
+name = "/sandbox/bin/openresty"
+
+[startup.openresty.args.env]
+LUALIB = "/sandbox/openresty/lualib"
+LUA_PATH = "?.lua;/sandbox/openresty/lualib/?/init.lua;/sandbox/openresty/lualib/?.lua;/sandbox/openresty/lualib/?/?.lua;/sandbox/openresty/lualib/?/core.lua;/sandbox/openresty/lapis/?.lua"
+LUA_CPATH = "/sandbox/openresty/lualib/?.so;./?.so"
+LAPIS_OPENRESTY = "/sandbox/bin/openresty"
+LD_LIBRARY_PATH = "/sandbox/lib/"

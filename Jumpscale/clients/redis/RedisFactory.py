@@ -54,6 +54,7 @@ class RedisFactory(j.application.JSBaseClass):
         ssl=False,
         ssl_certfile=None,
         ssl_keyfile=None,
+        ssl_cert_reqs="none",
         timeout=10,
         ping=True,
         die=True,
@@ -108,6 +109,7 @@ class RedisFactory(j.application.JSBaseClass):
                     ssl_certfile=ssl_certfile,
                     ssl_keyfile=ssl_keyfile,
                     unix_socket_path=unixsocket,
+                    ssl_cert_reqs=ssl_cert_reqs,
                     # socket_timeout=timeout,
                     **args,
                 )

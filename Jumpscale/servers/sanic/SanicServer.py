@@ -13,7 +13,7 @@ class SanicServer(JSConfigClient):
            default_path = "" (S)
            """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._default_client = None
         self.path = os.path.dirname(os.path.abspath(__file__))
         print(self.path)
