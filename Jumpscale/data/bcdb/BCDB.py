@@ -23,6 +23,7 @@
 import gevent
 from Jumpscale.clients.stor_zdb.ZDBClientBase import ZDBClientBase
 from Jumpscale.clients.stor_rdb.RDBClient import RDBClient
+from Jumpscale.clients.stor_sqlite.DBSQLite import DBSQLite
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -31,7 +32,6 @@ from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
-from .DBSQLite import DBSQLite
 
 JSBASE = j.application.JSBaseClass
 
@@ -248,7 +248,8 @@ class BCDB(j.application.JSBaseClass):
     @property
     def sqlclient(self):
         if self._sqlclient is None:
-            self._sqlclient = DBSQLite(self)
+            dbpath = j.sal.fs.joinPaths(self._data_dir, "sqlite.db")
+            self._sqlclient = DBSQLite(dbpath)
         return self._sqlclient
 
     def redis_server_start(self, port=6380, secret="123456"):
