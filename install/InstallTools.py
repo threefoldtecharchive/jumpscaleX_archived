@@ -1343,15 +1343,18 @@ class Tools:
                     args_new[key] = val
 
         def process_line(line, args_new):
-            try:
-                line = line.format_map(args_new)
-            except Exception as e:
-                # means the format map did not work,lets fall back on something more failsafe
-                for arg, val in replace_args.items():
-                    line = line.replace("{%s}" % arg, val)
-            except Exception as e:
-                print("error here :", e)
-                
+            line = line.replace("{}", ">>EMPTYDICT<<")
+            if line.count("{") == line.count("}"):
+                try:
+                    line = line.format_map(args_new)
+                except KeyError as e:
+                    # means the format map did not work,lets fall back on something more failsafe
+                    for arg, val in replace_args.items():
+                        line = line.replace("{%s}" % arg, val)
+                except Exception as e:
+                    j.exceptions.Runtime("failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new)
+            line = line.replace(">>EMPTYDICT<<", "{}")
+            
             return line
 
         for replace_args in args_list:
