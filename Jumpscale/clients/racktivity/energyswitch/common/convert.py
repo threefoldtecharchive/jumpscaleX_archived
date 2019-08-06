@@ -31,7 +31,7 @@ def string2bin(data, size=None):
         data = data[1]
     datalen = len(data)
     if datalen > size:
-        raise ValueError("Data %s bigger then size" % repr(data))
+        raise j.exceptions.Value("Data %s bigger then size" % repr(data))
     data += "\x00" * (size - datalen)
     return data
 
@@ -49,7 +49,7 @@ def bin2value(data, val_def, check_error_byte=True):
     """Convert a byte-string to the data-type defined in 'val_def'."""
 
     if data is None:
-        raise ValueError("Invalid data")
+        raise j.exceptions.Value("Invalid data")
     if check_error_byte:
         errorcode = bin2int(data[:1])
         data = data[1:]
@@ -105,7 +105,7 @@ def value2bin(data, val_def):
     """Convert data with its type defined in 'val_def' to a byte-string."""
 
     if data is None:
-        raise ValueError("Invalid data")
+        raise j.exceptions.Value("Invalid data")
     # valdef represent the return of a get call, setting will be differeot for NumberWithTs types
     #    if val_def.type.endswith("NUMBER_WITH_TS"):
     #        val_def.size = 2
@@ -219,7 +219,7 @@ def int2bin(value, size, signed):
 
     types = {1: "b", 2: "h", 4: "i", 8: "q"}
     if size not in types:
-        raise ValueError("Invalid size")
+        raise j.exceptions.Value("Invalid size")
     _type = types[size]
     if not signed:
         _type = _type.upper()

@@ -116,7 +116,7 @@ class FarmerRegistration:
     @staticmethod
     def register(farmer):
         if not isinstance(farmer, Farmer):
-            raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
+            raise j.exceptions.Value("farmer need to be a Farmer object, not %s" % type(farmer))
         farmer.save()
 
     @staticmethod

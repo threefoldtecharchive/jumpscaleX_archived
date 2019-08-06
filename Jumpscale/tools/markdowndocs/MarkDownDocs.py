@@ -262,7 +262,7 @@ class MarkDownDocs(j.application.JSBaseClass):
     def def_get(self, name):
         name = j.core.text.strip_to_ascii_dense(name)
         if name not in self.defs:
-            raise RuntimeError("cannot find def:%s" % name)
+            raise j.exceptions.Base("cannot find def:%s" % name)
         return self.defs[name]
 
     def docsite_get(self, name, die=True):
@@ -283,7 +283,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         :param sonic_server: NOT USED YET #TODO:*1
         :return:
         """
-        raise RuntimeError("no longer ok, need to use j.servers.openresty")
+        raise j.exceptions.Base("no longer ok, need to use j.servers.openresty")
         url = "https://github.com/threefoldtech/OpenPublish"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -340,10 +340,11 @@ class MarkDownDocs(j.application.JSBaseClass):
         examples = j.tools.markdowndocs.load(url, name="examples")
         examples.write()
 
-        j.servers.threebot.get('test').start(background=True)
+        j.servers.threebot.get("test").start(background=True)
 
         import webbrowser
-        webbrowser.open('http://localhost:8090/wiki/examples#/test_include')
+
+        webbrowser.open("http://localhost:8090/wiki/examples#/test_include")
 
     def test(self, watch=False):
         """

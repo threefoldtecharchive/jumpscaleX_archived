@@ -39,7 +39,7 @@ class KVSTarantool(j.application.JSBaseClass):
     def get(self, key):
         resp = self._call("get", key)
         if len(resp.data) <= 1 and len(resp.data[0]) > 2:
-            raise KeyError("value for %s not found" % key)
+            raise j.exceptions.NotFound("value for %s not found" % key)
         # taarantool doesn't support binary value
         value = resp.data[0][1]
         if isinstance(value, (str, bytes)):

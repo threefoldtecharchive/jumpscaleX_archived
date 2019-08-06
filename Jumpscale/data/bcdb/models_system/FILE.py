@@ -223,9 +223,13 @@ class FileStream:
         block = next(blocks_generator)
         while block:
             # hash = j.data.hash.md5_string(str(block) + str(self._vfile.id))
+<<<<<<< HEAD
+            # exists = self._block_model.find(md5=hash)
+=======
             # exists = self._block_model.get_by_name(md5=hash)
-            #TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
-            #so we will disable block caching till we fix this
+>>>>>>> development_jumpscale
+            # TODO: seems like there is a bug in bcdb that if you added the same id to a list multible times it will exxist only once
+            # so we will disable block caching till we fix this
             if True:
                 b = self._block_model.new()
                 b.md5 = hash

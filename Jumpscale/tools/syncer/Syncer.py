@@ -52,11 +52,11 @@ class Syncer(j.application.JSBaseConfigClass):
         elif isinstance(sshclients, str):
             name = sshclients
             if not j.clients.ssh.exists(name=name):
-                raise RuntimeError("cannot find sshclient:%s for syncer:%s" % (name, self))
+                raise j.exceptions.Base("cannot find sshclient:%s for syncer:%s" % (name, self))
 
             cl = j.clients.ssh.get(name=name)
         else:
-            raise RuntimeError("only support name of sshclient or the sshclient instance itself")
+            raise j.exceptions.Base("only support name of sshclient or the sshclient instance itself")
 
         if cl.name not in self.sshclients:
             self.sshclients[cl.name] = cl
@@ -100,7 +100,7 @@ class Syncer(j.application.JSBaseConfigClass):
                 src = items[0]
                 dst = items[1]
             else:
-                raise RuntimeError("can only have 2 parts")
+                raise j.exceptions.Base("can only have 2 parts")
             src = j.core.tools.text_replace(src)
             if not executor:
                 dst = None
@@ -117,7 +117,7 @@ class Syncer(j.application.JSBaseConfigClass):
             if src.startswith(src_model):
                 dest = j.sal.fs.joinPaths(dest_model, j.sal.fs.pathRemoveDirPart(src, src_model))
                 return dest
-        raise RuntimeError("did not find:%s" % src)
+        raise j.exceptions.Base("did not find:%s" % src)
 
     def monitor(self):
         from .MyFileSystemEventHandler import FileSystemMonitor
@@ -193,7 +193,7 @@ class Syncer(j.application.JSBaseConfigClass):
                                 continue
                             else:
                                 error = True
-                                # raise RuntimeError(e)
+                                # raise j.exceptions.Base(e)
                     else:
                         raise j.exceptions.RuntimeError(
                             "action not understood in filesystemhandler on sync:%s" % action

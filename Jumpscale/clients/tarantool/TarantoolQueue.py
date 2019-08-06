@@ -22,13 +22,13 @@ class TarantoolQueue(j.application.JSBaseClass):
         self.db = self.client.db
         self.name = name
         if ttl != 0:
-            raise RuntimeError("not implemented")
+            raise j.exceptions.Base("not implemented")
         else:
             try:
                 self.db.eval('queue.create_tube("%s","fifottl")' % name)
             except Exception as e:
                 if "already exists" not in str(e):
-                    raise RuntimeError(e)
+                    raise j.exceptions.Base(e)
 
     def qsize(self):
         """Return the approximate size of the queue."""

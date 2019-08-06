@@ -24,13 +24,13 @@ class ED25519Signature(BinaryData):
     def __init__(self, value=None, as_array=False):
         super().__init__(value, fixed_size=ED25519Signature.SIZE, strencoding="hex")
         if not isinstance(as_array, bool):
-            raise TypeError("as_array has to be of type bool, not type {}".format(type(as_array)))
+            raise j.exceptions.Value("as_array has to be of type bool, not type {}".format(type(as_array)))
         self._as_array = as_array
 
     @classmethod
     def from_json(cls, obj, as_array=False):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "ed25519 signature is expected to be an encoded string when part of a JSON object, not {}".format(
                     type(obj)
                 )
@@ -78,15 +78,17 @@ class SignatureRequest:
     def __init__(self, unlockhash, input_hash_gen, callback):
         # set defined properties
         if not isinstance(unlockhash, UnlockHash):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "signature request requires an unlock hash of Type UnlockHash, not: {}".format(type(unlockhash))
             )
         self._unlockhash = unlockhash
         if not callable(input_hash_gen):
-            raise TypeError("signature request requires a generator function with the signature `f(PublicKey) -> Hash")
+            raise j.exceptions.Value(
+                "signature request requires a generator function with the signature `f(PublicKey) -> Hash"
+            )
         self._input_hash_gen = input_hash_gen
         if not isinstance(callback, SignatureCallbackBase):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "signature request requires a callback of Type SignatureCallbackBase, not: {}".format(type(unlockhash))
             )
         self._callback = callback
@@ -116,7 +118,9 @@ class SignatureRequest:
         if isinstance(input_hash, (str, bytearray, bytes)):
             input_hash = Hash(value=input_hash)
         elif not isinstance(input_hash, Hash):
-            raise TypeError("signature request requires an input hash of Type Hash, not: {}".format(type(input_hash)))
+            raise j.exceptions.Value(
+                "signature request requires an input hash of Type Hash, not: {}".format(type(input_hash))
+            )
         return input_hash
 
     def signature_fulfill(self, public_key, signature):
@@ -131,12 +135,12 @@ class SignatureRequest:
 
         # ensure public key is the key of the wallet who owns this request
         if not isinstance(public_key, PublicKey):
-            raise TypeError("public key is expected to be of type PublicKey, not {}".format(type(public_key)))
+            raise j.exceptions.Value("public key is expected to be of type PublicKey, not {}".format(type(public_key)))
         address = str(public_key.unlockhash)
         if (
             self._unlockhash.type != UnlockHashType.NIL and self.wallet_address != address
         ):  # only check if the request is not using a NIL Condition
-            raise ValueError(
+            raise j.exceptions.Value(
                 "signature request cannot be fulfilled using address {}, expected address {}".format(
                     address, self.wallet_address
                 )
@@ -161,7 +165,7 @@ class FulfillmentFactory(j.application.JSBaseClass):
             return FulfillmentMultiSignature.from_json(obj)
         if ft == _FULFILLMENT_TYPE_ATOMIC_SWAP:
             return FulfillmentAtomicSwap.from_json(obj)
-        raise ValueError("unsupport fulfillment type {}".format(ft))
+        raise j.exceptions.Value("unsupport fulfillment type {}".format(ft))
 
     def from_condition(self, condition):
         """
@@ -176,7 +180,9 @@ class FulfillmentFactory(j.application.JSBaseClass):
             return FulfillmentSingleSignature()
         if isinstance(icondition, ConditionMultiSignature):
             return FulfillmentMultiSignature()
-        raise TypeError("invalid condition type {} cannot be used to create a fulfillment".format(type(condition)))
+        raise j.exceptions.Value(
+            "invalid condition type {} cannot be used to create a fulfillment".format(type(condition))
+        )
 
     def single_signature_new(self, pub_key=None, signature=None):
         """
@@ -314,7 +320,7 @@ class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
         ff = cls()
         t = obj.get("type", 0)
         if ff.type != t:
-            raise ValueError("invalid fulfillment type {}, expected it to be of type {}".format(t, ff.type))
+            raise j.exceptions.Value("invalid fulfillment type {}, expected it to be of type {}".format(t, ff.type))
         ff.from_json_data_object(obj.get("data", {}))
         return ff
 
@@ -401,7 +407,7 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
             self._pub_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as FulfillmentSingleSignature's public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -443,14 +449,14 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(
                     type(input_hash_func)
                 )
             )
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition))
             )
         unlockhash = parent_condition.unlockhash
@@ -467,7 +473,7 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     def is_fulfilled(self, parent_condition):
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition))
             )
         return self._signature is not None
@@ -505,7 +511,7 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
         spk = str(public_key)
         for pair in self._pairs:
             if str(pair.public_key) == spk:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "cannot add public_key {} as it already exists within a pair of this MultiSignature Fulfillment".format(
                         spk
                     )
@@ -531,14 +537,14 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(
                     type(input_hash_func)
                 )
             )
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, ConditionMultiSignature):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition))
             )
         requests = []
@@ -557,7 +563,7 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
     def is_fulfilled(self, parent_condition):
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, ConditionMultiSignature):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition))
             )
         return len(self._pairs) >= parent_condition.required_signatures
@@ -592,7 +598,7 @@ class PublicKeySignaturePair(BaseDataTypeClass):
             self._public_key = None
             return
         if not isinstance(pk, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as PublicKeySignaturePair's public key (expected type: PublicKey)".format(
                     type(pk)
                 )
@@ -661,7 +667,7 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
             self._pub_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as FulfillmentAtomicSwap's public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -722,13 +728,13 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(
                     type(input_hash_func)
                 )
             )
         if not isinstance(parent_condition, ConditionAtomicSwap):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition))
             )
         requests = []
@@ -748,7 +754,7 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
 
     def is_fulfilled(self, parent_condition):
         if not isinstance(parent_condition, ConditionAtomicSwap):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition))
             )
         return self._signature is not None

@@ -29,11 +29,13 @@ class ZOSVB(ZOS):
                     if nic["addrs"][0]["addr"].startswith("127.0.0.1"):
                         self._zos_private_address = nic["addrs"][0]["addr"].split("/")[0]
                         if not j.sal.nettools.pingMachine(self._zos_private_address):
-                            raise RuntimeError("could not reach private addr:%s of VB ZOS" % self._zos_private_address)
+                            raise j.exceptions.Base(
+                                "could not reach private addr:%s of VB ZOS" % self._zos_private_address
+                            )
                         self.address_private = self._zos_private_address
                         self.save()
                         return self._zos_private_address
-                raise RuntimeError("could not find private addr of virtualbox for zos")
+                raise j.exceptions.Base("could not find private addr of virtualbox for zos")
         return self._zos_private_address
 
     def _get_free_port(self):

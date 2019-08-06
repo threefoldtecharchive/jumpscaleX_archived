@@ -24,4 +24,4 @@ class LogDumper(j.application.JSBaseClass):
         """
         recieve log from MongoDumper
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()

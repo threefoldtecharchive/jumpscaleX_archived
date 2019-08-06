@@ -39,7 +39,7 @@ class builder_method(object):
         zhub_client = kwargs.get("zhub_client")
         if not zhub_client and kwargs.get("flist_create"):
             if not j.clients.zhub.exists(name="main"):
-                raise RuntimeError("cannot find main zhub client")
+                raise j.exceptions.Base("cannot find main zhub client")
 
             # verifying the client
             zhub_client = j.clients.zhub.get(name="main")
@@ -354,7 +354,7 @@ class BuilderBaseClass(BaseClass):
         if replace:
             cmd = self._replace(cmd, args=args)
         if cmd.strip() == "":
-            raise RuntimeError("cmd cannot be empty")
+            raise j.exceptions.Base("cmd cannot be empty")
 
         cmd = "cd /tmp/\n. %s\n%s" % (self.profile.profile_path, cmd)
         name = self.__class__._name
@@ -590,13 +590,13 @@ class BuilderBaseClass(BaseClass):
         - will automatically call start() at start
         - is optional
         """
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")
 
     def test_api(self, ipaddr="localhost"):
         """
         - will test the api on specified ipaddr e.g. rest calls, tcp calls, port checks, ...
         """
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")
 
     def test_zos(self, zhub_client, zos_client):
         """
@@ -607,4 +607,4 @@ class BuilderBaseClass(BaseClass):
         - will call .test_api() with ip addr of the container
 
         """
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")

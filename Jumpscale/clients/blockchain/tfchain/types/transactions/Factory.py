@@ -82,7 +82,7 @@ class TransactionFactory(j.application.JSBaseClass):
         if isinstance(obj, (str, bytes, bytearray)):
             obj = j.data.serializers.json.loads(obj)
         if not isinstance(obj, dict):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "only a dictionary or JSON-encoded dictionary is supported as input: type {} is not supported",
                 type(obj),
             )

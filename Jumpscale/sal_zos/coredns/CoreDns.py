@@ -60,7 +60,7 @@ class Coredns(Service):
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
-            raise RuntimeError("Failed to get zt ip for coredns {}".format(self.name))
+            raise j.exceptions.Base("Failed to get zt ip for coredns {}".format(self.name))
 
     def create_config(self):
         """
@@ -95,4 +95,4 @@ class Coredns(Service):
         job = self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
-            raise RuntimeError("Failed to start CoreDns server {}: {}".format(self.name, result.stderr))
+            raise j.exceptions.Base("Failed to start CoreDns server {}: {}".format(self.name, result.stderr))

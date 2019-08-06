@@ -29,7 +29,7 @@ class TransactionV1(TransactionBaseClass):
 
         tv = obj.get("version", -1)
         if TransactionVersion.LEGACY != tv:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "legacy v0 transaction is expected to be of version {}, not version {}".format(
                     TransactionVersion.LEGACY, tv
                 )
@@ -37,7 +37,9 @@ class TransactionV1(TransactionBaseClass):
         txn = cls()
 
         if "data" not in obj:
-            raise ValueError("no data object found in Legacy Transaction (v{})".format(TransactionVersion.LEGACY))
+            raise j.exceptions.Value(
+                "no data object found in Legacy Transaction (v{})".format(TransactionVersion.LEGACY)
+            )
         txn_data = obj["data"]
         if "coininputs" in txn_data:
             for legacy_ci_info in txn_data["coininputs"] or []:
@@ -212,7 +214,7 @@ class TransactionV1(TransactionBaseClass):
         elif isinstance(value, str):
             value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
             )
         self._data = BinaryData(value=value, strencoding="base64")

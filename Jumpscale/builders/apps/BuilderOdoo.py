@@ -99,7 +99,7 @@ class BuilderOdoo(j.builders.system._BaseClass):
         #     "sudo -H -u odoouser python3 /sandbox/apps/odoo/odoo/odoo-bin -c {DIR_CFG}/odoo.conf"
         # )
         if not self.dbname:
-            raise ValueError("invalid DB Name, use set_dbname with the correct database")
+            raise j.exceptions.Value("invalid DB Name, use set_dbname with the correct database")
 
         search = j.sal.process.execute(
             """psql -h localhost -U postgres \

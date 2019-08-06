@@ -203,7 +203,7 @@ class JSBase:
                         if self._key.endswith(finditem[1:]):
                             return True
                     else:
-                        raise RuntimeError("find item can only have * at start or at end")
+                        raise j.exceptions.Base("find item can only have * at start or at end")
                 else:
                     try:
                         if self._location == finditem:
@@ -368,7 +368,7 @@ class JSBase:
     def __check(self):
         for key in self.__dict__.keys():
             if key not in self.__class__._names_properties_:
-                raise RuntimeError("a property was inserted which should not be there")
+                raise j.exceptions.Base("a property was inserted which should not be there")
 
     ################
 
@@ -455,8 +455,6 @@ class JSBase:
                     logdict["context"] = ""
                     pass  # TODO:*1 is not good
             logdict["cat"] = cat
-
-            logdict["use_custom_printer"] = j.application._in_autocomplete
 
             logdict["data"] = data
             if data and isinstance(data, dict):
@@ -619,7 +617,7 @@ class JSBase:
                 if item.id == id:
                     return item
             else:
-                raise RuntimeError("need to specify name or id")
+                raise j.exceptions.Base("need to specify name or id")
         return None
 
     def _dataprops_names_get(self, filter=None):
@@ -747,7 +745,7 @@ class JSBase:
 
         out += "{RESET}"
 
-        out = j.core.tools.text_replace(out, ignore_error=True)
+        out = j.core.tools.text_replace(out, check_no_args_left=False)
         print(out)
 
         # TODO: *1 dirty hack, the ansi codes are not printed, need to check why

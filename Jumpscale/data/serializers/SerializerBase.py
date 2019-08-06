@@ -26,13 +26,13 @@ class SerializerBase(j.application.JSBaseClass):
 #         JSBASE.__init__(self)
 #
 #     def dump(self, filepath, obj):
-#         raise RuntimeError("should not come here")
+#         raise j.exceptions.Base("should not come here")
 #
 #     def load(self, path):
-#         raise RuntimeError("should not come here")
+#         raise j.exceptions.Base("should not come here")
 #
 #     def dumps(self, val):
-#         raise RuntimeError("should not come here")
+#         raise j.exceptions.Base("should not come here")
 #
 #     def loads(self, data):
-#         raise RuntimeError("should not come here")
+#         raise j.exceptions.Base("should not come here")

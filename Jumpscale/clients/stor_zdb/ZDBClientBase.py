@@ -33,7 +33,7 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
         else:
 
             if self.nsname in ["default", "system"]:
-                raise RuntimeError("a non admin namespace cannot be default or system")
+                raise j.exceptions.Base("a non admin namespace cannot be default or system")
 
             # DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
             # only go inside namespace if not in admin mode
@@ -66,7 +66,7 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
 
     def delete(self, key):
         if not key:
-            raise ValueError("key must be provided")
+            raise j.exceptions.Value("key must be provided")
         self.redis.execute_command("DEL", key)
 
     def flush(self, meta=None):

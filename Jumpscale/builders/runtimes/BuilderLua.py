@@ -287,6 +287,8 @@ class BuilderLua(j.builders.system._BaseClass):
         j.builders.web.openresty.sandbox()
 
         bins = ["lua", "lapis", "moon", "moonc"]
+        # bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua", "lapis", "moon", "moonc"]
+        # TODO: this was the original, we prob need to copy more
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
@@ -316,7 +318,7 @@ class BuilderLua(j.builders.system._BaseClass):
                 "git@github.com:threefoldtech/sandbox_osx.git"
             )
         else:
-            raise RuntimeError("only ubuntu & osx support")
+            raise j.exceptions.Base("only ubuntu & osx support")
 
         dest = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
             "git@github.com:threefoldtech/sandbox_base.git"
@@ -329,7 +331,7 @@ class BuilderLua(j.builders.system._BaseClass):
             elif j.sal.fs.getFileExtension(item) == "lua":
                 d2 = dest
             else:
-                raise RuntimeError(item)
+                raise j.exceptions.Base(item)
             dir_dest_full = j.sal.fs.getDirName(self.tools.joinpaths(d2, rdest))
             self.tools.dir_ensure(dir_dest_full)
             dest_full = self.tools.joinpaths(d2, rdest)

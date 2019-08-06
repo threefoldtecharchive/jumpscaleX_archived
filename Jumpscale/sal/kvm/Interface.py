@@ -76,7 +76,7 @@ class Interface(BaseKVMComponent):
         if self.ovs:
             return self.controller.executor.execute("ovs-vsctl del-port %s %s" % (self.bridge.name, self.name))
         else:
-            raise NotImplementedError("delete on non ovs network is not supported")
+            raise j.exceptions.NotImplemented("delete on non ovs network is not supported")
 
     def stop(self):
         return NotImplementedError()
@@ -158,4 +158,4 @@ class Interface(BaseKVMComponent):
                 "ovs-vsctl set interface %s ingress_policing_burst=%d" % (self.name, burst)
             )
         else:
-            raise NotImplementedError("qos for std bridge not implemeted")
+            raise j.exceptions.NotImplemented("qos for std bridge not implemeted")

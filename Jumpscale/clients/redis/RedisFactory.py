@@ -54,7 +54,7 @@ class RedisFactory(j.application.JSBaseClass):
         ssl=False,
         ssl_certfile=None,
         ssl_keyfile=None,
-        ssl_cert_reqs=u'none',
+        ssl_cert_reqs="none",
         timeout=10,
         ping=True,
         die=True,
@@ -139,7 +139,7 @@ class RedisFactory(j.application.JSBaseClass):
                     if die == False:
                         return None
                     else:
-                        raise RuntimeError("Redis on %s:%s did not answer" % (ipaddr, port))
+                        raise j.exceptions.Base("Redis on %s:%s did not answer" % (ipaddr, port))
                 else:
                     raise e
 

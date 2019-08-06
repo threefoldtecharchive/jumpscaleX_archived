@@ -82,7 +82,7 @@ class BuilderSystemPackage(j.builders.system._BaseClass):
         self._log_info("packages upgrade")
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             if distupgrade:
-                raise NotImplementedError()
+                raise j.exceptions.NotImplemented()
                 # return self._apt_get("dist-upgrade")
             else:
                 self._apt_get("upgrade -y")

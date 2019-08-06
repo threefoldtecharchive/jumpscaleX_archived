@@ -18,9 +18,11 @@ class AtomicSwapContract:
         Creates a ReadOnly AtomicSwap contract for consumption purposes.
         """
         if not isinstance(coinoutput, CoinOutput):
-            raise TypeError("expected coin output to be a CoinOutput, not to be of type {}".format(type(coinoutput)))
+            raise j.exceptions.Value(
+                "expected coin output to be a CoinOutput, not to be of type {}".format(type(coinoutput))
+            )
         if not isinstance(coinoutput.condition, ConditionAtomicSwap):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "expected an atomic swap condition for the CoinOutput, not a condition of type {}".format(
                     type(coinoutput.condition)
                 )
@@ -29,19 +31,21 @@ class AtomicSwapContract:
         self._condition = coinoutput.condition
         self._value = coinoutput.value
         if not isinstance(unspent, bool):
-            raise TypeError("unspent status is expected to be of type bool, not {}".format(type(unspent)))
+            raise j.exceptions.Value("unspent status is expected to be of type bool, not {}".format(type(unspent)))
         self._unspent = unspent
         if current_timestamp is None:
             current_timestamp = int(datetime.now().timestamp())
         elif not isinstance(current_timestamp, int):
-            raise TypeError("current timestamp has to be of type integer, not {}".format(type(current_timestamp)))
+            raise j.exceptions.Value(
+                "current timestamp has to be of type integer, not {}".format(type(current_timestamp))
+            )
         elif current_timestamp <= 0:
             current_timestamp = int(datetime.now().timestamp())
         self._current_timestamp = current_timestamp
 
     def __eq__(self, other):
         if not isinstance(other, AtomicSwapContract):
-            raise TypeError("other is expected to ben AtomicSwapContract as well")
+            raise j.exceptions.Value("other is expected to ben AtomicSwapContract as well")
         return (
             self.unspent == other.unspent
             and (self.outputid == other.outputid)

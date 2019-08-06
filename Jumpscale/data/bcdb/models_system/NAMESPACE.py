@@ -27,4 +27,4 @@ class NAMESPACE(j.data.bcdb._BCDBModelClass):
 
     @property
     def acl(self):
-        raise RuntimeError("cannot modify acl object in acl object")
+        raise j.exceptions.Base("cannot modify acl object in acl object")

@@ -33,14 +33,13 @@ def load_install_tools(branch=None):
 
             with urlopen(url) as resp:
                 if resp.status != 200:
-                    raise RuntimeError("fail to download InstallTools.py")
+                    raise j.exceptions.Base("fail to download InstallTools.py")
                 with open(path, "w+") as f:
                     f.write(resp.read().decode("utf-8"))
                 print("DOWNLOADED INSTALLTOOLS TO %s" % path)
 
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
-    sys.excepthook = IT.my_excepthook
     IT.MyEnv.init()
     # if path.find("/code/") != -1:  # means we are getting the installtools from code dir
     #     check_branch(IT)
@@ -554,6 +553,16 @@ def bcdb_system_delete():
     j.application.bcdb_system_destroy()
 
 
+@click.command()
+@click.option("--name", default="system", help="specify which bcdb you want to fix, if not specified will use all")
+def bcdb_check(name=None):
+    """
+    will erase the indexes and rebuild it from the BCDB original data
+    :return:
+    """
+    j.shell()
+
+
 def _generate(path=None):
     j = jumpscale_get(die=True)
     j.application.generate(path)
@@ -569,7 +578,7 @@ if __name__ == "__main__":
     cli.add_command(wireguard)
     cli.add_command(modules_install, "modules-install")
     cli.add_command(bcdb_system_delete, "bcdb-system-delete")
-    # cli.add_command(bcdb_indexrebuild)
+    cli.add_command(bcdb_check, "bcdb-check")
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     if not IT.DockerFactory.indocker():

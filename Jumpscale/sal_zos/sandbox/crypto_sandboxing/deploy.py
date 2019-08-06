@@ -34,7 +34,7 @@ def tft_wallet_unlock(prefab, passphrase):
     cmd = 'curl -A "Rivine-Agent" "localhost:23110/wallet"'
     rc, out, err = prefab.core.run(cmd, die=False, showout=False)
     if rc:
-        raise RuntimeError("Failed to unlock tft wallet. Error {}".format(err))
+        raise j.exceptions.Base("Failed to unlock tft wallet. Error {}".format(err))
     json_out = json.loads(out)
     if json_out.get("unlocked") is False and json_out.get("encrypted") is True:
         cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "localhost:23110/wallet/unlock"'.format(passphrase)
@@ -42,7 +42,7 @@ def tft_wallet_unlock(prefab, passphrase):
         if out:
             stdout_error = json.loads(out).get("message")
             if stdout_error:
-                raise RuntimeError("Failed to unlock wallet. Error {}".format(stdout_error))
+                raise j.exceptions.Base("Failed to unlock wallet. Error {}".format(stdout_error))
 
 
 def tft_wallet_init(prefab, passphrase, recovery_seed=None):
@@ -54,7 +54,7 @@ def tft_wallet_init(prefab, passphrase, recovery_seed=None):
     cmd = 'curl -A "Rivine-Agent" "localhost:23110/wallet"'
     rc, out, err = prefab.core.run(cmd, die=False, showout=False)
     if rc:
-        raise RuntimeError("Failed to unlock tft wallet. Error {}".format(err))
+        raise j.exceptions.Base("Failed to unlock tft wallet. Error {}".format(err))
     json_out = json.loads(out)
     cmd_data = '--data "passphrase={}"'
     if json_out.get("unlocked") is False and json_out.get("encrypted") is False:
@@ -66,7 +66,7 @@ def tft_wallet_init(prefab, passphrase, recovery_seed=None):
         cmd = 'curl -A "Rivine-Agent" {} "localhost:23110/wallet/init"'.format(cmd_data)
         rc, out, err = prefab.core.run(cmd, die=False, showout=False)
         if rc:
-            raise RuntimeError("Failed to initialize tft wallet. Error {}".format(err))
+            raise j.exceptions.Base("Failed to initialize tft wallet. Error {}".format(err))
 
 
 def check_tfchain_synced(prefab, height_threeshold=10):
@@ -176,7 +176,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     try:
         task.wait(die=True)
     except Exception as ex:
-        raise RuntimeError(f"Failed to create a VM for TFT. Error: {ex}")
+        raise j.exceptions.Base(f"Failed to create a VM for TFT. Error: {ex}")
 
     timeout = 5 * 60
     tft_node_prefab = None
@@ -191,7 +191,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
             timeout -= 30
 
     if tft_node_prefab is None:
-        raise RuntimeError(
+        raise j.exceptions.Base(
             "Failed to establish a connection to {} port: {}".format(zos_node_name, tft_node_data["ports"][0]["source"])
         )
 
@@ -242,7 +242,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
     task = btc_node_srv.schedule_action("install")
     task.wait()
     if task.state != "ok":
-        raise RuntimeError("Failed to create a VM for BTC")
+        raise j.exceptions.Base("Failed to create a VM for BTC")
 
     timeout = 5 * 60
     btc_node_prefab = None
@@ -256,7 +256,7 @@ def create_blockchain_zos_vms(zos_node_name="main", sshkeyname=None):
             timeout -= 30
 
     if btc_node_prefab is None:
-        raise RuntimeError(
+        raise j.exceptions.Base(
             "Failed to establish a connection to {} port: {}".format(zos_node_name, btc_node_data["ports"][0]["source"])
         )
 
@@ -369,7 +369,7 @@ def create_packet_zos(
             break
 
     if not timeout:
-        raise RuntimeError("Z-node robot is not accessible")
+        raise j.exceptions.Base("Z-node robot is not accessible")
 
     try:
         create_blockchain_zos_vms(zos_node_name=zos_node_name, sshkeyname=sshkeyname)
@@ -390,7 +390,7 @@ def main():
     zt_netid_envvar = "ZT_NET_ID"
     zt_netid = os.environ.get(zt_netid_envvar)
     if zt_netid is None:
-        raise RuntimeError("Environtment variable {} is not set".format(zt_netid_envvar))
+        raise j.exceptions.Base("Environtment variable {} is not set".format(zt_netid_envvar))
     sshkeyname = os.environ.get("SSHKEY_NAME")
     zt_client_instance = os.environ.get("ZT_CLIENT_INSTANCE", "main")
     packet_client_instance = os.environ.get("PACKET_CLIENT_INSTANCE", "main")

@@ -84,7 +84,7 @@ class S3Client(JSConfigBase):
         :rtype: Object etag computed by the minio server.
         """
         if not j.sal.fs.exists(file_path):
-            raise ValueError("file: %s not found" % file_path)
+            raise j.exceptions.Value("file: %s not found" % file_path)
         return self.client.fput_object(bucket_name, object_name, file_path, content_type, meta_data)
 
     def download(self, bucket_name, object_name, file_path):

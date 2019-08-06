@@ -23,7 +23,7 @@ class DHCP:
         self.container.client.system(DNSMASQ, id="dhcp.{}".format(self.container.name))
         # check if command is listening for dhcp
         if not j.tools.timer.execute_until(self.is_running, 10):
-            raise RuntimeError("Failed to run dnsmasq")
+            raise j.exceptions.Base("Failed to run dnsmasq")
 
     def is_running(self):
         for port in self.container.client.info.port():
@@ -35,4 +35,4 @@ class DHCP:
             if "dnsmasq" in process["cmdline"]:
                 self.container.client.process.kill(process["pid"], signal.SIGKILL)
                 if not j.tools.timer.execute_until(lambda: not self.is_running(), 10):
-                    raise RuntimeError("Failed to stop DNSMASQ")
+                    raise j.exceptions.Base("Failed to stop DNSMASQ")

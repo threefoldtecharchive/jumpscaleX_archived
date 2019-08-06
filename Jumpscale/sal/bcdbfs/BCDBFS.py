@@ -61,7 +61,7 @@ class BCDBFS(j.application.JSBaseClass):
         """
         dir = self._dir_model.get_by_name(name=path)[0]
         if not recursive and dir.dirs:
-            raise RuntimeError("this dir contains other dirs you must pass recursive = True")
+            raise j.exceptions.Base("this dir contains other dirs you must pass recursive = True")
         elif not recursive and not dir.dirs:
             for file_id in dir.files:
                 file = self._file_model.get(file_id)
@@ -163,7 +163,7 @@ class BCDBFS(j.application.JSBaseClass):
         :return: file object
         """
         if not j.sal.fs.exists(path):
-            raise RuntimeError("{} doesn't exist on local file system".format(path))
+            raise j.exceptions.Base("{} doesn't exist on local file system".format(path))
 
         with open(path, "rb") as f:
             self.file_write(dest, f, append=False, create=True)
@@ -241,7 +241,7 @@ class BCDBFS(j.application.JSBaseClass):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError("path {} does not exist".format(path))
+            raise j.exceptions.Base("path {} does not exist".format(path))
         res = [self._dir_model.get(item).name for item in dir_obj[0].dirs]
         return res
 
@@ -254,7 +254,7 @@ class BCDBFS(j.application.JSBaseClass):
         path = j.sal.fs.pathClean(path)
         dir_obj = self._dir_model.get_by_name(path)
         if not dir_obj:
-            raise RuntimeError("path {} does not exist".format(path))
+            raise j.exceptions.Base("path {} does not exist".format(path))
         res = [self._file_model.get(item).name for item in dir_obj[0].files]
         return res
 
@@ -282,7 +282,9 @@ class BCDBFS(j.application.JSBaseClass):
         :param location: location to search in, default: /
         :return: List[str] full paths
         """
-        return [obj.name[len(location) + 1:-3] for obj in self._file_model.search(text) if obj.name.startswith(location)]
+        return [
+            obj.name[len(location) + 1 : -3] for obj in self._file_model.search(text) if obj.name.startswith(location)
+        ]
 
     def test(self):
         cl = j.clients.sonic.get_client_bcdb()
@@ -308,7 +310,13 @@ class BCDBFS(j.application.JSBaseClass):
             "/test/dir_1/test_3",
             "/test/dir_1/test_4",
         ]
-        assert j.sal.bcdbfs.list_dirs("/test") == ["/test/dir_0", "/test/dir_1", "/test/dir_2", "/test/dir_3", "/test/dir_4"]
+        assert j.sal.bcdbfs.list_dirs("/test") == [
+            "/test/dir_0",
+            "/test/dir_1",
+            "/test/dir_2",
+            "/test/dir_3",
+            "/test/dir_4",
+        ]
         assert j.sal.bcdbfs.list_files_and_dirs("/test") == [
             "/test/dir_0",
             "/test/dir_1",

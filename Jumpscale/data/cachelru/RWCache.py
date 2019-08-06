@@ -46,9 +46,9 @@ class WCache:
         """
         # Check arguments
         if size <= 0:
-            raise ValueError(size)
+            raise j.exceptions.Value(size)
         elif not isinstance(size, type(0)):
-            raise TypeError(size)
+            raise j.exceptions.Value(size)
         object.__init__(self)
         JSBASE.__init__(self)
         self.__dict = {}

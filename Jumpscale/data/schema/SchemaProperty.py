@@ -36,7 +36,7 @@ class SchemaProperty(j.application.JSBaseClass):
         self.index_text = False  # is for full text index
         self.unique = False  # to check if type is unique or not
         if self.name in ["schema"]:
-            raise RuntimeError("cannot have property name:%s" % self.name)
+            raise j.exceptions.Base("cannot have property name:%s" % self.name)
 
     @property
     def capnp_schema(self):

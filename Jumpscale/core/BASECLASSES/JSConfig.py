@@ -77,7 +77,7 @@ class JSConfig(JSBase, Attr):
 
     def __init_class_post(self):
         if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
-            raise RuntimeError("combination not allowed of config and configsclass")
+            raise j.exceptions.Base("combination not allowed of config and configsclass")
 
     def _trigger_add(self, method):
         """

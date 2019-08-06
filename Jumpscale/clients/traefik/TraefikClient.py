@@ -153,7 +153,7 @@ class ProxyMap(MutableMapping):
 
     def __getitem__(self, key):
         if not isinstance(key, str):
-            raise TypeError("index should be a str, not %s" % type(key))
+            raise j.exceptions.Value("index should be a str, not %s" % type(key))
 
         if key not in self._names:
             raise IndexError()
@@ -164,9 +164,9 @@ class ProxyMap(MutableMapping):
 
     def __setitem__(self, key, value):
         if not isinstance(value, Proxy):
-            raise TypeError()
+            raise j.exceptions.Value()
         if not isinstance(key, str):
-            raise TypeError()
+            raise j.exceptions.Value()
 
         self._names.append(key)
         self._names.sort()
@@ -174,10 +174,10 @@ class ProxyMap(MutableMapping):
 
     def __delitem__(self, key):
         if not isinstance(key, str):
-            raise TypeError("index should be a string, not %s" % type(key))
+            raise j.exceptions.Value("index should be a string, not %s" % type(key))
 
         if key not in self._names:
-            raise KeyError()
+            raise j.exceptions.NotFound()
 
         self._names.remove(key)
         if key in self._proxies:

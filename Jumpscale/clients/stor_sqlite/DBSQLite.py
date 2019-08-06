@@ -25,14 +25,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class DBSQLite(j.application.JSBaseClass):
-    def __init__(self, bcdb):
+    def __init__(self, db_path):
         JSBASE.__init__(self)
-        if bcdb.storclient and bcdb.storclient.type == "RDB":
-            raise RuntimeError("cannot use sqlite for RDB")
 
-        self.bcdb = bcdb
-
-        self._dbpath = j.sal.fs.joinPaths(bcdb._data_dir, "sqlite.db")
+        self._dbpath = db_path
 
         if j.sal.fs.exists(self._dbpath):
             self._log_debug("EXISTING SQLITEDB in %s" % self._dbpath)
@@ -82,7 +78,7 @@ class DBSQLite(j.application.JSBaseClass):
         if len(res) == 0:
             return None
         elif len(res) > 1:
-            raise RuntimeError("error, can only be 1 item")
+            raise j.exceptions.Base("error, can only be 1 item")
         return res[0].value
 
     def delete(self, key):

@@ -60,7 +60,7 @@ class BuilderAydoStor(j.builders.system._BaseClass):
 
             j.builders.ufw.allowIncoming(port)
             if j.builders.system.process.tcpport_check(port, ""):
-                raise RuntimeError("port %d is occupied, cannot start stor" % port)
+                raise j.exceptions.Base("port %d is occupied, cannot start stor" % port)
 
         j.core.tools.dir_ensure("{DIR_BASE}/cfg/stor/", recursive=True)
         j.builders.tools.file_copy("{DIR_VAR}/templates/cfg/stor/config.toml", "{DIR_BASE}/cfg/stor/")

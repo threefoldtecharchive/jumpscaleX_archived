@@ -73,7 +73,7 @@ def _parse_storage(disks, storage_pools):
         elif disk_type in [StorageType.SSD, StorageType.NVME]:
             ressoures["sru"] += size / GiB
         else:
-            raise ValueError("disk type %s is not valid" % disk.type.name)
+            raise j.exceptions.Value("disk type %s is not valid" % disk.type.name)
 
     return ressoures
 

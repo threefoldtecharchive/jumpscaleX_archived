@@ -61,7 +61,7 @@ class SerializerJSXObject(SerializerBase):
         versionnr = int.from_bytes(data[0:1], byteorder="little")
         if versionnr == 1:
             if model:
-                raise RuntimeError("when model need to use the sid")
+                raise j.exceptions.Base("when model need to use the sid")
             md5bin = data[1:17]
             md5 = md5bin.hex()
             data2 = data[17:]
@@ -73,16 +73,16 @@ class SerializerJSXObject(SerializerBase):
             else:
                 j.shell()
                 if not model:
-                    raise RuntimeError("could not find schema with md5:%s, no model specified" % md5)
+                    raise j.exceptions.Base("could not find schema with md5:%s, no model specified" % md5)
                 j.shell()
-                raise RuntimeError("could not find schema with md5:%s" % md5)
+                raise j.exceptions.Base("could not find schema with md5:%s" % md5)
         elif versionnr == 10:
             if not model:
-                raise RuntimeError("model needs to be specified")
+                raise j.exceptions.Base("model needs to be specified")
             sid = int.from_bytes(data[1:3], byteorder="little")
             data2 = data[3:]
             model2 = model.bcdb.model_get_from_sid(sid)  # weird concept but it could be we get other model based on sid
             return model2.schema.new(capnpdata=data2, model=model)
         else:
 
-            raise RuntimeError("version wrong")
+            raise j.exceptions.Base("version wrong")

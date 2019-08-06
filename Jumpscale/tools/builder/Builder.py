@@ -67,7 +67,7 @@ class Builder(j.application.JSBaseClass):
             self._log_info("will create zero-os:%s on redis port:%s" % (name, redis_port))
             # VM DOES NOT EXIST, Need to create the redis port should be free
             if j.sal.nettools.checkListenPort(redis_port):
-                raise RuntimeError("cannot use port:%s is already in use" % redis_port)
+                raise j.exceptions.Base("cannot use port:%s is already in use" % redis_port)
             isopath = self.zos_iso_download(zerotierinstance)
             self._log_info("zos vb create:%s (%s)" % (name, redis_port))
             vm.create(isopath=isopath, reset=reset, redis_port=redis_port, memory=memory)
@@ -87,7 +87,7 @@ class Builder(j.application.JSBaseClass):
                     sleep(2)
                 retries -= 1
             else:
-                raise RuntimeError("could not connect to VM port %s in 60 sec." % redis_port)
+                raise j.exceptions.Base("could not connect to VM port %s in 60 sec." % redis_port)
 
         r = j.clients.redis.get("localhost", redis_port, fromcache=False, ping=True, die=False, ssl=True)
         if r is None:
@@ -103,7 +103,7 @@ class Builder(j.application.JSBaseClass):
                     sleep(2)
                 retries -= 1
             else:
-                raise RuntimeError("could not connect to VM port %s in 200 sec." % redis_port)
+                raise j.exceptions.Base("could not connect to VM port %s in 200 sec." % redis_port)
 
         self._redis = r
 
@@ -127,7 +127,7 @@ class Builder(j.application.JSBaseClass):
                 sleep(2)
             retries -= 1
         else:
-            raise RuntimeError("could not connect to zeroos client in 400 sec.")
+            raise j.exceptions.Base("could not connect to zeroos client in 400 sec.")
 
         self._log_info("zero-os client active")
         self._log_info("ping test start")

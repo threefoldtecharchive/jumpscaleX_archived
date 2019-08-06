@@ -98,7 +98,7 @@ class JSModule:
         if self.location != "":
             splitted = self.location.split(".")
             if len(splitted) != 3:
-                raise RuntimeError("location should be 3 parts, %s in %s" % (self.location, self.path))
+                raise j.exceptions.Base("location should be 3 parts, %s in %s" % (self.location, self.path))
             return splitted[1]
         return ""
 
@@ -107,7 +107,7 @@ class JSModule:
         if self.location != "":
             splitted = self.location.split(".")
             if len(splitted) != 3:
-                raise RuntimeError("location should be 3 parts, %s in %s" % (self.location, self.path))
+                raise j.exceptions.Base("location should be 3 parts, %s in %s" % (self.location, self.path))
             return splitted[2]
         return ""
 
@@ -143,18 +143,18 @@ class JSModule:
 
             if line.find("__jslocation__") != -1:
                 if classobj is None:
-                    raise RuntimeError("Could not find class in '%s' while loading jumpscale lib." % line)
+                    raise j.exceptions.Base("Could not find class in '%s' while loading jumpscale lib." % line)
                 if line.find("=") != -1 and line.find("IGNORELOCATION") == -1:
                     location = line.split("=", 1)[1].replace('"', "").replace("'", "").strip()
                     if _check_jlocation(location):
                         if classobj.location != "":
-                            raise RuntimeError("there cannot be 2 jlocations:'%s' in class:%s" % (location, self))
+                            raise j.exceptions.Base("there cannot be 2 jlocations:'%s' in class:%s" % (location, self))
                         classobj.location = location
                         self.name = classname
 
             if line.find("__imports__") != -1:
                 if classobj is None:
-                    raise RuntimeError("Could not find class in %s while loading jumpscale lib." % path)
+                    raise j.exceptions.Base("Could not find class in %s while loading jumpscale lib." % path)
                 importItems = line.split("=", 1)[1].replace('"', "").replace("'", "").strip()
                 classobj.imports = [item.strip() for item in importItems.split(",") if item.strip() != ""]
 

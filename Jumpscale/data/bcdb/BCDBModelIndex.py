@@ -188,7 +188,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = "%s__%s" % (property_name, val)
         ids = self._key_index_getids(key, nid=nid)
         if obj_id is None:
-            raise RuntimeError("id cannot be None")
+            raise j.exceptions.Base("id cannot be None")
         if obj_id not in ids:
             ids.append(obj_id)
         data = j.data.serializers.msgpack.dumps(ids)
@@ -201,7 +201,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = "%s__%s" % (property_name, val)
         ids = self._key_index_getids(key, nid=nid)
         if obj_id is None:
-            raise RuntimeError("id cannot be None")
+            raise j.exceptions.Base("id cannot be None")
         if obj_id in ids:
             ids.pop(ids.index(obj_id))
         hash = self._key_index_redis_get(key)
@@ -273,7 +273,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :return:
         """
         if len(args.keys()) == 0:
-            raise RuntimeError("get from keys need arguments")
+            raise j.exceptions.Base("get from keys need arguments")
         ids_prev = []
         ids = []
         for propname, val in args.items():
@@ -321,7 +321,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     last = struct.unpack("<I", chunk)[0]
                     self._ids_last[nid] = last  # need to know the last one
             else:
-                raise RuntimeError("needs to be 100% checked")
+                raise j.exceptions.Base("needs to be 100% checked")
                 # next one always happens
                 ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
                 if not j.sal.fs.exists(ids_file_path) or j.sal.fs.fileSize(ids_file_path) == 0:
@@ -402,7 +402,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         chunk = r.lindex(self._id_redis_listkey_get(nid=nid), pos)
         if not chunk:
             if die:
-                raise RuntimeError("should always get something back?")
+                raise j.exceptions.Base("should always get something back?")
             return None
         return struct.unpack("<I", chunk)[0]
 
@@ -442,7 +442,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 if trypos == last_id:
                     potentialid = self._id_get_objid_redis(trypos, die=False, nid=nid)
                 if not potentialid:
-                    raise RuntimeError("can't get a model from data:%s" % bdata)
+                    raise j.exceptions.Base("can't get a model from data:%s" % bdata)
                 elif potentialid == id:
                     # lucky
                     return True
@@ -463,12 +463,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
                         if potentialid > id:
                             return False  # we're already too high
                 else:
-                    raise RuntimeError("did not find, should not get here")
+                    raise j.exceptions.Base("did not find, should not get here")
 
                 return False
         else:
             ids_file_path = "%s/ids_%s.data" % (nid, self._data_dir)
-            raise RuntimeError("not implemented yet")
+            raise j.exceptions.Base("not implemented yet")
 
     def __str__(self):
         out = "modelindex:%s\n" % self.schema.url

@@ -131,7 +131,7 @@ class OdooServer(JSConfigClient):
         for db in self.databases:
             if db.name == name:
                 return db
-        raise RuntimeError("could not find database :%s" % name)
+        raise j.exceptions.Base("could not find database :%s" % name)
 
     def database_export(self, name, dest=None):
         db = self._database_obj_get(name)

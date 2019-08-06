@@ -42,7 +42,7 @@ class RedisServer(j.application.JSBaseClass):
         # j.clients.redis.core_check()  #need to make sure we have a core redis
 
         if self.bcdb.models is None:
-            raise RuntimeError("models are not filled in")
+            raise j.exceptions.Base("models are not filled in")
 
         self.init()
 
@@ -135,7 +135,7 @@ class RedisServer(j.application.JSBaseClass):
                 kwargs = parser.request_to_dict(request[3:])
                 if not hasattr(self, redis_cmd):
                     response.error("COULD NOT FIND COMMAND:%s" % redis_cmd)
-                    raise RuntimeError("COULD NOT FIND COMMAND:%s" % redis_cmd)
+                    raise j.exceptions.Base("COULD NOT FIND COMMAND:%s" % redis_cmd)
                 else:
                     method = getattr(self, redis_cmd)
                     start_obj = int(request[2].decode())
@@ -182,7 +182,7 @@ class RedisServer(j.application.JSBaseClass):
         url = ""
         cat = ""
         if key.strip() == "":
-            raise RuntimeError("key cannot be empty")
+            raise j.exceptions.Base("key cannot be empty")
         splitted = key.split(":")
         len_splitted = len(splitted)
         m = ""
@@ -324,7 +324,7 @@ class RedisServer(j.application.JSBaseClass):
             response.error("cannot get, key:'%s' not found" % key)
 
     def hdel(self, response, key, id):
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")
 
     def hlen(self, response, key):
         parse_key = key.replace(":", "/")

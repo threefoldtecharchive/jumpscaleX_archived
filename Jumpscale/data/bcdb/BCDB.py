@@ -23,6 +23,7 @@
 import gevent
 from Jumpscale.clients.stor_zdb.ZDBClientBase import ZDBClientBase
 from Jumpscale.clients.stor_rdb.RDBClient import RDBClient
+from Jumpscale.clients.stor_sqlite.DBSQLite import DBSQLite
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -31,7 +32,6 @@ from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
-from .DBSQLite import DBSQLite
 
 JSBASE = j.application.JSBaseClass
 
@@ -47,11 +47,11 @@ class BCDB(j.application.JSBaseClass):
         self._redis_index = j.clients.redis.core
 
         if name is None:
-            raise RuntimeError("name needs to be specified")
+            raise j.exceptions.Base("name needs to be specified")
 
         if storclient is not None:
             if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
-                raise RuntimeError("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
+                raise j.exceptions.Base("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
 
         self.name = name
         self._sqlclient = None
@@ -97,7 +97,7 @@ class BCDB(j.application.JSBaseClass):
         j.data.bcdb._bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
-            raise RuntimeError("name needs to be string")
+            raise j.exceptions.Base("name needs to be string")
 
         j.data.nacl.default
 
@@ -136,7 +136,7 @@ class BCDB(j.application.JSBaseClass):
 
     def export(self, path=None, encrypt=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
 
         for o in list(self.meta._data.schemas):
             m = self.model_get_from_schema(o.text)
@@ -160,7 +160,7 @@ class BCDB(j.application.JSBaseClass):
 
     def import_(self, path=None, reset=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
         if reset:
             self.reset()
             if self.storclient:
@@ -202,7 +202,7 @@ class BCDB(j.application.JSBaseClass):
                 else:
                     obj_id = int(base.split(".")[0])
                 if obj_id in data:
-                    raise RuntimeError("id's need to be unique, cannot import")
+                    raise j.exceptions.Base("id's need to be unique, cannot import")
                 json = j.sal.fs.readFile(item, binary=encr)
                 if encr:
                     json = j.data.nacl.default.decryptSymmetric(json)
@@ -232,7 +232,7 @@ class BCDB(j.application.JSBaseClass):
                         try:
                             obj = model.new(data=json)
                         except:
-                            raise RuntimeError("can't get a new model based on json data:%s" % json)
+                            raise j.exceptions.Base("can't get a new model based on json data:%s" % json)
                         if self.storclient:
                             obj.id = None
                     else:
@@ -248,7 +248,8 @@ class BCDB(j.application.JSBaseClass):
     @property
     def sqlclient(self):
         if self._sqlclient is None:
-            self._sqlclient = DBSQLite(self)
+            dbpath = j.sal.fs.joinPaths(self._data_dir, "sqlite.db")
+            self._sqlclient = DBSQLite(dbpath)
         return self._sqlclient
 
     def redis_server_start(self, port=6380, secret="123456"):
@@ -352,7 +353,7 @@ class BCDB(j.application.JSBaseClass):
         if sid in self._sid_to_model:
             return self._sid_to_model[sid]
         else:
-            raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
+            raise j.exceptions.Base("did not find model with sid:'%s' in mem." % sid)
 
     def model_get_from_url(self, url, namespaceid=1):
         """
@@ -377,7 +378,7 @@ class BCDB(j.application.JSBaseClass):
         else:
             self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-                raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+                raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
 
         if schema._md5 in self.meta._schema_md5_to_sid:
@@ -387,7 +388,7 @@ class BCDB(j.application.JSBaseClass):
             if schema_set:
                 sid = self.meta._schema_set(schema)
             else:
-                raise RuntimeError("sid should be known in the self.meta._schema_md5...")
+                raise j.exceptions.Base("sid should be known in the self.meta._schema_md5...")
 
         if sid in self._sid_to_model:
             return self._sid_to_model[sid]
@@ -404,7 +405,7 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
         if not isinstance(model, j.data.bcdb._BCDBModelClass):
-            raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
+            raise j.exceptions.Base("model needs to be of type:%s" % self._BCDBModelClass)
         assert model.sid
 
         self._sid_to_model[model.sid] = model
@@ -453,7 +454,7 @@ class BCDB(j.application.JSBaseClass):
             schema = j.data.schema.get_from_text(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         if schema.key not in self._index_schema_class_cache:
 
@@ -495,7 +496,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("models_add:%s" % path)
 
         if not j.sal.fs.isDir(path):
-            raise RuntimeError("path: %s needs to be dir, to load models from" % path)
+            raise j.exceptions.Base("path: %s needs to be dir, to load models from" % path)
 
         pyfiles_base = []
         for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
@@ -551,12 +552,12 @@ class BCDB(j.application.JSBaseClass):
 
         if len(res) == 3:
             j.shell()
-            raise RuntimeError("should never be stored as only 3 parts in msgpack")
+            raise j.exceptions.Base("should never be stored as only 3 parts in msgpack")
         elif len(res) == 4:
             nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)
         else:
-            raise RuntimeError("not supported format")
+            raise j.exceptions.Base("not supported format")
 
         bdata = j.data.nacl.default.decryptSymmetric(bdata_encrypted)
 
@@ -568,7 +569,7 @@ class BCDB(j.application.JSBaseClass):
             except Exception as e:
                 msg = "can't get a model from data:%s\n%s" % (bdata, e)
                 print(msg)
-                raise RuntimeError(msg)
+                raise j.exceptions.Base(msg)
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id

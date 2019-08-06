@@ -54,6 +54,6 @@ class BuilderOpenSSL(j.builders.system._BaseClass):
         if build:
             self.build()
 
-        raise RuntimeError("implement")
+        raise j.exceptions.Base("implement")
 
         print("TEST OK")

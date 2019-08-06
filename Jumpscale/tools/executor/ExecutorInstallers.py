@@ -50,7 +50,7 @@ class executor_method(object):
             :return: if the method was already done it will return BuilderBase.ALREADY_DONE_VALUE
             """
             if len(args) > 0:
-                raise RuntimeError("only use kwargs")
+                raise j.exceptions.Base("only use kwargs")
             name = func.__name__
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
@@ -88,7 +88,9 @@ class ExecutorInstallers(j.application.JSBaseClass):
     def base(self):
         self.executor.execute("apt update")
         self.executor.execute(
-            'DEBIAN_FRONTEND=noninteractive apt upgrade -y -q -o DEBIAN_PRIORITY=critical -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold"', interactive=True)
+            'DEBIAN_FRONTEND=noninteractive apt upgrade -y -q -o DEBIAN_PRIORITY=critical -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold"',
+            interactive=True,
+        )
 
     @executor_method()
     def mosh(self):

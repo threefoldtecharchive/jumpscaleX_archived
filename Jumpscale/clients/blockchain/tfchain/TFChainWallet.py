@@ -340,15 +340,17 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         if ERC20Address.is_valid_value(recipient):
             if lock is not None:
-                raise ValueError("a lock cannot be applied when sending coins to an ERC20 Address")
+                raise j.exceptions.Value("a lock cannot be applied when sending coins to an ERC20 Address")
             if data is not None:
-                raise ValueError("data cannot be added to the transaction when sending coins to an ERC20 Address")
+                raise j.exceptions.Value(
+                    "data cannot be added to the transaction when sending coins to an ERC20 Address"
+                )
             # all good, try to send to the ERC20 address
             return self.erc20.coins_send(address=recipient, amount=amount, source=source, refund=refund)
 
         amount = Currency(value=amount)
         if amount <= 0:
-            raise ValueError("no amount is defined to be sent")
+            raise j.exceptions.Value("no amount is defined to be sent")
 
         # define recipient
         recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
@@ -441,7 +443,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         if isinstance(txn, (str, dict)):
             txn = j.clients.tfchain.types.transactions.from_json(txn)
         elif not isinstance(txn, TransactionBaseClass):
-            raise TypeError("txn value has invalid type {} and cannot be signed".format(type(txn)))
+            raise j.exceptions.Value("txn value has invalid type {} and cannot be signed".format(type(txn)))
 
         balance = self.balance
 
@@ -538,14 +540,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         If the unlock has is not owned by this wallet a KeyError exception is raised.
         """
         if not isinstance(unlockhash, (str, UnlockHash)):
-            raise TypeError("unlockhash cannot be of type {}".format(type(unlockhash)))
+            raise j.exceptions.Value("unlockhash cannot be of type {}".format(type(unlockhash)))
         unlockhash = str(unlockhash)
         if unlockhash[:2] == "00":
             key = self._key_pairs.get(self.address)
         else:
             key = self._key_pairs.get(unlockhash)
         if key is None:
-            raise KeyError("wallet does not own unlock hash {}".format(unlockhash))
+            raise j.exceptions.NotFound("wallet does not own unlock hash {}".format(unlockhash))
         return key
 
     def _unlockhash_get(self, address):
@@ -598,7 +600,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         addr = str(key_pair.unlockhash)
         if addr in self._key_pairs:
-            raise KeyError("wallet already contains a key pair for unlock hash {}".format(addr))
+            raise j.exceptions.NotFound("wallet already contains a key pair for unlock hash {}".format(addr))
         self._key_pairs[addr] = key_pair
         if add_count:
             self.key_count += 1 + offset
@@ -615,7 +617,7 @@ class TFChainMinter:
 
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
-            raise TypeError("wallet is expected to be a TFChainWallet")
+            raise j.exceptions.Value("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
     def definition_set(self, minter, data=None):
@@ -644,7 +646,9 @@ class TFChainMinter:
         # minter definition must be of unlock type 1 or 3
         ut = txn.mint_condition.unlockhash.type
         if ut not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.MULTI_SIG):
-            raise ValueError("{} is an invalid unlock hash type and cannot be used for a minter definition".format(ut))
+            raise j.exceptions.Value(
+                "{} is an invalid unlock hash type and cannot be used for a minter definition".format(ut)
+            )
 
         # optionally set the data
         if data is not None:
@@ -718,7 +722,7 @@ class TFChainMinter:
         # parse the output
         amount = Currency(value=amount)
         if amount <= 0:
-            raise ValueError("no amount is defined to be sent")
+            raise j.exceptions.Value("no amount is defined to be sent")
 
         # define recipient
         recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
@@ -796,7 +800,7 @@ class TFChainAtomicSwap:
 
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
-            raise TypeError("wallet is expected to be a TFChainWallet")
+            raise j.exceptions.Value("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
     def initiate(self, participator, amount, refund_time="+48h", source=None, refund=None, data=None, submit=True):
@@ -943,7 +947,7 @@ class TFChainAtomicSwap:
             # create the unspent contract
             contract = AtomicSwapContract(coinoutput=co, unspent=True, current_timestamp=self._chain_time)
         elif not isinstance(contract, AtomicSwapContract):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "contract was expected to be an AtomicSwapContract, not to be of type {}".format(type(contract))
             )
         else:
@@ -985,7 +989,7 @@ class TFChainAtomicSwap:
             if isinstance(min_refund_time, str):
                 min_refund_time = OutputLock(value=min_refund_time, current_timestamp=chain_time).value
             elif not isinstance(min_refund_time, int):
-                raise TypeError(
+                raise j.exceptions.Value(
                     "expected minimum refund time to be an integer or string, not to be of type {}".format(
                         type(min_refund_time)
                     )
@@ -1136,7 +1140,7 @@ class TFChainAtomicSwap:
         # define the amount
         amount = Currency(value=amount)
         if amount <= 0:
-            raise ValueError("no amount is defined to be swapped")
+            raise j.exceptions.Value("no amount is defined to be swapped")
 
         # define the miner fee
         miner_fee = self._minium_miner_fee
@@ -1175,7 +1179,7 @@ class TFChainAtomicSwap:
             chain_time = self._chain_time
             refund_time = OutputLock(value=refund_time, current_timestamp=chain_time).value
         elif not isinstance(refund_time, int):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "expected refund time to be an integer or string, not to be of type {}".format(type(refund_time))
             )
 
@@ -1316,7 +1320,7 @@ class TFChainThreeBot:
 
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
-            raise TypeError("wallet is expected to be a TFChainWallet")
+            raise j.exceptions.Value("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
     def record_new(self, months=1, names=None, addresses=None, key_index=None, source=None, refund=None):
@@ -1341,13 +1345,13 @@ class TFChainThreeBot:
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         """
         if months > MaxBotPrepaidMonths:
-            raise ValueError("a 3bot can only have up to 24 months prepaid")
+            raise j.exceptions.Value("a 3bot can only have up to 24 months prepaid")
 
         # create the txn and fill the easiest properties already
         txn = j.clients.tfchain.types.transactions.threebot_registration_new()
         txn.number_of_months = months
         if names is None and addresses is None:
-            raise ValueError("at least one name or one address is to be given, none is defined")
+            raise j.exceptions.Value("at least one name or one address is to be given, none is defined")
         txn.names = names
         txn.addresses = addresses
 
@@ -1360,10 +1364,10 @@ class TFChainThreeBot:
             txn.public_key = self._wallet.public_key_new()
         else:
             if not isinstance(key_index, int):
-                raise TypeError("key index is to be of type int, not type {}".format(type(key_index)))
+                raise j.exceptions.Value("key index is to be of type int, not type {}".format(type(key_index)))
             addresses = self._wallet.addresses
             if key_index < 0 or key_index >= len(addresses):
-                raise ValueError(
+                raise j.exceptions.Value(
                     "key index {} is OOB, index cannot be negative, and can be maximum {}".format(
                         key_index, len(addresses) - 1
                     )
@@ -1406,7 +1410,9 @@ class TFChainThreeBot:
             [names_to_add, names_to_remove, addresses_to_add, addresses_to_remove],
             False,
         ):
-            raise ValueError("extra months is to be given or one name/address is to be added/removed, none is defined")
+            raise j.exceptions.Value(
+                "extra months is to be given or one name/address is to be added/removed, none is defined"
+            )
 
         # create the txn and fill the easiest properties already
         txn = j.clients.tfchain.types.transactions.threebot_record_update_new()
@@ -1451,7 +1457,7 @@ class TFChainThreeBot:
         txn.receiver_botid = receiver
         txn.names = names
         if len(txn.names) == 0:
-            raise ValueError("at least one (3Bot) name has to be transfered, but none were defined")
+            raise j.exceptions.Value("at least one (3Bot) name has to be transfered, but none were defined")
 
         # keep track of chain time
         chain_time = self._chain_time
@@ -1577,7 +1583,7 @@ class TFChainERC20:
 
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
-            raise TypeError("wallet is expected to be a TFChainWallet")
+            raise j.exceptions.Value("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
     def coins_send(self, address, amount, source=None, refund=None):
@@ -1601,7 +1607,7 @@ class TFChainERC20:
         """
         amount = Currency(value=amount)
         if amount <= 0:
-            raise ValueError("no amount is defined to be sent")
+            raise j.exceptions.Value("no amount is defined to be sent")
 
         # create transaction
         txn = j.clients.tfchain.types.transactions.erc20_convert_new()
@@ -1639,14 +1645,14 @@ class TFChainERC20:
         elif isinstance(value, int) and not isinstance(value, bool):
             addresses = self._wallet.addresses
             if value < 0 or value >= len(addresses):
-                raise ValueError(
+                raise j.exceptions.Value(
                     "address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
                         value, len(addresses) - 1
                     )
                 )
             public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
         else:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(
                     value, type(value)
                 )
@@ -1685,14 +1691,14 @@ class TFChainERC20:
         elif isinstance(value, int) and not isinstance(value, bool):
             addresses = self._wallet.addresses
             if value < 0 or value >= len(addresses):
-                raise ValueError(
+                raise j.exceptions.Value(
                     "address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
                         value, len(addresses) - 1
                     )
                 )
             public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
         else:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(
                     value, type(value)
                 )
@@ -1861,10 +1867,12 @@ class SpendableKey:
 
     def __init__(self, public_key, private_key):
         if not isinstance(public_key, PublicKey):
-            raise TypeError("public key cannot be of type {} (expected: PublicKey)".format(type(public_key)))
+            raise j.exceptions.Value("public key cannot be of type {} (expected: PublicKey)".format(type(public_key)))
         self._public_key = public_key
         if not isinstance(private_key, SigningKey):
-            raise TypeError("private key cannot be of type {} (expected: SigningKey)".format(type(private_key)))
+            raise j.exceptions.Value(
+                "private key cannot be of type {} (expected: SigningKey)".format(type(private_key))
+            )
         self._private_key = private_key
 
     @property
@@ -1948,7 +1956,9 @@ class WalletBalance(object):
         locked/unlocked outputs correctly for outputs that are locked by time.
         """
         if not isinstance(value, int):
-            raise TypeError("WalletBalance's chain time cannot be of type {} (expected: int)".format(type(value)))
+            raise j.exceptions.Value(
+                "WalletBalance's chain time cannot be of type {} (expected: int)".format(type(value))
+            )
         self._chain_time = int(value)
 
     @property
@@ -1965,7 +1975,9 @@ class WalletBalance(object):
         locked/unlocked outputs correctly for outputs that are locked by height.
         """
         if not isinstance(value, int):
-            raise TypeError("WalletBalance's chain height cannot be of type {} (expected: int)".format(type(value)))
+            raise j.exceptions.Value(
+                "WalletBalance's chain height cannot be of type {} (expected: int)".format(type(value))
+            )
         self._chain_height = int(value)
 
     @property
@@ -2143,15 +2155,15 @@ class WalletBalance(object):
         if isinstance(other, (WalletsBalance, MultiSigWalletBalance)):
             return WalletsBalance().balance_add(self).balance_add(other)
         if not isinstance(other, WalletBalance):
-            raise TypeError("other balance has to be of type wallet balance")
+            raise j.exceptions.Value("other balance has to be of type wallet balance")
         # another balance is defined, create a new balance that will contain our merge
         # merge the chain info
         if self.chain_height >= other.chain_height:
             if self.chain_time < other.chain_time:
-                raise ValueError("chain time and chain height of balances do not match")
+                raise j.exceptions.Value("chain time and chain height of balances do not match")
         else:
             if self.chain_time >= other.chain_time:
-                raise ValueError("chain time and chain height of balances do not match")
+                raise j.exceptions.Value("chain time and chain height of balances do not match")
             self.chain_time = other.chain_time
             self.chain_height = other.chain_height
             self.chain_blockid = other.chain_blockid
@@ -2184,9 +2196,9 @@ class WalletBalance(object):
 
         # validate miner fee
         if not isinstance(miner_fee, Currency):
-            raise TypeError("miner fee has to be a currency")
+            raise j.exceptions.Value("miner fee has to be a currency")
         if miner_fee == 0:
-            raise ValueError("a non-zero miner fee has to be defined")
+            raise j.exceptions.Value("a non-zero miner fee has to be defined")
 
         # collect all transactions in one list
         transactions = []
@@ -2256,17 +2268,17 @@ class MultiSigWalletBalance(WalletBalance):
         Creates a personal multi signature wallet.
         """
         if not isinstance(signature_count, int):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "signature count of a MultiSigWallet is expected to be of type int, not {}".format(
                     type(signature_count)
                 )
             )
         if signature_count < 1:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "signature count of a MultiSigWallet has to be at least 1, cannot be {}".format(signature_count)
             )
         if len(owners) < signature_count:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "the amount of owners ({}) cannot be lower than the specified signature count ({})".format(
                     len(owners), signature_count
                 )
@@ -2310,9 +2322,9 @@ class MultiSigWalletBalance(WalletBalance):
             if isinstance(other, (WalletBalance, WalletsBalance)):
                 return WalletsBalance().balance_add(self).balance_add(self)
             # can only merge 2 multi-signature wallet balances
-            raise TypeError("other balance has to be of type multi-signature wallet balance")
+            raise j.exceptions.Value("other balance has to be of type multi-signature wallet balance")
         if self.address != other.addres:
-            raise ValueError("other balance is for a different MultiSignature Wallet, cannot be merged")
+            raise j.exceptions.Value("other balance is for a different MultiSignature Wallet, cannot be merged")
         # piggy-back on the super class for the actual merge logic
         return super().balance_add(other._base)
 
@@ -2353,7 +2365,7 @@ class WalletsBalance(WalletBalance):
         """
         oc = output.condition.unwrap()
         if not isinstance(oc, ConditionMultiSignature):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
                     type(oc)
                 )
@@ -2385,7 +2397,7 @@ class WalletsBalance(WalletBalance):
         if other is None:
             return self
         if not isinstance(other, WalletBalance):
-            raise TypeError("other balance has to be of type wallet balance")
+            raise j.exceptions.Value("other balance has to be of type wallet balance")
         if isinstance(other, MultiSigWalletBalance):
             self._merge_multisig_wallet_balance(other.address, other)
             return self
@@ -2436,20 +2448,22 @@ class WalletsBalance(WalletBalance):
                 if isinstance(source, str):
                     source = UnlockHash.from_json(source)
                 elif not isinstance(source, UnlockHash):
-                    raise TypeError("cannot add source address from type {}".format(type(source)))
+                    raise j.exceptions.Value("cannot add source address from type {}".format(type(source)))
                 source = [source]
             # add one or multiple personal/multisig addresses
             for value in source:
                 if isinstance(value, str):
                     value = UnlockHash.from_json(value)
                 elif not isinstance(value, UnlockHash):
-                    raise TypeError("cannot add source address from type {}".format(type(value)))
+                    raise j.exceptions.Value("cannot add source address from type {}".format(type(value)))
                 if value.type == UnlockHashType.MULTI_SIG:
                     ms_addresses.add(value)
                 elif value.type == UnlockHashType.PUBLIC_KEY:
                     addresses.add(value)
                 else:
-                    raise TypeError("cannot add source addres with unsupported UnlockHashType {}".format(value.type))
+                    raise j.exceptions.Value(
+                        "cannot add source addres with unsupported UnlockHashType {}".format(value.type)
+                    )
             if len(source) == 1:
                 if source[0].type == UnlockHashType.PUBLIC_KEY:
                     refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=source[0])
@@ -2604,11 +2618,11 @@ class CoinTransactionBuilder:
         @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
         """
         if self._txn is None:
-            raise RuntimeError("coin transaction builder is already consumed")
+            raise j.exceptions.Base("coin transaction builder is already consumed")
 
         amount = Currency(value=amount)
         if amount <= 0:
-            raise ValueError("no amount is defined to be sent")
+            raise j.exceptions.Value("no amount is defined to be sent")
         recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
         self._txn.coin_output_add(value=amount, condition=recipient)
         return self

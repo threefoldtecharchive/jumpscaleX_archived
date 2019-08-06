@@ -169,7 +169,7 @@ class ExecutorBase(JSBASE):
     @property
     def uid(self):
         if self._id is None:
-            raise RuntimeError("self._id cannot be None")
+            raise j.exceptions.Base("self._id cannot be None")
         return self._id
 
     def _commands_transform(self, cmds, die=True, checkok=False, env={}, sudo=False, shell=False):
@@ -182,7 +182,7 @@ class ExecutorBase(JSBASE):
 
         if shell:
             if "\n" in cmds:
-                raise RuntimeError("cannot do shell for multiline scripts")
+                raise j.exceptions.Base("cannot do shell for multiline scripts")
             else:
                 cmds = "bash -c '%s'" % cmds
 
@@ -235,7 +235,7 @@ class ExecutorBase(JSBASE):
         if rc > 0:
             if err.lower().find("no such file") != -1:
                 return []
-            raise RuntimeError("could not find:%s \n%s" % (path, err))
+            raise j.exceptions.Base("could not find:%s \n%s" % (path, err))
         res = []
         for line in out.split("\n"):
             if line.strip() == path:
@@ -248,10 +248,10 @@ class ExecutorBase(JSBASE):
 
     # interface to implement by child classes
     def execute(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     # def executeRaw(self, cmd, die=True, showout=False):
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
 
     @property
     def isDebug(self):
@@ -345,7 +345,7 @@ class ExecutorBase(JSBASE):
     # def sudo_cmd(self, command):
     #
     #     if "\n" in command:
-    #         raise RuntimeError("cannot do sudo when multiline script:%s" % command)
+    #         raise j.exceptions.Base("cannot do sudo when multiline script:%s" % command)
     #
     #     if hasattr(self, "sshclient"):
     #         login = self.sshclient.config.data["login"]
@@ -640,7 +640,7 @@ class ExecutorBase(JSBASE):
     #             elif j.core.tools.platform() == "linux":
     #                 reponame = "sandbox_ubuntu"
     #             else:
-    #                 raise RuntimeError("cannot install, j.core.tools.platform() now found")
+    #                 raise j.exceptions.Base("cannot install, j.core.tools.platform() now found")
     #
     #             j.core.tools.code_github_get(repo=reponame, branch=["master"])
     #

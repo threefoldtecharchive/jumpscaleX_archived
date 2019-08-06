@@ -22,14 +22,14 @@ class DocSite(j.application.JSBaseClass):
 
         self.path = path
         if not j.sal.fs.exists(path):
-            raise RuntimeError("Cannot find path:%s" % path)
+            raise j.exceptions.Base("Cannot find path:%s" % path)
 
         self.sonic_client = sonic_client
         self.name = name.lower()
 
         self.name = j.core.text.strip_to_ascii_dense(self.name)
         if self.name == "":
-            raise RuntimeError("name cannot be empty")
+            raise j.exceptions.Base("name cannot be empty")
 
         self.defs = {}
         self.htmlpages = {}
@@ -323,7 +323,7 @@ class DocSite(j.application.JSBaseClass):
                 doc.errors.append(errormsg)
         else:
             self._log_error("DEBUG NOW raise error")
-            raise RuntimeError("stop debug here")
+            raise j.exceptions.Base("stop debug here")
 
     def file_get(self, name, die=True):
         """
@@ -478,7 +478,7 @@ class DocSite(j.application.JSBaseClass):
 
         if url0 == "":
             print("url0 is empty for sidebar")
-            raise RuntimeError("cannot be empty")
+            raise j.exceptions.Base("cannot be empty")
 
         newurl = ".".join(url0.split(".")[:-1]) + "._sidebar"
         newurl = newurl.strip(".")

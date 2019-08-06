@@ -10,7 +10,7 @@ class ZDBAdminClientBase:
             return True
         except Exception as e:
             if not "Namespace not found" in str(e):
-                raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
+                raise j.exceptions.Base("could not check namespace:%s, error:%s" % (name, e))
             # self._log_debug("namespace_NOTexists:%s" % name)
             return False
 
@@ -36,7 +36,7 @@ class ZDBAdminClientBase:
             self.redis.execute_command("NSNEW", name)
         else:
             if die:
-                raise RuntimeError("namespace already exists:%s" % name)
+                raise j.exceptions.Base("namespace already exists:%s" % name)
 
         if secret:
             self._log_debug("set secret")

@@ -346,7 +346,7 @@ class Expect(j.application.JSBaseClass):
     #         raise j.exceptions.RuntimeError('pexpect/pxssh not supported on this platform')
 
     #     if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
-    #         raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
+    #         raise j.exceptions.Value('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
     #     else:
     #         self._log_debug('SSH %s@%s session login successful' % (login, ip), 6)
 

@@ -31,7 +31,7 @@ class CoinInput(BaseDataTypeClass):
     @classmethod
     def from_coin_output(cls, co):
         if not isinstance(co, CoinOutput):
-            raise TypeError("invalid co parameter, expected value of type CoinOutput, not {}".format(type(co)))
+            raise j.exceptions.Value("invalid co parameter, expected value of type CoinOutput, not {}".format(type(co)))
         ci = cls(parentid=co.id, fulfillment=j.clients.tfchain.types.fulfillments.from_condition(co.condition))
         ci.parent_output = co
         return ci
@@ -57,7 +57,7 @@ class CoinInput(BaseDataTypeClass):
             self._fulfillment = FulfillmentSingleSignature()
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a  CoinInput's fulfillment (expected: FulfillmentBaseClass)".format(
                     type(value)
                 )
@@ -74,7 +74,7 @@ class CoinInput(BaseDataTypeClass):
             self._parent_output = None
             return
         if not isinstance(value, CoinOutput):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a CoinInput's parent output (expected: CoinOutput)".format(
                     type(value)
                 )
@@ -161,7 +161,7 @@ class CoinOutput(BaseDataTypeClass):
             self._condition = ConditionNil()
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a CoinOutput's condition (expected: ConditionBaseClass subtype)".format(
                     type(value)
                 )
@@ -219,7 +219,7 @@ class BlockstakeInput(BaseDataTypeClass):
     @classmethod
     def from_blockstake_output(cls, bso):
         if not isinstance(bso, BlockstakeOutput):
-            raise TypeError("invalid type of bso {} (expected: BlockstakeOutput)".format(type(bso)))
+            raise j.exceptions.Value("invalid type of bso {} (expected: BlockstakeOutput)".format(type(bso)))
         bsi = cls(parentid=bso.id, fulfillment=j.clients.tfchain.types.fulfillments.from_condition(bso.condition))
         bsi.parent_output = bso
         return bsi
@@ -245,7 +245,7 @@ class BlockstakeInput(BaseDataTypeClass):
             self._fulfillment = FulfillmentSingleSignature()
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a BlockstakeInput's fulfillment (expected: FulfillmentBaseClass subtype)".format(
                     type(value)
                 )
@@ -262,7 +262,7 @@ class BlockstakeInput(BaseDataTypeClass):
             self._parent_output = BlockstakeOutput()
             return
         if not isinstance(value, BlockstakeOutput):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a BlockstakeInput's parent output (expected: BlockstakeOutput)".format(
                     type(value)
                 )
@@ -349,7 +349,7 @@ class BlockstakeOutput(BaseDataTypeClass):
             self._condition = ConditionNil()
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as a BlockstakeOutput's condition (expected: ConditionBaseClass subtype)".format(
                     type(value)
                 )

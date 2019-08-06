@@ -140,7 +140,7 @@ class BCDBModel(j.application.JSBaseClass):
                 obj = obj2
             else:
                 if obj2 is not None:
-                    raise RuntimeError("obj return from action needs to be a JSXObject or None")
+                    raise j.exceptions.Base("obj return from action needs to be a JSXObject or None")
         return obj
 
     # def cache_reset(self):
@@ -191,7 +191,7 @@ class BCDBModel(j.application.JSBaseClass):
             if isinstance(obj, int):
                 obj = self.get(obj)
             else:
-                raise RuntimeError("specify id or obj")
+                raise j.exceptions.Base("specify id or obj")
         assert obj.nid
         if obj.id is not None:
             self._triggers_call(obj=obj, action="delete")
@@ -205,7 +205,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def check(self, obj):
         if not isinstance(obj, j.data.schema._JSXObjectClass):
-            raise RuntimeError("argument needs to be a jsx data obj")
+            raise j.exceptions.Base("argument needs to be a jsx data obj")
         assert obj.nid
 
     @queue_method
@@ -225,18 +225,18 @@ class BCDBModel(j.application.JSBaseClass):
                 if "nid" in data:
                     nid = data["nid"]
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
             obj = self.schema.new(datadict=data, model=self)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
             obj = self.schema.new(serializeddata=data, model=self)
             if obj_id is None:
-                raise RuntimeError("objid cannot be None")
+                raise j.exceptions.Base("objid cannot be None")
             if not obj.nid:
                 if nid:
                     obj.nid = nid
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
         elif isinstance(data, j.data.schema._JSXObjectClass):
             obj = data
             if obj_id is None and obj.id is not None:
@@ -245,7 +245,7 @@ class BCDBModel(j.application.JSBaseClass):
                 if nid:
                     obj.nid = nid
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
         elif j.data.types.dict.check(data):
             if obj_id == None and "id" in data:
                 obj_id = data["id"]
@@ -253,11 +253,11 @@ class BCDBModel(j.application.JSBaseClass):
                 if nid:
                     data["nid"] = nid
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
             obj = self.schema.new(datadict=data)
             obj.nid = nid
         else:
-            raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
+            raise j.exceptions.Base("Cannot find data type, str,bin,obj or ddict is only supported")
         if not obj.id:
             obj.id = obj_id  # do not forget
         return self.set(obj)
@@ -289,7 +289,7 @@ class BCDBModel(j.application.JSBaseClass):
             res = []
             for obj in self.iterate(nid=nid):
                 if obj is None:
-                    raise RuntimeError("iterate should not return None, ever")
+                    raise j.exceptions.Base("iterate should not return None, ever")
                 res.append(obj)
             return res
 
@@ -355,7 +355,7 @@ class BCDBModel(j.application.JSBaseClass):
             except Exception as e:
                 if str(e).find("has no such member") != -1:
                     msg = str(e).split("no such member", 1)[1].split("stack:")
-                    raise RuntimeError("Could not serialize capnnp message:%s" % msg)
+                    raise j.exceptions.Base("Could not serialize capnnp message:%s" % msg)
                 else:
                     raise e
 
@@ -384,7 +384,9 @@ class BCDBModel(j.application.JSBaseClass):
                         self.storclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
-                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
+                            raise j.exceptions.Base(
+                                "cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id)
+                            )
                         raise
 
         if index:
@@ -419,7 +421,7 @@ class BCDBModel(j.application.JSBaseClass):
             if isinstance(data, dict):
                 obj = self.schema.new(datadict=data, model=self)
             else:
-                raise RuntimeError("need dict")
+                raise j.exceptions.Base("need dict")
         else:
             obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
@@ -440,7 +442,7 @@ class BCDBModel(j.application.JSBaseClass):
         """
 
         if obj_id in [None, 0, "0", b"0"]:
-            raise RuntimeError("id cannot be None or 0")
+            raise j.exceptions.Base("id cannot be None or 0")
 
         # if self.obj_cache is not None and usecache:
         #     # print("use cache")
@@ -460,7 +462,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         if not data:
             if die:
-                raise RuntimeError("could not find obj with id:%s" % obj_id)
+                raise j.exceptions.Base("could not find obj with id:%s" % obj_id)
             else:
                 return None
 
@@ -469,7 +471,7 @@ class BCDBModel(j.application.JSBaseClass):
         if obj._schema.url == self.schema.url:
             obj = self._triggers_call(obj=obj, action="get")
         else:
-            raise RuntimeError("no object with id {} found in {}".format(obj_id, self))
+            raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
 
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
         return obj

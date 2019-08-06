@@ -52,27 +52,20 @@ else:
     pygments_pylexer = False
 
 
+# try:
+#     import colored_traceback
+#     colored_traceback.add_hook(always=True)
+# except ImportError:
+#     pass
+#
+
+
 class BaseInstallerror(Exception):
     pass
 
 
 class InputError(Exception):
     pass
-    # def __init__(self, expression, message):
-    #     self.expression = expression
-    #     self.message = message
-
-
-def my_excepthook(exception_type, exception_obj, tb):
-    try:
-        Tools.log(msg=exception_obj, tb=tb, level=40)
-    except:
-        print(exception_obj)
-    if MyEnv.debug and traceback and pudb:
-        # exception_type, exception_obj, tb = sys.exc_info()
-        pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
-    sys.exit(1)
 
 
 import inspect
@@ -127,13 +120,13 @@ class RedisTools:
                 except ImportError:
                     # dit not find fakeredis so can only return None
                     if die:
-                        raise RuntimeError(
+                        raise Tools.exceptions.Base(
                             "cannot connect to fakeredis, could not import the library, please install fakeredis"
                         )
                     return None
             else:
                 if die:
-                    raise RuntimeError("redis python lib not installed, do pip3 install redis")
+                    raise Tools.exceptions.Base("redis python lib not installed, do pip3 install redis")
                 return None
 
         try:
@@ -218,7 +211,7 @@ class RedisTools:
             if not RedisTools.core_running():
                 return True
             if nr > 200:
-                raise RuntimeError("could not stop redis")
+                raise Tools.exceptions.Base("could not stop redis")
             time.sleep(0.05)
 
     def core_running(unixsocket=True, tcp=True):
@@ -259,7 +252,7 @@ class RedisTools:
         :type reset: bool, optional
         :raises RuntimeError: redis server not found after install
         :raises RuntimeError: platform not supported for start redis
-        :raises j.exceptions.Timeout: Couldn't start redis server
+        :raises Tools.exceptions.Timeout: Couldn't start redis server
         :return: redis instance
         :rtype: Redis
         """
@@ -275,14 +268,14 @@ class RedisTools:
                     Tools.execute("brew install redis")
                     Tools.execute("brew link redis")
                     if not Tools.cmd_installed("redis-server"):
-                        raise RuntimeError("Cannot find redis-server even after install")
+                        raise Tools.exceptions.Base("Cannot find redis-server even after install")
                 Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
                 Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
                 Tools.execute("redis-cli shutdown", die=False, showout=False)
             elif MyEnv.platform_is_linux:
                 Tools.execute("apt install redis-server -y")
             else:
-                raise RuntimeError("platform not supported for start redis")
+                raise Tools.exceptions.Base("platform not supported for start redis")
 
         if not MyEnv.platform_is_osx:
             cmd = "sysctl vm.overcommit_memory=1"
@@ -307,7 +300,7 @@ class RedisTools:
             print(1)
             time.sleep(0.1)
         else:
-            raise RuntimeError("Couldn't start redis server")
+            raise Tools.exceptions.Base("Couldn't start redis server")
 
 
 try:
@@ -487,7 +480,7 @@ if redis:
             if name not in self._storedprocedures_to_sha:
                 data = self.hget("storedprocedures:data", name)
                 if not data:
-                    raise RuntimeError("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
+                    raise Tools.exceptions.Base("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
@@ -537,12 +530,222 @@ if redis:
             return out
 
 
+class BaseJSException(Exception):
+    """
+    ## log (exception) levels
+
+        - CRITICAL 	50
+        - ERROR 	40
+        - WARNING 	30
+        - INFO 	    20
+        - STDOUT 	15
+        - DEBUG 	10
+
+    parent_exception is the exception which comes from e.g. a try except, its to log the original exception
+
+    e.g.
+
+    try:
+        dosomething_which_gives_error(data=data)
+    except Exception as e:
+        raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,parent_exception=e)
+
+    :param: message a meaningful message
+    :level: see above
+    :cat: dot notation can be used, just to put your error in a good category
+    :context: e.g. methodname, location id, ... the context (area) where the error happened (exception)
+    :data: any data worth keeping
+
+
+    """
+
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, parent_exception=None):
+
+        if level:
+            if isinstance(level, str):
+                level = int(level)
+            elif isinstance(level, int):
+                pass
+            else:
+                raise Tools.exceptions.JSBUG("level needs to be int or str", data=locals())
+            assert level > 9
+            assert level < 51
+
+        super().__init__(message)
+        self.message = message
+        self.message_pub = msgpub
+        self.level = level
+        self.context = context
+        self.cat = cat  # is a dot notation category, to make simple no more tags
+        self.data = data
+        self.parent_exception = parent_exception
+
+        self._init(
+            message=message, level=level, cat=cat, msgpub=msgpub, context=context, parent_exception=parent_exception
+        )
+
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        # self._tb = traceback.extract_tb(exc_traceback)
+        self._tb = exc_traceback
+        self._exc_traceback = exc_traceback
+        self._exc_value = exc_value
+        self._exc_type = exc_type
+
+    def _init(self, **kwargs):
+        pass
+
+    @property
+    def type(self):
+        return str(self.__class__).lower()
+
+    @property
+    def str_1_line(self):
+        """
+        1 line representation of exception
+
+        """
+        msg = ""
+        if self.level:
+            msg += "level:%s " % self.level
+        msg += "type:%s " % self.type
+        # if self._tags_add != "":
+        #     msg += " %s " % self._tags_add
+        return msg.strip()
+
+    def __str__(self):
+        # raise RuntimeError()
+        d = Tools.log(exception=self, stdout=False, replace=True)
+        return d["message"]
+        # if self.cat:
+        #     out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
+        # else:
+        #     out = "ERROR: %s\n" % (self.message)
+        # return out
+
+    __repr__ = __str__
+
+    # def trace_print(self):
+    #     j.core.errorhandler._trace_print(self._trace)
+
+
+class JSExceptions:
+    def __init__(self):
+        class Permission(BaseJSException):
+            pass
+
+        class Halt(BaseJSException):
+            pass
+
+        class Runtime(BaseJSException):
+            pass
+
+        class Input(BaseJSException):
+            pass
+
+        class Value(BaseJSException):
+            pass
+
+        class NotImplemented(BaseJSException):
+            pass
+
+        class BUG(BaseJSException):
+            pass
+
+        class JSBUG(BaseJSException):
+            pass
+
+        class Operations(BaseJSException):
+            pass
+
+        class IO(BaseJSException):
+            pass
+
+        class NotFound(BaseJSException):
+            pass
+
+        class Timeout(BaseJSException):
+            pass
+
+        class SSHError(BaseJSException):
+            pass
+
+        class SSHTimeout(BaseJSException):
+            pass
+
+        self.Permission = Permission
+        self.SSHTimeout = SSHTimeout
+        self.SSHError = SSHError
+        self.Timeout = Timeout
+        self.NotFound = NotFound
+        self.IO = IO
+        self.Operations = Operations
+        self.JSBUG = JSBUG
+        self.BUG = BUG
+        self.NotImplemented = NotImplemented
+        self.Input = Input
+        self.Value = Value
+        self.Runtime = RuntimeError
+        self.Halt = Halt
+        self.Base = BaseJSException
+
+
 class Tools:
 
     _supported_editors = ["micro", "mcedit", "joe", "vim", "vi"]  # DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
     custom_log_printer = None
+
+    pudb = pudb
+    traceback = traceback
+    pygments = pygments
+    pygments_formatter = pygments_formatter
+    pygments_pylexer = pygments_pylexer
+
+    exceptions = JSExceptions()
+
+    @staticmethod
+    def traceback_format(tb):
+        """
+
+        :param tb:
+        :return: [[filepath,name,linenr,line,locals],[]]
+
+        locals doesn't seem to be working yet, None for now
+
+        """
+        if tb is None:
+            tb = sys.last_traceback
+        res = []
+        ignore_items = ["click/", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+
+        def ignore(filename):
+            for ignorefind in ignore_items:
+                if filename.find(ignorefind) != -1:
+                    return True
+            return False
+
+        for item in traceback.extract_tb(tb):
+            if not ignore(item.filename):
+                if item.locals:
+                    Tools.shell()
+                else:
+                    llocals = None
+                tb_item = [item.filename, item.name, item.lineno, item.line, llocals]
+                res.append(tb_item)
+        return res
+
+        # if tb.tb_next is not None:
+        #     frame_ = tb.tb_next.tb_frame
+        # else:
+        #
+        #     frame_ = tb.tb_frame
+        #
+        #     Tools.shell()
+        #     Tools.traceback_text_get(tb, stdout=True)
+        #     tb_item = ()
+        #     logdict["tb"] = [tb_item, tb_item]  # just example for now #TODO:
+        #     print()
 
     @staticmethod
     def traceback_text_get(tb=None, stdout=False):
@@ -562,17 +765,104 @@ class Tools:
             if stdout:
                 line2 = "        {GRAY}%-60s :{RESET} %-4s: " % (fname, item.lineno)
                 Tools.pprint(line2, end="", log=False)
-                if pygments_formatter is not False:
-                    print(pygments.highlight(item.line, pygments_pylexer, pygments_formatter).rstrip())
+                if Tools.pygments_formatter is not False:
+                    print(
+                        Tools.pygments.highlight(item.line, Tools.pygments_pylexer, Tools.pygments_formatter).rstrip()
+                    )
                 else:
                     Tools.pprint(item.line, log=False)
 
             out += "%s\n" % line
         return out
 
+    def _traceback_filterLocals(k, v):
+        try:
+            k = "%s" % k
+            v = "%s" % v
+            if k in [
+                "re",
+                "q",
+                "jumpscale",
+                "pprint",
+                "qexec",
+                "jshell",
+                "Shell",
+                "__doc__",
+                "__file__",
+                "__name__",
+                "__package__",
+                "i",
+                "main",
+                "page",
+            ]:
+                return False
+            if v.find("<module") != -1:
+                return False
+            if v.find("IPython") != -1:
+                return False
+            if v.find("bpython") != -1:
+                return False
+            if v.find("click") != -1:
+                return False
+            if v.find("<built-in function") != -1:
+                return False
+            if v.find("jumpscale.Shell") != -1:
+                return False
+        except BaseException:
+            return False
+
+        return True
+
+    def _trace_get(self, ttype, err, tb):
+        """
+        #TODO: prob not used, needs to become 1 uniform way how to deal with traces
+        :param ttype:
+        :param err:
+        :param tb:
+        :return:
+        """
+        raise Tools.exceptions.Base()
+
+        tblist = traceback.format_exception(ttype, err, tb)
+
+        ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+
+        # if self._limit and len(tblist) > self._limit:
+        #     tblist = tblist[-self._limit:]
+        tb_text = ""
+        for item in tblist:
+            for ignoreitem in ignore:
+                if item.find(ignoreitem) != -1:
+                    item = ""
+            if item != "":
+                tb_text += "%s" % item
+        return tb_text
+
+    def _trace_print(self, tb_text):
+        if MyEnv.pygmentsObj:
+            MyEnv.pygmentsObj
+            # style=pygments.styles.get_style_by_name("vim")
+            formatter = pygments.formatters.Terminal256Formatter()
+            lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)  # pytb
+            tb_colored = pygments.highlight(tb_text, lexer, formatter)
+            sys.stderr.write(tb_colored)
+            # print(tb_colored)
+        else:
+            sys.stderr.write(tb_text)
+
     @staticmethod
     def log(
-        msg, cat="", level=10, data=None, context=None, _deeper=False, stdout=True, redis=True, tb=None, data_show=True
+        msg="",
+        cat=None,
+        level=10,
+        data=None,
+        context=None,
+        _deeper=False,
+        tb=None,
+        data_show=True,
+        exception=None,  # is jumpscale/python exception
+        replace=True,  # to replace the color variables for stdout
+        stdout=True,  # return as text or send to stdount
     ):
         """
 
@@ -587,69 +877,99 @@ class Tools:
 
         :return:
         """
+        logdict = {}
+
         if isinstance(msg, Exception):
-            Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
-            msg = "{RED}EXCEPTION: {RESET}%s" % str(msg)
+            raise Tools.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
+
+        # first deal with traceback
+        if exception and not tb:
+            if isinstance(exception, BaseJSException):
+                tb = exception._tb
+            else:
+                extype_, value_, tb = sys.exc_info()
+
+        if exception:
+            # make sure exceptions get the right priority
+            if not msg:
+                if isinstance(exception, BaseJSException):
+                    msg = exception.message
+                else:
+                    msg = exception.__repr__()
+            msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg, 4) + "{RESET}"
             level = 50
             if cat is "":
                 cat = "exception"
+
+            if isinstance(exception, BaseJSException):
+                if not data:
+                    # copy data from the exception
+                    data = exception.data
+                if exception.parent_exception:
+                    if isinstance(exception.parent_exception, BaseJSException):
+                        parent_exception = "      " + exception.parent_exception.str_1_line
+                    else:
+                        parent_exception = Tools.text_indent(exception.parent_exception, 6)
+                    msg += "\n - original Exception: %s" % parent_exception
+
+        logdict["message"] = msg
+
         if tb:
-            if tb.tb_next is not None:
-                frame_ = tb.tb_next.tb_frame
-            else:
-                # extype, value, tb = sys.exc_info()
-                frame_ = tb.tb_frame
-            if data is None:
-                data = Tools.traceback_text_get(tb, stdout=True)
-                data_show = False
-            else:
-                msg += "\n%s" % Tools.traceback_text_get(tb, stdout=True)
-            print()
+            logdict["traceback"] = Tools.traceback_format(tb)
+            fname, defname, linenr, line_, locals_ = logdict["traceback"][-1]
         else:
             if _deeper:
                 frame_ = inspect.currentframe().f_back
             else:
                 frame_ = inspect.currentframe().f_back.f_back
+            fname = frame_.f_code.co_filename.split("/")[-1]
+            defname = frame_.f_code.co_name
+            linenr = frame_.f_code.co_firstlineno
+            logdict["traceback"] = []
 
-        fname = frame_.f_code.co_filename.split("/")[-1]
-        defname = frame_.f_code.co_name
-        linenr = frame_.f_code.co_firstlineno
-
-        logdict = {}
         logdict["linenr"] = linenr
-        logdict["processid"] = MyEnv.appname
-        logdict["message"] = msg
         logdict["filepath"] = fname
+        logdict["processid"] = MyEnv.appname
+
         logdict["level"] = level
         if context:
             logdict["context"] = context
         else:
             logdict["context"] = defname
+
         logdict["cat"] = cat
 
-        if data and isinstance(data, dict):
-            if "password" in data or "secret" in data or "passwd" in data:
-                data["password"] = "***"
+        if data:
+            if isinstance(data, dict):
+                if "password" in data or "secret" in data or "passwd" in data:
+                    data["password"] = "***"
+            if isinstance(data, str):
+                pass
+            elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
+                data = str(data)
+            else:
+                data = serializer(data)
 
         logdict["data"] = data
 
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
 
-    # @staticmethod
-    # def error_raise(msg, pythonerror=None):
-    #     print ("** ERROR **")
-    #     Tools.log(msg)
-    #     if MyEnv.debug and traceback and pudb:
-    #         extype, value, tb = sys.exc_info()
-    #         if tb is not None:
-    #             traceback.print_exc()
-    #             pudb.post_mortem(tb,e_value=pythonerror)
-    #         else:
-    #             from pudb import set_trace
-    #             set_trace()
-    #         sys.exit(1)
-    #     raise RuntimeError(msg)
+        if tb or exception:
+            for handler in MyEnv.errorhandlers:
+                try:
+                    handler(logdict)
+                except Exception as e:
+                    MyEnv.exception_handle(e)
+        else:
+
+            for handler in MyEnv.loghandlers:
+                try:
+                    handler(logdict)
+                except Exception as e:
+                    MyEnv.exception_handle(e)
+
+        return logdict
 
     @staticmethod
     def _execute_interactive(cmd=None, args=None, die=True, original_command=None):
@@ -662,16 +982,16 @@ class Tools:
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd = " ".join(args)
         if returncode == 127:
-            raise RuntimeError("{}: command not found\n".format(cmd))
+            raise Tools.exceptions.Base("{}: command not found\n".format(cmd))
         if returncode > 0 and returncode != 999:
             if die:
                 if original_command:
-                    raise RuntimeError(
+                    raise Tools.exceptions.Base(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"
                         % (original_command, returncode)
                     )
                 else:
-                    raise RuntimeError(
+                    raise Tools.exceptions.Base(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" % (cmd, returncode)
                     )
             return returncode, "", ""
@@ -698,7 +1018,9 @@ class Tools:
             if Tools.cmd_installed(editor):
                 Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        raise RuntimeError("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+        raise Tools.exceptions.Base(
+            "cannot edit the file: '{}', non of the supported editors is installed".format(path)
+        )
 
     @staticmethod
     def file_write(path, content, replace=False, args=None):
@@ -799,7 +1121,7 @@ class Tools:
         @rtype: boolean (True if path refers to an existing path)
         """
         if path is None:
-            raise TypeError("Path is not passed in system.fs.exists")
+            raise Tools.exceptions.Value("Path is not passed in system.fs.exists")
         found = False
         try:
             st = os.lstat(path)
@@ -907,7 +1229,7 @@ class Tools:
 
     @staticmethod
     def text_strip(
-        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, ignore_error=False
+        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, check_no_args_left=False
     ):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
@@ -947,7 +1269,7 @@ class Tools:
 
         if replace:
             content = Tools.text_replace(
-                content=content, args=args, executor=executor, text_strip=False, ignore_error=ignore_error
+                content=content, args=args, executor=executor, text_strip=False, check_no_args_left=check_no_args_left
             )
         else:
             if colors and "{" in content:
@@ -957,21 +1279,17 @@ class Tools:
         return content
 
     @staticmethod
-    def text_replace(content, args=None, executor=None, ignorecomments=False, text_strip=True, ignore_error=False):
+    def text_replace(
+        content, args=None, executor=None, ignorecomments=False, text_strip=True, check_no_args_left=False
+    ):
         """
 
         Tools.text_replace
 
-        args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
-        MyEnv.config will also be given to the format function
-
         content example:
 
         "{name!s:>10} {val} {n:<10.2f}"  #floating point rounded to 2 decimals
-
-        performance is +100k per sec
-
-        will call the strip if
+        format as in str.format_map() function from
 
         following colors will be replaced e.g. use {RED} to get red color.
 
@@ -987,56 +1305,78 @@ class Tools:
 
         """
 
-        class format_dict(dict):
-            def __missing__(self, key):
-                return "{%s}" % key
-
         if args is None:
             args = {}
+
+        if not "{" in content:
+            return content
+
+        if executor and executor.config:
+            content2 = Tools.args_replace(content, args, executor.config, MyEnv.MYCOLORS)
         else:
-            args = copy.copy(args)  # make sure we don't change the original
+            content2 = Tools.args_replace(content, args, MyEnv.config, MyEnv.MYCOLORS)
 
-        if "{" in content:
-
-            if args is None:
-                args = {}
-
-            if executor:
-                args.update(executor.config)
-            else:
-                for key, val in MyEnv.config.items():
-                    if key not in args:
-                        args[key] = val
-
-            args.update(MyEnv.MYCOLORS)
-
-            replace_args = format_dict(args)
-            try:
-                content = content.format_map(replace_args)
-            except ValueError as e:
-                if ignore_error:
-                    pass  # e.g. if { is
-                else:
-                    sorted = [i for i in args.keys()]
-                    # raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
-            if not ignore_error:
-                if "{" in content:
-                    try:
-                        content = content.format_map(replace_args)  # this to deal with nested {
-                    except ValueError as e:
-                        sorted = [i for i in args.keys()]
-                        raise RuntimeError(
-                            "could not replace \n%s \nin \n%s\n, remaining {, if you want to ignore the error use ignore_error=True"
-                            % (sorted, content)
-                        )
+        if check_no_args_left:
+            if "{" in content:
+                raise Tools.exceptions.Input("{ found in %s" % content2, data=args)
 
         if text_strip:
-            content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
+            content = Tools.text_strip(content2, ignorecomments=ignorecomments, replace=False)
 
-        return content
+        return content2
+
+    @staticmethod
+    def args_replace(content, *args_list):
+        """
+
+        :param content:
+        :param args_list: add all dicts you want to replace
+        :return:
+        """
+        assert isinstance(content, str)
+        if content == "":
+            return content
+        args_new = {}
+        for replace_args in args_list:
+            for key, val in replace_args.items():
+                if key not in args_new:
+                    args_new[key] = val
+
+        def process_line(line, args_new):
+            try:
+                line = line.format_map(args_new)
+            except KeyError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    line = line.replace("{%s}" % arg, val)
+            except Exception as e:
+                print("error here :", e)
+                
+            return line
+
+        for replace_args in args_list:
+            if not isinstance(replace_args, dict):
+                raise j.exceptions.Input("replace args need to be dict", data=replace_args)
+        out = ""
+        for line in content.split("\n"):
+            if "{" in line:
+                line = process_line(line, args_new)
+            out += "%s\n" % line
+
+        out = out[:-1]  # needs to remove the last one, is because of the split there is no last \n
+        return out
 
     @staticmethod
     def log2stdout(logdict, data_show=True):
+        text = Tools.log2str(logdict, data_show=True, replace=True)
+        p = print
+        if MyEnv.config.get("LOGGER_PANEL_NRLINES"):
+            if Tools.custom_log_printer:
+                p = Tools.custom_log_printer
+        p(text)
+
+    @staticmethod
+    def log2str(logdict, data_show=True, replace=True):
         """
 
         :param logdict:
@@ -1050,32 +1390,31 @@ class Tools:
             logdict["cat"]
             logdict["data"]
             logdict["epoch"]
+            logdict["traceback"]
 
         :return:
         """
 
         if "epoch" in logdict:
-            timetuple = time.localtime(logdict["epoch"])
+            timetuple = time.localtime(logdict)
         else:
             timetuple = time.localtime(time.time())
         logdict["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
 
         if logdict["level"] < 11:
-            LOGCAT = "DEBUG"
+            LOGLEVEL = "DEBUG"
         elif logdict["level"] == 15:
-            LOGCAT = "STDOUT"
+            LOGLEVEL = "STDOUT"
         elif logdict["level"] < 21:
-            LOGCAT = "INFO"
+            LOGLEVEL = "INFO"
         elif logdict["level"] < 31:
-            LOGCAT = "WARNING"
+            LOGLEVEL = "WARNING"
         elif logdict["level"] < 41:
-            LOGCAT = "ERROR"
+            LOGLEVEL = "ERROR"
         else:
-            LOGCAT = "CRITICAL"
+            LOGLEVEL = "CRITICAL"
 
-        LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
-
-        logdict.update(MyEnv.MYCOLORS)
+        LOGFORMAT = MyEnv.LOGFORMAT[LOGLEVEL]
 
         if len(logdict["filepath"]) > 16:
             logdict["filename"] = logdict["filepath"][len(logdict["filepath"]) - 18 :]
@@ -1084,22 +1423,29 @@ class Tools:
 
         if len(logdict["context"]) > 35:
             logdict["context"] = logdict["context"][len(logdict["context"]) - 34 :]
-        if logdict["context"].startswith("_"):
-            logdict["context"] = ""
-        elif logdict["context"].startswith(":"):
-            logdict["context"] = ""
+        # if logdict["context"].startswith("_"):
+        #     logdict["context"] = ""
+        # elif logdict["context"].startswith(":"):
+        #     logdict["context"] = ""
 
-        p = print
-        if MyEnv.config.get("LOGGER_PANEL_NRLINES") or logdict.get("use_custom_printer"):
-            if Tools.custom_log_printer:
-                p = Tools.custom_log_printer
+        out = ""
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
-        msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
-        p(msg)
+        if "traceback" in logdict and logdict["traceback"]:
+            out += Tools.text_replace("{RED}--TRACEBACK------------------{RESET}\n")
+            for tb_path, tb_name, tb_lnr, tb_line, tb_locals in logdict["traceback"]:
+                C = "{GREEN}{tb_path}{RESET} in {BLUE}{tb_name}{RESET}\n"
+                C += "    {GREEN}{tb_lnr}{RESET}    {tb_code}{RESET}"
+                if Tools.pygments_formatter:
+                    tb_code = Tools.pygments.highlight(
+                        tb_line, Tools.pygments_pylexer, Tools.pygments_formatter
+                    ).rstrip()
+                tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
+                C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
+                out += C.rstrip() + "\n"
+            out += Tools.text_replace("{RED}-----------------------------\n{RESET}")
 
         if data_show:
-            if logdict["data"] not in ["", None, {}]:
+            if logdict["data"] != None:
                 if isinstance(logdict["data"], dict):
                     try:
                         data = serializer(logdict["data"])
@@ -1107,12 +1453,29 @@ class Tools:
                         data = logdict["data"]
                 else:
                     data = logdict["data"]
-                data = Tools.text_indent(data, 10, strip=True)
-                try:
-                    data = Tools.text_replace(data, ignore_error=True, text_strip=False)
-                except:
-                    pass
-                p(data.rstrip())
+                data = Tools.text_indent(data, 2, strip=True)
+                out += Tools.text_replace("{YELLOW}--DATA-----------------------\n")
+                out += data.rstrip() + "\n"
+                out += Tools.text_replace("-----------------------------\n{RESET}\n")
+
+        msg = Tools.text_replace(LOGFORMAT, args=logdict, check_no_args_left=False).rstrip()
+        out += msg
+
+        if logdict["level"] > 39:
+            # means is error
+            if "public" in logdict and logdict["public"]:
+                out += (
+                    "{YELLOW}" + Tools.text_indent(logdict["public"].rstrip(), nspaces=2, prefix="* ") + "{RESET}\n\n"
+                )
+
+        # restore the logdict
+        logdict.pop("TIME")
+        logdict.pop("filename")
+
+        if replace:
+            out = Tools.text_replace(out)
+
+        return out
 
     @staticmethod
     def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=True, indent=0, end="\n", log=True):
@@ -1140,7 +1503,7 @@ class Tools:
             content = str(content)
         if args or colors or text_strip:
             content = Tools.text_replace(
-                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, ignore_error=True
+                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, check_no_args_left=False
             )
             for key, val in MyEnv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)
@@ -1164,7 +1527,7 @@ class Tools:
         return impl.hexdigest()
 
     @staticmethod
-    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
+    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", prefix=None, args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -1182,7 +1545,11 @@ class Tools:
 
         """
         if content is None:
-            raise RuntimeError("content cannot be None")
+            raise Tools.exceptions.Base("content cannot be None")
+        if content == "":
+            return content
+        if not prefix:
+            prefix = ""
         content = str(content)
         if args is not None:
             content = Tools.text_replace(content, args=args)
@@ -1195,7 +1562,12 @@ class Tools:
         ind = indentchar * nspaces
         out = ""
         for line in content.split("\n"):
-            out += "%s%s\n" % (ind, line)
+            if line.strip() == "":
+                out += "\n"
+            else:
+                out += "%s%s%s\n" % (ind, prefix, line)
+        if content[-1] == "\n":
+            out = out[:-1]
         return out
 
     @staticmethod
@@ -1374,7 +1746,7 @@ class Tools:
                 out = readout(p.stdout)
                 err = readout(p.stderr)
                 if (out is None or err is None) and p.poll() is None:
-                    raise RuntimeError("prob bug, needs to think this through, seen the while loop")
+                    raise Tools.exceptions.Base("prob bug, needs to think this through, seen the while loop")
                 while p.poll() is None:
                     # means process is still running
 
@@ -1428,7 +1800,7 @@ class Tools:
                 if err.strip() != "":
                     msg += "stderr:\n"
                     msg += Tools.text_indent(err).rstrip() + "\n\n"
-                raise RuntimeError(msg)
+                raise Tools.exceptions.Base(msg)
 
             # close the files (otherwise resources get lost),
             # wait for the process to die, and del the Popen object
@@ -1528,7 +1900,7 @@ class Tools:
     @staticmethod
     def _check_interactive():
         if not MyEnv.interactive:
-            raise RuntimeError("Cannot use console in a non interactive mode.", "console.noninteractive")
+            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.", "console.noninteractive")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -1571,7 +1943,7 @@ class Tools:
             if failed:
                 print("Invalid password!")
                 retryCount = retryCount - 1
-        raise RuntimeError(
+        raise Tools.exceptions.Base(
             (
                 "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
                 % (retry, regex)
@@ -1718,7 +2090,7 @@ class Tools:
         elif isinstance(branch, (set, list)):
             branch = [branch.strip() for branch in branch]
         else:
-            raise RuntimeError("branch should be a string or list, now %s" % branch)
+            raise Tools.exceptions.Base("branch should be a string or list, now %s" % branch)
 
         args["BRANCH"] = branch
 
@@ -1823,7 +2195,7 @@ class Tools:
             if checkoutbranch(args, branch):
                 return
 
-            raise RuntimeError("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
+            raise Tools.exceptions.Base("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -1869,7 +2241,7 @@ class Tools:
                         download = True
 
             if not exists and download == False:
-                raise RuntimeError("Could not download some code")
+                raise Tools.exceptions.Base("Could not download some code")
 
     @staticmethod
     def config_load(path="", if_not_exist_create=False, executor=None, content=""):
@@ -1966,6 +2338,9 @@ class MyEnv:
     sandbox_lua_active = False  # same for lua
     config_changed = False
     _cmd_installed = {}
+    # should be the only location where we allow logs to be going elsewhere
+    loghandlers = []
+    errorhandlers = []
     state = None
     __init = False
     debug = False
@@ -2002,6 +2377,11 @@ class MyEnv:
     db = RedisTools.client_core_get(die=False)
 
     @staticmethod
+    def _init():
+        if not MyEnv.__init:
+            raise Tools.exceptions.Base("myenv should have been inited by system")
+
+    @staticmethod
     def platform():
         """
         will return one of following strings:
@@ -2025,7 +2405,7 @@ class MyEnv:
         if "linux" in platform:
             UbuntuInstaller.ensure_version()
         elif "darwin" not in platform:
-            raise RuntimeError("Your platform is not supported")
+            raise Tools.exceptions.Base("Your platform is not supported")
 
     @staticmethod
     def _homedir_get():
@@ -2115,11 +2495,6 @@ class MyEnv:
 
         return config
 
-    @staticmethod
-    def _init():
-        if not MyEnv.__init:
-            raise RuntimeError("myenv should have been inited by system")
-
     # def configure_help():
     #     C = """
     #     Configuration for JSX initialisation:
@@ -2181,7 +2556,7 @@ class MyEnv:
             MyEnv._config_load()
 
         if interactive not in [True, False]:
-            raise RuntimeError("interactive is True or False")
+            raise Tools.exceptions.Base("interactive is True or False")
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -2339,6 +2714,38 @@ class MyEnv:
             MyEnv.config_save()
 
     @staticmethod
+    def excepthook(exception_type, exception_obj, tb, die=True):
+
+        try:
+            Tools.log(tb=tb, level=50, exception=exception_obj)
+        except Exception as e:
+            Tools.pprint("{RED}ERROR IN LOG HANDLER")
+            print(e)
+            ttype, msg, tb = sys.exc_info()
+            traceback.print_exception(etype=ttype, tb=tb, value=msg)
+            Tools.pprint("{RESET}")
+            sys.exit(1)
+
+        if MyEnv.debug and traceback and pudb:
+            # exception_type, exception_obj, tb = sys.exc_info()
+            pudb.post_mortem(tb)
+        # Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+        if die == False:
+            return
+        else:
+            sys.exit(1)
+
+    @staticmethod
+    def exception_handle(e, die=True):
+        """
+        e is the error as raised by e.g. try/except statement
+        :param e:
+        :return:
+        """
+        ttype, msg, tb = sys.exc_info()
+        return MyEnv.excepthook(ttype, e, tb, die=die)
+
+    @staticmethod
     def init(configdir=None, reset=False):
         """
 
@@ -2361,7 +2768,7 @@ class MyEnv:
             MyEnv.platform_is_unix = True
             MyEnv.platform_is_osx = True
         else:
-            raise RuntimeError("platform not supported, only linux or osx for now.")
+            raise Tools.exceptions.Base("platform not supported, only linux or osx for now.")
 
         if not configdir:
             if "JSX_DIR_CFG" in os.environ:
@@ -2401,6 +2808,8 @@ class MyEnv:
 
             if MyEnv.config["SSH_AGENT"]:
                 MyEnv.sshagent = SSHAgent()
+
+            sys.excepthook = MyEnv.excepthook
 
             MyEnv.__init = True
 
@@ -2514,16 +2923,16 @@ class BaseInstaller:
             if not sandboxed:
                 UbuntuInstaller.do_all()
             else:
-                raise RuntimeError("not ok yet")
+                raise Tools.exceptions.Base("not ok yet")
                 UbuntuInstaller.base()
         elif "darwin" in MyEnv.platform():
             if not sandboxed:
                 OSXInstaller.do_all()
             else:
-                raise RuntimeError("not ok yet")
+                raise Tools.exceptions.Base("not ok yet")
                 OSXInstaller.base()
         else:
-            raise RuntimeError("only OSX and Linux Ubuntu supported.")
+            raise Tools.exceptions.Base("only OSX and Linux Ubuntu supported.")
 
         for profile_name in [".bash_profile", ".profile"]:
             # BASHPROFILE
@@ -2572,7 +2981,7 @@ class BaseInstaller:
 
             # install the sandbox
 
-            raise RuntimeError("not done yet")
+            raise Tools.exceptions.Base("not done yet")
 
             script = """
             cd {DIR_BASE}
@@ -2586,7 +2995,7 @@ class BaseInstaller:
             elif MyEnv.platform() == "linux":
                 reponame = "sandbox_ubuntu"
             else:
-                raise RuntimeError("cannot install, MyEnv.platform() now found")
+                raise Tools.exceptions.Base("cannot install, MyEnv.platform() now found")
 
             Tools.code_github_get(repo=reponame, branch=["master"])
 
@@ -2861,7 +3270,7 @@ class UbuntuInstaller:
     def ensure_version():
         MyEnv._init()
         if not os.path.exists("/etc/lsb-release"):
-            raise RuntimeError("Your operating system is not supported")
+            raise Tools.exceptions.Base("Your operating system is not supported")
 
         return True
 
@@ -3067,7 +3476,7 @@ class JumpscaleInstaller:
                     MyEnv.interactive = False
                     Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
                 else:
-                    raise RuntimeError("\n### Please authenticate your key and try again\n")
+                    raise Tools.exceptions.Base("\n### Please authenticate your key and try again\n")
 
     def repos_link(self):
         """
@@ -3086,7 +3495,7 @@ class JumpscaleInstaller:
             """
             exists, _, _, _, loc = Tools._code_location_get(repo=item, account=self.account)
             if not exists:
-                raise RuntimeError("did not find:%s" % loc)
+                raise Tools.exceptions.Base("did not find:%s" % loc)
 
             # destpath = "/sandbox/lib/jumpscale/{ALIAS}"
             # if os.path.exists(destpath):
@@ -3107,7 +3516,7 @@ class JumpscaleInstaller:
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
     def web(self):
-        j.shell()
+        Tools.shell()
 
 
 class DockerFactory:
@@ -3289,7 +3698,7 @@ class DockerContainer:
             MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
         if len(MyEnv.sshagent.keys_list()) == 0:
-            raise RuntimeError("Please load your ssh-agent with a key!")
+            raise Tools.exceptions.Base("Please load your ssh-agent with a key!")
 
     @property
     def _path(self):
@@ -3448,10 +3857,10 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
-            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
             Tools.execute(
                 'ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:%s"' % (MyEnv.config["DIR_HOME"], args["PORT"])
             )
+            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
@@ -3524,7 +3933,7 @@ class DockerContainer:
         if not path:
             dpath = "%s/exports/" % self._path
             if not Tools.exists(dpath):
-                raise RuntimeError("no exports found in:%s" % dpath)
+                raise Tools.exceptions.Base("no exports found in:%s" % dpath)
             if not version:
                 items = os.listdir(dpath)
                 if items != []:
@@ -3532,7 +3941,7 @@ class DockerContainer:
                     last = items[-1]
                     version = int(last.replace(".tar", ""))
                 else:
-                    raise RuntimeError("no exports found in:%s" % dpath)
+                    raise Tools.exceptions.Base("no exports found in:%s" % dpath)
             path = "%s/exports/%s.tar" % (self._path, version)
 
         if not Tools.exists(path):
@@ -3617,7 +4026,8 @@ class DockerContainer:
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             Tools.execute(
-                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure -s"
+                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
+                % MyEnv.sshagent.key_default
             )
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
@@ -3630,7 +4040,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure -s;python3 jsx install"
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % MyEnv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
@@ -3739,7 +4149,7 @@ class SSHAgent:
     def key_default(self):
         """
 
-        kosmos 'print(j.core.myenv.sshagent.key_default)'
+        kosmos 'print(MyEnv.sshagent.key_default)'
 
         checks if it can find the default key for ssh-agent, if not will ask
         :return:
@@ -3792,7 +4202,7 @@ class SSHAgent:
 
         if not sshkey in self.key_names:
             if DockerFactory.indocker():
-                raise RuntimeError("sshkey should be passed forward by means of SSHAgent")
+                raise Tools.exceptions.Base("sshkey should be passed forward by means of SSHAgent")
             self.key_load(name=sshkey)
             assert sshkey in self.key_names
 
@@ -3828,7 +4238,7 @@ class SSHAgent:
             return
 
         if not Tools.exists(path):
-            raise RuntimeError("Cannot find path:%sfor sshkey (private key)" % path)
+            raise Tools.exceptions.Base("Cannot find path:%sfor sshkey (private key)" % path)
 
         Tools.log("load ssh key: %s" % path)
         os.chmod(path, 0o600)
@@ -3952,7 +4362,7 @@ class SSHAgent:
         if not Tools.exists(bashprofile_path):
             Tools.execute("touch %s" % bashprofile_path)
 
-        content = j.sal.fs.readFile(bashprofile_path)
+        content = Tools.readFile(bashprofile_path)
         out = ""
         for line in content.split("\n"):
             if line.find("#JSSSHAGENT") != -1:
@@ -3965,7 +4375,7 @@ class SSHAgent:
         out += '[ -z "SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK=%s' % self.ssh_socket_path
         out = out.replace("\n\n\n", "\n\n")
         out = out.replace("\n\n\n", "\n\n")
-        j.sal.fs.writeFile(bashprofile_path, out)
+        Tools.writeFile(bashprofile_path, out)
 
     def start(self):
         """
@@ -3988,11 +4398,11 @@ class SSHAgent:
             Tools.dir_ensure("{DIR_VAR}")
             rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise Tools.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not Tools.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
-                    raise RuntimeError(err_msg)
+                    raise Tools.exceptions.Base(err_msg)
 
                 # get pid from out of ssh-agent being started
                 piditems = [item for item in out.split("\n") if item.find("pid") != -1]
@@ -4000,7 +4410,7 @@ class SSHAgent:
                 # print(piditems)
                 if len(piditems) < 1:
                     Tools.log("results was: %s", out)
-                    raise RuntimeError("Cannot find items in ssh-add -l")
+                    raise Tools.exceptions.Base("Cannot find items in ssh-add -l")
 
                 # pid = int(piditems[-1].split(" ")[-1].strip("; "))
                 # socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
@@ -4080,7 +4490,7 @@ class WireGuard:
             cmd = "wg-quick up %s" % path
             Tools.execute(cmd)
         else:
-            raise RuntimeError("cannot start server only supported on linux ")
+            raise Tools.exceptions.Base("cannot start server only supported on linux ")
 
     def connect(self):
         config_container = Tools.config_load("/sandbox/var/containers/%s/cfg/wireguard.toml" % self.container.name)

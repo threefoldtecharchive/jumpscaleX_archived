@@ -60,18 +60,18 @@ class ZFSManager:
     def _valid_hash_range(self, hr):
         m = re.match(r"^([0-9a-fA-F]+)(?::([0-9a-fA-F]+))$", hr)
         if m is None:
-            raise ValueError('invalid hash range "%s"' % hr)
+            raise j.exceptions.Value('invalid hash range "%s"' % hr)
 
         start = m.group(1)
         end = m.group(2)
 
         if end is not None and len(start) != len(end):
-            raise ValueError("invalid hash range start and end of different length")
+            raise j.exceptions.Value("invalid hash range start and end of different length")
 
     def _valid_dest(self, dest):
         url = urllib.parse.urlparse(dest)
         if url.scheme not in ["ardb", "zdb", "redis"]:
-            raise ValueError('invalid destination address "%s" only zdb, redis and ardb are supported' % dest)
+            raise j.exceptions.Value('invalid destination address "%s" only zdb, redis and ardb are supported' % dest)
 
     @config.setter
     def config(self, table):
@@ -83,11 +83,11 @@ class ZFSManager:
 
         for lookup in table["lookup"]:
             if lookup not in table["pools"]:
-                raise ValueError("unknown pool name '%s' in lookup" % lookup)
+                raise j.exceptions.Value("unknown pool name '%s' in lookup" % lookup)
 
         for cache in table.get("cache", []):
             if cache not in table["pools"]:
-                raise ValueError("unknown pool name '%s' in lookup" % lookup)
+                raise j.exceptions.Value("unknown pool name '%s' in lookup" % lookup)
 
         final = {"pools": table["pools"], "lookup": table["lookup"], "cache": table.get("cache", [])}
         buf = io.BytesIO(yaml.dump(final).encode())

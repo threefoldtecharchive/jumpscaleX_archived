@@ -70,7 +70,7 @@ class BuilderFW(j.builders.system._BaseClass):
 
         rc=os.system("nft list ruleset > /tmp/firelwallruleset_old")
         if rc>0:
-            raise RuntimeError("Cannot export firelwall ruleset")
+            raise j.exceptions.Base("Cannot export firelwall ruleset")
 
         f = open('/etc/nftables.conf', 'w')
         f.write(C)
@@ -89,7 +89,7 @@ class BuilderFW(j.builders.system._BaseClass):
             rc=os.system("nft -f /etc/nftables.conf")
 
         if rc>0 or rc2>0:
-            raise RuntimeError("Could not set interface file, something went wrong, previous situation restored.")
+            raise j.exceptions.Base("Could not set interface file, something went wrong, previous situation restored.")
 
 
         """

@@ -50,10 +50,10 @@ class UnixNetworkManager(j.application.JSBaseClass):
         self._nicExists(device)
 
         if inet not in ["static", "dhcp"]:
-            raise ValueError("Invalid inet .. use either dhcp or static")
+            raise j.exceptions.Value("Invalid inet .. use either dhcp or static")
 
         if inet == "static" and (not ip or not netmask):
-            raise ValueError("ip, and netmask, are required in static inet.")
+            raise j.exceptions.Value("ip, and netmask, are required in static inet.")
 
         file = j.tools.path.get("/etc/network/interfaces.d/%s" % device)
         content = "auto %s\n" % device

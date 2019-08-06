@@ -71,7 +71,7 @@ class Mnemonic(object):
         elif isinstance(txt, unicode if sys.version < "3" else str):  # noqa: F821
             utxt = txt
         else:
-            raise TypeError("String value expected")
+            raise j.exceptions.Value("String value expected")
 
         return unicodedata.normalize("NFKD", utxt)
 
@@ -90,7 +90,7 @@ class Mnemonic(object):
 
     def generate(self, strength=128):
         if strength not in [128, 160, 192, 224, 256]:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Strength should be one of the following [128, 160, 192, 224, 256], but it is not (%d)." % strength
             )
         return self.to_mnemonic(os.urandom(strength // 8))
@@ -100,7 +100,7 @@ class Mnemonic(object):
         if not isinstance(words, list):
             words = words.split(" ")
         if len(words) not in [12, 15, 18, 21, 24]:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Number of words must be one of the following: [12, 15, 18, 21, 24], but it is not (%d)." % len(words)
             )
         # Look up all the words in the list and construct the
@@ -116,7 +116,7 @@ class Mnemonic(object):
             # Find the words index in the wordlist
             ndx = binary_search(self.wordlist, word) if use_binary_search else self.wordlist.index(word)
             if ndx < 0:
-                raise LookupError('Unable to find "%s" in word list.' % word)
+                raise j.exceptions.NotFound('Unable to find "%s" in word list.' % word)
             # Set the next 11 bits to the value of the index.
             for ii in range(11):
                 concatBits[(wordindex * 11) + ii] = (ndx & (1 << (10 - ii))) != 0
@@ -142,12 +142,12 @@ class Mnemonic(object):
         # Check all the checksum bits.
         for i in range(checksumLengthBits):
             if concatBits[entropyLengthBits + i] != hashBits[i]:
-                raise ValueError("Failed checksum.")
+                raise j.exceptions.Value("Failed checksum.")
         return bytes(entropy)
 
     def to_mnemonic(self, data):
         if len(data) not in [16, 20, 24, 28, 32]:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Data length should be one of the following: [16, 20, 24, 28, 32], but it is not (%d)." % len(data)
             )
         h = hashlib.sha256(data).hexdigest()

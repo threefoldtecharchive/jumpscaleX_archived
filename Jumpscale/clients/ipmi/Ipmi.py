@@ -55,7 +55,7 @@ class Ipmi(JSConfigBase):
         elif out.lower().strip() == "chassis power is off":
             return "off"
         else:
-            raise RuntimeError("ipmitool returned something unexpected: {}".format(out))
+            raise j.exceptions.Base("ipmitool returned something unexpected: {}".format(out))
 
     def power_cycle(self):
         """ Power off host, wait a couple of seconds and turn back on again.

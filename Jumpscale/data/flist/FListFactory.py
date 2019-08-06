@@ -182,7 +182,7 @@ class FListArchiver:
 
     #     m = re.match(r'^added (.+) (.+)$', out.stdout.decode())
     #     if m is None:
-    #         raise RuntimeError('invalid output from ipfs add: %s' % out)
+    #         raise j.exceptions.Base('invalid output from ipfs add: %s' % out)
 
     #     return m.group(1)
 

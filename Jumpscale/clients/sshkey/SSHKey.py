@@ -19,7 +19,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         self._connected = None
 
         if self.name == "":
-            raise RuntimeError("need to specify name")
+            raise j.exceptions.Base("need to specify name")
 
         self.autosave = True  # means every write will be saved (is optional to set)
 
@@ -68,9 +68,9 @@ class SSHKey(j.application.JSBaseConfigClass):
                     self.write_to_sshdir()
 
         if self.pubkey:
-            raise RuntimeError("cannot generate key because pubkey already known")
+            raise j.exceptions.Base("cannot generate key because pubkey already known")
         if self.privkey:
-            raise RuntimeError("cannot generate key because privkey already known")
+            raise j.exceptions.Base("cannot generate key because privkey already known")
 
         if not j.sal.fs.exists(self.path) or reset:
             cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
@@ -117,7 +117,7 @@ class SSHKey(j.application.JSBaseConfigClass):
             rc, out, err = j.sal.process.execute(cmd, die=False)  # there could be more than 1 instance
         j.core.myenv.sshagent.__keys = None
         if err.find("agent refused operation") != -1:
-            raise RuntimeError("agent did not allow operation")
+            raise j.exceptions.Base("agent did not allow operation")
         j.shell()
         assert self.is_loaded() == False
 
@@ -145,11 +145,11 @@ class SSHKey(j.application.JSBaseConfigClass):
         :return:
         """
         if not self.pubkey:
-            raise RuntimeError("pubkey is None")
+            raise j.exceptions.Base("pubkey is None")
         r = self.pubkey.split(" ")
         if len(r) == 2:
             return r[1]
         elif len(r) == 3:
             return r[1]
         else:
-            raise RuntimeError("format of pubkey not ok:%s" % self.pubkey)
+            raise j.exceptions.Base("format of pubkey not ok:%s" % self.pubkey)

@@ -131,7 +131,7 @@ class SystemFSWalker(j.application.JSBaseClass):
 
         """
         if not j.sal.fs.isDir(root):
-            raise ValueError("Root path for walk should be a folder")
+            raise j.exceptions.Value("Root path for walk should be a folder")
         if recursive is False:
             depths = [0]
         # We want to work with full paths, even if a non-absolute path is
@@ -267,7 +267,7 @@ class SystemFSWalker(j.application.JSBaseClass):
         root = os.path.abspath(root)
 
         if not j.sal.fs.isDir(root):
-            raise ValueError("Root path for walk should be a folder, {}".format(root))
+            raise j.exceptions.Value("Root path for walk should be a folder, {}".format(root))
 
         # print "ROOT OF WALKER:%s"%root
         SystemFSWalker._walkFunctional(

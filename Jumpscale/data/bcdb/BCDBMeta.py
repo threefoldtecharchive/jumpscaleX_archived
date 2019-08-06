@@ -100,7 +100,7 @@ class BCDBMeta(j.application.JSBaseClass):
             self._data = self._schema.new(serializeddata=serializeddata)
 
         if self._data.name != self._bcdb.name:
-            raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
+            raise j.exceptions.Base("name given to bcdb does not correspond with name in the metadata stor")
 
         check = []
 
@@ -109,7 +109,7 @@ class BCDBMeta(j.application.JSBaseClass):
         for s in self._data.schemas:
             self._log_debug("load in meta:%s" % s.url)
             if s.md5 in check:
-                raise RuntimeError("corrupted metadata index, duplicate in schema")
+                raise j.exceptions.Base("corrupted metadata index, duplicate in schema")
             check.append(s.md5)
             schema = j.data.schema.get_from_text(s.text)  # make sure jumpscale knows about the schema
             self._schema_jsxobj_load(s)
@@ -132,9 +132,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
         for s in self._data.schemas:
             if s.md5 in check:
-                raise RuntimeError("corrupted metadata index, duplicate in schema (md5")
+                raise j.exceptions.Base("corrupted metadata index, duplicate in schema (md5")
             if s.sid in check:
-                raise RuntimeError("corrupted metadata index, duplicate in schema (sid)")
+                raise j.exceptions.Base("corrupted metadata index, duplicate in schema (sid)")
             check.append(s.md5)
             check.append(s.sid)
 
@@ -191,7 +191,7 @@ class BCDBMeta(j.application.JSBaseClass):
         :return:
         """
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         # check if the data is already in metadatastor
         if schema._md5 in self._schema_md5_to_sid:
@@ -213,7 +213,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _schema_exists(self, schema):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         return schema._md5 in self._schema_md5_to_sid
 

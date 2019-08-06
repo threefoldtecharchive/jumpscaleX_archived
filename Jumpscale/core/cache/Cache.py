@@ -64,7 +64,7 @@ class Cache(object):
             c.get("somethingElse")
         except Exception as e:
             if "Cannot get 'somethingElse' from cache" not in str(e):
-                raise RuntimeError("error in test. non expected output")
+                raise j.exceptions.Base("error in test. non expected output")
 
         time.sleep(2)
 

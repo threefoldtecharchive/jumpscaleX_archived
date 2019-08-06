@@ -125,7 +125,7 @@ class IniFile(j.application.JSBaseClass):
         try:
             return self.__configParser.sections()
         except Exception as err:
-            raise LookupError("Failed to get sections \nERROR: %s" % str(err))
+            raise j.exceptions.NotFound("Failed to get sections \nERROR: %s" % str(err))
 
     def getParams(self, sectionName):
         """ Return list of params in a certain section of this IniFile
@@ -135,7 +135,7 @@ class IniFile(j.application.JSBaseClass):
         try:
             return self.__configParser.options(sectionName)
         except Exception as err:
-            raise LookupError(
+            raise j.exceptions.NotFound(
                 "Failed to get parameters under the specified section: %s \nERROR: %s" % (sectionName, str(err))
             )
 
@@ -145,7 +145,7 @@ class IniFile(j.application.JSBaseClass):
         try:
             return self.__configParser.has_section(sectionName)
         except Exception as err:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Failed to check if the specified section: %s exists \nERROR: %s" % (sectionName, str(err))
             )
 
@@ -156,7 +156,7 @@ class IniFile(j.application.JSBaseClass):
         try:
             return self.__configParser.has_option(sectionName, paramName)
         except Exception as e:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Failed to check if the parameter: %s under section: %s exists \nERROR: %s"
                 % (paramName, sectionName, str(e))
             )
@@ -177,7 +177,7 @@ class IniFile(j.application.JSBaseClass):
             )
             return result
         except Exception as err:
-            raise LookupError(
+            raise j.exceptions.NotFound(
                 "Failed to get value of the parameter: %s under section: %s in file %s.\nERROR: %s"
                 % (paramName, sectionName, self.__inifilepath, str(err))
             )
@@ -194,7 +194,7 @@ class IniFile(j.application.JSBaseClass):
             return result
 
         except Exception as e:
-            raise LookupError(
+            raise j.exceptions.NotFound(
                 "Inifile: Failed to get boolean value of parameter:%s under section:%s \nERROR: %s"
                 % (paramName, sectionName, e)
             )
@@ -210,7 +210,7 @@ class IniFile(j.application.JSBaseClass):
             )
             return result
         except Exception as e:
-            raise LookupError(
+            raise j.exceptions.NotFound(
                 "Failed to get integer value of parameter: %s under section: %s\nERROR: %s"
                 % (paramName, sectionName, e)
             )
@@ -226,7 +226,7 @@ class IniFile(j.application.JSBaseClass):
             )
             return result
         except Exception as e:
-            raise LookupError(
+            raise j.exceptions.NotFound(
                 "Failed to get float value of parameter:%s under section:%s \nERROR: %" % (paramName, sectionName, e)
             )
 

@@ -15,7 +15,7 @@ class Capacity:
     def hw_info(self):
         """dump a computer's DMI (some say SMBIOS) table contents in a human-readable.
 
-        :raise RuntimeError: Error getting hardware info from dmidecode
+        :raise j.exceptions.Base: Error getting hardware info from dmidecode
         :return: the hardware info
         :rtype: str
         """
@@ -24,7 +24,7 @@ class Capacity:
 
             rc, dmi_data, err = j.sal.process.execute("dmidecode", die=False)
             if rc != 0:
-                raise RuntimeError("Error getting hardware info:\n%s" % (err))
+                raise j.exceptions.Base("Error getting hardware info:\n%s" % (err))
 
             self._hw_info = j.tools.capacity.parser.hw_info_from_dmi(dmi_data)
         return self._hw_info
@@ -43,7 +43,7 @@ class Capacity:
 
             rc, out, err = j.sal.process.execute("lsblk -Jb -o NAME,SIZE,ROTA,TYPE", die=False)
             if rc != 0:
-                raise RuntimeError("Error getting disks:\n%s" % (err))
+                raise j.exceptions.Base("Error getting disks:\n%s" % (err))
 
             disks = json.loads(out)["blockdevices"]
             for disk in disks:
@@ -53,7 +53,7 @@ class Capacity:
                 rc, out, err = j.sal.process.execute("smartctl -T permissive -i %s" % disk["name"], die=False)
                 if rc != 0:
                     # smartctl prints error on stdout
-                    raise RuntimeError(
+                    raise j.exceptions.Base(
                         "Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s"
                         % (disk["name"], out, err)
                     )
@@ -99,7 +99,7 @@ class Capacity:
         mac = j.sal.nettools.getMacAddress(interface)
         node_id = mac.replace(":", "")
         if not node_id:
-            raise RuntimeError("can't detect node ID")
+            raise j.exceptions.Base("can't detect node ID")
 
         report = self.report()
         capacity = dict(

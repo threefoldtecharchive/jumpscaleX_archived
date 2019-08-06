@@ -152,10 +152,12 @@ class UnixSystem(j.application.JSBaseClass):
             startAt = 1
             unitPlace = 4
         else:
-            raise ValueError("This function only supports these interval units: minutes, hours, days and months.")
+            raise j.exceptions.Value(
+                "This function only supports these interval units: minutes, hours, days and months."
+            )
 
         if interval not in allowedIntervals:
-            raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
+            raise j.exceptions.Value("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options
         if j.core.platformtype.myplatform.platform_is_linux:
@@ -353,7 +355,7 @@ class UnixSystem(j.application.JSBaseClass):
         try:
             pwent = pwd.getpwnam(username)
         except KeyError:
-            raise ValueError("The user %s can't be found on this system" % username)
+            raise j.exceptions.Value("The user %s can't be found on this system" % username)
 
         if not os.getuid() == 0:
             raise j.exceptions.RuntimeError("Can't execute as user when not running as root (UID 0)")
@@ -374,7 +376,7 @@ class UnixSystem(j.application.JSBaseClass):
         @type path: string
         """
         if not path or not j.sal.fs.checkDirParam(path):
-            raise ValueError("Path %s is invalid" % path)
+            raise j.exceptions.Value("Path %s is invalid" % path)
 
         self._log_info("Change root to %s" % path)
         os.chroot(path)
@@ -496,7 +498,7 @@ class UnixSystem(j.application.JSBaseClass):
 
         """
         if not j.sal.unix.unixUserExists(username):
-            raise ValueError("User [%s] does not exist, cannot disable user" % username)
+            raise j.exceptions.Value("User [%s] does not exist, cannot disable user" % username)
         else:
             command = "passwd %s -l" % username
             exitCode, stdout, stderr = j.sal.process.execute(command)
@@ -514,7 +516,7 @@ class UnixSystem(j.application.JSBaseClass):
 
         """
         if not j.sal.unix.unixUserExists(username):
-            raise ValueError("User [%s] does not exist, cannot enable user" % username)
+            raise j.exceptions.Value("User [%s] does not exist, cannot enable user" % username)
         else:
             command = "passwd %s -u" % username
             exitCode, stdout, stderr = j.sal.process.execute(command)
@@ -533,7 +535,7 @@ class UnixSystem(j.application.JSBaseClass):
         """
         if not j.sal.unix.unixUserExists(username):
             if die:
-                raise ValueError("User [%s] does not exist, cannot remove user" % username)
+                raise j.exceptions.Value("User [%s] does not exist, cannot remove user" % username)
             else:
                 return True
         else:
@@ -557,7 +559,7 @@ class UnixSystem(j.application.JSBaseClass):
 
         """
         if not j.sal.unix.unixUserExists(username):
-            raise ValueError("User [%s] does not exist, cannot set password" % username)
+            raise j.exceptions.Value("User [%s] does not exist, cannot set password" % username)
         else:
             command = "echo '%s:%s' | chpasswd" % (username, password)
             exitCode, stdout, stderr = j.sal.process.execute(command)
@@ -617,7 +619,7 @@ class UnixSystem(j.application.JSBaseClass):
         @returns: Daemon status and PID
         @rtype: tuple<bool, number>
 
-        @raise RuntimeError: System does not support fork(2)
+        @raise j.exceptions.Base: System does not support fork(2)
         """
         # We display a warning here when threads are discovered in the current
         # process, because forking a threaded application is a pretty bad idea.

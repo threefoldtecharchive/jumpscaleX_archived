@@ -58,7 +58,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 data = j.data.nacl.default.decryptSymmetric(data_encrypted)
             except Exception as e:
                 if str(e).find("Ciphertext failed") != -1:
-                    raise RuntimeError("%s cannot be decrypted with secret" % self._config_data_path)
+                    raise j.exceptions.Base("%s cannot be decrypted with secret" % self._config_data_path)
                 raise e
             self._config = j.data.serializers.msgpack.loads(data)
         else:
@@ -191,7 +191,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 if "type" not in data or data["type"] == "zdb":
                     if "admin" in data:
                         if data["admin"]:
-                            raise RuntimeError("can only use ZDB connection which is not admin")
+                            raise j.exceptions.Base("can only use ZDB connection which is not admin")
                         data.pop("admin")
                     if "type" in data:
                         data.pop("type")
@@ -201,7 +201,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 else:
                     storclient = None
         else:
-            raise RuntimeError("did not find bcdb with name:%s" % name)
+            raise j.exceptions.Base("did not find bcdb with name:%s" % name)
 
         self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
         return self._bcdb_instances[name]
@@ -225,7 +225,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if name in self._bcdb_instances:  # make sure we don't remember when a new one
             self._bcdb_instances.pop(name)
         if storclient != None and j.data.types.string.check(storclient):
-            raise RuntimeError("storclient cannot be str")
+            raise j.exceptions.Base("storclient cannot be str")
         data = {}
 
         if storclient:
@@ -312,7 +312,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             assert storclient.ping()
             bcdb = j.data.bcdb.new(name="test", storclient=storclient)
         else:
-            raise RuntimeError("only rdb,zdb,sqlite for stor")
+            raise j.exceptions.Base("only rdb,zdb,sqlite for stor")
 
         if reset:
             bcdb.reset()  # empty
@@ -343,7 +343,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
     def __setattr__(self, key, value):
         if key in ["system", "test"]:
-            raise RuntimeError("no system or test allowed")
+            raise j.exceptions.Base("no system or test allowed")
         self.__dict__[key] = value
 
     def __str__(self):

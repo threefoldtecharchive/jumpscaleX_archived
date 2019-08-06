@@ -15,5 +15,5 @@ class UserGroupModel(ModelBase):
 
             self._log_debug("DEBUG NOW generate key UserGroup")
             embed()
-            raise RuntimeError("stop debug here")
+            raise j.exceptions.Base("stop debug here")
         return self._key

@@ -30,7 +30,7 @@ class SSHAgent(j.application.JSBaseClass):
             self.key_load = MyEnv.sshagent.key_load
 
         else:
-            raise RuntimeError("cannot use sshagent, maybe not initted?")
+            raise j.exceptions.Base("cannot use sshagent, maybe not initted?")
 
     @property
     def key_default(self):
@@ -85,7 +85,9 @@ class SSHAgent(j.application.JSBaseClass):
             if item.endswith(keyname):
                 return item
         if die:
-            raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
+            raise j.exceptions.Base(
+                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname
+            )
 
     def keys_pub_get(self):
         """
@@ -122,7 +124,7 @@ class SSHAgent(j.application.JSBaseClass):
                 if line.endswith(keyname):
                     return line
 
-        raise RuntimeError("did not find public key")
+        raise j.exceptions.Base("did not find public key")
 
     #
     # def _paramiko_keys_get(self):
@@ -140,7 +142,7 @@ class SSHAgent(j.application.JSBaseClass):
     #             # maybe we can get this to work using comparing of the public keys?
     #             return key
     #
-    #     raise RuntimeError("could not find key:%s" % keyname)
+    #     raise j.exceptions.Base("could not find key:%s" % keyname)
 
     def sign(self, data, keyname=None, hash=True):
         """
@@ -189,11 +191,11 @@ class SSHAgent(j.application.JSBaseClass):
             self._log_info("start ssh agent")
             rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise j.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not Tools.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
-                    raise RuntimeError(err_msg)
+                    raise j.exceptions.Base(err_msg)
 
                 # get pid from out of ssh-agent being started
                 piditems = [item for item in out.split("\n") if item.find("pid") != -1]
@@ -201,7 +203,7 @@ class SSHAgent(j.application.JSBaseClass):
                 # print(piditems)
                 if len(piditems) < 1:
                     self._log_debug("results was: %s", out)
-                    raise RuntimeError("Cannot find items in ssh-add -l")
+                    raise j.exceptions.Base("Cannot find items in ssh-add -l")
 
                 self._init()
 

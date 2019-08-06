@@ -208,7 +208,7 @@ class Time_(object):
             datestr = datestr.strip()
             return time.mktime(time.strptime(datestr, "%Y/%m/%d"))
         except BaseException:
-            raise ValueError(
+            raise j.exceptions.Value(
                 'Date needs to be formatted as " 1988/06/16", also check if date is valid, now format = %s' % datestr
             )
 
@@ -223,7 +223,7 @@ class Time_(object):
             hrdatetime = hrdatetime.strip()
             return int(time.mktime(time.strptime(hrdatetime, "%Y/%m/%d %H:%M:%S")))
         except BaseException:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Date needs to be formatted as Needs to be formatted as 16/06/1988 %H:%M:%S, also check if date is valid, now format = %s"
                 % hrdatetime
             )

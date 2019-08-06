@@ -207,7 +207,7 @@ class KvmManager:
         self._create_chk.check(args)
 
         if media is None and flist is None:
-            raise ValueError("need at least one boot media via media or an flist")
+            raise j.exceptions.Value("need at least one boot media via media or an flist")
 
         return self._client.json("kvm.create", args, tags=tags)
 

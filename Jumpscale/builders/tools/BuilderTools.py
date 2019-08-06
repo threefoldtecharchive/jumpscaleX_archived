@@ -263,7 +263,7 @@ class BuilderTools(j.builders.system._BaseClass):
         elif base.endswith(".zip"):
             base = base[:-4]
         else:
-            raise RuntimeError("Cannot file expand, not supported")
+            raise j.exceptions.Base("Cannot file expand, not supported")
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
         j.sal.fs.remove(destination)
@@ -539,7 +539,7 @@ class BuilderTools(j.builders.system._BaseClass):
     def replace(self, text, args={}):
         text = self._replace(text, args=args)
         if "$" in text:
-            raise RuntimeError("found $ in the text to replace, should use {}")
+            raise j.exceptions.Base("found $ in the text to replace, should use {}")
         return text
 
     def file_copy(self, source, dest, recursive=False, overwrite=True):
@@ -755,7 +755,7 @@ class BuilderTools(j.builders.system._BaseClass):
         """
         self._log_info(cmd)
         if cmd.strip() == "":
-            raise RuntimeError("cmd cannot be empty")
+            raise j.exceptions.Base("cmd cannot be empty")
 
         if profile:
             cmd = "%s\n%s" % (j.builders.system.bash.profile, cmd)
@@ -818,7 +818,7 @@ class BuilderTools(j.builders.system._BaseClass):
         command = self._replace(command)
         rc, out, err = self.execute("which '%s'" % command, die=False, showout=False, profile=True)
         if rc > 0:
-            raise RuntimeError("command '%s' does not exist, cannot find" % command)
+            raise j.exceptions.Base("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
     # USE:j.builders.system.package.ensure

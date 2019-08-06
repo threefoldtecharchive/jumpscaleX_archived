@@ -60,13 +60,13 @@ class TestReservedParser(TestCase):
     @pytest.mark.skip(reason="Importing CapacityParser is failing")
     def test_parse_vm_cpu_negative(self):
         vm_data = {"cpu": -1, "memory": 128}
-        with pytest.raises(TypeError, message="negative cpu should raise TypeError"):
+        with pytest.raises(TypeError, message="negative cpu should raise j.exceptions.Value"):
             ressources = _parser_vm(vm_data)
 
     @pytest.mark.skip(reason="Importing CapacityParser is failing")
     def test_parse_vm_memory_negative(self):
         vm_data = {"cpu": 1, "memory": -512}
-        with pytest.raises(TypeError, message="negative memory should raise TypeError"):
+        with pytest.raises(TypeError, message="negative memory should raise j.exceptions.Value"):
             ressources = _parser_vm(vm_data)
 
     @pytest.mark.skip(reason="Importing CapacityParser is failing")

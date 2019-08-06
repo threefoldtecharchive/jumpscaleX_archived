@@ -47,7 +47,7 @@ class CoreDnsFactory(JSConfigs):
         :rtype: CoreDns
         """
         if "etcd_instance" not in kwargs:
-            raise ValueError("New or existing etcd_instance name required")
+            raise j.exceptions.Value("New or existing etcd_instance name required")
         j.clients.etcd.get(name=kwargs["etcd_instance"], host=host, port=port, user=user, password_=password)
         return JSConfigFactory.get(
             self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs

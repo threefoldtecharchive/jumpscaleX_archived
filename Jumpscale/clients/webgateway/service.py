@@ -30,7 +30,7 @@ class Service:
         for endpoint in endpoints:
             u = urlparse(endpoint)
             if not all([u.hostname, u.port, u.scheme]):
-                raise ValueError("wrong format for endpoint %s" % endpoint)
+                raise j.exceptions.Value("wrong format for endpoint %s" % endpoint)
 
         if not self.proxy:
             self._proxy = self._traefik.proxy_create(self.name)
