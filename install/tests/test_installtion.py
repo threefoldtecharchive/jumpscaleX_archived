@@ -5,6 +5,8 @@ from .base_test import BaseTest
 
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
+        print('\t')
+        self.info('* Test case : {}'.format(self._testMethodName))
         self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
         self.info(
             "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type())
@@ -82,9 +84,9 @@ class TestInstallationInDocker(BaseTest):
         #. Check the branch of jumpscale code, should be same as installation branch.
         """
         self.info("Run kosmos command inside docker,should start kosmos shell")
-        command = """source /sandbox/env.sh && kosmos "from Jumpscale import j" """
+        command = """source /sandbox/env.sh && kosmos "from Jumpscale import j";print(j) """
         output, error = self.docker_command(command)
-        self.assertIn("BCDB INIT DONE", output.decode())
+        self.assertIn("Jumpscale.Jumpscale object", output.decode())
 
         self.info("Run js_init generate ")
         command = "source /sandbox/env.sh && js_init generate"
@@ -160,7 +162,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that container-clean works successfully **
         """
-        command = 'docker ps -a | grep {} | awk "{print \$2}"'.format(self.CONTAINER_NAME)
+        command = 'docker ps -a | grep %s | awk "{print \$2}"' % self.CONTAINER_NAME
         output, error = self.os_command(command)
         container_image = output.decode()
 
@@ -180,7 +182,7 @@ class TestInstallationInDocker(BaseTest):
         self.assertFalse(error)
         self.assertIn("tar", output.decode())
 
-        command = 'docker ps -a -f status=running  | grep {} | awk "{print \$2}"'.format(self.CONTAINER_NAME)
+        command = 'docker ps -a -f status=running  | grep %s | awk "{print \$2}"' % self.CONTAINER_NAME
         output, error = self.os_command(command)
         new_container_image = output.decode()
         self.assertEqual(container_image, new_container_image)
@@ -193,7 +195,7 @@ class TestInstallationInDocker(BaseTest):
 
         self.info("Create file in existing jumpscale container")
         file_name = str(uuid.uuid4()).replace("-", "")[:10]
-        command = "cd / && touch {}".format()
+        command = "cd / && touch {}".format(file_name)
         self.docker_command(command)
 
         self.info("Run container-install -d ")
@@ -209,7 +211,8 @@ class TestInstallationInDocker(BaseTest):
 
 class TestInstallationInSystem(BaseTest):
     def setUp(self):
-        pass
+        print('\t')
+        self.info('* Test case : {}'.format(self._testMethodName))
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -229,10 +232,10 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
-        command = "jsx kosmos 'from Jumpscale import j' "
+        command = "jsx kosmos 'from Jumpscale import j'; print(j) "
         output, error = self.os_command(command)
         self.assertFalse(error)
-        self.assertIn("BCDB INIT DONE", output.decode())
+        self.assertIn("Jumpscale.Jumpscale object", output.decode())
 
     def Test02_verify_jsx_working_insystem(self):
         """
@@ -274,10 +277,10 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j' "
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j';print(j) "
         output, error = self.os_command(command)
         self.assertFalse(error)
-        self.assertIn("BCDB INIT DONE", output.decode())
+        self.assertIn("Jumpscale.Jumpscale object", output.decode())
 
     def Test04_insystem_installation_r_option_jsx_installed_before(self):
         """
@@ -301,10 +304,10 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j'"
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j';print(j)"
         output, error = self.os_command(command)
         self.assertFalse(error)
-        self.assertIn("BCDB INIT DONE", output.decode())
+        self.assertIn("Jumpscale.Jumpscale object", output.decode())
 
     def Test05_bcdb_system_delete_option(self):
         """
