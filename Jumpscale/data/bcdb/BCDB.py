@@ -119,6 +119,8 @@ class BCDB(j.application.JSBaseClass):
         if not res and self.meta._data_in_db():
             # means there is no index yet in the redis, need to rebuild all
             self.index_rebuild()
+        else:
+            self.check()
 
         from .models_system.ACL import ACL
         from .models_system.USER import USER
@@ -133,6 +135,17 @@ class BCDB(j.application.JSBaseClass):
         j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
+
+    def check(self):
+        """
+        at this point we have for sure the metadata loaded now we should see if the last record found can be found in the index
+        :return:
+        """
+        for s in self._data.schemas:
+            self._log_debug("check %s:%s:%s" % (s.sid, s.md5, s.url))
+            m = self.model_get_from_sid(s.sid)
+            j.shell()
+            w
 
     def export(self, path=None, encrypt=True):
         if not path:
@@ -461,8 +474,9 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
+            name = "bcdbindex_%s" % self.name
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
+                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass

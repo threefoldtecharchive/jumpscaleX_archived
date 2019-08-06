@@ -1345,7 +1345,7 @@ class Tools:
         def process_line(line, args_new):
             try:
                 line = line.format_map(args_new)
-            except KeyError as e:
+            except Exception as e:
                 # means the format map did not work,lets fall back on something more failsafe
                 for arg, val in replace_args.items():
                     line = line.replace("{%s}" % arg, val)
