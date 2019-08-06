@@ -22,10 +22,12 @@ from Jumpscale import j
 
 
 class DBSQLite(j.application.JSBaseClass):
-    def _init2(self, db_path=None):
+    def _init(self, nsname=None, **kwargs):
 
-        if not db_path:
-            j.shell()
+        assert nsname
+        self.nsname = nsname
+
+        db_path = j.core.tools.text_replace("{DIR_VAR}/bcdb/%s/sqlite_stor.db" % nsname)
 
         self._dbpath = db_path
 
@@ -49,7 +51,6 @@ class DBSQLite(j.application.JSBaseClass):
             value = p.BlobField()
 
         self._table_model = KVS
-        #
         self._table_model.create_table()
 
     def set(self, key, val):

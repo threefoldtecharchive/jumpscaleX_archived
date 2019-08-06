@@ -141,6 +141,7 @@ class BCDB(j.application.JSBaseClass):
         at this point we have for sure the metadata loaded now we should see if the last record found can be found in the index
         :return:
         """
+        return
         for s in self._data.schemas:
             self._log_debug("check %s:%s:%s" % (s.sid, s.md5, s.url))
             m = self.model_get_from_sid(s.sid)
