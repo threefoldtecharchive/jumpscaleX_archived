@@ -12,16 +12,36 @@ class GedisWebsocketServer(JSConfigClient):
         @url = jumpscale.gedis.websocket.1
         name* = "default" (S)
         port = 4444
+        ssl = True (B)
+        ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key" (S)
+        ssl_certfile = "/etc/ssl/resty-auto-ssl-fallback.crt" (S)
         """
 
     def _init(self, **kwargs):
         self._server = None
         self._app = None
+        if self.ssl:
+            if not j.sal.fs.exists(self.ssl_keyfile):
+                raise RuntimeError('SSL: keyfile not exists')
+            if not j.sal.fs.exists(self.ssl_certfile):
+                raise RuntimeError('SSL: certfile not exists')
 
     @property
     def server(self):
         if not self._server:
-            self._server = WebSocketServer(("0.0.0.0", self.port), Resource(OrderedDict([("/", Application)])))
+
+            if self.ssl:
+                self._server = WebSocketServer(
+                    ("0.0.0.0", self.port),
+                    Resource(OrderedDict([("/", Application)])),
+                    keyfile=self.ssl_keyfile,
+                    certfile=self.ssl_certfile
+                )
+            else:
+                self._server = WebSocketServer(
+                    ("0.0.0.0", self.port),
+                    Resource(OrderedDict([("/", Application)])))
+
         return self._server
 
     @property
