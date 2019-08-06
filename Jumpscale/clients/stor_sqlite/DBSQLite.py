@@ -84,11 +84,11 @@ class DBSQLite(j.application.JSBaseClass):
     def delete(self, key):
         self._table_model.delete_by_id(key)
 
-    # def reset(self):
-    #     self._log_info("RESET FOR KVS")
-    #     self._table_model.delete().execute()
-    #     self._table_model.create_table()
-    #     assert self._table_model.select().count() == 0
+    def flush(self):
+        self._log_info("RESET FOR SQLITE KVS")
+        self._table_model.delete().execute()
+        self._table_model.create_table()
+        assert self._table_model.select().count() == 0
 
     def iterate(self, key_start=None, **kwargs):
         if key_start:
