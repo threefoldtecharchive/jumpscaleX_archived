@@ -21,12 +21,11 @@
 from Jumpscale import j
 
 
-JSBASE = j.application.JSBaseClass
-
-
 class DBSQLite(j.application.JSBaseClass):
-    def __init__(self, db_path):
-        JSBASE.__init__(self)
+    def _init2(self, db_path=None):
+
+        if not db_path:
+            j.shell()
 
         self._dbpath = db_path
 

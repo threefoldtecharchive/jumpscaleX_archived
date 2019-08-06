@@ -72,7 +72,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :return:
         """
         if not self._system:
-            self._system = self.get("system", reset=reset)
+            storclient = j.clients.rdb.client_get(name="system")
+            self._system = self.get("system", storclient=storclient, reset=reset)
         return self._system
 
     def get_test(self, reset=False):
