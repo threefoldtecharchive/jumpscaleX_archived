@@ -340,10 +340,11 @@ class MarkDownDocs(j.application.JSBaseClass):
         examples = j.tools.markdowndocs.load(url, name="examples")
         examples.write()
 
-        j.servers.threebot.get('test').start(background=True)
+        j.servers.threebot.get("test").start(background=True)
 
         import webbrowser
-        webbrowser.open('http://localhost:8090/wiki/examples#/test_include')
+
+        webbrowser.open("http://localhost:8090/wiki/examples#/test_include")
 
     def test(self, watch=False):
         """

@@ -89,7 +89,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
             self._sonic = BuilderSonic()
         return self._sonic
-    
+
     @property
     def hub(self):
         if self._hub is None:

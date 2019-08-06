@@ -23,7 +23,7 @@ def main(self):
     c._explorer_get = explorer_client.explorer_get
 
     # create a new devnet wallet
-    w = c.wallets.get('mywallet')  # is the implicit form of `c.wallets.new("mywallet")`
+    w = c.wallets.get("mywallet")  # is the implicit form of `c.wallets.new("mywallet")`
 
     # a tfchain (JS) wallet uses the underlying tfchain client for all its
     # interaction with the tfchain network

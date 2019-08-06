@@ -452,6 +452,7 @@ class Link(j.application.JSBaseClass):
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
             import requests
+
             response = requests.get(self.link_source_original, stream=True)
             j.sal.bcdbfs.file_write(dest, response, append=False)
 

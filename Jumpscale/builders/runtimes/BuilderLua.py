@@ -287,6 +287,8 @@ class BuilderLua(j.builders.system._BaseClass):
         j.builders.web.openresty.sandbox()
 
         bins = ["lua", "lapis", "moon", "moonc"]
+        # bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua", "lapis", "moon", "moonc"]
+        # TODO: this was the original, we prob need to copy more
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])

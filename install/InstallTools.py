@@ -3447,10 +3447,10 @@ class DockerContainer:
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
-            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
             Tools.execute(
                 'ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:%s"' % (MyEnv.config["DIR_HOME"], args["PORT"])
             )
+            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
@@ -3615,9 +3615,7 @@ class DockerContainer:
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            Tools.execute(
-                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure -s"
-            )
+            Tools.execute("python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure -s")
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")

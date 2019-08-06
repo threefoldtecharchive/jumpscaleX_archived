@@ -282,7 +282,9 @@ class BCDBFS(j.application.JSBaseClass):
         :param location: location to search in, default: /
         :return: List[str] full paths
         """
-        return [obj.name[len(location) + 1:-3] for obj in self._file_model.search(text) if obj.name.startswith(location)]
+        return [
+            obj.name[len(location) + 1 : -3] for obj in self._file_model.search(text) if obj.name.startswith(location)
+        ]
 
     def test(self):
         cl = j.clients.sonic.get_client_bcdb()
@@ -308,7 +310,13 @@ class BCDBFS(j.application.JSBaseClass):
             "/test/dir_1/test_3",
             "/test/dir_1/test_4",
         ]
-        assert j.sal.bcdbfs.list_dirs("/test") == ["/test/dir_0", "/test/dir_1", "/test/dir_2", "/test/dir_3", "/test/dir_4"]
+        assert j.sal.bcdbfs.list_dirs("/test") == [
+            "/test/dir_0",
+            "/test/dir_1",
+            "/test/dir_2",
+            "/test/dir_3",
+            "/test/dir_4",
+        ]
         assert j.sal.bcdbfs.list_files_and_dirs("/test") == [
             "/test/dir_0",
             "/test/dir_1",
