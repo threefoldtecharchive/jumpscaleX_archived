@@ -136,6 +136,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if ports:
             for port in self.ports:
+                p = None
                 try:
                     p = j.sal.process.getProcessByPort(port)
                 except Exception as e:
