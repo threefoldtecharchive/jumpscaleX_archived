@@ -958,14 +958,14 @@ class Tools:
         if tb or exception:
             for handler in MyEnv.errorhandlers:
                 try:
-                    handler.handle(logdict)
+                    handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
         else:
 
             for handler in MyEnv.loghandlers:
                 try:
-                    handler.handle(logdict)
+                    handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
 
@@ -1349,6 +1349,9 @@ class Tools:
                 # means the format map did not work,lets fall back on something more failsafe
                 for arg, val in replace_args.items():
                     line = line.replace("{%s}" % arg, val)
+            except Exception as e:
+                print("error here :", e)
+                
             return line
 
         for replace_args in args_list:
