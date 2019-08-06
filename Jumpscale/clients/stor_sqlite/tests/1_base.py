@@ -47,7 +47,7 @@ def main(self):
         self._log_debug("%s:%s" % (id, data))
         result[id] = data
 
-    assert {1: b"rss", 2: b"b"} == result
+    assert {1: b'rss', 2: b'b'} == result
 
     assert cl.list(key_start=id2)[0] == id2
 
@@ -92,7 +92,7 @@ def main(self):
 
     res = j.tools.timer.stop(nritems)
 
-    assert res > 3000
+    assert res > 60
 
     self._log_info("PERF TEST SEQ OK")
 
