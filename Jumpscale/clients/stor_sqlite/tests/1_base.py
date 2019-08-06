@@ -6,7 +6,7 @@ def main(self):
     """
     to run:
     
-    kosmos 'j.clients.rdb.test()'
+    kosmos 'j.clients.sqlitedb.test()'
 
     """
 

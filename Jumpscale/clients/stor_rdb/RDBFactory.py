@@ -6,10 +6,9 @@ from .RDBClient import RDBClient
 JSBASE = j.application.JSBaseClass
 
 
-class RDBFactory(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.rdb"
-        JSBASE.__init__(self)
+class RDBFactory(j.application.JSBaseFactoryClass):
+
+    __jslocation__ = "j.clients.rdb"
 
     def client_get(self, nsname="test", redisconfig_name="core", fromcache=True, redisclient=None, **kwargs):
         """

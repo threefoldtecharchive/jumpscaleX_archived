@@ -25,8 +25,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class DBSQLite(j.application.JSBaseClass):
-    def __init__(self, db_path):
-        JSBASE.__init__(self)
+    def _init2(self, db_path=None):
+
+        if not db_path:
+
 
         self._dbpath = db_path
 
