@@ -25,7 +25,7 @@ class RDBClient(j.application.JSBaseClass):
         assert self.ping()
 
     def _incr(self):
-        return self._redis.incr(self._incrkey)
+        return self._redis.incr(self._incrkey) - 1
 
     def _key_encode(self, key):
         return key

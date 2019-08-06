@@ -84,7 +84,7 @@ def main(self):
     assert ns.nsinfo["entries"] == 1
 
     nritems = 1000
-    j.tools.timer.start("zdb")
+    j.tools.timer.start("rdb")
 
     self._log_debug("perftest for 10.000 records, should get above 5k per sec, +10k expected")
     for i in range(nritems):

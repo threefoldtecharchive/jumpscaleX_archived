@@ -21,12 +21,13 @@
 from Jumpscale import j
 
 
-JSBASE = j.application.JSBaseClass
-
-
 class DBSQLite(j.application.JSBaseClass):
-    def __init__(self, db_path):
-        JSBASE.__init__(self)
+    def _init(self, nsname=None, **kwargs):
+
+        assert nsname
+        self.nsname = nsname
+
+        db_path = j.core.tools.text_replace("{DIR_VAR}/bcdb/%s/sqlite_stor.db" % nsname)
 
         self._dbpath = db_path
 
@@ -50,7 +51,6 @@ class DBSQLite(j.application.JSBaseClass):
             value = p.BlobField()
 
         self._table_model = KVS
-        #
         self._table_model.create_table()
 
     def set(self, key, val):
@@ -84,11 +84,11 @@ class DBSQLite(j.application.JSBaseClass):
     def delete(self, key):
         self._table_model.delete_by_id(key)
 
-    # def reset(self):
-    #     self._log_info("RESET FOR KVS")
-    #     self._table_model.delete().execute()
-    #     self._table_model.create_table()
-    #     assert self._table_model.select().count() == 0
+    def flush(self):
+        self._log_info("RESET FOR SQLITE KVS")
+        self._table_model.delete().execute()
+        self._table_model.create_table()
+        assert self._table_model.select().count() == 0
 
     def iterate(self, key_start=None, **kwargs):
         if key_start:

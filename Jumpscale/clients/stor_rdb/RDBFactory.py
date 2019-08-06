@@ -6,7 +6,7 @@ from .RDBClient import RDBClient
 JSBASE = j.application.JSBaseClass
 
 
-class RDBFactory(j.application.JSBaseClass):
+class RDBFactory(j.application.JSFactoryConfigsBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.clients.rdb"
         JSBASE.__init__(self)

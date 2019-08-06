@@ -88,7 +88,7 @@ class BCDBModel(j.application.JSBaseClass):
         self._kosmosinstance = None
 
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
-        self.index = indexklass(self, reset=reset)
+        self.index = indexklass(bcdbmodel=self, reset=reset)
 
         self._sonic_client = None
         # self.cache_expiration = 3600
