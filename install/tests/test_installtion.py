@@ -1,7 +1,7 @@
 import os
 import uuid
 from .base_test import BaseTest
-from unittest import SkipTest
+from unittest import skip
 
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
@@ -160,7 +160,7 @@ class TestInstallationInDocker(BaseTest):
         output, error = self.docker_command(command)
         self.assertNotIn(file_name, output.decode())
 
-    @SkipTest.skip('To re-do')
+    @skip('To re-do')
     def test07_verify_container_clean_options(self):
         """
 
@@ -236,7 +236,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
-        command = "jsx kosmos 'from Jumpscale import j; print(j)' "
+        command = "source /sandbox/env.sh && echo 'from Jumpscale import j; print(j)' | jsx kosmos "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -258,7 +258,7 @@ class TestInstallationInSystem(BaseTest):
         os.remove("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py")
 
         self.info("Check generate option")    
-        command = "jsx generate"
+        command = "source /sandbox/env.sh && jsx generate"
         self.os_command(command)
 
         self.info("make sure that jumpscale_generated file is generated again")
@@ -281,7 +281,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j;print(j)' "
+        command = "source /sandbox/env.sh && echo 'from Jumpscale import j; print(j)' | jsx kosmos "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -308,7 +308,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j;print(j)'"
+        command = "source /sandbox/env.sh && echo 'from Jumpscale import j; print(j)' | jsx kosmos "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -327,23 +327,23 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("use kosmos to create github client, make sure that there is no error")
-        command = """kosmos 'c=j.clients.github.new("test_bcdb_delete_option", token="test_bcdb_delete_option"); c.save()'"""
+        command = """source /sandbox/env.sh && jsx kosmos 'c=j.clients.github.new("test_bcdb_delete_option", token="test_bcdb_delete_option"); c.save()'"""
         output, error = self.os_command(command)
         self.assertFalse(error)
 
         self.info("check that the client is existing")
-        command = """kosmos 'print(j.clients.github.get("test_bcdb_delete_option").name)'"""
+        command = """source /sandbox/env.sh && echo 'print(j.clients.github.get("test_bcdb_delete_option").name)' | jsx kosmos """
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("test_bcdb_delete_option", output)
 
         self.info("use bcdb_system_delete option to delete database, and check if the client still exists or not")
-        command = "jsx bcdb-system-delete"
+        command = "source /sandbox/env.sh && jsx bcdb-system-delete"
         output, error = self.os_command(command)
         self.assertTrue(error) 
 
         self.info("check that the client is not existing")
-        command = """kosmos 'print(j.clients.github.get("test_bcdb_delete_option").name)'"""
+        command = """source /sandbox/env.sh && echo 'print(j.clients.github.get("test_bcdb_delete_option").name)' | jsx kosmos """
         output, error = self.os_command(command)
         self.assertTrue(error)
 
@@ -361,7 +361,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("test jsx check option ")
-        command = "jsx check"
+        command = "source /sandbox/env.sh && jsx check"
         output, error = self.os_command(command)
         self.assertFalse(error)
 
