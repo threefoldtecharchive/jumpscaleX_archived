@@ -64,7 +64,7 @@ class BaseTest(unittest.TestCase):
         BaseTest.os_command(command)
 
         BaseTest.info("Run script with {} with branch {}".format(install_type, BaseTest.get_js_branch()))
-        command = "/tmp/jsx {}  -s -b {} {}".format(install_type, BaseTest.get_js_branch(), options)
+        command = "/tmp/jsx {} -s -b {} {}".format(install_type, BaseTest.get_js_branch(), options)
         output, error = BaseTest.os_command(command)
         return output, error
 

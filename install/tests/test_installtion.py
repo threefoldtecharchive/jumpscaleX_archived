@@ -1,12 +1,12 @@
 import os
 import uuid
 from .base_test import BaseTest
-
+from unittest import SkipTest
 
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
         print('\t')
-        self.info('* Test case : {}'.format(self._testMethodName))
+        self.info('Test case : {}'.format(self._testMethodName))
         self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
         self.info(
             "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type())
@@ -84,7 +84,7 @@ class TestInstallationInDocker(BaseTest):
         #. Check the branch of jumpscale code, should be same as installation branch.
         """
         self.info("Run kosmos command inside docker,should start kosmos shell")
-        command = """source /sandbox/env.sh && kosmos "from Jumpscale import j";print(j) """
+        command = """source /sandbox/env.sh && kosmos "from Jumpscale import j;print(j)" """
         output, error = self.docker_command(command)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
 
@@ -121,42 +121,46 @@ class TestInstallationInDocker(BaseTest):
     def test05_verify_containers_reset_option(self):
         """
 
-        **Verify that containers-reset option will delete running container and image**
+        **Verify that containers-reset option will delete running containers and image**
         """
         self.info("Reset the running container and image using container-reset")
-        command = "/tmp/jsx container-reset -n {}".format(self.CONTAINER_NAME)
+        command = "/tmp/jsx containers-reset".format(self.CONTAINER_NAME)
         self.os_command(command)
 
         self.info("Check that running containers have been deleted")
-        command = "docker ps -a -q "
+        command = "docker ps -aq "
         output, error = self.os_command(command)
         self.assertFalse(output)
 
         self.info("Check that containers image have been deleted")
-        command = "docker images -a -q "
+        command = "docker images -aq "
         output, error = self.os_command(command)
         self.assertFalse(output)
 
-    def test06_verify_cotianer_import_export_options(self):
+    def test06_verify_containers_import_export_options(self):
         """
 
         **Verify that container-import and container-export works successfully **
         """
-        self.info("Use container-export ,should export the running container image .")
+        self.info("Use container-export ,should export the running container.")
         command = "/tmp/jsx container-export -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
 
-        self.info("Delete the running container")
-        command = "docker rm {}".format(self.CONTAINER_NAME)
-        self.os_command(command)
+        self.info("Create file in existing jumpscale container")
+        file_name = str(uuid.uuid4()).replace("-", "")[:10]
+        command = "cd / && touch {}".format(file_name)
+        self.docker_command(command)
 
-        self.info("Use container-import, should run container with exported image ")
+        self.info("Use container-import, should restore the container")
         command = "/tmp/jsx container-import -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
-        command = "docker ps -a -f status=running | grep {}".format(self.CONTAINER_NAME)
-        output, error = self.os_command(command)
-        self.assertIn(self.CONTAINER_NAME, output.decode())
 
+        self.info("Check that container does not have the file ")
+        command = "ls / "
+        output, error = self.docker_command(command)
+        self.assertNotIn(file_name, output.decode())
+
+    @SkipTest.skip('To re-do')
     def test07_verify_container_clean_options(self):
         """
 
@@ -212,7 +216,7 @@ class TestInstallationInDocker(BaseTest):
 class TestInstallationInSystem(BaseTest):
     def setUp(self):
         print('\t')
-        self.info('* Test case : {}'.format(self._testMethodName))
+        self.info('Test case : {}'.format(self._testMethodName))
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -232,7 +236,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("Run kosmos shell,should succeed")
-        command = "jsx kosmos 'from Jumpscale import j'; print(j) "
+        command = "jsx kosmos 'from Jumpscale import j; print(j)' "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -277,7 +281,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j';print(j) "
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j;print(j)' "
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -304,7 +308,7 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info(" Run kosmos shell,should succeed")
-        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j';print(j)"
+        command = "source /sandbox/env.sh && kosmos 'from Jumpscale import j;print(j)'"
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn("Jumpscale.Jumpscale object", output.decode())
@@ -343,7 +347,7 @@ class TestInstallationInSystem(BaseTest):
         output, error = self.os_command(command)
         self.assertTrue(error)
 
-    def Test05_check_option(self):
+    def Test06_check_option(self):
         """
         test TC205, TC206
         ** test check option on Linux and Mac OS **
