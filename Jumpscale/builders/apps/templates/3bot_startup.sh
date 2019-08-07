@@ -5,17 +5,21 @@ export LANGUAGE=en_US.UTF-8zdb
 export LC_ALL=en_US.UTF-8
 . /sandbox/env.sh
 
+# update all repos and checkout development_jumpscale branch
 cd /sandbox/code/github/threefoldtech/jumpscaleX
-git pull
+git remote set-branches origin '*'
+git stash; git fetch -v; git pull origin development_jumpscale; git checkout development_jumpscale -f
 cd /sandbox/code/github/threefoldtech/digitalmeX
-git pull
+git remote set-branches origin '*'
+git stash; git fetch -v; git pull origin development_jumpscale; git checkout development_jumpscale -f
 cd /sandbox/code/github/threefoldfoundation/info_foundation
 git pull
 cd /sandbox/code/github/threefoldfoundation/info_tokens
 git pull
 cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
-jsx generate
+cd /sandbox/code/github/threefoldtech/digitalmeX
+js_init generate
 
 #tmux new -d -s main  "export NACL_SECRET=123 ; kosmos 'j.servers.threebot.default.start()'"
-kosmos --instruct /bot_configure.toml
+kosmos --instruct /3bot_configure.toml
