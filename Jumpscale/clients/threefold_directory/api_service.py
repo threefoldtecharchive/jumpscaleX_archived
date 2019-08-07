@@ -133,23 +133,34 @@ class ApiService:
         if query_params is None:
             query_params = {}
 
-        uri = self.client.base_url + "/api/nodes"
-        resp = self.client.get(uri, None, headers, query_params, content_type)
-        try:
-            if resp.status_code == 200:
-                resps = []
-                for elem in resp.json():
-                    resps.append(Capacity(elem))
-                return resps, resp
+        output = []
 
-            message = "unknown status code={}".format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
-        except ValueError as msg:
-            raise UnmarshallError(resp, msg)
-        except UnhandledAPIError as uae:
-            raise uae
-        except Exception as e:
-            raise UnmarshallError(resp, e.message)
+        def get_page(page):
+            query_params.update({"page": page})
+            uri = self.client.base_url + "/api/nodes"
+            resp = self.client.get(uri, None, headers, query_params, content_type)
+            try:
+                if resp.status_code == 200:
+                    resps = []
+                    for elem in resp.json():
+                        resps.append(Capacity(elem))
+                    return resps, resp, resp.headers.get("page", 1)
+
+                    message = "unknown status code={}".format(resp.status_code)
+                    raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
+            except ValueError as msg:
+                raise UnmarshallError(resp, msg)
+            except UnhandledAPIError as uae:
+                raise uae
+            except Exception as e:
+                raise UnmarshallError(resp, e.message)
+
+        nodes, resp, pages = get_page(page=1)
+        output.extend(nodes)
+        for i in range(2, int(pages) + 1):
+            nodes, resp, _ = get_page(page=i)
+            output.extend(nodes)
+        return output, resp
 
     def RegisterCapacity(self, data, headers=None, query_params=None, content_type="application/json"):
         """
