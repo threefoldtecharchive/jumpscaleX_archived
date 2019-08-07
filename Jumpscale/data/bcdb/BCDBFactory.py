@@ -261,13 +261,13 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         data = {}
 
         assert isinstance(storclient.type, str)
-        if storclient.type == "RDB":
-            data["nsname"] = storclient.nsname
-            data["type"] = "rdb"
-            # link to which redis to connect to (name of the redis client in JSX)
-        elif storclient.type == "SDB":
+        if storclient.type == "SDB":
             data["nsname"] = storclient.nsname
             data["type"] = "sdb"
+            # link to which redis to connect to (name of the redis client in JSX)
+        elif storclient.type == "RDB":
+            data["nsname"] = storclient.nsname
+            data["type"] = "rdb"
             data["redisconfig_name"] = storclient._redis.redisconfig_name
             # link to which redis to connect to (name of the redis client in JSX)
 

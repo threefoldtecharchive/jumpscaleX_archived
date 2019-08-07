@@ -373,7 +373,11 @@ class BCDB(j.application.JSBaseClass):
         for model in self.models:
             # make sure indexes are empty
             model.index.destroy()
+        first = True
         for data in self.storclient.iterate():
+            if first:
+                first = False
+                continue
             jsxobj = j.data.serializers.jsxdata.loads(data)
             model = self.model_get_from_schema(jsxobj._schema)
             model.set(jsxobj, store=False, index=True)
@@ -638,7 +642,7 @@ class BCDB(j.application.JSBaseClass):
         if self.storclient:
             db = self.storclient
             for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
-                if self.storclient.type.lower() == "zdb" and key == 0:  # skip first metadata entry
+                if key == 0:  # skip first metadata entry
                     continue
                 if keyonly:
                     yield key
