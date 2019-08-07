@@ -20,6 +20,8 @@ cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
 cd /sandbox/code/github/threefoldtech/digitalmeX
 js_init generate
-
-#tmux new -d -s main  "export NACL_SECRET=123 ; kosmos 'j.servers.threebot.default.start()'"
-kosmos --instruct /3bot_configure.toml
+pip3 install peewee
+cd /sandbox/code/github/threefoldtech/jumpscaleX
+./jsx.py configure -s
+echo y | ./jsx.py check
+kosmos 'j.servers.threebot.default.start()'
