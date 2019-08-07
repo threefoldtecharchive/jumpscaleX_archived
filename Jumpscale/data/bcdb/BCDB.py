@@ -46,7 +46,9 @@ class BCDB(j.application.JSBaseClass):
         # JSBASE.__init__(self)
 
         self._redis_index = j.clients.redis.core
-
+        ## caching to fix kosmos REMOVE AFTERWARDS.
+        self._index_schema_class_cache = {}
+        self._sid_to_model = {}
         if name is None:
             raise j.exceptions.Base("name needs to be specified")
 
