@@ -79,12 +79,15 @@ class DBSQLite(j.application.JSBaseClass):
     def exists(self, key):
         return len(self.get(key)) > 0
 
-    def flush(self, meta=None):
+    def flush(self):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
         """
-        self._flush()
+        self._log_info("RESET FOR KVS")
+        self._table_model.delete().execute()
+        self._table_model.create_table()
+        assert self._table_model.select().count() == 0
 
     @property
     def count(self):
@@ -108,12 +111,6 @@ class DBSQLite(j.application.JSBaseClass):
 
     def delete(self, key):
         self._table_model.delete_by_id(key)
-
-    def _flush(self):
-        self._log_info("RESET FOR KVS")
-        self._table_model.delete().execute()
-        self._table_model.create_table()
-        assert self._table_model.select().count() == 0
 
     def iterate(self, key_start=None, **kwargs):
         if key_start:

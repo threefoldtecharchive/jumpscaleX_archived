@@ -576,12 +576,25 @@ def bcdb_delete(name=None, all=False):
 @click.option("--name", default=None, help="specify which bcdb you want to fix, if not specified will use all")
 def bcdb_check(name=None):
     """
+    will check and if issues found in index it will rebuild the index
+    :return:
+    """
+    if not name:
+        j.shell()
+    j.shell()
+
+
+@click.command()
+@click.option("--name", default=None, help="specify which bcdb you want to rebuild, if not specified will use all")
+def bcdb_rebuild(name=None):
+    """
     will erase the indexes and rebuild it from the BCDB original data
     :return:
     """
-    if not default:
+    if not name:
         j.shell()
-    j.shell()
+    bcdb = j.data.bcdb.get(name=name, reset=True)
+    bcdb.index_rebuild()
 
 
 def _generate(path=None):
@@ -600,6 +613,7 @@ if __name__ == "__main__":
     cli.add_command(modules_install, "modules-install")
     cli.add_command(bcdb_delete, "bcdb-delete")
     cli.add_command(bcdb_check, "bcdb-check")
+    cli.add_command(bcdb_rebuild, "bcdb-rebuild")
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     if not IT.DockerFactory.indocker():
