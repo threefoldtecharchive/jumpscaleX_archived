@@ -3,9 +3,9 @@ from Jumpscale import j
 from .DBSQLite import DBSQLite
 
 
-class DBSQLiteFactory(j.application.JSBaseFactoryClass):
-
-    __jslocation__ = "j.clients.sqlitedb"
+class DBSQLiteFactory(j.application.JSFactoryConfigsBaseClass):
+    def __init__(self):
+        self.__jslocation__ = "j.clients.sqlitedb"
 
     def client_get(self, nsname="test", fromcache=True, **kwargs):
         """
