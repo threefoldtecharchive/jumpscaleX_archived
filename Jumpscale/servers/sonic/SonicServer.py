@@ -64,7 +64,12 @@ class SonicServer(JSConfigClient):
 
     def stop(self):
         self._log_info("stop sonic server")
+        self._write_config()
         self.startupcmd.stop()
+
+    def destroy(self):
+        self.stop()
+        j.sal.fs.remove(self._path)
 
     @property
     def startupcmd(self):

@@ -52,11 +52,41 @@ url = ""
 sid = 0  #schema id
 text = ""
 md5 = ""
+hasdata = False (B) #if True then we know there needs to be id's in the metadata for the iterator
 
 @url = jumpscale.bcdb.namespace.2
 name* = ""                              #chosen name needs to be unique
 acls = (LO) !jumpscale.bcdb.acl.2
 write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+
+#BCDB EXTERNAL SCHEMAS
+
+@url = jumpscale.ebcdb.datamulti.1
+recordchain = (LO) !jumpscale.ebcdb.data.1
+
+@url = jumpscale.ebcdb.data.1
+data = ""           #capnp optionally encrypted data (symmetric encryption)
+schema_sid = (I)
+authors = (LO) !jumpscale.ebcdb.data.author.1
+md5 = ""            #md5 of non encrypted data
+epoch = (T)
+multisig_write = (LI)           #list of 3botid's of who need to agree on 
+multisig_delete = (LI)          #list of 3botid's of who need to agree on 
+multisig_admin = (LI)           #list of 3botid's of who need to agree on
+multisig_write_min = (LI)       #min nr of people who need to sign from the list
+multisig_delete_min = (LI)   
+multisig_admin_min = (LI)   
+timeout = 3600 (I)
+
+
+@url = jumpscale.ebcdb.data.author.1
+threebot_id = (I)
+admin = (B)  #admin is the only one who can change admin rights, multisig, delete
+encr_key = "" #is the encryption key for the data used but encrypted with public key of this author
+signature = "" #as when the author changed the data last otherwise empty, sign the previous md5 (previous record, first one = "aaaa")
+               #or when multisignature was needed then you need this field too
+rights = "write,delete" (E)
+
 
 
 #FILE & FILE METADATA OBJECTS

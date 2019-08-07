@@ -69,22 +69,12 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
             raise j.exceptions.Value("key must be provided")
         self.redis.execute_command("DEL", key)
 
-    def flush(self, meta=None):
+    def flush(self):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
         """
-        if meta:
-            data = meta._data
-            self.redis.execute_command("FLUSH")
-            # recreate the metadata table
-            meta.reset()
-            # copy the old data back
-            meta._data = data
-            # now make sure its back in the db
-            meta._save()
-        else:
-            self.redis.execute_command("FLUSH")
+        self.redis.execute_command("FLUSH")
 
     @property
     def nsinfo(self):

@@ -26,7 +26,7 @@ class {{BASENAME}}(BCDBModelIndex):
 
     {% if index.active %}
 
-    def _init_index(self):
+    def _sql_index_init(self):
         self._log_info("init index:%s"%self.schema.url)
 
         p = j.clients.peewee
@@ -72,17 +72,6 @@ class {{BASENAME}}(BCDBModelIndex):
         # if not self._sql_index_db.select().where(self._sql_index_db.id == obj.id).count()==0:
         self._sql_index_db.delete().where(self._sql_index_db.id == obj.id).execute()
 
-    def _sql_index_destroy(self, nid=None):
-        """
-        will remove all namespaces indexes
-        :param nid:
-        :return:
-        """
-        if nid:
-            self._sql_index_db.delete().where(self._sql_index_db.nid == nid).execute()
-        else:
-            self._sql_index_db.drop_table()
-            self._sql_index_db.create_table()
 
     {% else %}
     def _init_index(self):

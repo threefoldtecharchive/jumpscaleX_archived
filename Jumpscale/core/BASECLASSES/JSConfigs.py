@@ -120,7 +120,6 @@ class JSConfigs(JSBase, Attr):
         """
         :param name: of the object
         """
-
         jsconfig = self._get(name=name, die=needexist)
         if not jsconfig:
             self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
