@@ -46,16 +46,20 @@ class BuilderThreebot(j.builders.system._BaseClass):
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
         self._copy(file, file_dest)
 
+        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "3bot_configure.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "3bot_configure.toml")
+        self._copy(file, file_dest)
+
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "3bot_startup.sh")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "3bot_startup.sh")
+        self._copy(startup_file, file_dest)
+
     def start(self):
-        j.builders.db.zdb.start()
-        j.servers.sonic.default.start()
-        j.builders.web.openresty.start()
+        j.servers.threebot.default.start()
         return True
 
     def stop(self):
-        j.builders.db.zdb.stop()
-        j.servers.sonic.default.stop()
-        j.builders.web.openresty.stop()
+        j.servers.threebot.default.stop()
         return True
 
     @builder_method()
