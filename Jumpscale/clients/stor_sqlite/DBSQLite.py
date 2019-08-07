@@ -27,6 +27,8 @@ class DBSQLite(j.application.JSBaseClass):
         assert nsname
         self.nsname = nsname
 
+        self.type = "SDB"
+
         db_path = j.core.tools.text_replace("{DIR_VAR}/bcdb/%s/sqlite_stor.db" % nsname)
 
         self._dbpath = db_path
@@ -53,17 +55,17 @@ class DBSQLite(j.application.JSBaseClass):
         self._table_model = KVS
         self._table_model.create_table()
 
-    def set(self, key, val):
+    def set(self, data, key=None):
         if key == None:
-            res = self._table_model(value=val)
+            res = self._table_model(value=data)
             res.save()
             return res.id
         else:
             key = int(key)
             if self.exists(key):
-                self._table_model.update(value=val).where(self._table_model.id == key).execute()
+                self._table_model.update(value=data).where(self._table_model.id == key).execute()
             else:
-                self._table_model.create(id=key, value=val)
+                self._table_model.create(id=key, value=data)
         v = self.get(key)
         return key
 

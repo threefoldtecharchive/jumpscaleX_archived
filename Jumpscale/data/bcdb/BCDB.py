@@ -32,6 +32,7 @@ from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
+import time
 
 JSBASE = j.application.JSBaseClass
 
@@ -49,27 +50,34 @@ class BCDB(j.application.JSBaseClass):
         if name is None:
             raise j.exceptions.Base("name needs to be specified")
 
-        if storclient is not None:
-            if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
-                raise j.exceptions.Base("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
+        assert storclient
+        if (
+            not isinstance(storclient, ZDBClientBase)
+            and not isinstance(storclient, RDBClient)
+            and not isinstance(storclient, DBSQLite)
+        ):
+            raise j.exceptions.Base("storclient needs to be type: clients.zdb or clients.rdb or clients.sqlitedb")
 
         self.name = name
-        self._sqlclient = None
         self.dataprocessor_greenlet = None
 
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
         self.storclient = storclient
 
-        self.meta = BCDBMeta(self)
-
-        self._init_props()
-
         if reset:
+            self.meta = None
             self.reset()
         else:
+            self.meta = BCDBMeta(self)
             self.meta._load()
 
         self._init_system_objects()
+
+        self.check()
+
+        j.data.nacl.default
+
+        self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def _init_props(self):
 
@@ -99,28 +107,11 @@ class BCDB(j.application.JSBaseClass):
         if not j.data.types.string.check(self.name):
             raise j.exceptions.Base("name needs to be string")
 
-        j.data.nacl.default
-
         # need to do this to make sure we load the classes from scratch
         for item in ["ACL", "USER", "GROUP"]:
             key = "Jumpscale.data.bcdb.models_system.%s" % item
             if key in sys.modules:
                 sys.modules.pop(key)
-
-        # check if we need to rebuild the BCDB indexes
-        try:
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except j.clients.credis_core._ConnectionError:
-            j.clients.credis_core._init()
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except Exception as e:
-            raise e
-
-        if not res and self.meta._data_in_db():
-            # means there is no index yet in the redis, need to rebuild all
-            self.index_rebuild()
-        else:
-            self.check()
 
         from .models_system.ACL import ACL
         from .models_system.USER import USER
@@ -132,21 +123,30 @@ class BCDB(j.application.JSBaseClass):
         self.circle = self.model_add(CIRCLE(bcdb=self))
         self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
-        j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
-
-        self._log_info("BCDB INIT DONE:%s" % self.name)
-
     def check(self):
         """
         at this point we have for sure the metadata loaded now we should see if the last record found can be found in the index
         :return:
         """
-        return
-        for s in self._data.schemas:
-            self._log_debug("check %s:%s:%s" % (s.sid, s.md5, s.url))
-            m = self.model_get_from_sid(s.sid)
-            j.shell()
-            w
+
+        def index_ok():
+            for s in self.meta._data.schemas:
+                self._log_debug("check %s:%s:%s" % (s.sid, s.md5, s.url))
+                # the submodels (subobj in JSXObj don't have model, so they won't exist in this table)
+                if s.sid in self._sid_to_model:
+                    m = self.model_get_from_sid(s.sid)
+                    if m.schema.hasdata:
+                        # we need to check that the id iterator has at least 1 item, its not a perfect check but better than nothing
+                        if not m.index._ids_exists():
+                            # means there is a real issue with an iterator
+                            return False
+            return True
+
+        if not index_ok():
+            # the index rebuild needs to completely remove the index, show a warning sign
+            self._log_warning("we need to rebuild the full index because iterator was not complete")
+            # there is no other way we can do this because without iterator the rebuild index cannot be done
+            self.index_rebuild()
 
     def export(self, path=None, encrypt=True):
         if not path:
@@ -277,6 +277,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_info("DATAPROCESSOR STARTS")
         while True:
             method, args, kwargs, event, returnid = self.queue.get()
+            j.shell()
             if args == ["STOP"]:
                 break
             else:
@@ -285,7 +286,8 @@ class BCDB(j.application.JSBaseClass):
                     self.results[returnid] = res
                 event.set()
         self.dataprocessor_greenlet = None
-        event.set()
+        if event:
+            event.set()
         self._log_warning("DATAPROCESSOR STOPS")
 
     def dataprocessor_start(self):
@@ -302,29 +304,39 @@ class BCDB(j.application.JSBaseClass):
             self.dataprocessor_greenlet = gevent.spawn(self._data_process)
             self.dataprocessor_state = "RUNNING"
 
+    def dataprocessor_stop(self, force=False):
+        if self.dataprocessor_greenlet:
+            if self.dataprocessor_greenlet.started and not force:
+                # stop dataprocessor
+                self.queue.put((None, ["STOP"], {}, None, None))
+                while self.queue.qsize() > 0:
+                    self._log_debug("wait dataprocessor to stop")
+                    time.sleep(0.1)
+            self.dataprocessor_greenlet.kill()
+
     def reset(self):
         """
         remove all data but the bcdb instance remains
         :return:
         """
 
-        j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
+        self.dataprocessor_stop(force=True)
 
-        if self.storclient:
-            self.storclient.flush(meta=self.meta)  # new flush command
+        assert self.storclient
 
+        self.storclient.flush()
         self._redis_reset()
-        self.meta.reset()
-
-        if self._sqlclient is not None:
-            self.sqlclient.close()
-            self._sqlclient = None
-
         j.sal.fs.remove(self._data_dir)
 
+        # all data is now removed
+
         self._init_props()
-        self.meta._load()
+        if not self.meta:
+            self.meta = BCDBMeta(self)
+        self.meta.reset()  # will make sure the record 0 is written with empty metadata
         self._init_system_objects()
+
+        self.check()
 
     def destroy(self):
         """
@@ -342,6 +354,7 @@ class BCDB(j.application.JSBaseClass):
             j.core.db.delete(key)
 
     def _redis_reset(self):
+        # shouldnt this be part of the indexing class?
         for key in self._redis_index.keys("bcdb:%s*" % self.name):
             self._redis_index.delete(key)
 
@@ -352,10 +365,16 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
     def index_rebuild(self):
-        self._log_warning("REBUILD INDEX")
-        self.meta.reset()
-        for m in self.models:
-            m.index_rebuild()
+        self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
+        # IF WE DO A FULL BLOWN REBUILD THEN WE NEED TO ITERATE OVER ALL OBJECTS AND CANNOT START FROM THE ITERATOR PER MODEL
+        # this always needs to work, independent of state of index
+        for model in self.models:
+            # make sure indexes are empty
+            model.index.destroy()
+        for data in self.storclient.iterate():
+            jsxobj = j.data.serializers.jsxdata.loads(data)
+            model = self.model_get_from_schema(jsxobj._schema)
+            model.set(jsxobj, store=False, index=True)
 
     @property
     def models(self):

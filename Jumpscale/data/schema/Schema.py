@@ -50,6 +50,8 @@ class Schema(j.application.JSBaseClass):
 
         self.url = url
 
+        self.hasdata = False  # only used in BCDB, this tells us if the ID iterator should be there
+
         if md5:
             self._md5 = md5
             assert j.data.schema._md5(text) == self._md5
@@ -323,6 +325,27 @@ class Schema(j.application.JSBaseClass):
             )
 
         return self._obj_class
+
+    def index_needed(self):
+        """
+        :return:  (index_key, index_sql, index_text)
+        each of them is True when there is an index like this on the schema
+        otherwise False
+
+        tells if we have to index that type
+
+        """
+        index_key = False
+        index_sql = False
+        index_text = False
+        for p in self.properties:
+            if p.index_text:
+                index_text = True
+            if p.index:
+                index_sql = True
+            if p.index_key:
+                index_key = True
+        return (index_key, index_sql, index_text)
 
     def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
         """

@@ -21,6 +21,12 @@ class SonicFactory(JSConfigs):
             self._default = self.new(name="default")
         return self._default
 
+    @property
+    def bcdb(self):
+        if not self._default:
+            self._default = self.new(name="bcdb")
+        return self._default
+
     def install(self, reset=False):
         """
         kosmos 'j.servers.sonic.build()'
