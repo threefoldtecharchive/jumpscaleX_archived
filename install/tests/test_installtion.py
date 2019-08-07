@@ -327,25 +327,26 @@ class TestInstallationInSystem(BaseTest):
         self.assertIn("installed successfully", output.decode())
 
         self.info("use kosmos to create github client, make sure that there is no error")
-        command = """. /sandbox/env.sh && jsx kosmos 'c=j.clients.github.new("test_bcdb_delete_option", token="test_bcdb_delete_option"); c.save()'"""
+        client_name = str(uuid.uuid4()).replace("-", "")[:10]
+        command = """. /sandbox/env.sh && echo 'c=j.clients.github.new("{}", token="test_bcdb_delete_option"); c.save()' | jsx kosmos """.format(client_name)
         output, error = self.os_command(command)
         self.assertFalse(error)
 
         self.info("check that the client is existing")
-        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("test_bcdb_delete_option").name)' | jsx kosmos """
+        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(client_name)
         output, error = self.os_command(command)
         self.assertFalse(error)
-        self.assertIn("test_bcdb_delete_option", output)
+        self.assertIn(client_name, output.decode())
 
         self.info("use bcdb_system_delete option to delete database, and check if the client still exists or not")
         command = ". /sandbox/env.sh && jsx bcdb-system-delete"
         output, error = self.os_command(command)
-        self.assertTrue(error) 
+        self.assertFalse(error)
 
         self.info("check that the client is not existing")
-        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("test_bcdb_delete_option").name)' | jsx kosmos """
+        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(client_name)
         output, error = self.os_command(command)
-        self.assertTrue(error)
+        self.assertIn('Missing Github token or login/password', output.decode())
 
     def Test06_check_option(self):
         """
