@@ -5,7 +5,6 @@ from .protocol.Client import Client as ProtocolClient
 
 
 class ZeroOSClient(j.application.JSBaseConfigClass, Node):
-
     _SCHEMATEXT = """
     @url = jumpscale.zos.client.1
     name* = "" (S)
@@ -18,8 +17,10 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     timeout = 120 (I)
     """
 
+    client = None
+
     def _init(self, **kwargs):
-        client = ProtocolClient(
+        self.client = ProtocolClient(
             host=self.host,
             port=self.port,
             unixsocket=self.unixsocket,
@@ -28,7 +29,7 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
             ssl=self.ssl,
             timeout=self.timeout,
         )
-        Node.__init__(self, client=client)
+        Node.__init__(self, client=self.client)
 
     def _update_trigger(self, key, value):
         try:

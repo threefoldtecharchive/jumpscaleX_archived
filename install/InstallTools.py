@@ -2718,6 +2718,7 @@ class BaseInstaller:
                 "prompt-toolkit>=2.0.9",
                 "pygments-markdown-lexer",
                 "wsgidav",
+                "bottle==0.12.17",
             ],
             # level 1: in the middle
             1: [

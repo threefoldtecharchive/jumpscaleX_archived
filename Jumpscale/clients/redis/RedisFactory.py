@@ -54,7 +54,8 @@ class RedisFactory(j.application.JSBaseClass):
         ssl=False,
         ssl_certfile=None,
         ssl_keyfile=None,
-        ssl_cert_reqs="none",
+        ssl_ca_certs=None,
+        ssl_cert_reqs=None,
         timeout=10,
         ping=True,
         die=True,
@@ -65,28 +66,20 @@ class RedisFactory(j.application.JSBaseClass):
         get an instance of redis client, store it in cache so we could easily retrieve it later
 
         :param ipaddr: used to form the key when no unixsocket, defaults to "localhost"
-        :type ipaddr: str, optional
         :param port: used to form the key when no unixsocket, defaults to 6379
-        :type port: int, optional
         :param password: defaults to ""
-        :type password: str, optional
         :param fromcache: if False, will create a new one instead of checking cache, defaults to True
-        :type fromcache: bool, optional
         :param unixsocket: path of unixsocket to be used while creating Redis, defaults to socket of the core redis
-        :type unixsocket: [type], optional
 
-        :param ssl_certfile: [description], defaults to None
-        :type ssl_certfile: [type], optional
-        :param ssl_keyfile: [description], defaults to None
-        :type ssl_keyfile: [type], optional
+        :param ssl_certfile: TODO: what is it, defaults to None
+        :param ssl_keyfile: TODO: what is it, defaults to None
+        :param ssl_cert_reqs: TODO: what is it, defaults to None  (other value is "required")
         :param timeout: [description], defaults to 10
-        :type timeout: int, optional
         :param ping: [description], defaults to True
-        :type ping: bool, optional
         :param die: [description], defaults to True
-        :type die: bool, optional
 
         other arguments to redis: ssl_cert_reqs=None, ssl_ca_certs=None
+
 
         set_patch is needed when using the client for gedis
 
@@ -110,6 +103,7 @@ class RedisFactory(j.application.JSBaseClass):
                     ssl_keyfile=ssl_keyfile,
                     unix_socket_path=unixsocket,
                     ssl_cert_reqs=ssl_cert_reqs,
+                    ssl_ca_certs=ssl_ca_certs,
                     # socket_timeout=timeout,
                     **args,
                 )
@@ -122,6 +116,7 @@ class RedisFactory(j.application.JSBaseClass):
                     ssl=ssl,
                     ssl_certfile=ssl_certfile,
                     ssl_keyfile=ssl_keyfile,
+                    ssl_ca_certs=ssl_ca_certs,
                     **args,
                 )
 

@@ -11,21 +11,11 @@ class BuilderThreebot(j.builders.system._BaseClass):
         self.BUILD_LOCATION = self._replace("{DIR_BUILD}/threebot")
 
     @builder_method()
-    def build(self, reset=False):
-        j.builders.web.openresty.build(reset=reset)
-        j.builders.runtimes.lua.build(reset=reset)
-        j.builders.db.zdb.build(reset=reset)
-        j.builders.apps.sonic.build(reset=reset)
-
-    @builder_method()
     def install(self, reset=False):
         j.builders.web.openresty.install(reset=reset)
         j.builders.runtimes.lua.install(reset=reset)
         j.builders.db.zdb.install(reset=reset)
         j.builders.apps.sonic.install(reset=reset)
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "sonic_config.cfg")
-        file_dest = self.tools.joinpaths(self.BUILD_LOCATION, "sonic_config.cfg")
-        self._copy(file, file_dest)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True):
@@ -38,24 +28,24 @@ class BuilderThreebot(j.builders.system._BaseClass):
         self.tools.copyTree(j.builders.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
         self.tools.copyTree(j.builders.apps.sonic.DIR_SANDBOX, self.DIR_SANDBOX)
 
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "sonic_config.cfg")
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sonic_config.cfg")
-        self._copy(file, file_dest)
-
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "threebot_startup.toml")
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
         self._copy(file, file_dest)
 
+        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "3bot_configure.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "3bot_configure.toml")
+        self._copy(file, file_dest)
+
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "3bot_startup.sh")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "3bot_startup.sh")
+        self._copy(startup_file, file_dest)
+
     def start(self):
-        j.builders.db.zdb.start()
-        j.servers.sonic.default.start()
-        j.builders.web.openresty.start()
+        j.servers.threebot.default.start()
         return True
 
     def stop(self):
-        j.builders.db.zdb.stop()
-        j.servers.sonic.default.stop()
-        j.builders.web.openresty.stop()
+        j.servers.threebot.default.stop()
         return True
 
     @builder_method()
