@@ -22,6 +22,4 @@ cd /sandbox/code/github/threefoldtech/digitalmeX
 js_init generate
 pip3 install peewee
 cd /sandbox/code/github/threefoldtech/jumpscaleX
-./jsx.py configure -s
-echo y | ./jsx.py check
-kosmos 'j.servers.threebot.default.start()'
+kosmos "j.servers.threebot.default.start()"
