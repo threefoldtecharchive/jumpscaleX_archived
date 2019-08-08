@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 class EBCDB(j.application.JSBaseClass):
     def set(self, data, schema_out):
         """
@@ -17,4 +18,3 @@ class EBCDB(j.application.JSBaseClass):
         :return:
         172.17.0.2:8080/gdrive/slide/1-Eh4ghLxoVCGSt5onNb8Dx9sCi3-OJ3mNQGo0h9CUgg/second
         """
-        
