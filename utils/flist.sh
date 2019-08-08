@@ -33,7 +33,8 @@ pushd $HOME/code/github/threefoldtech
 
 #ssh generate
 eval `ssh-agent -s`
-ssh-keygen -t rsa -N "" -f {}/.ssh/id_rsa -q -P ""; ssh-add {}/.ssh/id_rsa
+mkdir -p /root/.ssh
+ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa -q -P ""; ssh-add /root/.ssh/id_rsa
 
 # Install jumpscale
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
@@ -45,7 +46,7 @@ chmod +x /tmp/jsx;
 
 #change in permission
 chown root:root /tmp
-source /sandbox/env.sh
+. /sandbox/env.sh
 cd /sandbox
 kosmos "j.builders.runtimes.lua.install(reset=True)"
 kosmos "j.builders.runtimes.lua.lua_rocks_install() "
