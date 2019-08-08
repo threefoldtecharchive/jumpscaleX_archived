@@ -3,17 +3,11 @@ import uuid
 from .base_test import BaseTest
 from unittest import skip
 
+
 class TestInstallationInDocker(BaseTest):
     def setUp(self):
         print('\t')
         self.info('Test case : {}'.format(self._testMethodName))
-        self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
-        self.info(
-            "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type())
-        )
-        output, error = self.jumpscale_installation("container-install", "-n {}".format(self.CONTAINER_NAME))
-        self.assertFalse(error)
-        self.assertIn("installed successfully", output.decode())
 
     def tearDown(self):
         self.info("Clean the installation")
@@ -26,6 +20,15 @@ class TestInstallationInDocker(BaseTest):
         command = "rm -rf /sandbox; rm -rf ~/sandbox"
         self.os_command(command)
 
+    def install_jsx_container(self):
+        self.CONTAINER_NAME = str(uuid.uuid4()).replace("-", "")[:10]
+        self.info(
+            "Install container jumpscale from {} branch in {} os type".format(self.get_js_branch(), self.get_os_type())
+        )
+        output, error = self.jumpscale_installation("container-install", "-n {}".format(self.CONTAINER_NAME))
+        self.assertFalse(error)
+        self.assertIn("installed successfully", output.decode())
+
     def Test01_verify_container_kosmos_option(self):
         """
         TC54
@@ -36,6 +39,7 @@ class TestInstallationInDocker(BaseTest):
         #. Install jumpscale from specific branch
         #. Run container-kosmos ,should succeed
         """
+        self.install_jsx_container()
         self.info("Run container_kosmos ,should succeed")
         command = " echo 'from Jumpscale import j' | /tmp/jsx container-kosmos -n {}".format(self.CONTAINER_NAME)
         output, error = self.os_command(command)
@@ -54,6 +58,7 @@ class TestInstallationInDocker(BaseTest):
         #. Check that container started successfully
 
         """
+        self.install_jsx_container()
         self.info(" Running on {} os type".format(self.os_type))
 
         self.info("Run container stop ")
@@ -83,6 +88,7 @@ class TestInstallationInDocker(BaseTest):
         #. Run js_init generate command inside docker, sshould run successfully.
         #. Check the branch of jumpscale code, should be same as installation branch.
         """
+        self.install_jsx_container()
         self.info("Run kosmos command inside docker,should start kosmos shell")
         command = """source /sandbox/env.sh && kosmos "from Jumpscale import j;print(j)" """
         output, error = self.docker_command(command)
@@ -97,7 +103,7 @@ class TestInstallationInDocker(BaseTest):
         self.info(" Check the branch of jumpscale code, should be same as installation branch.")
         command = "cat /sandbox/code/github/threefoldtech/jumpscaleX/.git/HEAD"
         output, _ = self.docker_command(command)
-        branch = output.decode()[output.decode().find("head") + 6 : -2]
+        branch = output.decode()[output.decode().find("head") + 6:].replace('\n', '')
         self.assertEqual(branch, self.js_branch)
 
         self.info("check  that ssh-key loaded in docker successfully")
@@ -110,6 +116,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that container-delete option will delete the running container**
         """
+        self.install_jsx_container()
         self.info("Delete the running jsx container using container-delete")
         command = "/tmp/jsx container-delete -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
@@ -123,6 +130,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that containers-reset option will delete running containers and image**
         """
+        self.install_jsx_container()
         self.info("Reset the running container and image using container-reset")
         command = "/tmp/jsx containers-reset".format(self.CONTAINER_NAME)
         self.os_command(command)
@@ -142,6 +150,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that container-import and container-export works successfully **
         """
+        self.install_jsx_container()
         self.info("Use container-export ,should export the running container.")
         command = "/tmp/jsx container-export -n {}".format(self.CONTAINER_NAME)
         self.os_command(command)
@@ -166,6 +175,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that container-clean works successfully **
         """
+        self.install_jsx_container()
         command = 'docker ps -a | grep %s | awk "{print \$2}"' % self.CONTAINER_NAME
         output, error = self.os_command(command)
         container_image = output.decode()
@@ -196,7 +206,7 @@ class TestInstallationInDocker(BaseTest):
 
         **Verify that container-install -d  works successfully **
         """
-
+        self.install_jsx_container()
         self.info("Create file in existing jumpscale container")
         file_name = str(uuid.uuid4()).replace("-", "")[:10]
         command = "cd / && touch {}".format(file_name)
