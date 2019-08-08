@@ -6,15 +6,9 @@ export LC_ALL=en_US.UTF-8
 . /sandbox/env.sh
 
 cd /sandbox/code/github/threefoldtech/jumpscaleX
-git remote set-branches origin '*'
 git stash; git fetch -v; git pull origin development_jumpscale; git checkout development_jumpscale -f
 cd /sandbox/code/github/threefoldtech/digitalmeX
-git remote set-branches origin '*'
 git stash; git fetch -v; git pull origin development_jumpscale; git checkout development_jumpscale -f
-cd /sandbox/code/github/threefoldfoundation/info_foundation
-git pull
-cd /sandbox/code/github/threefoldfoundation/info_tokens
-git pull
 cd /sandbox/code/github/threefoldtech/digitalmeX
 js_init generate
 cd /sandbox/code/github/threefoldtech/jumpscaleX
@@ -23,12 +17,13 @@ groupadd www
 useradd -G www www
 mkdir -p /etc/resty-auto-ssl
 chown -R www:www /etc/resty-auto-ssl
-chmod 0o755 /etc/resty-auto-ssl
+chmod 755 /etc/resty-auto-ssl
 openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
 -subj '/CN=sni-support-required-for-valid-ssl' \
 -keyout /etc/ssl/resty-auto-ssl-fallback.key \
 -out /etc/ssl/resty-auto-ssl-fallback.crt
 sudo adduser --system --no-create-home --shell /bin/false --group --disabled-login www
 mkdir -p /etc/resty-auto-ssl/letsencrypt/certs/
-mv resty-auto-ssl-fallback.crt resty-auto-ssl-fallback.key /etc/resty-auto-ssl/letsencrypt/certs/
+mv /resty-auto-ssl-fallback.key /etc/resty-auto-ssl/letsencrypt/certs/
+mv /resty-auto-ssl-fallback.crt /etc/resty-auto-ssl/letsencrypt/certs/
 . /sandbox/env.sh; kosmos 'j.servers.threebot.default.start()'
