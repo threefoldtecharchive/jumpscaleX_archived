@@ -8,8 +8,8 @@ mkdir -p $ARCHIVE
 
 # install system deps
 apt-get update
-apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev
-
+apt-get install -y curl unzip rsync locales git lsb wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev
+pip3 install click
 
 # setting up locales
 if ! grep -q ^en_US /etc/locale.gen; then
@@ -31,100 +31,25 @@ done
 
 pushd $HOME/code/github/threefoldtech
 
-# cloning source code
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
-
 #ssh generate
-ssh-keygen -f ~/.ssh/id_rsa -P ''
 eval `ssh-agent -s`
-ssh-add ~/.ssh/id_rsa
+mkdir -p /root/.ssh
+ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa -q -P ""; ssh-add /root/.ssh/id_rsa
+
+# Install jumpscale
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
+# change permission
+chmod +x /tmp/jsx; 
+/tmp/jsx configure -s --secret mysecret;
+# install
+/tmp/jsx install -s
+
 #change in permission
 chown root:root /tmp
-source /sandbox/env.sh
-cd /sandbox
-js_shell "j.builders.runtimes.lua.install(reset=True)"
-js_shell "j.servers.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.markdowndocs.webserver()\'',window ='flist')"
-
-echo "Waiting webserver to launch on 8080..."
-TRIALS=0
-while [[ $TRIALS -lt 30 ]] && ! nc -z localhost 8080; do
-    sleep 5
-    let TRIALS=TRIALS+1
-done
-if [[ $TRIALS -eq 30 ]]; then
-        echo "Failed to start webserver at 8080, check openresty/lapis setup..."
-        exit 1
-fi
-
-js_shell "j.builders.runtimes.lua.lua_rocks_install() "
-
-cd /sandbox
-echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-export HOME=/root
-export LANG=en_US.UTF-8
-export LANGUAGE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
 . /sandbox/env.sh
-cd /sandbox/code/github/threefoldfoundation/info_foundation
-git pull
-cd /sandbox/code/github/threefoldfoundation/info_tokens
-git pull
-cd /sandbox/code/github/threefoldfoundation/lapis-wiki
-git pull
-rm -rf /sandbox/code/github/threefoldtech/jumpscaleX
-cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefoldtech/jumpscaleX.git -b development
-cd /sandbox/code/github/threefoldtech/jumpscaleX
-git checkout f99f9af1948ac2bb4afccc3ca29bbeb953c2bd87
-git cherry-pick f7c1e251cd4e087b7e8af7d5ad7ba4ec367edbaf
-git cherry-pick 7cb987ed3e2f8e7867eb780efc9a2612bcb81abc
-
-rm -rf /sandbox/code/github/threefoldtech/digitalmeX
-cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefoldtech/digitalmeX.git -b development
-cd /sandbox/code/github/threefoldtech/digitalmeX
-git checkout c7599c9f59abe3a68038eacf9776aa3e2360d094
-git cherry-pick a9ef0d31eaa4a632e8aa0d4f8192dd49d107b29b^..6f3547879b95bf3f9f321bad5485cf8333069b9e
-git cherry-pick 8caf6e331b3c94cb9004a3da075b152768c39cdf^..58623979094c7001546a9df8b681a5bc39831095
-git cherry-pick ad677617e6d1685486dd5a6430975f8586e9371e
-
-
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -sf /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon
-
-tmux new -d -s main  \" export NACL_SECRET=123 ; js_shell ' server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888) ; server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py\\\"); server.chatbot.chatflows_load(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows\\\"); server.start()' \"
-
-js_shell \"j.tools.markdowndocs.webserver()\"
-""" > 3bot_startup.sh
-
 cd /sandbox
-echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
-export HOME=/root
-export LANG=en_US.UTF-8
-export LANGUAGE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-. /sandbox/env.sh
-cd /sandbox/code/github/threefoldfoundation/info_foundation
-git pull
-cd /sandbox/code/github/threefoldfoundation/info_tokens
-git pull
-cd /sandbox/code/github/threefoldfoundation/lapis-wiki
-git pull
-cd /sandbox/code/github/threefoldtech/digitalmeX
-git pull
+kosmos "j.builders.runtimes.lua.install(reset=True)"
+kosmos "j.builders.runtimes.lua.lua_rocks_install() "
 
-
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon
-
-tmux new -d -s main  \"export NACL_SECRET=123 ; js_shell 'j.builders.db.zdb.start(); zdb_cl = j.clients.zdb.client_admin_get(); zdb_cl = zdb_cl.namespace_new(\\\"notary_namespace\\\", secret=\\\"1234\\\"); bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name=\\\"notary_bcdb\\\");bcdb.models_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models \\\"); server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888);server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py\\\");server.models_add(models=bcdb.models.values());server.save();server.start()' \"
-
-cd /sandbox/code/github/threefoldtech/digitalmeX/packages/notary
-moonc . &&lapis server
-""" > notary_startup.sh
-
-rm -rf /sandbox/var/codegen/
-
+cd /sandbox/code/github/threefoldtech/jumpscaleX/
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /

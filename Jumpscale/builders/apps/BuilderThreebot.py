@@ -11,21 +11,11 @@ class BuilderThreebot(j.builders.system._BaseClass):
         self.BUILD_LOCATION = self._replace("{DIR_BUILD}/threebot")
 
     @builder_method()
-    def build(self, reset=False):
-        j.builders.web.openresty.build(reset=reset)
-        j.builders.runtimes.lua.build(reset=reset)
-        j.builders.db.zdb.build(reset=reset)
-        j.builders.apps.sonic.build(reset=reset)
-
-    @builder_method()
     def install(self, reset=False):
         j.builders.web.openresty.install(reset=reset)
         j.builders.runtimes.lua.install(reset=reset)
         j.builders.db.zdb.install(reset=reset)
         j.builders.apps.sonic.install(reset=reset)
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "sonic_config.cfg")
-        file_dest = self.tools.joinpaths(self.BUILD_LOCATION, "sonic_config.cfg")
-        self._copy(file, file_dest)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True):
@@ -37,10 +27,6 @@ class BuilderThreebot(j.builders.system._BaseClass):
         self.tools.copyTree(j.builders.runtimes.lua.DIR_SANDBOX, self.DIR_SANDBOX)
         self.tools.copyTree(j.builders.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
         self.tools.copyTree(j.builders.apps.sonic.DIR_SANDBOX, self.DIR_SANDBOX)
-
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "sonic_config.cfg")
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sonic_config.cfg")
-        self._copy(file, file_dest)
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "threebot_startup.toml")
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
