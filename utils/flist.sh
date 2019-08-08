@@ -31,6 +31,10 @@ done
 
 pushd $HOME/code/github/threefoldtech
 
+#ssh generate
+eval `ssh-agent -s`
+ssh-keygen -t rsa -N "" -f {}/.ssh/id_rsa -q -P ""; ssh-add {}/.ssh/id_rsa
+
 # Install jumpscale
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py?$RANDOM > /tmp/jsx;
 # change permission
@@ -39,10 +43,6 @@ chmod +x /tmp/jsx;
 # install
 /tmp/jsx install -s
 
-#ssh generate
-ssh-keygen -f ~/.ssh/id_rsa -P ''
-eval `ssh-agent -s`
-ssh-add ~/.ssh/id_rsa
 #change in permission
 chown root:root /tmp
 source /sandbox/env.sh
