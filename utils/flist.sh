@@ -8,8 +8,8 @@ mkdir -p $ARCHIVE
 
 # install system deps
 apt-get update
-apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev
-
+apt-get install -y curl unzip rsync locales git lsb wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev
+pip3 install click
 
 # setting up locales
 if ! grep -q ^en_US /etc/locale.gen; then
