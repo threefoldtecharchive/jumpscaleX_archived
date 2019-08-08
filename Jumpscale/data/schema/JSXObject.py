@@ -28,8 +28,6 @@ class JSXObject(j.application.JSBaseClass):
         assert schema
         self._schema = schema
         self._model = model
-        if model:
-            assert self._schema == self._model.schema  # they need to be the same
 
         self._deserialized_items = {}
 
