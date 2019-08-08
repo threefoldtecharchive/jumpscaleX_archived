@@ -16,10 +16,9 @@ cd /sandbox/code/github/threefoldfoundation/info_foundation
 git pull
 cd /sandbox/code/github/threefoldfoundation/info_tokens
 git pull
-cd /sandbox/code/github/threefoldfoundation/lapis-wiki
-git pull
 cd /sandbox/code/github/threefoldtech/digitalmeX
 js_init generate
-pip3 install peewee
 cd /sandbox/code/github/threefoldtech/jumpscaleX
-kosmos "j.servers.threebot.default.start()"
+echo bash >> ~/.profile
+sudo adduser --system --no-create-home --shell /bin/false --group --disabled-login www
+. /sandbox/env.sh; kosmos 'j.servers.threebot.default.start()'
