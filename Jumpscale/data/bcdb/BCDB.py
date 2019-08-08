@@ -62,7 +62,7 @@ class BCDB(j.application.JSBaseClass):
 
         self.name = name
         self.dataprocessor_greenlet = None
-
+        self._sqlclient = None
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
         self.storclient = storclient
 
@@ -227,7 +227,6 @@ class BCDB(j.application.JSBaseClass):
                     max = obj_id
 
         if self.storclient:
-            assert self.storclient.nsinfo["mode"] == "sequential"
             assert self.storclient.nsinfo["entries"] == 1
             lastid = 1
 
@@ -264,8 +263,7 @@ class BCDB(j.application.JSBaseClass):
     @property
     def sqlclient(self):
         if self._sqlclient is None:
-            dbpath = j.sal.fs.joinPaths(self._data_dir, "sqlite.db")
-            self._sqlclient = DBSQLite(dbpath)
+            self._sqlclient = DBSQLite(nsname=self.name)
         return self._sqlclient
 
     def redis_server_start(self, port=6380, secret="123456"):
@@ -279,7 +277,6 @@ class BCDB(j.application.JSBaseClass):
         self._log_info("DATAPROCESSOR STARTS")
         while True:
             method, args, kwargs, event, returnid = self.queue.get()
-            j.shell()
             if args == ["STOP"]:
                 break
             else:

@@ -84,8 +84,8 @@ class BCDBMeta(j.application.JSBaseClass):
             self._log_debug("schemas load from db")
             self._data = self._schema.new(serializeddata=serializeddata)
 
-        if self._data.name != self._bcdb.name:
-            raise j.exceptions.Base("name given to bcdb does not correspond with name in the metadata stor")
+        # if self._data.name != self._bcdb.name:
+        #    raise j.exceptions.Base("name given to bcdb does not correspond with name in the metadata stor")
 
         check = []
 
