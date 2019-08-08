@@ -73,6 +73,8 @@ class BuilderThreebot(j.builders.system._BaseClass):
             self.tools.file_ensure(file_dest)
             self.tools.file_write(file_dest, content)
 
+        self.tools.dir_ensure(self.DIR_SANDBOX + "etc/ssl/")
+        self.tools.dir_ensure(self.DIR_SANDBOX + "etc/resty-auto-ssl")
         self.tools.copyTree("/etc/ssl/", self.DIR_SANDBOX + "etc/ssl/")
         self.tools.copyTree("/etc/resty-auto-ssl", self.DIR_SANDBOX + "etc/resty-auto-ssl")
 
