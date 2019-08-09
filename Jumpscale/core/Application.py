@@ -113,6 +113,9 @@ class Application(object):
         self.JSConfigClass = JSConfig
         self.JSConfigsClass = JSConfigs
         self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
+        self.loghandlers = self._j.core.myenv.loghandlers
+        self.errorhandlers = self._j.core.myenv.errorhandlers
+        self.exception_handle = self._j.core.myenv.exception_handle
 
     @property
     def appname(self):
@@ -138,7 +141,8 @@ class Application(object):
         return self._bcdb_system
 
     def bcdb_system_destroy(self):
-        self._j.data.bcdb.get_system(reset=True)
+        s = self._j.data.bcdb.get_system()
+        s.destroy()
         self._bcdb_system = None
 
     def subprocess_prepare(self):
@@ -192,7 +196,7 @@ class Application(object):
         if not self._check_debug():
             msg = "%s:%s:%s" % (cat, obj, error)
             # self.report_errors()
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return "%s:%s:%s" % (cat, obj, error)
 
     def reset(self):
@@ -428,7 +432,7 @@ class Application(object):
 
     def _setWriteExitcodeOnExit(self, value):
         if not self._j.data.types.bool.check(value):
-            raise TypeError
+            raise j.exceptions.Value
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):
@@ -470,7 +474,12 @@ class Application(object):
     #     self._j.shell()
     #
 
-    def check(self, generate=True):
+    def check(self, generate=False):
+        """
+        jsx check
+        :param generate:
+        :return:
+        """
         j = self._j
 
         if generate:
@@ -513,14 +522,8 @@ class Application(object):
                 if j.tools.console.askYesNo("Ok to delete this metadata, will prob be rebuild"):
                     j.sal.fs.remove(j.core.tools.text_replace("{DIR_CFG}/bcdb_config"))
                     j.application.bcdb_system
-        try:
-            j.data.bcdb.index_rebuild()
-        except Exception as e:
-            print(e)
-            print("ERROR:COULD NOT RE-INDEX THE BCDB, DO YOU WANT TO ERASE THE BCDB: DANGER DANGER ...")
-            if j.tools.console.askYesNo("Ok to delete the BCDB? DANGER !!!", default=False):
-                j.sal.process.execute("rm -rf /sandbox/var/bcdb")
-                j.data.bcdb.index_rebuild()
+
+        j.data.bcdb.check()
 
     def generate(self, path=None):
         j = self._j

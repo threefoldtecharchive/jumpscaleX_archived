@@ -15,7 +15,7 @@ class ACIModel(ModelBase):
     @property
     def id(self):
         # if self.dbobj.id == 0:
-        #     raise RuntimeError("id cannot be 0")
+        #     raise j.exceptions.Base("id cannot be 0")
         return self.dbobj.id
 
     def index(self):

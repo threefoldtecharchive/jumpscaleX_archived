@@ -37,12 +37,12 @@ class ZipFile(j.application.JSBaseClass):
         JSBASE.__init__(self)
 
         if not j.data.types.path.check(path):
-            raise ValueError("Provided string %s is not a valid path" % path)
+            raise j.exceptions.Value("Provided string %s is not a valid path" % path)
         if mode is ZipFileFactory.READ:
             if not j.sal.fs.isFile(path):
-                raise ValueError("Provided path %s is not an existing file" % path)
+                raise j.exceptions.Value("Provided path %s is not an existing file" % path)
             if not zipfile.is_zipfile(path):
-                raise ValueError("Provided path %s is not a valid zip archive" % path)
+                raise j.exceptions.Value("Provided path %s is not a valid zip archive" % path)
             self._zip = zipfile.ZipFile(path, "r")
             # TODO Make this optional?
             result = self._zip.testzip()
@@ -50,7 +50,7 @@ class ZipFile(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError("Trying to open broken zipfile, first broken file is %s" % result)
 
         else:
-            raise ValueError("Invalid mode")
+            raise j.exceptions.Value("Invalid mode")
 
         self.path = path
         self.mode = mode
@@ -70,7 +70,7 @@ class ZipFile(j.application.JSBaseClass):
         @type folder: string
         """
         if files and folder:
-            raise ValueError("Only files or folders can be provided, not both")
+            raise j.exceptions.Value("Only files or folders can be provided, not both")
 
         if not files:
             files = self._zip.namelist()

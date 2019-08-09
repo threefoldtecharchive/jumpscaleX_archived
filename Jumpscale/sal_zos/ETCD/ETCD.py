@@ -128,7 +128,7 @@ class ETCD(Service):
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
-            raise RuntimeError("Failed to get zt ip for etcd {}".format(self.name))
+            raise j.exceptions.Base("Failed to get zt ip for etcd {}".format(self.name))
 
     def start(self):
         if self.is_running():
@@ -140,7 +140,7 @@ class ETCD(Service):
         cmd = "/bin/etcd --config-file {}".format(self._config_path)
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
-            raise RuntimeError("Failed to start etcd server: {}".format(self.name))
+            raise j.exceptions.Base("Failed to start etcd server: {}".format(self.name))
 
     def stop(self):
         super().stop()
@@ -165,7 +165,7 @@ class ETCD(Service):
                     # this command has been executed before
                     continue
                 else:
-                    raise RuntimeError(result.stderr)
+                    raise j.exceptions.Base(result.stderr)
 
     def prepare_traefik(self):
         result = self.container.client.system(
@@ -174,4 +174,4 @@ class ETCD(Service):
             )
         ).get()
         if result.state != "SUCCESS":
-            raise RuntimeError("fail to prepare traefik configuration: %s" % result.stderr)
+            raise j.exceptions.Base("fail to prepare traefik configuration: %s" % result.stderr)

@@ -25,7 +25,7 @@ class TOTPSecret:
         pass
 
         if json is None and not kwargs:
-            raise ValueError("No data or kwargs present")
+            raise j.exceptions.Value("No data or kwargs present")
 
         class_name = "TOTPSecret"
         data = json or kwargs

@@ -69,7 +69,7 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
         # other = self._other_convert(other)
         # if other is None:
         #     j.shell()
-        #     raise RuntimeError("cannot compare with None")
+        #     raise j.exceptions.Value("cannot compare with None")
         other = self._typebase.clean(other)
         return float(other) == float(self)
 
@@ -177,7 +177,7 @@ class TypeBaseClass:  #!!TYPEBASECLASS!!
         """
         if hasattr(self, "NOCHECK") and self.NOCHECK is True:
             return RuntimeError("check cannot be used")
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Value("not implemented")
 
     def possible(self, value):
         """
@@ -192,13 +192,13 @@ class TypeBaseClass:  #!!TYPEBASECLASS!!
 
     def default_get(self):
         if self._default is None:
-            raise RuntimeError("self._default cannot be None")
+            raise j.exceptions.Value("self._default cannot be None")
         return self.clean(self._default)
 
     def clean(self, value):
         """
         """
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Value("not implemented")
 
     def python_code_get(self, value):
         """

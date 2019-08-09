@@ -105,7 +105,7 @@ class ModelBase(j.application.JSBaseClass):
             prop = self.__dict__["list_%s" % key]
             dbobjprop = eval("self.dbobj.%s" % key)
             if len(dbobjprop) != 0:
-                raise RuntimeError("bug, dbobj prop should be empty, means we didn't reserialize properly")
+                raise j.exceptions.Base("bug, dbobj prop should be empty, means we didn't reserialize properly")
             if prop is not None and len(prop) > 0:
                 # init the subobj, iterate over all the items we have & insert them
                 subobj = self.dbobj.init(key, len(prop))

@@ -12,7 +12,7 @@ class Test(j.application.JSBaseClass):
         lua_path = "%s/%s.lua" % (self._dirpath, name)
 
         if not j.sal.fs.exists(lua_path):
-            raise RuntimeError("cannot find:%s" % lua_path)
+            raise j.exceptions.Base("cannot find:%s" % lua_path)
 
         name2 = "%s_%s" % (self._ns, name)
 

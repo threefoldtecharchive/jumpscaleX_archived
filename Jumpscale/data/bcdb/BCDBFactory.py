@@ -58,7 +58,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 data = j.data.nacl.default.decryptSymmetric(data_encrypted)
             except Exception as e:
                 if str(e).find("Ciphertext failed") != -1:
-                    raise RuntimeError("%s cannot be decrypted with secret" % self._config_data_path)
+                    raise j.exceptions.Base("%s cannot be decrypted with secret" % self._config_data_path)
                 raise e
             self._config = j.data.serializers.msgpack.loads(data)
         else:
@@ -72,7 +72,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :return:
         """
         if not self._system:
-            self._system = self.get("system", reset=reset)
+            # storclient = j.clients.sqlitedb.client_get(name="system")
+            storclient = j.clients.rdb.client_get(name="system")
+            self._system = self.get("system", storclient=storclient, reset=reset)
         return self._system
 
     def get_test(self, reset=False):
@@ -126,10 +128,27 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         all data will be lost
         :return:
         """
+        names = [name for name in j.data.bcdb._config.keys()]
+        try:
+            j.servers.sonic.bcdb.destroy()
+            # can fail because maybe the config manager is upset
+        except:
+            # could not do config mgmt, lets still destroy the sonic db
+            j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/sonic_db/bcdb"))
+        self._bcdb_instances = {}
+        storclients = []
+        for name in names:
+            cl = self._get_storclient(name)
+            if cl not in storclients:
+                storclients.append(cl)
+        for cl in storclients:
+            if cl.type == "SDB":
+                cl.sqlitedb.close()
+            cl.flush()
         for key in j.core.db.keys("bcdb:*"):
             j.core.db.delete(key)
-        for item in self.instances:
-            item.destroy()
+        j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/bcdb"))
+        self._load()
 
     def exists(self, name):
         if name in self._bcdb_instances:
@@ -138,15 +157,16 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         return name in self._config
 
-    def delete(self, name):
+    def destroy(self, name):
+        assert name
+        assert isinstance(name, str)
         if name in self._bcdb_instances:
             self._bcdb_instances.pop(name)
         if name in self._config:
-            data = self._config[name]
-            # self._config.pop(name)
+            self._get(name=name, reset=True, storclient=None)
+        else:
             b = BCDB(storclient=None, name=name, reset=True)
             b.destroy()
-            self._config_write()
 
     def get(self, name, storclient=None, reset=False, fromcache=True):
         """
@@ -171,6 +191,22 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         return BCDBVFS(self._bcdb_instances)
 
+    def _get_storclient(self, name):
+        data = self._config[name]
+        if "type" not in data or data["type"] == "zdb":
+            if "admin" in data:
+                if data["admin"]:
+                    raise j.exceptions.Base("can only use ZDB connection which is not admin")
+                data.pop("admin")
+            if "type" in data:
+                data.pop("type")
+            storclient = j.clients.zdb.client_get(**data)
+        elif data["type"] == "rdb":
+            storclient = j.clients.rdb.client_get(**data)
+        else:
+            storclient = j.clients.sqlitedb.client_get(**data)
+        return storclient
+
     def _get(self, name, reset=False, storclient=None):
         """[summary]
         get instance of bcdb
@@ -187,21 +223,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             return bcdb
         elif name in self._config:
             if not storclient:
-                data = self._config[name]
-                if "type" not in data or data["type"] == "zdb":
-                    if "admin" in data:
-                        if data["admin"]:
-                            raise RuntimeError("can only use ZDB connection which is not admin")
-                        data.pop("admin")
-                    if "type" in data:
-                        data.pop("type")
-                    storclient = j.clients.zdb.client_get(**data)
-                elif data["type"] == "rdb":
-                    storclient = j.clients.rdb.client_get(**data)
-                else:
-                    storclient = None
+                storclient = self._get_storclient(name)
         else:
-            raise RuntimeError("did not find bcdb with name:%s" % name)
+            raise j.exceptions.Base("did not find bcdb with name:%s" % name)
 
         self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
         return self._bcdb_instances[name]
@@ -218,33 +242,45 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :param storclient: optional
             e.g. j.clients.rdb.client_get()  (would be the core redis
             e.g. j.clients.zdb.client_get() would be a zdb client
+            e.g. j.clients.sqlitedb.client_get() would be a sqlite client
+
+            if not specified then will be storclient = j.clients.sqlitedb.client_get(nsname="system")
+
         :return:
         """
 
         self._log_info("new bcdb:%s" % name)
         if name in self._bcdb_instances:  # make sure we don't remember when a new one
             self._bcdb_instances.pop(name)
-        if storclient != None and j.data.types.string.check(storclient):
-            raise RuntimeError("storclient cannot be str")
+
+        if not storclient:
+            storclient = j.clients.sqlitedb.client_get(nsname="system")
+        else:
+            if j.data.types.string.check(storclient):
+                raise j.exceptions.Base("storclient cannot be str")
         data = {}
 
-        if storclient:
-            assert isinstance(storclient.type, str)
-            if storclient.type == "RDB":
-                data["nsname"] = storclient.nsname
-                data["type"] = "rdb"
-                data["redisconfig_name"] = storclient._redis.redisconfig_name
-            else:
-                data["nsname"] = storclient.nsname
-                data["admin"] = storclient.admin
-                data["addr"] = storclient.addr
-                data["port"] = storclient.port
-                data["mode"] = str(storclient.mode)
-                data["secret"] = storclient.secret_
-                data["type"] = "zdb"
+        assert isinstance(storclient.type, str)
+        if storclient.type == "SDB":
+            data["nsname"] = storclient.nsname
+            data["type"] = "sdb"
+            # link to which redis to connect to (name of the redis client in JSX)
+        elif storclient.type == "RDB":
+            data["nsname"] = storclient.nsname
+            data["type"] = "rdb"
+            data["redisconfig_name"] = storclient._redis.redisconfig_name
+            # link to which redis to connect to (name of the redis client in JSX)
+
         else:
-            data["nsname"] = name
-            data["type"] = "sqlite"
+            data["nsname"] = storclient.nsname
+            data["admin"] = storclient.admin
+            data["addr"] = storclient.addr
+            data["port"] = storclient.port
+            data["mode"] = str(storclient.mode)
+            data["secret"] = storclient.secret_
+            data["type"] = "zdb"
+
+        assert data["nsname"]
 
         self._config[name] = data
         self._config_write()
@@ -252,9 +288,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         bcdb = self._get(name=name, reset=reset)
 
-        if storclient:
-            assert bcdb.storclient
-            assert bcdb.storclient.type == storclient.type
+        assert bcdb.storclient
+        assert bcdb.storclient.type == storclient.type
+
         return bcdb
 
     @property
@@ -312,7 +348,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             assert storclient.ping()
             bcdb = j.data.bcdb.new(name="test", storclient=storclient)
         else:
-            raise RuntimeError("only rdb,zdb,sqlite for stor")
+            raise j.exceptions.Base("only rdb,zdb,sqlite for stor")
 
         if reset:
             bcdb.reset()  # empty
@@ -343,7 +379,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
     def __setattr__(self, key, value):
         if key in ["system", "test"]:
-            raise RuntimeError("no system or test allowed")
+            raise j.exceptions.Base("no system or test allowed")
         self.__dict__[key] = value
 
     def __str__(self):

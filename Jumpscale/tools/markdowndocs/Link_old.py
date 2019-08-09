@@ -202,7 +202,7 @@ class Link(j.application.JSBaseClass):
     def replace_in_txt(self, txt):
         if len(self.source) < 4:
             j.shell()
-            raise RuntimeError("something wrong with original source")
+            raise j.exceptions.Base("something wrong with original source")
         txt = txt.replace(self.source, self.markdown)
         # self.source = self.markdown #there is a new source now
         return txt

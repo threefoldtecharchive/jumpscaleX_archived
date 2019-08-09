@@ -41,7 +41,7 @@ class ZeroStor:
             is_running, _ = self.is_running()
 
         if is_running:
-            raise RuntimeError("zerostor server {} didn't stopped")
+            raise j.exceptions.Base("zerostor server {} didn't stopped")
 
     def start(self):
         cmd = '/bin/zerostorserver \
@@ -60,7 +60,7 @@ class ZeroStor:
                 break
             time.sleep(1)
         else:
-            raise RuntimeError("Failed to start zerostor server: {}".format(self.name))
+            raise j.exceptions.Base("Failed to start zerostor server: {}".format(self.name))
 
     def is_running(self):
         return self.container.is_job_running(self._job_id)

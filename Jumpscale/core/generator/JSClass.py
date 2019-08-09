@@ -10,7 +10,7 @@ class JSClass:
     # @property
     # def name(self):
     #     if not self.name.startswith("j."):
-    #         raise RuntimeError("name:%s needs to start with j."%self.name)
+    #         raise j.exceptions.Base("name:%s needs to start with j."%self.name)
     #     d= self.name[2:]
     #     d=d[0].upper()+d[1:].lower()
     #     return d

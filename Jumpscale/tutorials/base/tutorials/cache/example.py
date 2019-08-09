@@ -14,7 +14,7 @@ def do(name=""):
     print("name:%s, counter:%s" % (name, j.counter))
     if j.counter == 5:
         return j.counter
-    raise RuntimeError("some error")
+    raise j.exceptions.Base("some error")
 
 
 def main():

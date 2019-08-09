@@ -31,7 +31,7 @@ class FListMetadata(j.application.JSBaseClass):
         """
         fType, dirObj = self._search_db(ppath)
         if dirObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         if fType == "D" and dirObj.dbobj.location == ppath[len(self.rootpath) :].strip("/"):
             return dirObj.dbobj.to_dict()
@@ -53,13 +53,13 @@ class FListMetadata(j.application.JSBaseClass):
         ppath = j.sal.fs.joinPaths(parent_path, name)
         dirRelPath, dirKey = self._path2key(ppath)
         if self.dirCollection.exists(dirKey):
-            raise RuntimeError("cannot create directory '%s': File exists" % ppath)
+            raise j.exceptions.Base("cannot create directory '%s': File exists" % ppath)
         dirObj = self.dirCollection.get(dirKey, autoCreate=True)
 
         _, dirKeyParent = self._path2key(parent_path)
         parentObj = self.dirCollection.get(dirKeyParent)
         if parentObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         aciKey = self._initialize_aci(mode, stat.S_IFDIR)
         # Initialize dirObj
@@ -85,7 +85,7 @@ class FListMetadata(j.application.JSBaseClass):
     def addFile(self, parent_path, name, size=0, mode="644"):
         _, parentObj = self._search_db(parent_path)
         if parentObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % parent_path)
+            raise j.exceptions.Base("%s: No such file or directory" % parent_path)
 
         aciKey = self._initialize_aci(mode, stat.S_IFREG)
         fileDict = {
@@ -105,10 +105,10 @@ class FListMetadata(j.application.JSBaseClass):
 
         _, parentObj = self._search_db(parent_path)
         if parentObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % parent_path)
+            raise j.exceptions.Base("%s: No such file or directory" % parent_path)
 
         if parent_path == j.sal.fs.getDirName(ppath):
-            raise RuntimeError("Cannot link to file to itself")
+            raise j.exceptions.Base("Cannot link to file to itself")
 
         relpath = ppath[len(self.rootpath) :].strip("/")
         for link in parentObj.dbobj.links:
@@ -127,7 +127,7 @@ class FListMetadata(j.application.JSBaseClass):
     def chown(self, ppath, gname, uname):
         fType, dirObj = self._search_db(ppath)
         if dirObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         if fType == "D":
             aclObj = self.aciCollection.get(dirObj.dbobj.aclkey)
@@ -154,12 +154,12 @@ class FListMetadata(j.application.JSBaseClass):
         """
         fType, dirObj = self._search_db(ppath)
         if dirObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         try:
             mode = int(mode, 8)
         except ValueError:
-            raise ValueError("Invalid mode.")
+            raise j.exceptions.Value("Invalid mode.")
         else:
             if fType == "D":
                 _mode = mode + stat.S_IFDIR
@@ -193,12 +193,12 @@ class FListMetadata(j.application.JSBaseClass):
     def delete(self, ppath):
         fType, dirObj = self._search_db(ppath)
         if dirObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         if fType == "D":
             dbobj = dirObj.dbobj
             if len(dbobj.dirs) != 0 and len(dbobj.files) != 0 and len(dbobj.links) != 0 and len(dbobj.specials) != 0:
-                raise RuntimeError("failed to remove '%s': Directory not empty" % ppath)
+                raise j.exceptions.Base("failed to remove '%s': Directory not empty" % ppath)
             dirObj.dbobj.state = "Deleted"
         else:
             _, entityList = self._getPropertyList(dirObj.dbobj, fType)
@@ -212,7 +212,7 @@ class FListMetadata(j.application.JSBaseClass):
         stat = {}
 
         if dirObj.dbobj.state != "":
-            raise RuntimeError("%s: No such file or directory" % ppath)
+            raise j.exceptions.Base("%s: No such file or directory" % ppath)
 
         if fType == "D":
             stat["modificationTime"] = dirObj.dbobj.modificationTime
@@ -252,12 +252,12 @@ class FListMetadata(j.application.JSBaseClass):
 
         if oldFtype == "D":
             if "{}/".format(old_path) in new_parent_path:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Cannot move '{}' to a subdirectory of itself, '{}'".format(old_path, new_parent_path)
                 )
 
             if oldDirObj.dbobj.state != "":
-                raise RuntimeError("%s: No such file or directory" % old_path)
+                raise j.exceptions.Base("%s: No such file or directory" % old_path)
 
             _, parentDir = self._search_db(j.sal.fs.getDirName(old_path))
             self._move_dir(parentDir, newParentDirObj, oldDirObj, fname=fname)
@@ -318,7 +318,7 @@ class FListMetadata(j.application.JSBaseClass):
                 newFiles.append(file.to_dict())
 
         if poppedFile == {}:
-            raise RuntimeError("cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
+            raise j.exceptions.Base("cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
 
         newlist = dirObj.dbobj.init(pName, len(newFiles))
         for i, item in enumerate(newFiles):
@@ -372,7 +372,7 @@ class FListMetadata(j.application.JSBaseClass):
                 if special.name == baseName:
                     return "S", parent_dir_obj
 
-            raise RuntimeError("%s: No such file or directory" % absolutePath)
+            raise j.exceptions.Base("%s: No such file or directory" % absolutePath)
 
     def _get_dir_from_db(self, dirPath):
         _, key = self._path2key(dirPath)
@@ -408,7 +408,7 @@ class FListMetadata(j.application.JSBaseClass):
             stat.S_IFSOCK,
         ]
         if fileType not in valid_types:
-            raise RuntimeError("Invalid file type.")
+            raise j.exceptions.Base("Invalid file type.")
 
         aci = self.aciCollection.new()
         uid = os.getuid()

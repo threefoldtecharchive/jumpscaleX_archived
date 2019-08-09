@@ -324,7 +324,7 @@ if "1" in args or "2" in args:
         force = True
 
     if "2" in args:
-        raise RuntimeError("sandboxed not supported yet")
+        raise j.exceptions.Base("sandboxed not supported yet")
         sandboxed = True
     else:
         sandboxed = False

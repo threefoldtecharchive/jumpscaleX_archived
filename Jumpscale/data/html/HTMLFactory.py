@@ -69,7 +69,7 @@ class HTMLFactory(j.application.JSBaseClass):
             self._log_info("found webpart:%s" % webpart_name)
             path2 = "%s/%s/add.py" % (path, webpart_name)
             if not j.sal.fs.exists(path2):
-                raise RuntimeError("cannot find webpart:%s" % path2)
+                raise j.exceptions.Base("cannot find webpart:%s" % path2)
             module = import_module("%s.add" % webpart_name)
             self.webparts.modules[webpart_name] = module
             for key, item in module.__dict__.items():

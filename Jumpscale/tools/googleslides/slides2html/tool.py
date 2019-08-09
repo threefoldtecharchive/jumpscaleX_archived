@@ -77,7 +77,7 @@ class Tool:
         SCOPES = ["https://www.googleapis.com/auth/drive"]
 
         if not os.path.exists(credfile):
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials"
             )
 
@@ -94,7 +94,7 @@ class Tool:
                     **json.loads(credjson), scopes=SCOPES
                 )
             else:
-                raise RuntimeError("invalid credential file or credential json.")
+                raise j.exceptions.Base("invalid credential file or credential json.")
             service = build("slides", "v1", credentials=credentials)
         else:
             userdir = os.path.expanduser("~")
@@ -168,7 +168,7 @@ def cli(
         pass
     imagesize = imagesize.upper()
     if imagesize not in ["MEDIUM", "LARGE"]:
-        raise ValueError("Invalid image size should be MEDIUM or LARGE")
+        raise j.exceptions.Value("Invalid image size should be MEDIUM or LARGE")
     if not indexfile:
         indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
     else:
@@ -177,7 +177,7 @@ def cli(
     destdir = os.path.join(website, presentation_id)
     credfile = os.path.abspath(os.path.expanduser(credfile))
     if not os.path.exists(credfile):
-        raise ValueError("Invalid credential file: {}".format(credfile))
+        raise j.exceptions.Value("Invalid credential file: {}".format(credfile))
 
     theme = ""
     themefilepath = os.path.expanduser(themefile)
@@ -215,7 +215,7 @@ class Tool:
         SCOPES = ["https://www.googleapis.com/auth/drive"]
 
         if not os.path.exists(credfile):
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials"
             )
 
@@ -301,13 +301,13 @@ def cli(
         pass
     imagesize = imagesize.upper()
     if imagesize not in ["MEDIUM", "LARGE"]:
-        raise ValueError("Invalid image size should be MEDIUM or LARGE")
+        raise j.exceptions.Value("Invalid image size should be MEDIUM or LARGE")
 
     if resize and "," in resize:
         try:
             newwidth, newheight = map(lambda x: int(x.strip()), resize.split(","))
         except:
-            raise ValueError("invalid size for --resize {}: should be 'width,height' ".format(resize))
+            raise j.exceptions.Value("invalid size for --resize {}: should be 'width,height' ".format(resize))
 
     if not indexfile:
         indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
@@ -317,7 +317,7 @@ def cli(
     destdir = os.path.join(website, presentation_id)
     credfile = os.path.abspath(os.path.expanduser(credfile))
     if not os.path.exists(credfile):
-        raise ValueError("Invalid credential file: {}".format(credfile))
+        raise j.exceptions.Value("Invalid credential file: {}".format(credfile))
 
     theme = ""
     themefilepath = os.path.expanduser(themefile)

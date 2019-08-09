@@ -22,7 +22,7 @@ from Jumpscale.data.schema.tests.testsuite.testcases.base_test import BaseTest
 from Jumpscale import j
 import random
 
-# raise RuntimeError("needs to be part of tests on BCDB not here")
+# raise j.exceptions.Base("needs to be part of tests on BCDB not here")
 
 
 class Unique(BaseTest):

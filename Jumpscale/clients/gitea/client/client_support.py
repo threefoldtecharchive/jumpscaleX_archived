@@ -47,7 +47,7 @@ def has_properties(cls, property, child_properties):
 
 def list_factory(val, member_type):
     if not isinstance(val, list):
-        raise ValueError("list_factory: value must be a list")
+        raise j.exceptions.Value("list_factory: value must be a list")
     return [val_factory(v, member_type) for v in val]
 
 
@@ -67,11 +67,11 @@ def dict_factory(val, objmap):
                 except Exception:
                     pass
             if objdict.get(attrname) is None:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "dict_factory: {attr}: unable to instantiate with any supplied type".format(attr=attrname)
                 )
         elif attrdict.get("required"):
-            raise ValueError("dict_factory: {attr} is required".format(attr=attrname))
+            raise j.exceptions.Value("dict_factory: {attr} is required".format(attr=attrname))
 
     return objdict
 
@@ -90,7 +90,7 @@ def val_factory(val, datatypes):
         except Exception as e:
             exceptions.append(str(e))
     # if we get here, we never found a valid value. raise an error
-    raise ValueError(
+    raise j.exceptions.Value(
         "val_factory: Unable to instantiate {val} from types {types}. Exceptions: {excs}".format(
             val=val, types=datatypes, excs=exceptions
         )
@@ -125,15 +125,15 @@ def set_property(
             else:
                 factory_value = val_factory(val, data_types)
         except ValueError as err:
-            raise ValueError(create_error.format(cls=class_name, prop=name, val=val, err=err))
+            raise j.exceptions.Value(create_error.format(cls=class_name, prop=name, val=val, err=err))
         else:
             if required_child_properties:
                 for child in required_child_properties:
                     if not factory_value.get(child):
                         child_prop_name = "{parent}.{child}".format(parent=name, child=child)
-                        raise ValueError(required_error.format(cls=class_name, prop=child_prop_name))
+                        raise j.exceptions.Value(required_error.format(cls=class_name, prop=child_prop_name))
     elif required:
-        raise ValueError(required_error.format(cls=class_name, prop=name))
+        raise j.exceptions.Value(required_error.format(cls=class_name, prop=name))
 
     return factory_value
 
@@ -237,7 +237,7 @@ class EnumHandler(object):
         """
         cannot restore here because we don't know what type of enum it is
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
 
 handlers = {datetime: DatetimeHandler, Enum: EnumHandler, UUID: UUIDHandler}

@@ -31,7 +31,7 @@ def random_polynomial(degree, intercept, upper_bound):
     """ Generates a random polynomial with positive coefficients.
     """
     if degree < 0:
-        raise ValueError("Degree must be a non-negative number.")
+        raise j.exceptions.Value("Degree must be a non-negative number.")
     coefficients = [intercept]
     for i in range(degree):
         random_coeff = randint(0, upper_bound - 1)
@@ -86,11 +86,11 @@ def secret_int_to_points(secret_int, point_threshold, num_points, prime):
         the secret int.
     """
     if point_threshold < 2:
-        raise ValueError("Threshold must be >= 2.")
+        raise j.exceptions.Value("Threshold must be >= 2.")
     if point_threshold > num_points:
-        raise ValueError("Threshold must be < the total number of points.")
+        raise j.exceptions.Value("Threshold must be < the total number of points.")
     if secret_int > prime:
-        raise ValueError("Error! Secret is too long for share calculation!")
+        raise j.exceptions.Value("Error! Secret is too long for share calculation!")
     coefficients = random_polynomial(point_threshold - 1, secret_int, prime)
     points = get_polynomial_points(coefficients, num_points, prime)
     return points
@@ -102,12 +102,12 @@ def points_to_secret_int(points, prime):
         Get the intercept of a random polynomial defined by the given points.
     """
     if not isinstance(points, list):
-        raise ValueError("Points must be in list form.")
+        raise j.exceptions.Value("Points must be in list form.")
     for point in points:
         if not isinstance(point, tuple) and len(point) == 2:
-            raise ValueError("Each point must be a tuple of two values.")
+            raise j.exceptions.Value("Each point must be a tuple of two values.")
         if not isinstance(point[0], int) and isinstance(point[1], int):
-            raise ValueError("Each value in the point must be an int.")
+            raise j.exceptions.Value("Each value in the point must be an int.")
     x_values, y_values = zip(*points)
     free_coefficient = modular_lagrange_interpolation(0, points, prime)
     secret_int = free_coefficient  # the secret int is the free coefficient

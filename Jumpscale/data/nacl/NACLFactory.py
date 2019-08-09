@@ -113,7 +113,7 @@ class NACLFactory(j.application.JSBaseClass):
         self.default.reset()
         try:
             self.default.load()
-            raise RuntimeError("should have given error")
+            raise j.exceptions.Base("should have given error")
         except:
             pass
 

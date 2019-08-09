@@ -62,7 +62,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                                 return
                             else:
                                 error = True
-                                # raise RuntimeError(e)
+                                # raise j.exceptions.Base(e)
                     else:
                         raise j.exceptions.RuntimeError(
                             "action not understood in filesystemhandler on sync:%s" % action

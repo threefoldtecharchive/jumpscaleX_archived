@@ -2,6 +2,7 @@ import struct
 
 import redis
 from Jumpscale import j
+from redis import ResponseError
 
 from ..ZDBClientBase import ZDBClientBase
 from ..ZDBAdminClientBase import ZDBAdminClientBase
@@ -31,7 +32,13 @@ class ZDBClientSeqMode(ZDBClientBase):
 
     def delete(self, key):
         key1 = self._key_encode(key)
-        self.redis.execute_command("DEL", key1)
+        try:
+            self.redis.execute_command("DEL", key1)
+        except ResponseError as e:
+            if str(e).find("Key not found") != -1:
+                return
+            else:
+                raise e
 
     def get(self, key):
         key = self._key_encode(key)

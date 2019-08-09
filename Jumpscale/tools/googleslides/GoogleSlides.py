@@ -68,13 +68,13 @@ class GoogleSlides(j.application.JSBaseClass):
             pass
         imagesize = imagesize.upper()
         if imagesize not in ["MEDIUM", "LARGE"]:
-            raise ValueError("Invalid image size should be MEDIUM or LARGE")
+            raise j.exceptions.Value("Invalid image size should be MEDIUM or LARGE")
 
         if resize and "," in resize:
             try:
                 newwidth, newheight = map(lambda x: int(x.strip()), resize.split(","))
             except:
-                raise ValueError("invalid size for --resize {}: should be 'width,height' ".format(resize))
+                raise j.exceptions.Value("invalid size for --resize {}: should be 'width,height' ".format(resize))
 
         if not indexfile:
             indexfilepath = j.sal.fs.joinPaths(websitedir, "{}.html".format(presentation_id))
@@ -84,7 +84,7 @@ class GoogleSlides(j.application.JSBaseClass):
         destdir = j.sal.fs.joinPaths(websitedir, presentation_id)
         credfile = os.path.abspath(os.path.expanduser(credfile))
         if not os.path.exists(credfile) and not credjson:
-            raise ValueError("Invalid credential file: {}".format(credfile))
+            raise j.exceptions.Value("Invalid credential file: {}".format(credfile))
 
         theme = ""
         themefilepath = os.path.expanduser(themefile)

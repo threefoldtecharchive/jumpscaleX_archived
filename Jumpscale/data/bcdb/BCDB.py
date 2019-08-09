@@ -23,6 +23,7 @@
 import gevent
 from Jumpscale.clients.stor_zdb.ZDBClientBase import ZDBClientBase
 from Jumpscale.clients.stor_rdb.RDBClient import RDBClient
+from Jumpscale.clients.stor_sqlite.DBSQLite import DBSQLite
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -31,7 +32,7 @@ from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
-from .DBSQLite import DBSQLite
+import time
 
 JSBASE = j.application.JSBaseClass
 
@@ -45,31 +46,40 @@ class BCDB(j.application.JSBaseClass):
         # JSBASE.__init__(self)
 
         self._redis_index = j.clients.redis.core
-
+        ## caching to fix kosmos REMOVE AFTERWARDS.
+        self._index_schema_class_cache = {}
+        self._sid_to_model = {}
         if name is None:
-            raise RuntimeError("name needs to be specified")
+            raise j.exceptions.Base("name needs to be specified")
 
-        if storclient is not None:
-            if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
-                raise RuntimeError("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
+        assert storclient
+        if (
+            not isinstance(storclient, ZDBClientBase)
+            and not isinstance(storclient, RDBClient)
+            and not isinstance(storclient, DBSQLite)
+        ):
+            raise j.exceptions.Base("storclient needs to be type: clients.zdb or clients.rdb or clients.sqlitedb")
 
         self.name = name
-        self._sqlclient = None
         self.dataprocessor_greenlet = None
-
+        self._sqlclient = None
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
         self.storclient = storclient
 
-        self.meta = BCDBMeta(self)
-
-        self._init_props()
-
         if reset:
+            self.meta = None
             self.reset()
         else:
+            self.meta = BCDBMeta(self)
             self.meta._load()
 
         self._init_system_objects()
+
+        self.check()
+
+        j.data.nacl.default
+
+        self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def _init_props(self):
 
@@ -97,28 +107,13 @@ class BCDB(j.application.JSBaseClass):
         j.data.bcdb._bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
-            raise RuntimeError("name needs to be string")
-
-        j.data.nacl.default
+            raise j.exceptions.Base("name needs to be string")
 
         # need to do this to make sure we load the classes from scratch
         for item in ["ACL", "USER", "GROUP"]:
             key = "Jumpscale.data.bcdb.models_system.%s" % item
             if key in sys.modules:
                 sys.modules.pop(key)
-
-        # check if we need to rebuild the BCDB indexes
-        try:
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except j.clients.credis_core._ConnectionError:
-            j.clients.credis_core._init()
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except Exception as e:
-            raise e
-
-        if not res and self.meta._data_in_db():
-            # means there is no index yet in the redis, need to rebuild all
-            self.index_rebuild()
 
         from .models_system.ACL import ACL
         from .models_system.USER import USER
@@ -130,13 +125,34 @@ class BCDB(j.application.JSBaseClass):
         self.circle = self.model_add(CIRCLE(bcdb=self))
         self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
-        j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
+    def check(self):
+        """
+        at this point we have for sure the metadata loaded now we should see if the last record found can be found in the index
+        :return:
+        """
 
-        self._log_info("BCDB INIT DONE:%s" % self.name)
+        def index_ok():
+            for s in self.meta._data.schemas:
+                self._log_debug("check %s:%s:%s" % (s.sid, s.md5, s.url))
+                # the submodels (subobj in JSXObj don't have model, so they won't exist in this table)
+                if s.sid in self._sid_to_model:
+                    m = self.model_get_from_sid(s.sid)
+                    if m.schema.hasdata:
+                        # we need to check that the id iterator has at least 1 item, its not a perfect check but better than nothing
+                        if not m.index._ids_exists():
+                            # means there is a real issue with an iterator
+                            return False
+            return True
+
+        if not index_ok():
+            # the index rebuild needs to completely remove the index, show a warning sign
+            self._log_warning("we need to rebuild the full index because iterator was not complete")
+            # there is no other way we can do this because without iterator the rebuild index cannot be done
+            self.index_rebuild()
 
     def export(self, path=None, encrypt=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
 
         for o in list(self.meta._data.schemas):
             m = self.model_get_from_schema(o.text)
@@ -160,7 +176,7 @@ class BCDB(j.application.JSBaseClass):
 
     def import_(self, path=None, reset=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
         if reset:
             self.reset()
             if self.storclient:
@@ -202,7 +218,7 @@ class BCDB(j.application.JSBaseClass):
                 else:
                     obj_id = int(base.split(".")[0])
                 if obj_id in data:
-                    raise RuntimeError("id's need to be unique, cannot import")
+                    raise j.exceptions.Base("id's need to be unique, cannot import")
                 json = j.sal.fs.readFile(item, binary=encr)
                 if encr:
                     json = j.data.nacl.default.decryptSymmetric(json)
@@ -211,7 +227,6 @@ class BCDB(j.application.JSBaseClass):
                     max = obj_id
 
         if self.storclient:
-            assert self.storclient.nsinfo["mode"] == "sequential"
             assert self.storclient.nsinfo["entries"] == 1
             lastid = 1
 
@@ -232,7 +247,7 @@ class BCDB(j.application.JSBaseClass):
                         try:
                             obj = model.new(data=json)
                         except:
-                            raise RuntimeError("can't get a new model based on json data:%s" % json)
+                            raise j.exceptions.Base("can't get a new model based on json data:%s" % json)
                         if self.storclient:
                             obj.id = None
                     else:
@@ -248,7 +263,7 @@ class BCDB(j.application.JSBaseClass):
     @property
     def sqlclient(self):
         if self._sqlclient is None:
-            self._sqlclient = DBSQLite(self)
+            self._sqlclient = DBSQLite(nsname=self.name)
         return self._sqlclient
 
     def redis_server_start(self, port=6380, secret="123456"):
@@ -270,7 +285,8 @@ class BCDB(j.application.JSBaseClass):
                     self.results[returnid] = res
                 event.set()
         self.dataprocessor_greenlet = None
-        event.set()
+        if event:
+            event.set()
         self._log_warning("DATAPROCESSOR STOPS")
 
     def dataprocessor_start(self):
@@ -287,29 +303,39 @@ class BCDB(j.application.JSBaseClass):
             self.dataprocessor_greenlet = gevent.spawn(self._data_process)
             self.dataprocessor_state = "RUNNING"
 
+    def dataprocessor_stop(self, force=False):
+        if self.dataprocessor_greenlet:
+            if self.dataprocessor_greenlet.started and not force:
+                # stop dataprocessor
+                self.queue.put((None, ["STOP"], {}, None, None))
+                while self.queue.qsize() > 0:
+                    self._log_debug("wait dataprocessor to stop")
+                    time.sleep(0.1)
+            self.dataprocessor_greenlet.kill()
+
     def reset(self):
         """
         remove all data but the bcdb instance remains
         :return:
         """
 
-        j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
+        self.dataprocessor_stop(force=True)
 
-        if self.storclient:
-            self.storclient.flush(meta=self.meta)  # new flush command
+        assert self.storclient
 
+        self.storclient.flush()
         self._redis_reset()
-        self.meta.reset()
-
-        if self._sqlclient is not None:
-            self.sqlclient.close()
-            self._sqlclient = None
-
         j.sal.fs.remove(self._data_dir)
 
+        # all data is now removed
+
         self._init_props()
-        self.meta._load()
+        if not self.meta:
+            self.meta = BCDBMeta(self)
+        self.meta.reset()  # will make sure the record 0 is written with empty metadata
         self._init_system_objects()
+
+        self.check()
 
     def destroy(self):
         """
@@ -327,6 +353,7 @@ class BCDB(j.application.JSBaseClass):
             j.core.db.delete(key)
 
     def _redis_reset(self):
+        # shouldnt this be part of the indexing class?
         for key in self._redis_index.keys("bcdb:%s*" % self.name):
             self._redis_index.delete(key)
 
@@ -337,10 +364,20 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
     def index_rebuild(self):
-        self._log_warning("REBUILD INDEX")
-        self.meta.reset()
-        for m in self.models:
-            m.index_rebuild()
+        self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
+        # IF WE DO A FULL BLOWN REBUILD THEN WE NEED TO ITERATE OVER ALL OBJECTS AND CANNOT START FROM THE ITERATOR PER MODEL
+        # this always needs to work, independent of state of index
+        for model in self.models:
+            # make sure indexes are empty
+            model.index.destroy()
+        first = True
+        for data in self.storclient.iterate():
+            if first:
+                first = False
+                continue
+            jsxobj = j.data.serializers.jsxdata.loads(data)
+            model = self.model_get_from_schema(jsxobj._schema)
+            model.set(jsxobj, store=False, index=True)
 
     @property
     def models(self):
@@ -352,7 +389,7 @@ class BCDB(j.application.JSBaseClass):
         if sid in self._sid_to_model:
             return self._sid_to_model[sid]
         else:
-            raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
+            raise j.exceptions.Base("did not find model with sid:'%s' in mem." % sid)
 
     def model_get_from_url(self, url, namespaceid=1):
         """
@@ -377,7 +414,7 @@ class BCDB(j.application.JSBaseClass):
         else:
             self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-                raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+                raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
 
         if schema._md5 in self.meta._schema_md5_to_sid:
@@ -387,7 +424,7 @@ class BCDB(j.application.JSBaseClass):
             if schema_set:
                 sid = self.meta._schema_set(schema)
             else:
-                raise RuntimeError("sid should be known in the self.meta._schema_md5...")
+                raise j.exceptions.Base("sid should be known in the self.meta._schema_md5...")
 
         if sid in self._sid_to_model:
             return self._sid_to_model[sid]
@@ -404,7 +441,7 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
         if not isinstance(model, j.data.bcdb._BCDBModelClass):
-            raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
+            raise j.exceptions.Base("model needs to be of type:%s" % self._BCDBModelClass)
         assert model.sid
 
         self._sid_to_model[model.sid] = model
@@ -453,7 +490,7 @@ class BCDB(j.application.JSBaseClass):
             schema = j.data.schema.get_from_text(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         if schema.key not in self._index_schema_class_cache:
 
@@ -461,8 +498,9 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
+            name = "bcdbindex_%s" % self.name
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
+                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass
@@ -495,7 +533,7 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("models_add:%s" % path)
 
         if not j.sal.fs.isDir(path):
-            raise RuntimeError("path: %s needs to be dir, to load models from" % path)
+            raise j.exceptions.Base("path: %s needs to be dir, to load models from" % path)
 
         pyfiles_base = []
         for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
@@ -551,12 +589,12 @@ class BCDB(j.application.JSBaseClass):
 
         if len(res) == 3:
             j.shell()
-            raise RuntimeError("should never be stored as only 3 parts in msgpack")
+            raise j.exceptions.Base("should never be stored as only 3 parts in msgpack")
         elif len(res) == 4:
             nid, schema_id, acl_id, bdata_encrypted = res
             model = self.model_get_from_sid(schema_id)
         else:
-            raise RuntimeError("not supported format")
+            raise j.exceptions.Base("not supported format")
 
         bdata = j.data.nacl.default.decryptSymmetric(bdata_encrypted)
 
@@ -568,7 +606,7 @@ class BCDB(j.application.JSBaseClass):
             except Exception as e:
                 msg = "can't get a model from data:%s\n%s" % (bdata, e)
                 print(msg)
-                raise RuntimeError(msg)
+                raise j.exceptions.Base(msg)
             obj.nid = nid
             obj.id = id
             obj.acl_id = acl_id
@@ -601,7 +639,7 @@ class BCDB(j.application.JSBaseClass):
         if self.storclient:
             db = self.storclient
             for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
-                if self.storclient.type.lower() == "zdb" and key == 0:  # skip first metadata entry
+                if key == 0:  # skip first metadata entry
                     continue
                 if keyonly:
                     yield key

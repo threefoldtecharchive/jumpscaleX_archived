@@ -66,7 +66,7 @@ class ZTBootstrap:
             for addr in member["config"]["ipAssignments"]:
                 all_ips.remove(netaddr.IPAddress(addr))
         if len(all_ips) <= 0:
-            raise RuntimeError("No more free ip in the range %s" % self._cidr)
+            raise j.exceptions.Base("No more free ip in the range %s" % self._cidr)
         return str(all_ips[0])
 
 

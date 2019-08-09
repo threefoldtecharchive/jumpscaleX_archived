@@ -91,7 +91,7 @@ class BuilderPython(j.builders.system._BaseClass):
         cmd = "python3 -c 'import ssl'"
         rc, _, err = self._execute(cmd, die=False)
         if rc > 0:
-            raise RuntimeError("SSL was not included in building process !\n%s" % err)
+            raise j.exceptions.Base("SSL was not included in building process !\n%s" % err)
         self._pip_install()
         self._pip_packages_all()
 

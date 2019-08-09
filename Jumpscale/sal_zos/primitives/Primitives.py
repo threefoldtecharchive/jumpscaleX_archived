@@ -32,7 +32,7 @@ class Primitives:
             flistname = "{}:{}".format(templatename, version)
             kwargs["flist"] = BASEFLIST.format(flistname)
         else:
-            raise RuntimeError("Invalid VM type {}".format(type_))
+            raise j.exceptions.Base("Invalid VM type {}".format(type_))
         return ZOS_VM(**kwargs)
 
     def create_disk(self, name, zdb, mountpoint=None, filesystem="ext4", size=10, label=None):
@@ -157,4 +157,4 @@ class Primitives:
             zdb = self.create_zerodb(data["name"], node_port=None)
             zdb.from_dict(data)
             return zdb
-        raise RuntimeError("Unkown type {}, supported types are gateway, vm and zerodb".format(type_))
+        raise j.exceptions.Base("Unkown type {}, supported types are gateway, vm and zerodb".format(type_))

@@ -103,7 +103,7 @@ class ContainerClient(BaseClient):
 
         result = response.get()
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to dispatch command to container: %s" % result.data)
+            raise j.exceptions.Base("failed to dispatch command to container: %s" % result.data)
 
         cmd_id = json.loads(result.data)
         return self._client.response_for(cmd_id)
@@ -310,7 +310,7 @@ class ContainerManager:
 
         result = response.get()
         if result.state != "SUCCESS":
-            raise RuntimeError("failed to terminate container: %s" % result.data)
+            raise j.exceptions.Base("failed to terminate container: %s" % result.data)
 
     def nic_add(self, container, nic):
         """

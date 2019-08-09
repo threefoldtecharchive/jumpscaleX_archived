@@ -133,7 +133,7 @@ class Node:
         ip = get_zt_ip(nics, True, SUPPORT_NETWORK)
         if ip:
             return ip
-        raise LookupError("their is no support zerotier interface (support_address)")
+        raise j.exceptions.NotFound("their is no support zerotier interface (support_address)")
 
     @property
     def management_address(self):
@@ -146,7 +146,7 @@ class Node:
         for route in self.client.ip.route.list():
             if route["gw"] and not route["dst"]:
                 return route
-        raise LookupError("Could not find route with default gw")
+        raise j.exceptions.NotFound("Could not find route with default gw")
 
     def get_gateway_nic(self):
         return self.get_gateway_route()["dev"]
@@ -192,7 +192,7 @@ class Node:
             if eligible[t]:
                 return eligible[t][0]
         else:
-            raise RuntimeError("cannot find eligible disks for the fs cache")
+            raise j.exceptions.Base("cannot find eligible disks for the fs cache")
 
     def find_disks(self, disk_type):
         """

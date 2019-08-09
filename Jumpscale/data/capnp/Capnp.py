@@ -130,7 +130,7 @@ class Capnp(j.application.JSBaseClass):
                 schema = parser.load(path)
             except Exception as e:
                 msg = str(e)
-                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s" % (schemaInText, msg))
+                raise j.exceptions.Base("%s\n\nERROR:Could not parse capnp schema:\n%s" % (schemaInText, msg))
             self._schema_cache[schemaId] = schema
         return self._schema_cache[schemaId]
 

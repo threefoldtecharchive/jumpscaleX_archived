@@ -71,13 +71,13 @@ class ExecutorSerial(ExecutorBase):
         self.send("\n")
 
     def _execute_script(self, content="", die=True, showout=True, checkok=None):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def upload(self, source, dest, dest_prefix="", recursive=True, createdir=True):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def download(self, source, dest, source_prefix="", recursive=True):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def __repr__(self):
         return "Executor serial: %s" % (self.device)

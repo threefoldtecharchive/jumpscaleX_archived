@@ -26,9 +26,9 @@ class Story:
         """
 
         if title == "":
-            raise ValueError("title was not provided and is mandatory")
+            raise j.exceptions.Value("title was not provided and is mandatory")
         if url == "":
-            raise ValueError("url was not provided and is mandatory")
+            raise j.exceptions.Value("url was not provided and is mandatory")
 
         self.title = title
         self.url = url

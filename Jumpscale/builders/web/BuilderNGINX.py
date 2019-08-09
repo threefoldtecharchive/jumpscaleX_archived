@@ -194,7 +194,7 @@ class BuilderNGINX(j.builders.system._BaseClass):
             cmd = j.servers.startupcmd.get("nginx", cmd_start=nginxcmd, cmd_stop="nginx -s stop", path="/sandbox/bin")
             return [cmd]
         else:
-            raise RuntimeError("Failed to start nginx")
+            raise j.exceptions.Base("Failed to start nginx")
 
     def _test(self, name=""):
         """Run tests under tests directory

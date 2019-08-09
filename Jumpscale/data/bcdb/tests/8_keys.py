@@ -97,7 +97,7 @@ def main(self):
             data_ = j.clients.credis_core.hget(key, key2)
             data__ = j.data.serializers.msgpack.loads(data_)
             if o.id in data__:
-                raise RuntimeError("the id should not be in the redis index")
+                raise j.exceptions.Base("the id should not be in the redis index")
 
     m2 = bcdb.model_get_from_schema(SCHEMA)
 

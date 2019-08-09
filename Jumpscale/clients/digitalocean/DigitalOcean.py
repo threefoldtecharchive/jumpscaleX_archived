@@ -98,7 +98,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         for item in self.sshkeys:
             if name == item.name:
                 return item
-        raise RuntimeError("did not find key:%s" % name)
+        raise j.exceptions.Base("did not find key:%s" % name)
 
     def region_get(self, name):
         for item in self.digitalocean_regions:
@@ -106,7 +106,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 return item
             if name == item.name:
                 return item
-        raise RuntimeError("did not find region:%s" % name)
+        raise j.exceptions.Base("did not find region:%s" % name)
 
     @property
     def digitalocean_account_images(self):
@@ -120,7 +120,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 name_do = item.distribution + " " + item.name
             if name_do.lower().find(name) != -1:
                 return item
-        raise RuntimeError("did not find image:%s" % name)
+        raise j.exceptions.Base("did not find image:%s" % name)
 
     def image_names_get(self, name=""):
         res = []

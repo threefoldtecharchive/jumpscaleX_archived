@@ -196,7 +196,7 @@ class ReplaceTool(j.application.JSBaseClass):
                 C = j.sal.fs.readFile(item)
             except Exception as e:
                 if "codec can't" not in str(e):
-                    raise RuntimeError(e)
+                    raise j.exceptions.Base(e)
                 C = ""
             if C == "":
                 continue

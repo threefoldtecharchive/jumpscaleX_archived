@@ -210,14 +210,14 @@ class Sheet(j.application.JSBaseClass):
 
     def setCell(self, rowName, month, value):
         if month > self.nrcols - 1:
-            raise ValueError("max month = %s, %s given" % (self.nrcols - 1, month))
+            raise j.exceptions.Value("max month = %s, %s given" % (self.nrcols - 1, month))
         row = self.getRow(rowName)
 
         row.cells[month] = value
 
     def addCell(self, rowName, month, value):
         if month > self.nrcols - 1:
-            raise ValueError("max month = %s, %s given" % (self.nrcols - 1, month))
+            raise j.exceptions.Value("max month = %s, %s given" % (self.nrcols - 1, month))
         row = self.getRow(rowName)
         row.cells[month] += value
 

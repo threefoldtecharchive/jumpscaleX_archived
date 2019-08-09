@@ -89,7 +89,7 @@ class BuilderZDisk(j.builders.system._BaseClass):
         Only one of these parameters can be set
         """
         if config_file is not None and config_cluster is not None:
-            raise ValueError("Both config_file and config_file parameters were provided")
+            raise j.exceptions.Value("Both config_file and config_file parameters were provided")
 
         config = ""
         if config_cluster is not None:
@@ -98,7 +98,7 @@ class BuilderZDisk(j.builders.system._BaseClass):
             if config_file is None:
                 config_file = _DEFAULT_LOCAL_CONFIG_FILE
             if not os.path.isfile(config_file):
-                raise ValueError("Could not find local config file: {}".format(config_file))
+                raise j.exceptions.Value("Could not find local config file: {}".format(config_file))
             j.builders.tools.upload(config_file, _NBDSERVER_CONFIG_FILE)
             # set config to file location
             j.builders.tools.file_ensure(_NBDSERVER_CONFIG_FILE)
@@ -135,7 +135,7 @@ class BuilderZDisk(j.builders.system._BaseClass):
 
     def start_tlogserver(self, config):
         """Starts the 0-disk\'s tlogserver"""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def stop_nbdserver(self):
         """Stops the 0-disk\'s nbdserver"""
@@ -144,4 +144,4 @@ class BuilderZDisk(j.builders.system._BaseClass):
 
     def stop_tlogserver(self):
         """Stops the 0-disk\'s tlogserver"""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

@@ -62,7 +62,7 @@ class GiteaFactory(JSConfigBase):
         if "test" in names:
             name = "test"
         else:
-            raise RuntimeError("can only run test if test org exists")
+            raise j.exceptions.Base("can only run test if test org exists")
 
         org = cl.org_get(name)
 

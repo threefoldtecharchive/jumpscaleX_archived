@@ -30,7 +30,7 @@ class Containers:
         try:
             container = self.node.client.container.get(name)
             if not container:
-                raise LookupError("Could not find container with name {}".format(name))
+                raise j.exceptions.NotFound("Could not find container with name {}".format(name))
             container["container"]["id"] = container.pop("id")
             return Container.from_containerinfo(container, self.node)
         except ResultError:
@@ -39,9 +39,9 @@ class Containers:
 
         containers = list(self.node.client.container.find(name).values())
         if not containers:
-            raise LookupError("Could not find container with name {}".format(name))
+            raise j.exceptions.NotFound("Could not find container with name {}".format(name))
         if len(containers) > 1:
-            raise LookupError("Found more than one containter with name {}".format(name))
+            raise j.exceptions.NotFound("Found more than one containter with name {}".format(name))
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(
@@ -324,13 +324,13 @@ class Container:
                     interface = route["dev"]
                     break
             else:
-                raise LookupError("Could not find default interface")
+                raise j.exceptions.NotFound("Could not find default interface")
         for ipaddress in self.client.ip.addr.list(interface):
             ip = netaddr.IPNetwork(ipaddress)
             if ip.version == 4:
                 break
         else:
-            raise LookupError("Failed to get default ip")
+            raise j.exceptions.NotFound("Failed to get default ip")
         return ip
 
     def add_nic(self, nic):
@@ -448,7 +448,7 @@ class Container:
             is_running = self.is_job_running(id)
 
         if is_running:
-            raise RuntimeError("Failed to stop job {}".format(id))
+            raise j.exceptions.Base("Failed to stop job {}".format(id))
 
     def is_port_listening(self, port, timeout=60, network=("tcp", "tcp6")):
         def is_listening():
@@ -523,7 +523,7 @@ class Container:
 
             if flag & 0x4 != 0:
                 erroMessage = " ".join(logs)
-                raise RuntimeError(erroMessage)
+                raise j.exceptions.Base(erroMessage)
 
         resp = self.client.subscribe(job.id)
         resp.stream(callback)
@@ -536,7 +536,7 @@ class Container:
     def authorize_networks(self, nics):
         public_identity = self.public_identity
         if not public_identity:
-            raise RuntimeError("Failed to get zerotier public identity")
+            raise j.exceptions.Base("Failed to get zerotier public identity")
         for nic in nics:
             if nic["type"] == "zerotier":
                 client = j.clients.zerotier.get(nic["ztClient"], create=False, die=True, interactive=False)
@@ -567,7 +567,7 @@ def next_cpus(node, nr):
     """
     max_cpu_nr = len(node.client.info.cpu())
     if nr > max_cpu_nr:
-        raise ValueError("maximum number of cpu is %s" % max_cpu_nr)
+        raise j.exceptions.Value("maximum number of cpu is %s" % max_cpu_nr)
 
     cgroup = node.client.cgroup
 
@@ -580,7 +580,7 @@ def next_cpus(node, nr):
     for outer in all_used:
         for cpu in outer:
             if cpu not in appearances:
-                raise RuntimeError("cpu number %s doesn't exist, but it is reported as used" % cpu)
+                raise j.exceptions.Base("cpu number %s doesn't exist, but it is reported as used" % cpu)
             appearances[cpu] += 1
 
     # sort by less used

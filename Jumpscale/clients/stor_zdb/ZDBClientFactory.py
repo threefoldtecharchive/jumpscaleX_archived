@@ -53,7 +53,7 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
             else:
                 return ZDBClientDirectMode
         else:
-            raise RuntimeError("childclass cannot be defined")
+            raise j.exceptions.Base("childclass cannot be defined")
 
     def client_admin_get(self, name="admin", addr="localhost", port=9900, secret="123456", mode="seq"):
         if self.exists(name=name):

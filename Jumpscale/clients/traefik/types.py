@@ -29,7 +29,7 @@ class Backend:
         self.name = name
         self.servers = servers or []
         if load_balance_method and not isinstance(load_balance_method, LoadBalanceMethod):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "load_balance_method should be a LoadBalanceMethod enum not {}".format(type(load_balance_method))
             )
         self.load_balance_method = load_balance_method
@@ -81,7 +81,7 @@ class FrontendRule:
         for more info: https://docs.traefik.io/basics/#modifiers
         """
         if not isinstance(kind, RoutingKind):
-            raise TypeError("type must be a RoutingKind enum not {}".format(type(kind)))
+            raise j.exceptions.Value("type must be a RoutingKind enum not {}".format(type(kind)))
         self.value = value
         self.type = kind
 

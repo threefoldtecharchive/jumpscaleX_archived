@@ -25,7 +25,7 @@ class RDBClient(j.application.JSBaseClass):
         assert self.ping()
 
     def _incr(self):
-        return self._redis.incr(self._incrkey)
+        return self._redis.incr(self._incrkey) - 1
 
     def _key_encode(self, key):
         return key
@@ -66,25 +66,23 @@ class RDBClient(j.application.JSBaseClass):
 
     def exists(self, key):
         if not key or not isinstance(key, int):
-            raise ValueError("key must be provided, and must be an int")
+            raise j.exceptions.Value("key must be provided, and must be an int")
         return self._redis.execute_command("HEXISTS", self._hsetkey, key) == 1
 
     def delete(self, key):
         if not key or not isinstance(key, int):
-            raise ValueError("key must be provided, and must be an int")
+            if not key is 0:
+                raise j.exceptions.Value("key must be provided, and must be an int")
         self._redis.execute_command("HDEL", self._hsetkey, key)
 
-    def _flush(self):
-        self._redis.delete(self._hsetkey)
-        self._redis.delete(self._incrkey)
-        self._redis.delete(self._keysbinkey)
-
-    def flush(self, meta=None):
+    def flush(self):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
         """
-        self._flush()
+        self._redis.delete(self._hsetkey)
+        self._redis.delete(self._incrkey)
+        self._redis.delete(self._keysbinkey)
 
     @property
     def nsinfo(self):

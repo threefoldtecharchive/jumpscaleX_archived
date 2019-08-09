@@ -124,7 +124,7 @@ class NACL(j.application.JSBaseClass):
             interactive = j.application.interactive
 
         if sshagent_use:
-            raise RuntimeError("does not work yet")
+            raise j.exceptions.Base("does not work yet")
 
         self.load(die=False)
 
@@ -148,7 +148,7 @@ class NACL(j.application.JSBaseClass):
             self.load(die=True)
 
     def _error_raise(self, msg):
-        raise RuntimeError(msg)
+        raise j.exceptions.Base(msg)
 
     def load(self, die=True):
         """
@@ -159,7 +159,7 @@ class NACL(j.application.JSBaseClass):
         self.privkey = None
 
         if not j.core.myenv.config["SECRET"]:
-            raise RuntimeError("secret should already have been set, do 'jsx check'")
+            raise j.exceptions.Base("secret should already have been set, do 'jsx check'")
             # j.core.myenv.secret_set() #there is no secret yet
 
         if False and j.core.myenv.config["SSH_KEY_DEFAULT"]:

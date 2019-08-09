@@ -103,18 +103,18 @@ class Hosts(Collection):
         :type macaddress: str
         """
         if not self.network.ip.cidr:
-            raise ValueError("Can not configure hosts if network cidr is not set")
+            raise j.exceptions.Value("Can not configure hosts if network cidr is not set")
         ipaddress = ipaddress or self.get_free_ip().format()
         if ipaddress not in self.network.ip.cidr:
-            raise ValueError("IPAddresss {} is not in {}".format(ipaddress, self.network.ip.cidr.cidr))
+            raise j.exceptions.Value("IPAddresss {} is not in {}".format(ipaddress, self.network.ip.cidr.cidr))
         if ipaddress == str(self.network.ip.cidr.ip):
-            raise ValueError("IPAddresss {} can not be the same as the gateway.".format(ipaddress))
+            raise j.exceptions.Value("IPAddresss {} can not be the same as the gateway.".format(ipaddress))
 
         for configuredhost in self:
             if configuredhost.ipaddress == ipaddress:
-                raise ValueError("IPAddress already in use by {}".format(configuredhost.name))
+                raise j.exceptions.Value("IPAddress already in use by {}".format(configuredhost.name))
             if macaddress and macaddress == configuredhost.macaddress:
-                raise ValueError("MACAddress already in use by {}".format(configuredhost.name))
+                raise j.exceptions.Value("MACAddress already in use by {}".format(configuredhost.name))
 
         macaddress = macaddress or self.get_free_mac()
         if isinstance(host, ZOS_VM):
@@ -140,7 +140,7 @@ class Hosts(Collection):
 
     def get_free_ip(self):
         if not self.network.ip.cidr:
-            raise RuntimeError("Can not get free IPAddress when cidr is not set")
+            raise j.exceptions.Base("Can not get free IPAddress when cidr is not set")
         poolstart = self.network.ip.cidr.network + self.pool_start
         poolend = poolstart + self.pool_size
         pool = netaddr.IPRange(poolstart, poolend)
@@ -149,7 +149,7 @@ class Hosts(Collection):
         for ip in pool:
             if ip not in usedips:
                 return ip
-        raise RuntimeError("Pool has been exhausted")
+        raise j.exceptions.Base("Pool has been exhausted")
 
 
 class IP:
@@ -184,7 +184,7 @@ class IP:
         if value is None:
             return
         if value not in self.cidr:
-            raise ValueError("Gateway should be port of {}".format(self.cidr))
+            raise j.exceptions.Value("Gateway should be port of {}".format(self.cidr))
         self._gateway = value
 
     def _get_ip(self):
@@ -244,7 +244,7 @@ class DefaultIP(IP):
 
     @cidr.setter
     def cidr(self, value):
-        raise RuntimeError("Can not set cidr on default network")
+        raise j.exceptions.Base("Can not set cidr on default network")
 
     def __str__(self):
         return "DefaultIP <{}>".format(self.cidr)
@@ -273,11 +273,11 @@ class Networks(Collection):
         """
         super().add(name)
         if len(name) > 15 or name == "default":
-            raise ValueError("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
+            raise j.exceptions.Value("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
         if networkid is None and type_ != "default":
-            raise ValueError("Missing required argument networkid for type {}".format(type_))
+            raise j.exceptions.Value("Missing required argument networkid for type {}".format(type_))
         if type_ not in ["vxlan", "zerotier", "vlan", "bridge", "default", "passthrough"]:
-            raise ValueError("Invalid network type: {}".format(type_))
+            raise j.exceptions.Value("Invalid network type: {}".format(type_))
         if type_ == "vxlan":
             network = VXlanNetwork(name, networkid, self._parent)
         elif type_ == "vlan":
@@ -315,16 +315,16 @@ class Networks(Collection):
         if isinstance(network, ZeroTierNetwork):
             name = name or network.name
             if not name:
-                raise ValueError("Need to provide a name for network")
+                raise j.exceptions.Value("Need to provide a name for network")
             net = ZTNetwork(name, network.id, self._parent)
             net.client = network.client
         elif isinstance(network, ZerotierClient):
             if not name:
-                raise ValueError("Need to provide a name for network")
+                raise j.exceptions.Value("Need to provide a name for network")
             net = ZTNetwork(name, network, self._parent)
             net.client = network
         else:
-            raise ValueError("Unsupported value password for network")
+            raise j.exceptions.Value("Unsupported value password for network")
         self._items.append(net)
         return net
 
@@ -394,9 +394,9 @@ class VlanNetwork(Network):
             if value.isdigit():
                 value = int(value)
             else:
-                raise ValueError("Invalid value for vlantag")
+                raise j.exceptions.Value("Invalid value for vlantag")
         if not isinstance(value, int) or (value < 0 or value > 4096):
-            raise ValueError("Invalid value for vlantag")
+            raise j.exceptions.Value("Invalid value for vlantag")
         self._networkid = value
 
     @property
@@ -427,9 +427,9 @@ class VXlanNetwork(Network):
             if value.isdigit():
                 value = int(value)
             else:
-                raise ValueError("Invalid value for vxlan id")
+                raise j.exceptions.Value("Invalid value for vxlan id")
         if not isinstance(value, int) or value < 0:
-            raise ValueError("Invalid value for vxlan id")
+            raise j.exceptions.Value("Invalid value for vxlan id")
         self._networkid = value
 
     @property
@@ -461,7 +461,7 @@ class ZTNetwork(ZTNic):
     @networkid.setter
     def networkid(self, value):
         if not isinstance(value, str) or len(value) != 16:
-            raise ValueError("Invalid value for zerotierid")
+            raise j.exceptions.Value("Invalid value for zerotierid")
         self._networkid = value
 
     @property

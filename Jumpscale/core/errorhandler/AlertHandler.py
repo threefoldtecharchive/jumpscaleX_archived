@@ -5,7 +5,6 @@ JSBASE = j.application.jsbase_get_class()
 
 SCHEMA_ALERT = """
 @url = jumpscale.alerthandler.alert
-@name = JSAlert
 level = 0
 message = ""
 message_pub = ""
@@ -18,15 +17,17 @@ count = 0
 
 
 class AlertHandler(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jscorelocation__ = "j.tools.alerthandler"
-        JSBASE.__init__(self)
+
+    __jslocation__ = "j.tools.alerthandler"
+
+    def _init(self):
+
         if not j.application.schemas:
-            raise RuntimeError("cannot use alerthandler because digital me has not been installed")
+            raise j.exceptions.Base("cannot use alerthandler because digital me has not been installed")
         self.schema_alert = j.data.schema.schema_add(SCHEMA_ALERT)
 
         self.db = j.core.db
-        self.serialize_json = False  # will be serialized as capnp
+        self.serialize_json = True
 
     def log(self, error, tb_text=""):
         """

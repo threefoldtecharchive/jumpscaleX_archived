@@ -242,7 +242,7 @@ class Docker(j.application.JSBaseClass):
         @param ssh : if True it will authorize the sskey name givin and creates a node for it
         """
         if sshkey is True and myinit is False:
-            raise ValueError("SSH can't be enabled without myinit.")
+            raise j.exceptions.Value("SSH can't be enabled without myinit.")
 
         name = name.lower().strip()
         self._log_info(("create:%s" % name))

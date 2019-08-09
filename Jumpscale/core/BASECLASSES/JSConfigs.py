@@ -34,10 +34,10 @@ class JSConfigs(JSBase, Attr):
     def __init_class_post(self):
 
         if not hasattr(self.__class__, "_CHILDCLASS"):
-            raise RuntimeError("_CHILDCLASS needs to be specified")
+            raise j.exceptions.Base("_CHILDCLASS needs to be specified")
 
         if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
-            raise RuntimeError("combination not allowed of config and configsclass")
+            raise j.exceptions.Base("combination not allowed of config and configsclass")
 
     def _process_schematext(self, schematext):
         """
@@ -90,7 +90,7 @@ class JSConfigs(JSBase, Attr):
 
     def new(self, name, jsxobject=None, **kwargs):
         if self.exists(name=name):
-            raise RuntimeError("obj: %s already exists" % name)
+            raise j.exceptions.Base("obj: %s already exists" % name)
         return self._new(name=name, jsxobject=jsxobject, **kwargs)
 
     def _new(self, name, jsxobject=None, **kwargs):
@@ -120,7 +120,6 @@ class JSConfigs(JSBase, Attr):
         """
         :param name: of the object
         """
-
         jsconfig = self._get(name=name, die=needexist)
         if not jsconfig:
             self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
@@ -135,7 +134,7 @@ class JSConfigs(JSBase, Attr):
                     # msg = "COULD NOT GET OBJ BECAUSE KWARGS GIVEN DO NOT CORRESPOND WITH OBJ IN DB\n"
                     # msg += "kwargs: key:%s val:%s\n" % (key, val)
                     # msg += "object was:\n%s\n" % jsconfig._data._ddict_hr_get()
-                    # raise RuntimeError(msg)
+                    # raise j.exceptions.Base(msg)
             if changed:
                 jsconfig.save()
 
@@ -165,10 +164,12 @@ class JSConfigs(JSBase, Attr):
         if len(res) < 1:
             if not die:
                 return
-            raise RuntimeError("Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name))
+            raise j.exceptions.Base(
+                "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name)
+            )
 
         elif len(res) > 1:
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name)
             )
         else:
@@ -199,7 +200,7 @@ class JSConfigs(JSBase, Attr):
                     if val != getattr(item, key):
                         match = False
                 else:
-                    raise ValueError("could not find for prop:%s, did not exist in %s" % (key, self._key))
+                    raise j.exceptions.Value("could not find for prop:%s, did not exist in %s" % (key, self._key))
             if match:
                 res.append(item)
 
@@ -238,7 +239,7 @@ class JSConfigs(JSBase, Attr):
                 # we can try to find this config
                 return self._model.find(**kwargs)
             else:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"
                     % (kwargs, self)
                 )
@@ -254,7 +255,9 @@ class JSConfigs(JSBase, Attr):
     def exists(self, name):
         res = self._findData(name=name)
         if len(res) > 1:
-            raise RuntimeError("found too many items for :%s, name:\n%s\n%s" % (self.__class__.__name__, name, res))
+            raise j.exceptions.Base(
+                "found too many items for :%s, name:\n%s\n%s" % (self.__class__.__name__, name, res)
+            )
         elif len(res) == 1:
             return True
         else:
@@ -329,7 +332,7 @@ class JSConfigs(JSBase, Attr):
 
             r = self._get(name=name, die=False)
             if not r:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
                     % (name, self._key)
                 )
@@ -359,4 +362,4 @@ class JSConfigs(JSBase, Attr):
             elif not self._protected or key in self._properties:
                 self.__dict__[key] = value
             else:
-                raise RuntimeError("protected property:%s" % key)
+                raise j.exceptions.Base("protected property:%s" % key)

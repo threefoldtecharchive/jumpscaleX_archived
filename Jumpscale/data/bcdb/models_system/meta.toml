@@ -52,11 +52,98 @@ url = ""
 sid = 0  #schema id
 text = ""
 md5 = ""
+hasdata = False (B) #if True then we know there needs to be id's in the metadata for the iterator
 
 @url = jumpscale.bcdb.namespace.2
 name* = ""                              #chosen name needs to be unique
 acls = (LO) !jumpscale.bcdb.acl.2
 write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+
+#BCDB EXTERNAL SCHEMAS
+
+@url = jumpscale.bcdb.recordchain.1
+recordchain = (LO) !jumpscale.bcdb.record.1
+
+@url = jumpscale.bcdb.record.1
+data = ""           #capnp optionally encrypted data (symmetric encryption)
+schema_sid = (I)
+authors = (LO) !jumpscale.ebcdb.record.author.1
+md5 = ""            #md5 of encrypted data
+epoch = (T)
+multisig_write = (LI)           #list of 3botid's of who need to agree on 
+multisig_delete = (LI)          #list of 3botid's of who need to agree on 
+multisig_admin = (LI)           #list of 3botid's of who need to agree on
+multisig_write_min = (I)       #min nr of people who need to sign from the list
+multisig_delete_min = (I)
+multisig_admin_min = (I)
+timeout = 3600 (I)
+author_last = (I)
+state = "first,ok,deleted" (E)
+
+
+@url = jumpscale.ebcdb.record.author.1
+threebot_id = (I)
+admin = (B)  #admin is the only one who can change admin rights, multisig, delete
+encr_key = "" #is the encryption key for the data used but encrypted with public key of this author
+signature = "" #as when the author changed the data last otherwise empty, sign the md5 of above
+               #or when multisignature was needed then you need this field too
+rights = "write,delete" (E)
+
+
+
+
+#BCDB BLOCKCHAIN REGISTRY
+
+@url = jumpscale.ebcdb.block.chain.1
+zdb_block_md5 = ""
+zdb_block_id* = ""
+last_block_id = (I)
+last_block_md5 = ""
+dispersal_meta = (LO) !jumpscale.ebcdb.block.disperal.profile.1
+
+@url = jumpscale.ebcdb.block.disperal.profile.1
+name* = ""
+profile = (LO) !jumpscale.ebcdb.block.disperal.item.1
+
+@url = jumpscale.ebcdb.block.disperal.item.1
+zdb_id =  (I)  #reference to the zerodb instance
+key = (I)
+namespace = "" (S)
+secret_ = "" (S)
+
+
+#BCDB TFGRID
+
+@url = jumpscale.tfgrid.node.1
+ipaddr** = "" (S)
+#TODO: properties per 3node
+
+
+@url = jumpscale.tfgrid.zdb.1
+ipaddr** = "" (S)
+type*** = "ssd,hd" (E)
+space_total_gb = (I)
+space_available_gb = (I)
+location_id** = (I)
+farmer_id** = (I)
+
+
+@url = jumpscale.tfgrid.farmer.1
+name = ""
+description = ""
+locations = (LO) !jumpscale.tfgrid.farmer.location.1
+wallet_addr = (S)
+farmer_threebot_id = (I)
+
+@url = jumpscale.tfgrid.farmer.location.1
+name = ""
+description = ""
+#TODO: location #GOOGLE MAP LOCATION?
+
+
+
+
+
 
 
 #FILE & FILE METADATA OBJECTS

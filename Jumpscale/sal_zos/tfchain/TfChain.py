@@ -53,7 +53,9 @@ class TfChainDaemon:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise j.exceptions.Base(
+                    "Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr)
+                )
 
     def stop(self, timeout=30):
         """
@@ -110,7 +112,9 @@ class TfChainBridged:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start bridged.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise j.exceptions.Base(
+                    "Could not start bridged.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr)
+                )
 
     def stop(self, timeout=30):
         """
@@ -184,7 +188,9 @@ class TfChainExplorer:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise j.exceptions.Base(
+                    "Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr)
+                )
 
     def _start_caddy(self, timeout=150):
         """
@@ -206,7 +212,9 @@ class TfChainExplorer:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start caddy.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise j.exceptions.Base(
+                    "Could not start caddy.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr)
+                )
 
     def stop(self, timeout=30):
         """
@@ -259,7 +267,7 @@ class RivineCurl:
             r.raise_for_status()
             return r
         except requests.exceptions.HTTPError as err:
-            raise RuntimeError(err)
+            raise j.exceptions.Base(err)
 
     def post(self, endpoint, params=None, data=None):
         payload = data
@@ -270,7 +278,7 @@ class RivineCurl:
             r.raise_for_status()
             return r
         except requests.exceptions.HTTPError as err:
-            raise RuntimeError(err)
+            raise j.exceptions.Base(err)
 
 
 class TfChainClient:
@@ -425,7 +433,7 @@ def error_check(result, message="", parse=False):
     if result.state != "SUCCESS":
         # check if curl was executed correctly
         err = "{}: {} \n {}".format(message, result.stderr, result.data)
-        raise RuntimeError(err)
+        raise j.exceptions.Base(err)
 
     if not parse:
         return
@@ -441,4 +449,4 @@ def error_check(result, message="", parse=False):
         if stdout_error:
             # check tfclient error
             err = "{}: {}".format(message, stdout_error)
-            raise RuntimeError(err)
+            raise j.exceptions.Base(err)

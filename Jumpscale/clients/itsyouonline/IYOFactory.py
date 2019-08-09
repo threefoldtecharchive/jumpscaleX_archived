@@ -39,7 +39,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
 
         if not claims["refresh_token"]:
             if die:
-                raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
+                raise j.exceptions.Base("jwt token can't be refreshed, no refresh token claim found")
             else:
                 return
 

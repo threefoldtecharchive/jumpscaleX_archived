@@ -229,7 +229,7 @@ class HTMLPage(j.application.JSBaseClass):
                     col = " "
                 if colnr in linkcolumns:
                     if len(col.split("__")) != 2:
-                        raise RuntimeError(
+                        raise j.exceptions.Base(
                             "column which represents a link needs to be of format $descr__$link, here was:%s" % col
                         )
                     c += "<td>%s</td>\n" % self.link_get(col.split("__")[0], col.split("__")[1])
@@ -345,7 +345,7 @@ class HTMLPage(j.application.JSBaseClass):
                 link = link.replace("{params}", params)
                 row.append(self.link_get(actiondescr, link))
             else:
-                raise RuntimeError("Could not find action %s" % action)
+                raise j.exceptions.Base("Could not find action %s" % action)
         self.list_add([row])
 
     @staticmethod

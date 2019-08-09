@@ -41,7 +41,7 @@ class IndexField:
         elif self.jumpscaletype.NAME in ["float"]:
             self.type = "FloatField"
         else:
-            raise RuntimeError("did not find required type for peewee:%s" % self)
+            raise j.exceptions.Base("did not find required type for peewee:%s" % self)
 
     def __str__(self):
         out = "indexfield:%s:%s:%s" % (self.name, self.type, self.jumpscaletype)
@@ -57,7 +57,7 @@ class BCDBIndexMeta(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.schema = schema
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         self.fields = []
         self.fields_key = []

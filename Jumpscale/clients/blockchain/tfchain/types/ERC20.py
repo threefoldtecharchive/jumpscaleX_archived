@@ -52,7 +52,7 @@ class ERC20Address(BinaryData):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "ERC20 address is expected to be an encoded string when part of a JSON object, not {}".format(type(obj))
             )
         if obj == "":
@@ -73,7 +73,7 @@ class ERC20Hash(BinaryData):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "ERC20 hash is expected to be an encoded string when part of a JSON object, not {}".format(type(obj))
             )
         if obj == "":

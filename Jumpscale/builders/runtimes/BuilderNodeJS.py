@@ -41,7 +41,7 @@ class BuilderNodeJS(j.builders.system._BaseClass):
             j.builders.system.package.ensure("phantomjs")
 
         else:
-            raise RuntimeError("phantomjs only supported don ubuntu or osx")
+            raise j.exceptions.Base("phantomjs only supported don ubuntu or osx")
 
     def npm_install(self, name, global_=True):
         """
@@ -83,7 +83,7 @@ class BuilderNodeJS(j.builders.system._BaseClass):
 
         rc, out, err = j.sal.process.execute("npm -v")
         if out.replace("\n", "") != "3.10.10":
-            raise RuntimeError("npm version error")
+            raise j.exceptions.Base("npm version error")
 
         rc, initmodulepath, err = j.sal.process.execute("npm config get init-module")
         j.builders.tools.file_unlink(initmodulepath)

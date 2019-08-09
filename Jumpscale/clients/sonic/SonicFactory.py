@@ -14,9 +14,13 @@ class SonicFactory(JSConfigs):
     _CHILDCLASS = SonicClient
 
     def get_client_bcdb(self):
-        # j.builders.apps.sonic.install()
-        j.servers.sonic.get("test", port=1414).start()
-        return self.get("test", host="127.0.0.1", port=1414, password="123456")
+        """
+        j.clients.sonic.get_client_bcdb()
+        :return:
+        """
+        j.builders.apps.sonic.install()
+        j.servers.sonic.get("bcdb", port=1414).start()
+        return self.get("bcdb", host="127.0.0.1", port=1414, password="123456")
 
     def test(self):
         """

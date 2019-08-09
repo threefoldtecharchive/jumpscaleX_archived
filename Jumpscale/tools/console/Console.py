@@ -97,7 +97,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         try:
             line = str(line)
         except BaseException:
-            raise ValueError("Could not convert text to string in system class.")
+            raise j.exceptions.Value("Could not convert text to string in system class.")
         return line
 
     def clear_screen(self):
@@ -251,7 +251,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
         self._check_interactive()
         if validate and not isinstance(validate, collections.Callable):
-            raise TypeError("The validate argument should be a callable")
+            raise j.exceptions.Value("The validate argument should be a callable")
         response = ""
         if not defaultparam == "" and defaultparam:
             question += " [%s]" % defaultparam
@@ -269,7 +269,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             else:
                 self.echo("Please insert a valid value!")
                 retryCount = retryCount - 1
-        raise ValueError(
+        raise j.exceptions.Value(
             "Console.askString() failed: tried %d times but user didn't fill out a value that matches '%s'."
             % (retry, regex)
         )
@@ -309,7 +309,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
         self._check_interactive()
         if validate and not isinstance(validate, collections.Callable):
-            raise TypeError("The validate argument should be a callable")
+            raise j.exceptions.Value("The validate argument should be a callable")
         if minValue is None and maxValue is not None:
             question += " (%d-%d)" % (minValue, maxValue)
         elif minValue is not None:
@@ -338,7 +338,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             j.tools.console.echo("Please insert a valid value!")
             retryCount = retryCount - 1
 
-        raise ValueError(
+        raise j.exceptions.Value(
             "Console.askInteger() failed: tried %d times but user didn't fill out a value that matches '%s'."
             % (retry, response)
         )

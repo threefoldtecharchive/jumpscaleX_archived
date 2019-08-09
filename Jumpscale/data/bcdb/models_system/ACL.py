@@ -29,7 +29,7 @@ class ACL(j.data.bcdb._BCDBModelClass):
 
     @property
     def acl(self):
-        raise RuntimeError("cannot modify acl object in acl object")
+        raise j.exceptions.Base("cannot modify acl object in acl object")
 
     @property
     def user(self):
@@ -97,9 +97,9 @@ class ACL(j.data.bcdb._BCDBModelClass):
         rights = j.data.types.string.unique_sort(rights).lower()  # lets make sure its sorted & unique
 
         if not j.data.types.list.check(userids):
-            raise RuntimeError("userids needs to be list")
+            raise j.exceptions.Base("userids needs to be list")
         if not j.data.types.list.check(circleids):
-            raise RuntimeError("circleids needs to be list")
+            raise j.exceptions.Base("circleids needs to be list")
 
         rdict = acl._ddict
 

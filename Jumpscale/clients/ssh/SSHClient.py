@@ -62,7 +62,7 @@ class SSHClient(SSHClientBase):
             except Exception as e:
                 if str(e).find("Error connecting to host") != -1:
                     msg = e.args[0] % e.args[1:]
-                    raise RuntimeError("PSSH:%s" % msg)
+                    raise j.exceptions.Base("PSSH:%s" % msg)
                 j.shell()
 
         return self._client_
@@ -106,7 +106,7 @@ class SSHClient(SSHClientBase):
             counter += 1
             time.sleep(0.1)
             if counter > 10:
-                raise RuntimeError("sft gives back int:%s for %s" % (res, path))
+                raise j.exceptions.Base("sft gives back int:%s for %s" % (res, path))
         return res
 
     # def connectViaProxy(self, host, username, port, identityfile, proxycommand=None):

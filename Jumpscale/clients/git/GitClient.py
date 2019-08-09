@@ -11,7 +11,7 @@ class GitClient(j.application.JSBaseClass):
     def __init__(self, baseDir, check_path=True):  # NOQA
 
         if baseDir is None or baseDir.strip() == "":
-            raise RuntimeError("basedir cannot be empty")
+            raise j.exceptions.Base("basedir cannot be empty")
 
         baseDir_org = copy.copy(baseDir)
 

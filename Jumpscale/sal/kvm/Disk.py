@@ -138,7 +138,7 @@ class Disk(BaseKVMComponent):
 
     @classmethod
     def get_by_name(cls, controller, name):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def clone_disk(self, new_disk):
         """

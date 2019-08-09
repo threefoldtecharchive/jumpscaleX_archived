@@ -139,7 +139,7 @@ class Network:
         elif mode == "native":
             return self._unconfigure_native()
         else:
-            raise ValueError("unknown mode %s" % mode)
+            raise j.exceptions.Value("unknown mode %s" % mode)
 
     def configure(
         self,
@@ -169,7 +169,7 @@ class Network:
         elif mode == "native":
             return self._configure_native(cidr=cidr, bonded=bonded, mtu=mtu, interfaces=interfaces)
         else:
-            raise ValueError("unknown mode %s" % mode)
+            raise j.exceptions.Value("unknown mode %s" % mode)
 
     def _get_free_interfaces(self, bonded=False):
         freenics = self.node.network.get_free_nics()
@@ -196,12 +196,12 @@ class Network:
             interfaces = self._get_free_interfaces(bonded=bonded)
         else:
             if bonded and len(interfaces) != 2:
-                raise ValueError("should have 2 interfaces specified when using bonding")
+                raise j.exceptions.Value("should have 2 interfaces specified when using bonding")
 
             all_nics_names = [nic["name"] for nic in self.node.client.ip.link.list()]
             for name in interfaces:
                 if name not in all_nics_names:
-                    raise ValueError("interface %s does not exist on the node" % name)
+                    raise j.exceptions.Value("interface %s does not exist on the node" % name)
 
         return interfaces
 
@@ -236,7 +236,7 @@ class Network:
         self, cidr, vlan_tag, interfaces, ovs_container_name="ovs", bonded=False, mtu=9000, balance_mode=None, lacp=None
     ):
         if balance_mode and balance_mode not in ["tcp", "slb"]:
-            raise ValueError("balance mode can only be 'tcp' or 'slb'")
+            raise j.exceptions.Value("balance mode can only be 'tcp' or 'slb'")
 
         if not balance_mode:
             balance_mode = "slb"

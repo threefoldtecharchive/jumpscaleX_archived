@@ -164,7 +164,7 @@ class GiteaUser(j.application.JSBaseClass):
                     is_valid = False
                     errors["email"] = "Missing"
         else:
-            raise RuntimeError("You must choose operation to validate")
+            raise j.exceptions.Base("You must choose operation to validate")
 
         if is_valid:
             return True, ""

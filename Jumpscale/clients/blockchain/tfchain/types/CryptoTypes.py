@@ -50,10 +50,10 @@ class PublicKey(BaseDataTypeClass):
         if not obj:
             return cls()
         if not isinstance(obj, str):
-            raise TypeError("expected JSON-encoded PublicKey to be a string, not {}".format(type(obj)))
+            raise j.exceptions.Value("expected JSON-encoded PublicKey to be a string, not {}".format(type(obj)))
         parts = obj.split(sep=":", maxsplit=2)
         if len(parts) != 2:
-            raise ValueError("invalid JSON-encoded PublicKey: {}".format(obj))
+            raise j.exceptions.Value("invalid JSON-encoded PublicKey: {}".format(obj))
         pk = cls()
         pk._specifier = PublicKeySpecifier.from_json(parts[0])
         pk._hash = Hash.from_json(parts[1])
@@ -68,7 +68,7 @@ class PublicKey(BaseDataTypeClass):
         if value == None:
             value = PublicKeySpecifier.NIL
         elif not isinstance(value, PublicKeySpecifier):
-            raise TypeError("expected value to be a PublicKeySpecifier, not {}".format(type(value)))
+            raise j.exceptions.Value("expected value to be a PublicKeySpecifier, not {}".format(type(value)))
         self._specifier = value
 
     @property

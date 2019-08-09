@@ -30,7 +30,7 @@ class Path:
             return self._flist.rootpath
 
         if self._parent.abspath == "":
-            raise RuntimeError("a file should always have a parent location")
+            raise j.exceptions.Base("a file should always have a parent location")
 
         return os.path.join(self._parent.abspath, self.name)
 
@@ -85,7 +85,7 @@ class Path:
         """
         see os.chmod()
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def copy(self, src, follow_symlinks=True):
         """
@@ -99,7 +99,7 @@ class Path:
         Recursively copy a directory tree.
         """
         if not os.path.isdir(src):
-            raise ValueError("src must be a directory")
+            raise j.exceptions.Value("src must be a directory")
 
         def find_dir(location):
             current = self
@@ -173,7 +173,7 @@ class Path:
 
         For example, Path('/users').glob('*/bin/*') returns a list of all the files users have in their bin directories.
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def link(self, newpath):
         """
@@ -183,7 +183,7 @@ class Path:
 
         os.link()
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def unlink(self):
         """
@@ -191,7 +191,7 @@ class Path:
 
         os.unlink()
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def move(self, dst):
         """
@@ -207,7 +207,7 @@ class Path:
 
         A lot more could be done here… A look at a mv.c shows a lot of the issues this implementation glosses over.
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     @property
     def parent(self):
@@ -222,20 +222,20 @@ class Path:
         """
         remove
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def rename(self):
         """
         rename
         """
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def _filter_content(self, ttype, pattern=None):
         if not hasattr(self._obj, "contents"):
             return []
 
         if ttype not in ("file", "dir", "link", "special"):
-            raise ValueError("type should be one of 'file','dir', 'link','special'")
+            raise j.exceptions.Value("type should be one of 'file','dir', 'link','special'")
         out = []
 
         for x in self._obj.contents:
@@ -283,7 +283,7 @@ class Path:
 
     def _add_file(self, src):
         if os.path.isdir(src):
-            raise ValueError("src must be a file (%s)" % src)
+            raise j.exceptions.Value("src must be a file (%s)" % src)
 
         _, self_key = self._flist.path2key(self.abspath)
 

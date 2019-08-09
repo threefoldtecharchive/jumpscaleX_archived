@@ -187,7 +187,7 @@ class Tube(j.application.JSBaseClass):
     @serialize.setter
     def serialize(self, func):
         if not (hasattr(func, "__call__") or func is None):
-            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
+            raise j.exceptions.Value("func must be Callable " "or None, but not " + str(type(func)))
         self._serialize = func
 
     @serialize.deleter
@@ -208,7 +208,7 @@ class Tube(j.application.JSBaseClass):
     @deserialize.setter
     def deserialize(self, func):
         if not (hasattr(func, "__call__") or func is None):
-            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
+            raise j.exceptions.Value("func must be Callable " "or None, but not " + str(type(func)))
         self._deserialize = func
 
     @deserialize.deleter
@@ -384,7 +384,7 @@ class Queue(j.application.JSBaseClass):
     @serialize.setter
     def serialize(self, func):
         if not (hasattr(func, "__call__") or func is None):
-            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
+            raise j.exceptions.Value("func must be Callable " "or None, but not " + str(type(func)))
         self._serialize = func
 
     @serialize.deleter
@@ -405,7 +405,7 @@ class Queue(j.application.JSBaseClass):
     @deserialize.setter
     def deserialize(self, func):
         if not (hasattr(func, "__call__") or func is None):
-            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
+            raise j.exceptions.Value("func must be Callable " "or None, but not " + str(type(func)))
         self._deserialize = func
 
     @deserialize.deleter

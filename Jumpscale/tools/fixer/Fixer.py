@@ -16,8 +16,7 @@ class Fixer(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.fixer"
 
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self):
         self.generator = JSGenerator(j)
         self.replacer = FixerReplacer()
 

@@ -29,12 +29,12 @@ class BaseKVMComponent(j.application.JSBaseClass):
         return NotImplementedError()
 
     def to_xml(self):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     @classmethod
     def from_xml(cls, controller, xml):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     @classmethod
     def get_by_name(cls, controller, name):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()

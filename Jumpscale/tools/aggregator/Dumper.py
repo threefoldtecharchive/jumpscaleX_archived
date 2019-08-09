@@ -84,4 +84,4 @@ class BaseDumper(j.application.JSBaseClass):
         :param redis:
         :return:
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

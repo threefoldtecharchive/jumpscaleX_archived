@@ -42,7 +42,9 @@ class TransactionBaseClass(ABC):
         txn = cls()
         tv = obj.get("version", -1)
         if txn.version != tv:
-            raise ValueError("transaction is expected to be of version {}, not version {}".format(txn.version, tv))
+            raise j.exceptions.Value(
+                "transaction is expected to be of version {}, not version {}".format(txn.version, tv)
+            )
         txn._from_json_data_object(obj.get("data", {}))
         return txn
 
@@ -61,7 +63,7 @@ class TransactionBaseClass(ABC):
     @unconfirmed.setter
     def unconfirmed(self, value):
         if not isinstance(value, bool):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "unconfirmed status of a Transaction is expected to be of type bool, not {}".format(type(bool))
             )
         self._unconfirmed = bool(value)
@@ -86,7 +88,9 @@ class TransactionBaseClass(ABC):
 
     def __eq__(self, other):
         if not isinstance(other, TransactionBaseClass):
-            raise TypeError("other is expected to be subtype of TransactionBaseClass, not {}".format(type(other)))
+            raise j.exceptions.Value(
+                "other is expected to be subtype of TransactionBaseClass, not {}".format(type(other))
+            )
         return hash(self) == hash(other)
 
     @property
@@ -100,9 +104,9 @@ class TransactionBaseClass(ABC):
     @height.setter
     def height(self, value):
         if not (isinstance(value, int) and not isinstance(value, bool)):
-            raise TypeError("value should be of type int or bool, not {}".format(type(value)))
+            raise j.exceptions.Value("value should be of type int or bool, not {}".format(type(value)))
         if value < 0:
-            raise ValueError("a block height cannot be negative")
+            raise j.exceptions.Value("a block height cannot be negative")
         self._height = value
 
     @property
@@ -204,7 +208,7 @@ class TransactionBaseClass(ABC):
         Compute the ID of a Coin Output within this transaction.
         """
         if index < 0 or index >= len(self.coin_outputs):
-            raise ValueError("coin output index is out of range")
+            raise j.exceptions.Value("coin output index is out of range")
         return self._outputid_new(specifier=self._coin_outputid_specifier, index=index)
 
     def blockstake_outputid_new(self, index):
@@ -212,7 +216,7 @@ class TransactionBaseClass(ABC):
         Compute the ID of a Coin Output within this transaction.
         """
         if index < 0 or index >= len(self.coin_outputs):
-            raise ValueError("coin output index is out of range")
+            raise j.exceptions.Value("coin output index is out of range")
         return self._outputid_new(specifier=self._blockstake_outputid_specifier, index=index)
 
     def _outputid_new(self, specifier, index):
@@ -300,7 +304,7 @@ class InputSignatureHashFactory:
 
     def __init__(self, txn, *extra_objects):
         if not isinstance(txn, TransactionBaseClass):
-            raise TypeError("txn has an invalid type {}".format(type(txn)))
+            raise j.exceptions.Value("txn has an invalid type {}".format(type(txn)))
         self._txn = txn
         self._extra_objects = extra_objects
 

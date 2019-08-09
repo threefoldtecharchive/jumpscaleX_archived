@@ -53,7 +53,7 @@ class SourceBind:
 
     @ipaddress.setter
     def ipaddress(self):
-        raise RuntimeError("ipaddress can't be set")
+        raise j.exceptions.Base("ipaddress can't be set")
 
     def __str__(self):
         return "Source Bind <{}:{}>".format(self.network_name, self.port)
@@ -81,7 +81,7 @@ class Forward:
         if protocols:
             for protocol in protocols:
                 if protocol not in ["tcp", "udp"]:
-                    raise ValueError("Invalid protocol {} for portforward".format(protocol))
+                    raise j.exceptions.Value("Invalid protocol {} for portforward".format(protocol))
         if protocols is None:
             protocols = ["tcp"]
         self.protocols = protocols
@@ -90,7 +90,7 @@ class Forward:
         elif isinstance(source, SourceBind):
             self.source = source
         if self.source.network_name not in parent.networks:
-            raise LookupError("Network with name {} doesn't exist".format(self.source.network_name))
+            raise j.exceptions.NotFound("Network with name {} doesn't exist".format(self.source.network_name))
 
         if isinstance(target, tuple):
             self.target = DestBind(*target)
@@ -142,7 +142,7 @@ class HTTPProxy:
         if types:
             for proxy_type in types:
                 if proxy_type not in ["http", "https", "shttps"]:
-                    raise ValueError("Invalid type {} for http proxy".format(proxy_type))
+                    raise j.exceptions.Value("Invalid type {} for http proxy".format(proxy_type))
         if types is None:
             types = ["http", "https"]
         self.types = types
@@ -299,7 +299,7 @@ class Gateway:
         """
         publicnetworks = list(filter(lambda net: net.public, self.networks))
         if len(publicnetworks) != 1:
-            raise RuntimeError("Need exactly one public network")
+            raise j.exceptions.Base("Need exactly one public network")
         if publicnetworks[0].type == "zerotier" and not self._default_nic:
             defnet = self.networks.add("nat0", "default")
             defnet.public = False
@@ -341,7 +341,7 @@ class Gateway:
         Apply gateway's networks to gateway container's nics
         """
         if self.container is None:
-            raise RuntimeError("Can not update nics when gateway is not deployed")
+            raise j.exceptions.Base("Can not update nics when gateway is not deployed")
         toremove = []
         wantednetworks = list(self.networks)
         for nic in self.container.nics:
@@ -402,7 +402,7 @@ class Gateway:
             if network.type == "zerotier":
                 if not network.networkid:
                     if not network.client:
-                        raise RuntimeError("Zerotier network should either have client or networkid assigned")
+                        raise j.exceptions.Base("Zerotier network should either have client or networkid assigned")
                     cidr = network.ip.subnet or "172.20.0.0/16"
                     ztnetwork = network.client.network_create(False, cidr, name=network.name)
                     network.networkid = ztnetwork.id
@@ -505,7 +505,7 @@ class Gateway:
         Configure dhcp server based on the hosts added to the networks
         """
         if self.container is None:
-            raise RuntimeError("Can not configure dhcp when gateway is not deployed")
+            raise j.exceptions.Base("Can not configure dhcp when gateway is not deployed")
         dhcp = DHCP(self.container, self.domain, self.networks)
         dhcp.apply_config()
 
@@ -514,7 +514,7 @@ class Gateway:
         Configure cloudinit
         """
         if self.container is None:
-            raise RuntimeError("Can not configure cloudinit when gateway is not deployed")
+            raise j.exceptions.Base("Can not configure cloudinit when gateway is not deployed")
         cloudinit = CloudInit(self.container, self.networks)
         cloudinit.apply_config()
 
@@ -523,7 +523,7 @@ class Gateway:
         Configure http server based on the httpproxies
         """
         if self.container is None:
-            raise RuntimeError("Can not configure http when gateway is not deployed")
+            raise j.exceptions.Base("Can not configure http when gateway is not deployed")
         httpserver = HTTPServer(self.container, self.httpproxies)
         httpserver.apply_rules()
 
@@ -532,7 +532,7 @@ class Gateway:
         Configure nftables based on the networks and portforwards
         """
         if self.container is None:
-            raise RuntimeError("Can not configure fw when gateway is not deployed")
+            raise j.exceptions.Base("Can not configure fw when gateway is not deployed")
 
         if self._default_nic and self.networks[self._default_nic].public:
             self._update_container_portforwards()
@@ -545,7 +545,7 @@ class Gateway:
         Configure routing table
         """
         if self.container is None:
-            raise RuntimeError("Can not configure fw when gateway is not deployed")
+            raise j.exceptions.Base("Can not configure fw when gateway is not deployed")
         existing_routes = self.container.client.ip.route.list()
 
         def exists(route):

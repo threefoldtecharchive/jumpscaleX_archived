@@ -548,7 +548,7 @@ class AliasManager(object):
 
     def pop(self):
         if self._current_index == 1:
-            raise ValueError("Cannot pop() from empty alias manager.")
+            raise j.exceptions.Value("Cannot pop() from empty alias manager.")
         self._current_index -= 1
 
 
@@ -734,7 +734,7 @@ class Node(object):
         return obj
 
     def __sql__(self, ctx):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     @staticmethod
     def copy(method):
@@ -1068,7 +1068,7 @@ class CTE(_HashableSource, Source):
 
     def select_from(self, *columns):
         if not columns:
-            raise ValueError("select_from() must specify one or more columns " "from the CTE to select.")
+            raise j.exceptions.Value("select_from() must specify one or more columns " "from the CTE to select.")
 
         query = Select((self,), columns).with_cte(self).bind(self._query._database)
         try:
@@ -1208,7 +1208,7 @@ class ColumnBase(Node):
     def __getitem__(self, item):
         if isinstance(item, slice):
             if item.start is None or item.stop is None:
-                raise ValueError("BETWEEN range must have both a start- and " "end-point.")
+                raise j.exceptions.Value("BETWEEN range must have both a start- and " "end-point.")
             return self.between(item.start, item.stop)
         return self == item
 
@@ -1379,7 +1379,7 @@ class Ordering(WrappedNode):
         self.collation = collation
         self.nulls = nulls
         if nulls and nulls.lower() not in ("first", "last"):
-            raise ValueError('Ordering nulls= parameter must be "first" or ' '"last", got: %s' % nulls)
+            raise j.exceptions.Value('Ordering nulls= parameter must be "first" or ' '"last", got: %s' % nulls)
 
     def collate(self, collation=None):
         return Ordering(self.node, self.direction, collation)
@@ -1390,7 +1390,7 @@ class Ordering(WrappedNode):
         elif nulls.lower() == "first":
             ifnull, notnull = 0, 1
         else:
-            raise ValueError("unsupported value for nulls= ordering.")
+            raise j.exceptions.Value("unsupported value for nulls= ordering.")
         return Case(None, ((self.node.is_null(), ifnull),), notnull)
 
     def __sql__(self, ctx):
@@ -1593,7 +1593,7 @@ class Window(Node):
         self.start = start
         self.end = end
         if self.start is None and self.end is not None:
-            raise ValueError("Cannot specify WINDOW end without start.")
+            raise j.exceptions.Value("Cannot specify WINDOW end without start.")
         self._alias = alias or "w"
         self._inline = _inline
         self.frame_type = frame_type
@@ -1799,7 +1799,7 @@ class OnConflict(Node):
         self._preserve = ensure_tuple(preserve)
         self._where = where
         if conflict_target is not None and conflict_constraint is not None:
-            raise ValueError('only one of "conflict_target" and ' '"conflict_constraint" may be specified.')
+            raise j.exceptions.Value('only one of "conflict_target" and ' '"conflict_constraint" may be specified.')
         self._conflict_target = ensure_tuple(conflict_target)
         self._conflict_where = conflict_where
         self._conflict_constraint = conflict_constraint
@@ -1817,7 +1817,7 @@ class OnConflict(Node):
     @Node.copy
     def update(self, _data=None, **kwargs):
         if _data and kwargs and not isinstance(_data, dict):
-            raise ValueError("Cannot mix data with keyword arguments in the " "OnConflict update method.")
+            raise j.exceptions.Value("Cannot mix data with keyword arguments in the " "OnConflict update method.")
         _data = _data or {}
         if kwargs:
             _data.update(kwargs)
@@ -1912,10 +1912,10 @@ class BaseQuery(Node):
         elif row_type == ROW.CONSTRUCTOR:
             return ObjectCursorWrapper(cursor, self._constructor)
         else:
-            raise ValueError('Unrecognized row type: "%s".' % row_type)
+            raise j.exceptions.Value('Unrecognized row type: "%s".' % row_type)
 
     def __sql__(self, ctx):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def sql(self):
         if self._database:
@@ -1929,7 +1929,7 @@ class BaseQuery(Node):
         return self._execute(database)
 
     def _execute(self, database):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def iterator(self, database=None):
         return iter(self.execute(database).iterator())
@@ -1937,7 +1937,7 @@ class BaseQuery(Node):
     def _ensure_execution(self):
         if not self._cursor_wrapper:
             if not self._database:
-                raise ValueError("Query has not been executed.")
+                raise j.exceptions.Value("Query has not been executed.")
             self.execute()
 
     def __iter__(self):
@@ -2079,7 +2079,7 @@ class SelectQuery(Query):
 
     def select_from(self, *columns):
         if not columns:
-            raise ValueError("select_from() must specify one or more columns.")
+            raise j.exceptions.Value("select_from() must specify one or more columns.")
 
         query = Select((self,), columns).bind(self._database)
         if getattr(self, "model", None) is not None:
@@ -2261,7 +2261,7 @@ class Select(SelectBase):
     @Node.copy
     def join(self, dest, join_type="INNER", on=None):
         if not self._from_list:
-            raise ValueError("No sources to join on.")
+            raise j.exceptions.Value("No sources to join on.")
         item = self._from_list.pop()
         self._from_list.append(Join(item, dest, join_type, on))
 
@@ -2271,7 +2271,7 @@ class Select(SelectBase):
         for column in columns:
             if isinstance(column, Table):
                 if not column._columns:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "Cannot pass a table to group_by() that " "does not have columns explicitly " "declared."
                     )
                 grouping.extend([getattr(column, col_name) for col_name in column._columns])
@@ -2363,7 +2363,7 @@ class Select(SelectBase):
 
             if self._for_update:
                 if not ctx.state.for_update:
-                    raise ValueError("FOR UPDATE specified but not supported " "by database.")
+                    raise j.exceptions.Value("FOR UPDATE specified but not supported " "by database.")
                 ctx.literal(" ")
                 ctx.sql(SQL(self._for_update))
 
@@ -2478,7 +2478,7 @@ class Insert(_WriteQuery):
         self._query_type = None
 
     def where(self, *expressions):
-        raise NotImplementedError("INSERT queries cannot have a WHERE clause.")
+        raise j.exceptions.NotImplemented("INSERT queries cannot have a WHERE clause.")
 
     @Node.copy
     def on_conflict_ignore(self, ignore=True):
@@ -2522,7 +2522,7 @@ class Insert(_WriteQuery):
             if not isinstance(row, Mapping):
                 columns = self.get_default_columns()
                 if columns is None:
-                    raise ValueError("Bulk insert must specify columns.")
+                    raise j.exceptions.Value("Bulk insert must specify columns.")
             else:
                 # Infer column names from the dict of data being inserted.
                 accum = []
@@ -2585,7 +2585,7 @@ class Insert(_WriteQuery):
                             else:
                                 break
                         else:
-                            raise KeyError
+                            raise j.exceptions.NotFound
                     else:
                         val = row[i]
                 except (KeyError, IndexError):
@@ -2594,7 +2594,7 @@ class Insert(_WriteQuery):
                         if callable_(val):
                             val = val()
                     else:
-                        raise ValueError("Missing value for %s." % column.name)
+                        raise j.exceptions.Value("Missing value for %s." % column.name)
 
                 if not isinstance(val, Node):
                     val = Value(val, converter=converter, unpack=False)
@@ -2751,7 +2751,7 @@ class ModelIndex(Index):
                     accum.append(field.column_name)
 
         if not accum:
-            raise ValueError("Unable to generate a name for the index, please " "explicitly specify a name.")
+            raise j.exceptions.Value("Unable to generate a name for the index, please " "explicitly specify a name.")
 
         clean_field_names = re.sub("[^\w]+", "", "_".join(accum))
         meta = model._meta
@@ -2993,7 +2993,7 @@ class Database(_callable_context_manager):
         return ConnectionContext(self)
 
     def _connect(self):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def connect(self, reuse_if_open=False):
         with self._lock:
@@ -3102,10 +3102,10 @@ class Database(_callable_context_manager):
         return self.context_class(**context)
 
     def conflict_statement(self, on_conflict, query):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def conflict_update(self, on_conflict, query):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def _build_on_conflict_update(self, on_conflict, query):
         if on_conflict._conflict_target:
@@ -3226,22 +3226,22 @@ class Database(_callable_context_manager):
         return table_name in self.get_tables(schema=schema)
 
     def get_tables(self, schema=None):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_indexes(self, table, schema=None):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_columns(self, table, schema=None):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_primary_keys(self, table, schema=None):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_foreign_keys(self, table, schema=None):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def sequence_exists(self, seq):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def create_tables(self, models, **options):
         for model in sort_models(models):
@@ -3252,16 +3252,16 @@ class Database(_callable_context_manager):
             model.drop_table(**kwargs)
 
     def extract_date(self, date_part, date_field):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def truncate_date(self, date_part, date_field):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def to_timestamp(self, date_field):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def from_timestamp(self, date_field):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def random(self):
         return fn.random()
@@ -3376,7 +3376,7 @@ class SqliteDatabase(Database):
                 pragmas[key] = value
                 self._pragmas = list(pragmas.items())
         elif permanent:
-            raise ValueError("Cannot specify a permanent pragma without value")
+            raise j.exceptions.Value("Cannot specify a permanent pragma without value")
         row = self.execute_sql(sql).fetchone()
         if row:
             return row[0]
@@ -3620,7 +3620,7 @@ class SqliteDatabase(Database):
         if self.server_version < (3, 24, 0) and any(
             (oc._preserve, oc._update, oc._where, oc._conflict_target, oc._conflict_constraint)
         ):
-            raise ValueError("SQLite does not support specifying which values " "to preserve or update.")
+            raise j.exceptions.Value("SQLite does not support specifying which values " "to preserve or update.")
 
         action = oc._action.lower() if oc._action else ""
         if action and action not in ("nothing", "update", ""):
@@ -3629,16 +3629,16 @@ class SqliteDatabase(Database):
         if action == "nothing":
             return SQL("ON CONFLICT DO NOTHING")
         elif not oc._update and not oc._preserve:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "If you are not performing any updates (or "
                 "preserving any INSERTed values), then the "
                 "conflict resolution action should be set to "
                 '"NOTHING".'
             )
         elif oc._conflict_constraint:
-            raise ValueError("SQLite does not support specifying named " "constraints for conflict resolution.")
+            raise j.exceptions.Value("SQLite does not support specifying named " "constraints for conflict resolution.")
         elif not oc._conflict_target:
-            raise ValueError("SQLite requires that a conflict target be " "specified when doing an upsert.")
+            raise j.exceptions.Value("SQLite requires that a conflict target be " "specified when doing an upsert.")
 
         return self._build_on_conflict_update(oc, query)
 
@@ -3804,18 +3804,18 @@ class PostgresqlDatabase(Database):
         if action in ("ignore", "nothing"):
             return SQL("ON CONFLICT DO NOTHING")
         elif action and action != "update":
-            raise ValueError(
+            raise j.exceptions.Value(
                 "The only supported actions for conflict " 'resolution with Postgresql are "ignore" or ' '"update".'
             )
         elif not oc._update and not oc._preserve:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "If you are not performing any updates (or "
                 "preserving any INSERTed values), then the "
                 "conflict resolution action should be set to "
                 '"IGNORE".'
             )
         elif not (oc._conflict_target or oc._conflict_constraint):
-            raise ValueError("Postgres requires that a conflict target be " "specified when doing an upsert.")
+            raise j.exceptions.Value("Postgres requires that a conflict target be " "specified when doing an upsert.")
 
         return self._build_on_conflict_update(oc, query)
 
@@ -3966,13 +3966,13 @@ class MySQLDatabase(Database):
         elif action == "ignore":
             return SQL("INSERT IGNORE")
         elif action != "update":
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Un-supported action for conflict resolution. " "MySQL supports REPLACE, IGNORE and UPDATE."
             )
 
     def conflict_update(self, on_conflict, query):
         if on_conflict._where or on_conflict._conflict_target or on_conflict._conflict_constraint:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "MySQL does not support the specification of "
                 "where clauses or conflict targets for conflict "
                 "resolution."
@@ -4037,12 +4037,12 @@ class _manual(_callable_context_manager):
     def __enter__(self):
         top = self.db.top_transaction()
         if top and not isinstance(self.db.top_transaction(), _manual):
-            raise ValueError("Cannot enter manual commit block while a " "transaction is active.")
+            raise j.exceptions.Value("Cannot enter manual commit block while a " "transaction is active.")
         self.db.push_transaction(self)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.db.pop_transaction() is not self:
-            raise ValueError("Transaction stack corrupted while exiting " "manual commit block.")
+            raise j.exceptions.Value("Transaction stack corrupted while exiting " "manual commit block.")
 
 
 class _atomic(_callable_context_manager):
@@ -4055,7 +4055,7 @@ class _atomic(_callable_context_manager):
         if self.db.transaction_depth() == 0:
             self._helper = self.db.transaction(*self._transaction_args)
         elif isinstance(self.db.top_transaction(), _manual):
-            raise ValueError("Cannot enter atomic commit block while in " "manual commit mode.")
+            raise j.exceptions.Value("Cannot enter atomic commit block while in " "manual commit mode.")
         else:
             self._helper = self.db.savepoint()
         return self._helper.__enter__()
@@ -4166,7 +4166,7 @@ class CursorWrapper(object):
             self.fill_cache(item if item > 0 else 0)
             return self.row_cache[item]
         else:
-            raise ValueError("CursorWrapper only supports integer and slice " "indexes.")
+            raise j.exceptions.Value("CursorWrapper only supports integer and slice " "indexes.")
 
     def __len__(self):
         self.fill_cache()
@@ -4204,7 +4204,7 @@ class CursorWrapper(object):
     def fill_cache(self, n=0):
         n = n or float("Inf")
         if n < 0:
-            raise ValueError("Negative values are not supported.")
+            raise j.exceptions.Value("Negative values are not supported.")
 
         iterator = ResultIterator(self)
         iterator.index = self.count
@@ -4506,7 +4506,7 @@ class AutoField(IntegerField):
 
     def __init__(self, *args, **kwargs):
         if kwargs.get("primary_key") is False:
-            raise ValueError("%s must always be a primary key." % type(self))
+            raise j.exceptions.Value("%s must always be a primary key." % type(self))
         kwargs["primary_key"] = True
         super(AutoField, self).__init__(*args, **kwargs)
 
@@ -4665,7 +4665,7 @@ class BitField(BitwiseMixin, BigIntegerField):
 
             def __set__(self, instance, is_set):
                 if is_set not in (True, False):
-                    raise ValueError("Value must be either True or False")
+                    raise j.exceptions.Value("Value must be either True or False")
                 value = getattr(instance, self._field.name) or 0
                 if is_set:
                     value |= self._value
@@ -4733,7 +4733,7 @@ class BigBitFieldAccessor(FieldAccessor):
         elif isinstance(value, text_type):
             value = value.encode("utf-8")
         elif not isinstance(value, bytes_type):
-            raise ValueError("Value must be either a bytes, memoryview or " "BigBitFieldData instance.")
+            raise j.exceptions.Value("Value must be either a bytes, memoryview or " "BigBitFieldData instance.")
         super(BigBitFieldAccessor, self).__set__(instance, value)
 
 
@@ -4784,7 +4784,9 @@ class BinaryUUIDField(BlobField):
         if isinstance(value, uuid.UUID):
             return self._constructor(value.bytes)
         elif value is not None:
-            raise ValueError("value for binary UUID field must be UUID(), " "a hexadecimal string, or a bytes object.")
+            raise j.exceptions.Value(
+                "value for binary UUID field must be UUID(), " "a hexadecimal string, or a bytes object."
+            )
 
     def python_value(self, value):
         if isinstance(value, uuid.UUID):
@@ -4915,7 +4917,7 @@ class TimestampField(BigIntegerField):
         elif self.resolution in range(7):
             self.resolution = 10 ** self.resolution
         elif self.resolution not in self.valid_resolutions:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "TimestampField resolution must be one of: %s" % ", ".join(str(i) for i in self.valid_resolutions)
             )
         self.ticks_to_microsecond = 1000000 // self.resolution
@@ -5103,7 +5105,7 @@ class ForeignKeyField(Field):
             if self.object_id_name == name:
                 self.object_id_name += "_id"
         elif self.object_id_name == name:
-            raise ValueError(
+            raise j.exceptions.Value(
                 'ForeignKeyField "%s"."%s" specifies an '
                 "object_id_name that conflicts with its field "
                 "name." % (model._meta.name, name)
@@ -5210,9 +5212,13 @@ class ManyToManyFieldAccessor(FieldAccessor):
         src_fks = self.through_model._meta.model_refs[self.model]
         dest_fks = self.through_model._meta.model_refs[self.rel_model]
         if not src_fks:
-            raise ValueError('Cannot find foreign-key to "%s" on "%s" model.' % (self.model, self.through_model))
+            raise j.exceptions.Value(
+                'Cannot find foreign-key to "%s" on "%s" model.' % (self.model, self.through_model)
+            )
         elif not dest_fks:
-            raise ValueError('Cannot find foreign-key to "%s" on "%s" model.' % (self.rel_model, self.through_model))
+            raise j.exceptions.Value(
+                'Cannot find foreign-key to "%s" on "%s" model.' % (self.rel_model, self.through_model)
+            )
         self.src_fk = src_fks[0]
         self.dest_fk = dest_fks[0]
 
@@ -5244,9 +5250,11 @@ class ManyToManyField(MetaField):
     def __init__(self, model, backref=None, through_model=None, on_delete=None, on_update=None, _is_backref=False):
         if through_model is not None:
             if not (isinstance(through_model, DeferredThroughModel) or is_model(through_model)):
-                raise TypeError("Unexpected value for through_model. Expected " "Model or DeferredThroughModel.")
+                raise j.exceptions.Value(
+                    "Unexpected value for through_model. Expected " "Model or DeferredThroughModel."
+                )
             if not _is_backref and (on_delete is not None or on_update is not None):
-                raise ValueError("Cannot specify on_delete or on_update when " "through_model is specified.")
+                raise j.exceptions.Value("Cannot specify on_delete or on_update when " "through_model is specified.")
         self.rel_model = model
         self.backref = backref
         self._through_model = through_model
@@ -5351,9 +5359,9 @@ class CompositeKey(MetaField):
 
     def __set__(self, instance, value):
         if not isinstance(value, (list, tuple)):
-            raise TypeError("A list or tuple must be used to set the value of " "a composite primary key.")
+            raise j.exceptions.Value("A list or tuple must be used to set the value of " "a composite primary key.")
         if len(value) != len(self.field_names):
-            raise ValueError(
+            raise j.exceptions.Value(
                 "The length of the value must equal the number " "of columns of the composite primary key."
             )
         for idx, field_value in enumerate(value):
@@ -5470,7 +5478,7 @@ class SchemaManager(object):
             table_settings = ensure_tuple(meta.table_settings)
             for setting in table_settings:
                 if not isinstance(setting, basestring):
-                    raise ValueError("table_settings must be strings")
+                    raise j.exceptions.Value("table_settings must be strings")
                 ctx.literal(" ").literal(setting)
 
         if meta.without_rowid:
@@ -5567,7 +5575,7 @@ class SchemaManager(object):
 
     def _check_sequences(self, field):
         if not field.sequence or not self.database.sequences:
-            raise ValueError("Sequences are either not supported, or are not " 'defined for "%s".' % field.name)
+            raise j.exceptions.Value("Sequences are either not supported, or are not " 'defined for "%s".' % field.name)
 
     def _sequence_for_field(self, field):
         if field.model._meta.schema:
@@ -5718,7 +5726,7 @@ class Metadata(object):
 
     def model_graph(self, refs=True, backrefs=True, depth_first=True):
         if not refs and not backrefs:
-            raise ValueError("One of `refs` or `backrefs` must be True.")
+            raise j.exceptions.Value("One of `refs` or `backrefs` must be True.")
 
         accum = [(None, self.model, None)]
         seen = set()
@@ -5910,7 +5918,9 @@ class Metadata(object):
                     elif isinstance(part, Node):
                         fields.append(part)
                     else:
-                        raise ValueError("Expected either a field name or a " "subclass of Node. Got: %s" % part)
+                        raise j.exceptions.Value(
+                            "Expected either a field name or a " "subclass of Node. Got: %s" % part
+                        )
                 indexes.append(ModelIndex(self.model, fields, unique=unique))
 
         return indexes
@@ -6014,7 +6024,7 @@ class ModelBase(type):
         for key, value in cls.__dict__.items():
             if isinstance(value, Field):
                 if value.primary_key and pk:
-                    raise ValueError("over-determined primary key %s." % name)
+                    raise j.exceptions.Value("over-determined primary key %s." % name)
                 elif value.primary_key:
                     pk, pk_name = value, key
                 else:
@@ -6136,13 +6146,13 @@ class Model(with_metaclass(ModelBase, Node)):
         if data:
             if not isinstance(data, dict):
                 if kwargs:
-                    raise ValueError("Data cannot be mixed with keyword " "arguments: %s" % data)
+                    raise j.exceptions.Value("Data cannot be mixed with keyword " "arguments: %s" % data)
                 return data
             for key in data:
                 try:
                     field = key if isinstance(key, Field) else cls._meta.combined[key]
                 except KeyError:
-                    raise ValueError('Unrecognized field name: "%s" in %s.' % (key, data))
+                    raise j.exceptions.Value('Unrecognized field name: "%s" in %s.' % (key, data))
                 normalized[field] = data[key]
         if kwargs:
             for key in kwargs:
@@ -6217,7 +6227,7 @@ class Model(with_metaclass(ModelBase, Node)):
     @classmethod
     def bulk_update(cls, model_list, fields, batch_size=None):
         if isinstance(cls._meta.primary_key, CompositeKey):
-            raise ValueError("bulk_update() is not supported for models with " "a composite primary key.")
+            raise j.exceptions.Value("bulk_update() is not supported for models with " "a composite primary key.")
 
         # First normalize list of fields so all are field instances.
         fields = [cls._meta.fields[f] if isinstance(f, basestring) else f for f in fields]
@@ -6368,7 +6378,7 @@ class Model(with_metaclass(ModelBase, Node)):
             else:
                 field_dict.pop(pk_field.name, None)
             if not field_dict:
-                raise ValueError("no data to save!")
+                raise j.exceptions.Value("no data to save!")
             rows = self.update(**field_dict).where(self._pk_expr()).execute()
         elif pk_field is not None:
             pk = self.insert(**field_dict).execute()
@@ -6623,7 +6633,7 @@ class _ModelQueryHelper(object):
         elif row_type == ROW.CONSTRUCTOR:
             return ModelObjectCursorWrapper(cursor, self.model, self._returning, self._constructor)
         else:
-            raise ValueError('Unrecognized row type: "%s".' % row_type)
+            raise j.exceptions.Value('Unrecognized row type: "%s".' % row_type)
 
     def _get_model_cursor_wrapper(self, cursor):
         return ModelObjectCursorWrapper(cursor, self.model, [], self.model)
@@ -6693,7 +6703,7 @@ class BaseModelSelect(_ModelQueryHelper):
                 grouping.extend(column._meta.sorted_fields)
             elif isinstance(column, Table):
                 if not column._columns:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "Cannot pass a table to group_by() that " "does not have columns explicitly " "declared."
                     )
                 grouping.extend([getattr(column, col_name) for col_name in column._columns])
@@ -6814,7 +6824,7 @@ class ModelSelect(BaseModelSelect, Select):
                 else:
                     attr = dest_model._meta.name
             elif on_alias and fk_field is not None and attr == fk_field.object_id_name and not is_backref:
-                raise ValueError(
+                raise j.exceptions.Value(
                     'Cannot assign join alias to "%s", as this '
                     "attribute is the object_id_name for the "
                     'foreign-key field "%s"' % (attr, fk_field)
@@ -6843,7 +6853,7 @@ class ModelSelect(BaseModelSelect, Select):
         if not fk_fields:
             if on is not None:
                 return None, False
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Unable to find foreign key between %s and %s. "
                 "Please specify an explicit join condition." % (src, dest)
             )
@@ -6864,7 +6874,7 @@ class ModelSelect(BaseModelSelect, Select):
                 if fk.name == dest._meta.name:
                     return fk, is_backref
 
-            raise ValueError(
+            raise j.exceptions.Value(
                 "More than one foreign key between %s and %s." " Please specify which you are joining on." % (src, dest)
             )
 
@@ -6901,10 +6911,10 @@ class ModelSelect(BaseModelSelect, Select):
                 self._joins.setdefault(src, [])
                 self._joins[src].append((dest, attr, constructor))
         elif on is not None:
-            raise ValueError("Cannot specify on clause with cross join.")
+            raise j.exceptions.Value("Cannot specify on clause with cross join.")
 
         if not self._from_list:
-            raise ValueError("No sources to join on.")
+            raise j.exceptions.Value("No sources to join on.")
 
         item = self._from_list.pop()
         self._from_list.append(Join(item, dest, join_type, on))
@@ -7200,7 +7210,7 @@ class BaseModelCursorWrapper(DictCursorWrapper):
     initialize = _initialize_columns
 
     def process_row(self, row):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
 
 class ModelDictCursorWrapper(BaseModelCursorWrapper):

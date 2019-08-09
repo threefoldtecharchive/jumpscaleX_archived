@@ -67,7 +67,7 @@ class OdooFactory(JSConfigs):
                 dbexists = True
 
         if not dbexists:
-            raise ValueError("db doesn't exist")
+            raise j.exceptions.Value("db doesn't exist")
 
         cl1.module_install("note")
 

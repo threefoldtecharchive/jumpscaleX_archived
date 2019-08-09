@@ -33,7 +33,7 @@ class TutorialCacheClass(j.application.JSBaseClass):
                 msg = "could not fetch info, there was simulated network error"
                 print(msg)
                 time.sleep(0.05)
-                raise RuntimeError(msg)
+                raise j.exceptions.Base(msg)
 
         return self._cache.get("amounts_servers_active", do, expire=60, retry=100, refresh=reload, me=self)
 

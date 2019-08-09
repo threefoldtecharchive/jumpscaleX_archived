@@ -22,7 +22,7 @@ def error_check(result, message=""):
 
     if result.state != "SUCCESS":
         err = "{}: {} \n {}".format(message, result.stderr, result.data)
-        raise RuntimeError(err)
+        raise j.exceptions.Base(err)
 
 
 def get_node(ip):
@@ -43,9 +43,9 @@ def create_container(name, node):
         if route["gw"]:
             candidates.append(route)
     if not candidates:
-        raise RuntimeError("Could not find interface for macvlan parent")
+        raise j.exceptions.Base("Could not find interface for macvlan parent")
     elif len(candidates) > 1:
-        raise RuntimeError(
+        raise j.exceptions.Base(
             "Found multiple eligible interfaces for macvlan parent: %s" % ", ".join(c["dev"] for c in candidates)
         )
     parent_if = candidates[0]["dev"]

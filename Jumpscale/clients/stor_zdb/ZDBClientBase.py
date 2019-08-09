@@ -33,7 +33,7 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
         else:
 
             if self.nsname in ["default", "system"]:
-                raise RuntimeError("a non admin namespace cannot be default or system")
+                raise j.exceptions.Base("a non admin namespace cannot be default or system")
 
             # DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
             # only go inside namespace if not in admin mode
@@ -66,25 +66,15 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
 
     def delete(self, key):
         if not key:
-            raise ValueError("key must be provided")
+            raise j.exceptions.Value("key must be provided")
         self.redis.execute_command("DEL", key)
 
-    def flush(self, meta=None):
+    def flush(self):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
         """
-        if meta:
-            data = meta._data
-            self.redis.execute_command("FLUSH")
-            # recreate the metadata table
-            meta.reset()
-            # copy the old data back
-            meta._data = data
-            # now make sure its back in the db
-            meta._save()
-        else:
-            self.redis.execute_command("FLUSH")
+        self.redis.execute_command("FLUSH")
 
     @property
     def nsinfo(self):

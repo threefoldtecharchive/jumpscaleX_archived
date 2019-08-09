@@ -171,7 +171,7 @@ class NumTools(j.application.JSBaseClass):
         if j.data.types.int.check(val):
             bits = "{0:b}".format(val)
         else:
-            raise RuntimeError("bits need to be an integer")
+            raise j.exceptions.Base("bits need to be an integer")
 
         while (len(bits)) < 8:
             bits = "0%s" % bits
@@ -180,9 +180,9 @@ class NumTools(j.application.JSBaseClass):
 
     def bitstring8_to_int(self, val):
         if not j.data.types.string.check(val):
-            raise RuntimeError("bits need to be string")
+            raise j.exceptions.Base("bits need to be string")
         if len(val) != 8:
-            raise RuntimeError("bitstring needs to be 8 char")
+            raise j.exceptions.Base("bitstring needs to be 8 char")
         return int(val, 2)
 
     def bitstring_set_bit(self, bits, pos=7):

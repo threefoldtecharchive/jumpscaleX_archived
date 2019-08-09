@@ -502,5 +502,5 @@ class RegexTools(j.application.JSBaseClass):
         # print(self.getClassName("class iets(test):"))
         content = "class iets(test):"
         # find all occurences of class and find positions
-        regexmatches = self.getRegexMatches(r"(?m)(?<=^class )[ A-Za-z0-9_\-]*\b", content)
+        regexmatches = j.data.regex.getRegexMatches(r"(?m)(?<=^class )[ A-Za-z0-9_\-]*\b", content)
         return regexmatches

@@ -32,7 +32,7 @@ class Doc(j.application.JSBaseConfigClass):
         self._md = None
         self._loaded = False
         if docsite is None:
-            raise RuntimeError("docsite can not be None")
+            raise j.exceptions.Base("docsite can not be None")
         self._docsite = docsite
         if path:
             self.path = path
@@ -175,12 +175,12 @@ class Doc(j.application.JSBaseConfigClass):
         res = self.links_get(filename=filename, cat=cat)
         if len(res) == 0:
             if die:
-                raise RuntimeError("could not find link %s:%s" % (filename, cat))
+                raise j.exceptions.Base("could not find link %s:%s" % (filename, cat))
             else:
                 return None
         if nr > len(res):
             if die:
-                raise RuntimeError("could not find link %s:%s at position:%s" % (filename, cat, nr))
+                raise j.exceptions.Base("could not find link %s:%s at position:%s" % (filename, cat, nr))
             else:
                 return None
         return res[nr]

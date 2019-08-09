@@ -75,7 +75,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             if self._id in [0, None, ""]:
                 self.save()
             if self._id in [0, None, ""]:
-                raise RuntimeError("id cannot be empty")
+                raise j.exceptions.Base("id cannot be empty")
             self._uid = "%s-%s-%s" % (self.addr, self.port, self._id)
         return self._uid
 
@@ -100,7 +100,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         local_file = self._replace(local_file, paths_executor=False)
         remote_file = self._replace(remote_file)
         if os.path.isdir(local_file):
-            raise ValueError("Local file cannot be a dir")
+            raise j.exceptions.Value("Local file cannot be a dir")
         destination = j.sal.fs.getDirName(remote_file)
         self.executor.dir_ensure(destination)
         self._client.scp_send(local_file, remote_file, recurse=False, sftp=None)
@@ -153,7 +153,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         return right sshkey
         """
         if self.sshkey_name in [None, ""]:
-            raise RuntimeError("sshkeyname needs to be specified")
+            raise j.exceptions.Base("sshkeyname needs to be specified")
         return j.clients.sshkey.get(name=self.sshkey_name)
 
     @property
@@ -219,7 +219,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
         print("Test tcp port to:%s" % localport)
         if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
-            raise RuntimeError("Cannot open ssh forward:%s_%s_%s" % (self, remoteport, localport))
+            raise j.exceptions.Base("Cannot open ssh forward:%s_%s_%s" % (self, remoteport, localport))
         print("Connection ok")
 
     def portforward_kill(self, localport):
@@ -263,7 +263,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             if j.sal.fs.isFile(source):
                 return self.file_copy(source, dest)
             else:
-                raise RuntimeError("only support dir or file for upload")
+                raise j.exceptions.Base("only support dir or file for upload")
         dest = self._replace(dest)
         # self._check_base()
         # if dest_prefix != "":
@@ -312,8 +312,8 @@ class SSHClientBase(j.application.JSBaseConfigClass):
                 return self._client.scp_recv(source, dest, recurse=False, sftp=None, encoding="utf-8")
             else:
                 if not self.exists(source):
-                    raise RuntimeError("%s does not exists, cannot download" % source)
-                raise RuntimeError("src:%s needs to be dir or file" % source)
+                    raise j.exceptions.Base("%s does not exists, cannot download" % source)
+                raise j.exceptions.Base("src:%s needs to be dir or file" % source)
         # self._check_base()
         # if source_prefix != "":
         #     source = j.sal.fs.joinPaths(source_prefix, source)
@@ -353,7 +353,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         if not isinstance(cmd, str):
-            raise RuntimeError("cmd needs to be string")
+            raise j.exceptions.Base("cmd needs to be string")
         if replace:
             cmd = self._replace(cmd)
         if ("\n" in cmd and script in [None, True]) or len(cmd) > 100000:
@@ -373,7 +373,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
     def _execute_interactive(self, cmd, showout=False, replace=True, die=True):
         if "\n" in cmd:
-            raise RuntimeError("cannot have \\n in cmd: %s" % cmd)
+            raise j.exceptions.Base("cannot have \\n in cmd: %s" % cmd)
         if "'" in cmd:
             cmd = cmd.replace("'", '"')
         cmd2 = "ssh -oStrictHostKeyChecking=no -t {LOGIN}@{ADDR} -A -p {PORT} '%s'" % (cmd)
@@ -389,7 +389,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         """
 
         if "sudo -H -SE" in content:
-            raise RuntimeError(content)
+            raise j.exceptions.Base(content)
 
         if showout:
             self._log_info("EXECUTESCRIPT {}:{}:\n'''\n{}\n'''\n".format(self.addr, self.port, content))

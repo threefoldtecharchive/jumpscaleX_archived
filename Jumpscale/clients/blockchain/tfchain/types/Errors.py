@@ -310,7 +310,7 @@ class ExplorerError(Exception):
     def __init__(self, message, endpoint):
         super().__init__("{}: {}".format(endpoint, message))
         if not isinstance(endpoint, str):
-            raise TypeError("invalid endpoint, expected it to be of type str not {}".format(type(endpoint)))
+            raise j.exceptions.Value("invalid endpoint, expected it to be of type str not {}".format(type(endpoint)))
         self._endpoint = endpoint
 
     @property
@@ -358,7 +358,7 @@ class ExplorerNotAvailable(ExplorerError):
     def __init__(self, message, endpoint, addresses):
         super().__init__(message, endpoint)
         if not isinstance(addresses, list):
-            raise TypeError("invalid addresses, expected it to be of type list not {}".format(type(addresses)))
+            raise j.exceptions.Value("invalid addresses, expected it to be of type list not {}".format(type(addresses)))
         self._addresses = addresses
 
     @property
@@ -377,7 +377,7 @@ class ExplorerInvalidResponse(ExplorerError):
     def __init__(self, message, endpoint, response):
         super().__init__(message, endpoint)
         if not isinstance(response, dict):
-            raise TypeError("invalid response, expected it to be of type dict not {}".format(type(response)))
+            raise j.exceptions.Value("invalid response, expected it to be of type dict not {}".format(type(response)))
         self._response = response
 
     @property

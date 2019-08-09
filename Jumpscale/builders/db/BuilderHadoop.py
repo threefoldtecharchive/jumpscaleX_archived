@@ -22,7 +22,7 @@ class BuilderHadoop(j.builders.system._BaseClass):
             # j.builders.sandbox.env_set("JAVA_HOME", "/usr/lib/jvm/java-7-openjdk-amd64")
             # j.builders.sandbox.env_set("HADOOP_PREFIX", "/opt/hadoop-2.7.2/")
         else:
-            raise NotImplementedError("unsupported platform")
+            raise j.exceptions.NotImplemented("unsupported platform")
 
     def install(self):
         self._install()

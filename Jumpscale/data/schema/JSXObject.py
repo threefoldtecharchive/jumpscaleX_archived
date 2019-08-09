@@ -28,8 +28,6 @@ class JSXObject(j.application.JSBaseClass):
         assert schema
         self._schema = schema
         self._model = model
-        if model:
-            assert self._schema == self._model.schema  # they need to be the same
 
         self._deserialized_items = {}
 
@@ -64,7 +62,7 @@ class JSXObject(j.application.JSBaseClass):
 
     def _data_update(self, datadict):
         if not isinstance(datadict, dict):
-            raise RuntimeError("need to be dict, was:\n%s" % datadict)
+            raise j.exceptions.Base("need to be dict, was:\n%s" % datadict)
         if self._model is not None:
             data = self._model._dict_process_in(datadict)
         for key, val in datadict.items():
@@ -85,7 +83,7 @@ class JSXObject(j.application.JSBaseClass):
         """
 
         if self._model is not None and self._model.readonly:
-            raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
+            raise j.exceptions.Base("cannot load from data, model stor for obj is readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
             self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
@@ -134,8 +132,6 @@ class JSXObject(j.application.JSBaseClass):
             if serialize:
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
-            if self._model.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
                 if self.acl.id is None:
@@ -166,23 +162,24 @@ class JSXObject(j.application.JSBaseClass):
                                 assert self._model.sid == r[0]._model.sid
                                 return self  # means data was not changed
 
-                o = self._model.set(self)
+                if not self._model.readonly:
+                    o = self._model.set(self)
+                self._model._triggers_call(obj=self, action="save", propertyname=None)
                 self.id = o.id
-                # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
             return self
 
-        raise RuntimeError("cannot save, model not known")
+        raise j.exceptions.Base("cannot save, model not known")
 
     def delete(self):
         if self._model:
             if self._model.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
+                raise j.exceptions.Base("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
             return self
 
-        raise RuntimeError("cannot save, model not known")
+        raise j.exceptions.Base("cannot save, model not known")
 
     def _check(self):
         self._ddict
@@ -234,11 +231,10 @@ class JSXObject(j.application.JSBaseClass):
 
     def __str__(self):
         # FIXME: breaks in some cases in docsites generation needs to be cleanly implemented
-        # out = self._str_get(ansi=True)
-        # out = out.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+        out = self._str_get(ansi=True)
         # # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
         # # IS UGLY WORKAROUND
-        # print(out)
+        print(out)
         return ""
 
     __repr__ = __str__
