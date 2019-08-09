@@ -545,58 +545,6 @@ def check():
     j.application.check()
 
 
-@click.command()
-@click.option(
-    "--name", default="system", help="specify which bcdb you want to delete, if not specified will use system"
-)
-@click.option("--all", is_flag=True, help="delete all")
-def bcdb_delete(name=None, all=False):
-    from Jumpscale import j
-
-    if not name and all is False:
-        name = "system"
-    j.application.interactive = True
-
-    def do(name):
-        if name.lower() == "system":
-            j.application.bcdb_system_destroy()
-        else:
-            bcdb = j.data.bcdb.get(name=name, reset=True)
-            bcdb.destroy()
-
-    if all:
-        if j.tools.console.askYesNo("Are you sure you want to destroy all BCDB's"):
-            j.data.bcdb.destroy_all()
-    else:
-        if j.tools.console.askYesNo("Are you sure you want to destroy:%s" % name):
-            do(name)
-
-
-@click.command()
-@click.option("--name", default=None, help="specify which bcdb you want to fix, if not specified will use all")
-def bcdb_check(name=None):
-    """
-    will check and if issues found in index it will rebuild the index
-    :return:
-    """
-    if not name:
-        j.shell()
-    j.shell()
-
-
-@click.command()
-@click.option("--name", default=None, help="specify which bcdb you want to rebuild, if not specified will use all")
-def bcdb_rebuild(name=None):
-    """
-    will erase the indexes and rebuild it from the BCDB original data
-    :return:
-    """
-    if not name:
-        j.shell()
-    bcdb = j.data.bcdb.get(name=name, reset=True)
-    bcdb.index_rebuild()
-
-
 def _generate(path=None):
     j = jumpscale_get(die=True)
     j.application.generate(path)
@@ -611,9 +559,6 @@ if __name__ == "__main__":
     cli.add_command(generate)
     cli.add_command(wireguard)
     cli.add_command(modules_install, "modules-install")
-    cli.add_command(bcdb_delete, "bcdb-delete")
-    cli.add_command(bcdb_check, "bcdb-check")
-    cli.add_command(bcdb_rebuild, "bcdb-rebuild")
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     if not IT.DockerFactory.indocker():
