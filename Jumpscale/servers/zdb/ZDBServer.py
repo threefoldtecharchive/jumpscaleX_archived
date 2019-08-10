@@ -9,7 +9,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 class ZDBServer(JSConfigClient):
     _SCHEMATEXT = """
-           @url =  jumpscale.sonic.server.1
+           @url =  jumpscale.zdb.server.1
            name* = "default" (S)
            addr = "127.0.0.1" (S)
            port = 9900 (I)

@@ -269,12 +269,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 raise j.exceptions.Input("cannot create new bcdb '%s' already exists, and reset not used" % name)
             else:
                 self.destroy(name=name)
-                j.shell()
-        # if name in self._bcdb_instances:  # make sure we don't remember when a new one
-        #     self._bcdb_instances.pop(name)
 
         if not storclient:
-            storclient = j.clients.sqlitedb.client_get(nsname="system")
+            storclient = j.clients.sqlitedb.client_get(nsname=name)
         else:
             if j.data.types.string.check(storclient):
                 raise j.exceptions.Base("storclient cannot be str")
@@ -327,7 +324,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
     def _load_test_model(self, type="zdb", schema=None, datagen=False):
         """
+
         kosmos 'j.data.bcdb._load_test_model(type="zdb",datagen=True)'
+        kosmos 'j.data.bcdb._load_test_model(type="sqlite",datagen=True)'
+        kosmos 'j.data.bcdb._load_test_model(type="rdb",datagen=True)'
+
         :param reset:
         :param type:
         :param schema:
@@ -374,20 +375,22 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         else:
             raise j.exceptions.Base("only rdb,zdb,sqlite for stor")
 
+        assert bcdb.name == "test"
+
         bcdb.reset()  # empty
+
+        assert bcdb.name == "test"
 
         schemaobj = j.data.schema.get_from_text(schema)
         model = bcdb.model_get_from_schema(schemaobj)
 
         self._log_debug("bcdb already exists")
 
-        if reset:
-
-            if type.lower() in ["zdb"]:
-                print(model.storclient.nsinfo["entries"])
-                assert model.storclient.nsinfo["entries"] == 1
-            else:
-                assert len(model.find()) == 0
+        if type.lower() in ["zdb"]:
+            print(model.storclient.nsinfo["entries"])
+            assert model.storclient.nsinfo["entries"] == 1
+        else:
+            assert len(model.find()) == 0
 
         if datagen:
             for i in range(3):

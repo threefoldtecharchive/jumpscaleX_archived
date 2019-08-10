@@ -55,7 +55,7 @@ class RedisFactory(j.application.JSBaseClass):
         ssl_certfile=None,
         ssl_keyfile=None,
         ssl_ca_certs=None,
-        ssl_cert_reqs=u'required',
+        ssl_cert_reqs="required",
         timeout=10,
         ping=True,
         die=True,

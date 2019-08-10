@@ -62,9 +62,11 @@ class BCDB(j.application.JSBaseClass):
 
         self.name = name
         self.dataprocessor_greenlet = None
-        self._sqlclient = None
+        self._sqlite_index_client = None
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
         self.storclient = storclient
+
+        self._sqlite_index_dbpath = "%s/sqlite_index.db" % self._data_dir
 
         if reset:
             self.meta = None
@@ -83,7 +85,7 @@ class BCDB(j.application.JSBaseClass):
 
     def _init_props(self):
 
-        self._sqlclient = None
+        self._sqlite_index_client = None
 
         self._sid_to_model = {}
 
@@ -261,10 +263,10 @@ class BCDB(j.application.JSBaseClass):
                 assert obj.id == i
 
     @property
-    def sqlclient(self):
-        if self._sqlclient is None:
-            self._sqlclient = DBSQLite(nsname=self.name)
-        return self._sqlclient
+    def sqlite_index_client(self):
+        if self._sqlite_index_client is None:
+            self._sqlite_index_client = j.clients.peewee.SqliteDatabase(self._sqlite_index_dbpath)
+        return self._sqlite_index_client
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -304,6 +306,7 @@ class BCDB(j.application.JSBaseClass):
             self.dataprocessor_state = "RUNNING"
 
     def dataprocessor_stop(self, force=False):
+
         if self.dataprocessor_greenlet:
             if self.dataprocessor_greenlet.started and not force:
                 # stop dataprocessor
@@ -313,13 +316,15 @@ class BCDB(j.application.JSBaseClass):
                     time.sleep(0.1)
             self.dataprocessor_greenlet.kill()
 
+        self.dataprocessor_greenlet = None
+
     def reset(self):
         """
         remove all data but the bcdb instance remains
         :return:
         """
 
-        self.dataprocessor_stop(force=True)
+        self.stop()
 
         assert self.storclient
 
@@ -359,12 +364,15 @@ class BCDB(j.application.JSBaseClass):
 
     def stop(self):
         self._log_info("STOP BCDB")
-        if self.dataprocessor_greenlet is not None:
-            self.dataprocessor_greenlet.kill()
-        self.dataprocessor_greenlet = None
+        self.dataprocessor_stop(force=True)
+        if self._sqlite_index_client:
+            # todo: check tht its open
+            j.shell()
+            self._sqlite_index_client.close()
 
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
+        j.shell()
         # IF WE DO A FULL BLOWN REBUILD THEN WE NEED TO ITERATE OVER ALL OBJECTS AND CANNOT START FROM THE ITERATOR PER MODEL
         # this always needs to work, independent of state of index
         for model in self.models:

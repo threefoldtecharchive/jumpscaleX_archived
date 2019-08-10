@@ -28,7 +28,7 @@ class ZDBServers(JSConfigs):
         j.builders.db.zdb.install(reset=reset)
 
     def test_instance_start(
-        self, destroydata=True, namespaces=[], admin_secret="123456", namespaces_secret="1234", restart=False
+        self, destroydata=False, namespaces=[], admin_secret="123456", namespaces_secret="1234", restart=False
     ):
         """
 

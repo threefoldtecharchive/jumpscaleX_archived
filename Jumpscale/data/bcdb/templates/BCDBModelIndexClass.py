@@ -31,7 +31,7 @@ class {{BASENAME}}(BCDBModelIndex):
 
         p = j.clients.peewee
 
-        db = self.bcdb.sqlclient.sqlitedb
+        db = self.bcdb.sqlite_index_client
         # print(db)
 
         class BaseModel(p.Model):
