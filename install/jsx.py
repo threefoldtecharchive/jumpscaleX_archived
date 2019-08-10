@@ -89,6 +89,7 @@ def _configure(
 ):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
+
     IT.MyEnv.configure(
         basedir=basedir,
         readonly=None,

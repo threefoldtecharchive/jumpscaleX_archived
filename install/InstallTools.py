@@ -3687,6 +3687,8 @@ class DockerContainer:
         DockerFactory._dockers[name] = self
 
         self.config = DockerConfig(name=name, portrange=portrange, image=image, sshport=sshport, startupcmd=startupcmd)
+        if delete:
+            Tools.delete(self._path)
 
         self.container_exists = name in DockerFactory.containers_names()
 
@@ -3697,6 +3699,7 @@ class DockerContainer:
                 self.delete()
             newport = self.config._find_sshport(self.config.sshport)
             self.config.reset()
+
             if self.config.sshport != newport:
                 self.config.sshport = newport
                 self.config.save()
@@ -3762,7 +3765,6 @@ class DockerContainer:
         :param mount_dirs if mounts will be done from host system
         :return:
         """
-
         # portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
 
         args = {}
@@ -4021,19 +4023,14 @@ class DockerContainer:
             args_txt += " --branch %s" % branch
         if not MyEnv.interactive:
             args_txt += " --no-interactive"
-            cmd = "scp -P {} -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                -r {} root@localhost:/sandbox/cfg/".format(
-                self.config.sshport, MyEnv.config_file_path
-            )
-            Tools.execute(cmd)
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            Tools.execute(
+            cmd = (
                 "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
                 % MyEnv.sshagent.key_default
             )
+            Tools.execute(cmd)
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")
