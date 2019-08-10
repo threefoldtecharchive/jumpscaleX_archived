@@ -69,7 +69,7 @@ class BuilderLua(j.builders.system._BaseClass):
             j.builders.web.openresty.build(reset=True)
 
         # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
-        luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
+        luarocks_profile = Profile(self.bash, self.ROCKS_PATHS_PROFILE)
 
         lua_path = luarocks_profile.env_get("LUA_PATH")
         lua_path = _clean_env(lua_path)
