@@ -92,20 +92,23 @@ class JSFactoryTools:
             path = self._dirpath + "/" + path
         assert j.sal.fs.exists(path)
 
-        def get_shortname(bname):
+        def get_shortname(bname, underscoreprocess=True):
             # self._log_debug(bname)
-            if "_" in bname:
-                bname = bname.split("_", 1)[1]
+            if underscoreprocess:
+                if "_" in bname:
+                    bname = bname.split("_", 1)[1]
             if bname.endswith(".py"):
                 bname = bname[:-3]
             # self._log_debug(bname)
             return bname.lower()
 
         for item in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py"):
-
             bname = j.sal.fs.getBaseName(item)
-            bname = get_shortname(bname)
-            if bname == get_shortname(name):
+            bname2 = get_shortname(bname)
+            self._log_debug("%s:%s" % (bname2, name))
+            if bname2 == get_shortname(name, underscoreprocess=True):
+                return item
+            if bname2 == get_shortname(name, underscoreprocess=False):
                 return item
         raise j.exceptions.Base("Could not find code: '%s' in %s" % (name, path))
 

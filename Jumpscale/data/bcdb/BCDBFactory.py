@@ -112,6 +112,14 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         for bcdb in self.instances:
             bcdb.index_rebuild()
 
+    def check(self):
+        """
+        not implemented yet, will check the indexes & data
+        :return:
+        """
+        # TODO:
+        pass
+
     def reset(self):
         """
         will remove all remembered connections
@@ -167,6 +175,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         else:
             b = BCDB(storclient=None, name=name, reset=True)
             b.destroy()
+        if name in self._bcdb_instances:
+            self._bcdb_instances.pop(name)
+        if name in self._config:
+            self._config.pop(name)
+            self._config_write()
 
     def get(self, name, storclient=None, reset=False, fromcache=True):
         """
@@ -250,8 +263,15 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         self._log_info("new bcdb:%s" % name)
-        if name in self._bcdb_instances:  # make sure we don't remember when a new one
-            self._bcdb_instances.pop(name)
+
+        if self.exists(name=name):
+            if not reset:
+                raise j.exceptions.Input("cannot create new bcdb '%s' already exists, and reset not used" % name)
+            else:
+                self.destroy(name=name)
+                j.shell()
+        # if name in self._bcdb_instances:  # make sure we don't remember when a new one
+        #     self._bcdb_instances.pop(name)
 
         if not storclient:
             storclient = j.clients.sqlitedb.client_get(nsname="system")
@@ -305,7 +325,14 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             self._code_generation_dir_ = path
         return self._code_generation_dir_
 
-    def _load_test_model(self, reset=True, type="zdb", schema=None):
+    def _load_test_model(self, type="zdb", schema=None, datagen=False):
+        """
+        kosmos 'j.data.bcdb._load_test_model(type="zdb",datagen=True)'
+        :param reset:
+        :param type:
+        :param schema:
+        :return:
+        """
 
         if not schema:
             schema = """
@@ -330,28 +357,24 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         if type == "rdb":
             storclient = j.clients.rdb.client_get()  # will be to core redis
-            bcdb = j.data.bcdb.new(name="test", storclient=storclient)
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
 
         elif type == "sqlite":
-            bcdb = j.data.bcdb.new(name="test")
-            bcdb2 = j.data.bcdb.get("test")
-            assert bcdb2.storclient == None
+            bcdb = j.data.bcdb.new(name="test", reset=True)
         elif type == "zdb":
-            zdb = j.servers.zdb.test_instance_start(destroydata=reset)
+            zdb = j.servers.zdb.test_instance_start()
             storclient_admin = zdb.client_admin_get()
             assert storclient_admin.ping()
             secret = "1234"
             storclient = storclient_admin.namespace_new("test", secret=secret)
-            if reset:
-                storclient.flush()
+            storclient.flush()
             assert storclient.nsinfo["public"] == "no"
             assert storclient.ping()
-            bcdb = j.data.bcdb.new(name="test", storclient=storclient)
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
         else:
             raise j.exceptions.Base("only rdb,zdb,sqlite for stor")
 
-        if reset:
-            bcdb.reset()  # empty
+        bcdb.reset()  # empty
 
         schemaobj = j.data.schema.get_from_text(schema)
         model = bcdb.model_get_from_schema(schemaobj)
@@ -365,6 +388,23 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 assert model.storclient.nsinfo["entries"] == 1
             else:
                 assert len(model.find()) == 0
+
+        if datagen:
+            for i in range(3):
+                model_obj = model.new()
+                model_obj.llist.append(1)
+                model_obj.llist2.append("yes")
+                model_obj.llist2.append("no")
+                model_obj.llist3.append(1.2)
+                model_obj.date_start = j.data.time.epoch
+                model_obj.U = 1.1
+                model_obj.nr = i
+                model_obj.token_price = "10 EUR"
+                model_obj.description = "something"
+                model_obj.name = "name%s" % i
+                model_obj.email = "info%s@something.com" % i
+                model_obj2 = model.set(model_obj)
+            assert len(model.find()) == 3
 
         return bcdb, model
 

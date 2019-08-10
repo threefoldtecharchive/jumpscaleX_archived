@@ -54,7 +54,7 @@ def main(self):
             an_id = 0
             """
 
-            db, model = self._load_test_model(type=name, reset=True, schema=schema)
+            db, model = self._load_test_model(type=name, schema=schema)
 
             return db, model
 

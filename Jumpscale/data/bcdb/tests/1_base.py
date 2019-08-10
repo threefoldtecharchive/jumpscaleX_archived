@@ -71,7 +71,7 @@ def main(self):
                 pool_type = "managed,unmanaged" (E)
                 """
 
-            db, model = self._load_test_model(type=name, reset=True, schema=schema)
+            db, model = self._load_test_model(type=name, schema=schema)
 
             for i in range(10):
                 model_obj = model.new()

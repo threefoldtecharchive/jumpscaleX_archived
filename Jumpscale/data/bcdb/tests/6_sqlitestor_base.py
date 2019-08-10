@@ -30,7 +30,7 @@ def main(self):
     use a bcdb which is using sqlite
 
     """
-    bcdb, _ = self._load_test_model(reset=True, type="sqlite")
+    bcdb, _ = self._load_test_model(type="sqlite")
 
     mpath = self._dirpath + "/tests/models"
     assert j.sal.fs.exists(mpath)

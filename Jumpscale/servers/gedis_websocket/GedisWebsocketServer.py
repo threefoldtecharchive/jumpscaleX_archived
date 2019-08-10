@@ -22,9 +22,9 @@ class GedisWebsocketServer(JSConfigClient):
         self._app = None
         if self.ssl:
             if not j.sal.fs.exists(self.ssl_keyfile):
-                raise RuntimeError('SSL: keyfile not exists')
+                raise RuntimeError("SSL: keyfile not exists")
             if not j.sal.fs.exists(self.ssl_certfile):
-                raise RuntimeError('SSL: certfile not exists')
+                raise RuntimeError("SSL: certfile not exists")
 
     @property
     def server(self):
@@ -35,12 +35,10 @@ class GedisWebsocketServer(JSConfigClient):
                     ("0.0.0.0", self.port),
                     Resource(OrderedDict([("/", Application)])),
                     keyfile=self.ssl_keyfile,
-                    certfile=self.ssl_certfile
+                    certfile=self.ssl_certfile,
                 )
             else:
-                self._server = WebSocketServer(
-                    ("0.0.0.0", self.port),
-                    Resource(OrderedDict([("/", Application)])))
+                self._server = WebSocketServer(("0.0.0.0", self.port), Resource(OrderedDict([("/", Application)])))
 
         return self._server
 

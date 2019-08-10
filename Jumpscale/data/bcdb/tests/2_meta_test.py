@@ -35,7 +35,7 @@ def main(self):
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     cl1.flush()
 
-    bcdb, _ = self._load_test_model(reset=True)
+    bcdb, _ = self._load_test_model()
 
     assert len(bcdb.get_all()) == 0
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-import
+
 from Jumpscale import *
 
 j.tools.bash.get().profile.locale_check()
 import os
+import click
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
 
@@ -38,16 +39,26 @@ def delete(name=None, all=False):
             do(name)
 
 
+# @click.command()
+# @click.option("--name", default=None, help="specify which bcdb you want to fix, if not specified will use all")
+# def check(name=None):
+#     """
+#     will check and if issues found in index it will rebuild the index
+#     :return:
+#     """
+#     j.application.check()
+#     if not name:
+#         j.shell()
+#     j.shell()
+
+
 @click.command()
-@click.option("--name", default=None, help="specify which bcdb you want to fix, if not specified will use all")
 def check(name=None):
     """
-    will check and if issues found in index it will rebuild the index
+    will check the starting point for bcdb
     :return:
     """
-    if not name:
-        j.shell()
-    j.shell()
+    j.application.check()
 
 
 @click.command()
@@ -58,11 +69,11 @@ def rebuild(name=None):
     :return:
     """
     if not name:
-        j.shell()
-    bcdb = j.data.bcdb.get(name=name, reset=True)
-    bcdb.index_rebuild()
-
-
+        for bcdb in j.data.bcdb.instances:
+            bcdb.index_rebuild()
+    else:
+        bcdb = j.data.bcdb.get(name=name, reset=True)
+        bcdb.index_rebuild()
 
 
 if __name__ == "__main__":

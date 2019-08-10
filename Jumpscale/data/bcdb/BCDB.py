@@ -371,11 +371,11 @@ class BCDB(j.application.JSBaseClass):
             # make sure indexes are empty
             model.index.destroy()
         first = True
-        for data in self.storclient.iterate():
+        for id, data in self.storclient.iterate():
             if first:
                 first = False
                 continue
-            jsxobj = j.data.serializers.jsxdata.loads(data)
+            jsxobj = self._unserialize(id, data)
             model = self.model_get_from_schema(jsxobj._schema)
             model.set(jsxobj, store=False, index=True)
 

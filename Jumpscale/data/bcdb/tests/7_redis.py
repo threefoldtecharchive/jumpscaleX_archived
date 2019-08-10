@@ -126,12 +126,12 @@ def main(self):
 
     def sqlite_test():
         # SQLITE BACKEND
-        self._load_test_model(reset=True, type="sqlite")
+        self._load_test_model(type="sqlite")
         do()
 
     def zdb_test():
         # ZDB test
-        self._load_test_model(reset=True, type="zdb")
+        self._load_test_model(type="zdb")
         c = j.clients.zdb.client_admin_get(port=9901)
         do(zdb=True)
 
