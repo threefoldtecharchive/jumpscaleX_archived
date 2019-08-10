@@ -88,12 +88,12 @@ class JSConfigs(JSBase, Attr):
         """
         return self.__class__._CHILDCLASS
 
-    def new(self, name, jsxobject=None, **kwargs):
+    def new(self, name, jsxobject=None, save=True, **kwargs):
         if self.exists(name=name):
             raise j.exceptions.Base("obj: %s already exists" % name)
-        return self._new(name=name, jsxobject=jsxobject, **kwargs)
+        return self._new(name=name, jsxobject=jsxobject, save=save, **kwargs)
 
-    def _new(self, name, jsxobject=None, **kwargs):
+    def _new(self, name, jsxobject=None, save=True, **kwargs):
         """
         :param name: for the CONFIG item (is a unique name for the service, client, ...)
         :param jsxobject: you can right away specify the jsxobject
@@ -114,16 +114,21 @@ class JSConfigs(JSBase, Attr):
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
         self._children[name] = jsconfig
+        if save and not jsxobject:
+            self._children[name].save()
+            self._children[name]._autosave = True
         return self._children[name]
 
-    def get(self, name="main", needexist=False, **kwargs):
+    def get(self, name="main", needexist=False, save=True, **kwargs):
         """
         :param name: of the object
         """
+
         jsconfig = self._get(name=name, die=needexist)
+
         if not jsconfig:
             self._log_debug("NEW OBJ:%s:%s" % (name, self._name))
-            jsconfig = self._new(name=name, **kwargs)
+            jsconfig = self._new(name=name, save=save, **kwargs)
         else:
             # check that the stored values correspond with kwargs given
             changed = False
@@ -135,22 +140,13 @@ class JSConfigs(JSBase, Attr):
                     # msg += "kwargs: key:%s val:%s\n" % (key, val)
                     # msg += "object was:\n%s\n" % jsconfig._data._ddict_hr_get()
                     # raise j.exceptions.Base(msg)
-            if changed:
+            if changed and save:
                 jsconfig.save()
 
         jsconfig._triggers_call(jsconfig, "get")
         # if kwargs:
         #     jsconfig._data_update(kwargs)
         return jsconfig
-
-    def exists(self, name="main"):
-        """
-        :param name: of the object
-        """
-        r = self._get(name=name, die=False)
-        if r:
-            return True
-        return False
 
     def _get(self, name="main", die=True):
         if name is not None and name in self._children:
@@ -252,7 +248,12 @@ class JSConfigs(JSBase, Attr):
             o = self.get(name)
             o.delete()
 
-    def exists(self, name):
+    def exists(self, name="main"):
+        """
+        :param name: of the object
+        """
+        if name in self._children:
+            return True
         res = self._findData(name=name)
         if len(res) > 1:
             raise j.exceptions.Base(

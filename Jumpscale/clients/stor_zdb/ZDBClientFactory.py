@@ -61,6 +61,7 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
         else:
             cl = self.new(name=name, addr=addr, port=port, secret_=secret, mode=mode, admin=True)
         assert cl.admin == True
+        assert self.exists(name=name)
         return cl
 
     def client_get(self, name="main", nsname="test", addr="localhost", port=9900, secret="1234", mode="seq"):
@@ -75,6 +76,7 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
             cl = self.get(name=name)
         else:
             cl = self.new(name=name, nsname=nsname, addr=addr, port=port, secret_=secret, mode=mode, admin=False)
+        assert self.exists(name=name)
         return cl
 
     def test(self):

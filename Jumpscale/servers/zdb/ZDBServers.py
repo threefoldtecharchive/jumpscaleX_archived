@@ -28,7 +28,7 @@ class ZDBServers(JSConfigs):
         j.builders.db.zdb.install(reset=reset)
 
     def test_instance_start(
-        self, destroydata=False, namespaces=[], admin_secret="123456", namespaces_secret="1234", restart=False
+        self, destroydata=False, namespaces=None, admin_secret="123456", namespaces_secret="1234", restart=False
     ):
         """
 
@@ -42,14 +42,16 @@ class ZDBServers(JSConfigs):
 
         :return:
         """
-        zdb = self.get(name="test", port=9901)
+        if not namespaces:
+            namespaces = []
+        zdb = self.get(name="test", port=9901, save=True)
 
         if destroydata:
             zdb.destroy()
             j.clients.redis._cache_clear()  # make sure all redis connections gone
 
         zdb.start()
-        zdb.save()
+        # zdb.save()  #no longer needed happens auto
 
         cla = zdb.client_admin_get()
 

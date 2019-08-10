@@ -326,6 +326,10 @@ class BCDBModel(j.application.JSBaseClass):
         """
         self.check(obj)
 
+        # if self.bcdb.name != "test":
+        #     raise RuntimeError()
+        #     j.shell()
+
         if store:
 
             # later:
