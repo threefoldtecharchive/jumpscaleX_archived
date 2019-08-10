@@ -157,6 +157,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         for key in j.core.db.keys("bcdb:*"):
             j.core.db.delete(key)
         j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/bcdb"))
+        j.sal.fs.remove(self._config_data_path)
         self._load()
 
     def exists(self, name):

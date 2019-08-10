@@ -64,6 +64,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if self.path == "":
             self.path = "/tmp"
 
+        self.cmd_start = j.core.tools.text_strip(self.cmd_start)
+
         if self.executor == "corex":
             self._corex_clean()
         self.refresh()

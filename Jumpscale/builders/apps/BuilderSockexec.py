@@ -39,7 +39,7 @@ class BuilderSockexec(j.builders.system._BaseClass):
         C = """
         cd {DIR_BUILD}
         rm -rf /usr/local/lib/skalibs
-        ln -s /usr/lib/skalibs /usr/local/lib/skalibs
+        ln -sf /usr/lib/skalibs /usr/local/lib/skalibs
         rm -rf sockexec/
         git clone https://github.com/jprjr/sockexec
         cd {DIR_BUILD}/sockexec

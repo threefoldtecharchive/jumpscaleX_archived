@@ -33,7 +33,7 @@ apt-get install build-essential python3-dev python3-setuptools python3-pip -y
 pip3 install tornado==4.5.3
 python3 setup.py install
 cp /usr/local/bin/gateone {DIR_BIN}/gateone
-ln -s /usr/bin/python3 /usr/bin/python
+ln -sf /usr/bin/python3 /usr/bin/python
 """
         j.sal.process.execute(cmd)
         j.builders.system.ssh.keygen(name="id_rsa")

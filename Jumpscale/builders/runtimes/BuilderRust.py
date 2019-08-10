@@ -52,6 +52,10 @@ class BuilderRust(j.builders.system._BaseClass):
 
     @builder_method()
     def test(self):
+        """
+        kosmos 'j.builders.runtimes.rust.test()'
+        :return:
+        """
         self.install()
 
         rc, _, _ = self._execute("rustc --V")

@@ -51,7 +51,7 @@ class BuilderVRouter(j.builders.system._BaseClass):
         j.builders.tools.upload("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
         C = """
         rm -rf /opt/dnsmasq-alt
-        ln -s {DIR_CODE}/github/threefoldtech/jumpscale_smartproxy /opt/dnsmasq-alt
+        ln -sf {DIR_CODE}/github/threefoldtech/jumpscale_smartproxy /opt/dnsmasq-alt
         """
         j.sal.process.execute(C)
 

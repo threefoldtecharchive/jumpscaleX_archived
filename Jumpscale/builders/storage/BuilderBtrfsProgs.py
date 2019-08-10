@@ -53,8 +53,8 @@ class BuilderBtrfsProgs(BuilderApp):
         j.builders.tools.file_copy(self._replace("{DIR_VAR}/build/bin/btrfs"), "{DIR_BIN}")
 
         j.builders.tools.file_copy(self._replace("{DIR_VAR}/build/lib/libbtrfs.so"), "$LIBDIR")
-        self._run("cd $LIBDIR; ln -s libbtrfs.so libbtrfs.so.0.1")
-        self._run("cd $LIBDIR; ln -s libbtrfs.so libbtrfs.so.0")
+        self._run("cd $LIBDIR; ln -sf libbtrfs.so libbtrfs.so.0.1")
+        self._run("cd $LIBDIR; ln -sf libbtrfs.so libbtrfs.so.0")
 
     def start(self, name):
         pass
