@@ -1422,8 +1422,8 @@ class Tools:
 
         LOGFORMAT = MyEnv.LOGFORMAT[LOGLEVEL]
 
-        if len(logdict["filepath"]) > 16:
-            logdict["filename"] = logdict["filepath"][len(logdict["filepath"]) - 18 :]
+        if len(logdict["filepath"]) > 20:
+            logdict["filename"] = logdict["filepath"][-20:]
         else:
             logdict["filename"] = logdict["filepath"]
 
@@ -2333,7 +2333,7 @@ class Tools:
 
 
 LOGFORMATBASE = (
-    "{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
+    "{COLOR}{TIME} {filename:<20}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
 )  # DO NOT CHANGE COLOR
 
 
@@ -2377,7 +2377,7 @@ class MyEnv:
         "INFO": LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
         "WARNING": LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
         "ERROR": LOGFORMATBASE.replace("{COLOR}", "{RED}"),
-        "CRITICAL": "{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
+        "CRITICAL": "{RED}{TIME} {filename:<20} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
     }
 
     db = RedisTools.client_core_get(die=False)
