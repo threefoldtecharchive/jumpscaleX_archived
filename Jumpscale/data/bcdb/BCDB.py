@@ -337,6 +337,11 @@ class BCDB(j.application.JSBaseClass):
         self._init_props()
         if not self.meta:
             self.meta = BCDBMeta(self)
+
+        # since delete the data directory line 338, we have to re-init the storclient
+        # so it can do its things and re-connect properly
+        self.storclient._init(nsname=self.storclient.nsname)
+
         self.meta.reset()  # will make sure the record 0 is written with empty metadata
         self._init_system_objects()
 
