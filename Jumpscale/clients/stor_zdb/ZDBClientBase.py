@@ -76,6 +76,9 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
         """
         self.redis.execute_command("FLUSH")
 
+    def stop(self):
+        pass
+
     @property
     def nsinfo(self):
         cmd = self.redis.execute_command("NSINFO", self.nsname)

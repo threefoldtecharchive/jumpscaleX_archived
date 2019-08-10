@@ -268,6 +268,11 @@ class BCDB(j.application.JSBaseClass):
             self._sqlite_index_client = j.clients.peewee.SqliteDatabase(self._sqlite_index_dbpath)
         return self._sqlite_index_client
 
+    def sqlite_index_client_stop(self):
+        if self._sqlite_index_client is not None:
+            self._sqlite_index_client.close()
+            self._sqlite_index_client = None
+
     def redis_server_start(self, port=6380, secret="123456"):
 
         self.redis_server = RedisServer(bcdb=self, port=port, secret=secret, addr="0.0.0.0")

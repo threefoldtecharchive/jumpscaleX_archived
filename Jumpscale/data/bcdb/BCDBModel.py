@@ -165,9 +165,8 @@ class BCDBModel(j.application.JSBaseClass):
         self.bcdb.queue.put((None, ["STOP"], {}, event, None))
 
         event.wait(1000.0)  # will wait for processing
-        if self.bcdb._sqlclient is not None:
-            self.bcdb.sqlclient.close()
-            self.bcdb._sqlclient = None
+        self.sqlite_index_client_stop()
+        self.storclient.stop()
 
         self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
         return True
@@ -179,6 +178,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def index_rebuild(self, nid=1):
+        raise RuntimeError()
         self.stop()
         self.index.destroy(nid=nid)
         self._log_warning("will rebuild index for:%s" % self)
@@ -318,17 +318,13 @@ class BCDBModel(j.application.JSBaseClass):
 
         return res
 
-    @queue_method_results
+    # @queue_method_results
     def set(self, obj, index=True, store=True):
         """
         :param obj
         :return: obj
         """
         self.check(obj)
-
-        # if self.bcdb.name != "test":
-        #     raise RuntimeError()
-        #     j.shell()
 
         if store:
 
@@ -373,25 +369,17 @@ class BCDBModel(j.application.JSBaseClass):
             # PUT DATA IN DB
             if obj.id is None:
                 # means a new one
-                if not self.storclient:
-                    obj.id = self.bcdb.sqlclient.set(key=None, val=data)
-                else:
-                    obj.id = self.storclient.set(data)
+                obj.id = self.storclient.set(data)
                 if self.readonly:
                     obj.readonly = True
                 # self._log_debug("NEW:\n%s" % obj)
             else:
-                if not self.storclient:
-                    self.bcdb.sqlclient.set(key=obj.id, val=data)
-                else:
-                    try:
-                        self.storclient.set(data, key=obj.id)
-                    except Exception as e:
-                        if str(e).find("only update authorized") != -1:
-                            raise j.exceptions.Base(
-                                "cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id)
-                            )
-                        raise
+                try:
+                    self.storclient.set(data, key=obj.id)
+                except Exception as e:
+                    if str(e).find("only update authorized") != -1:
+                        raise j.exceptions.Base("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
+                    raise
 
         if index:
             self.index.set(obj)
@@ -459,10 +447,7 @@ class BCDBModel(j.application.JSBaseClass):
         #             # print("cache hit")
         #             return obj
 
-        if not self.storclient:
-            data = self.bcdb.sqlclient.get(key=obj_id)
-        else:
-            data = self.storclient.get(obj_id)
+        data = self.storclient.get(obj_id)
 
         if not data:
             if die:

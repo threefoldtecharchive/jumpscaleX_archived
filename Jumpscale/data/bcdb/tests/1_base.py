@@ -187,7 +187,7 @@ def main(self):
         self._log_info("TEST DONE: %s" % name)
 
     test("RDB", sqlite=False)
-    # test("ZDB")
-    # test("SQLITE")
+    test("ZDB")
+    test("SQLITE")
 
     return "OK"

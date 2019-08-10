@@ -25,6 +25,7 @@ class DBSQLite(j.application.JSBaseClass):
     def _init(self, nsname=None, **kwargs):
 
         assert nsname
+        assert "name" not in kwargs
         self.nsname = nsname
 
         self.type = "SDB"
@@ -55,6 +56,10 @@ class DBSQLite(j.application.JSBaseClass):
 
         self._table_model = KVS
         self._table_model.create_table()
+
+    def stop(self):
+        if not self.sqlitedb.is_closed():
+            self.sqlitedb.close()
 
     @property
     def nsinfo(self):

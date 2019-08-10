@@ -152,6 +152,9 @@ class RDBClient(j.application.JSBaseClass):
                     else:
                         yield (i, data)
 
+    def stop(self):
+        pass
+
     @property
     def count(self):
         """

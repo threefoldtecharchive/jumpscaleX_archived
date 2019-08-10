@@ -59,12 +59,12 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
         if self.exists(name=name):
             cl = self.get(name=name)
         else:
-            cl = self.new(name=name, addr=addr, port=port, secret_=secret, mode=mode, admin=True)
+            cl = self.new(name=name, nsname=name, addr=addr, port=port, secret_=secret, mode=mode, admin=True)
         assert cl.admin == True
         assert self.exists(name=name)
         return cl
 
-    def client_get(self, name="main", nsname="test", addr="localhost", port=9900, secret="1234", mode="seq"):
+    def client_get(self, name="main", addr="localhost", port=9900, secret="1234", mode="seq"):
         """
         :param nsname: namespace name
         :param addr:
@@ -75,7 +75,7 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
         if self.exists(name=name):
             cl = self.get(name=name)
         else:
-            cl = self.new(name=name, nsname=nsname, addr=addr, port=port, secret_=secret, mode=mode, admin=False)
+            cl = self.new(name=name, nsname=name, addr=addr, port=port, secret_=secret, mode=mode, admin=False)
         assert self.exists(name=name)
         return cl
 

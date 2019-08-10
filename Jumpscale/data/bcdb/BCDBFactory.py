@@ -27,6 +27,7 @@ import os
 import sys
 import redis
 import copy
+import copy
 
 
 class BCDBFactory(j.application.JSBaseFactoryClass):
@@ -205,8 +206,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         return BCDBVFS(self._bcdb_instances)
 
     def _get_storclient(self, name):
-        data = self._config[name]
-        if "type" not in data or data["type"] == "zdb":
+        data = copy.copy(self._config[name])
+
+        if data["type"] == "zdb":
             if "admin" in data:
                 if data["admin"]:
                     raise j.exceptions.Base("can only use ZDB connection which is not admin")
@@ -215,9 +217,15 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 data.pop("type")
             storclient = j.clients.zdb.client_get(**data)
         elif data["type"] == "rdb":
+            if "type" in data:
+                data.pop("type")
             storclient = j.clients.rdb.client_get(**data)
-        else:
+        elif data["type"] == "sdb":
+            if "type" in data:
+                data.pop("type")
             storclient = j.clients.sqlitedb.client_get(**data)
+        else:
+            raise j.exceptions.Input("type storclient not found:%s" % data["type"])
         return storclient
 
     def _get(self, name, reset=False, storclient=None):
@@ -271,7 +279,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 self.destroy(name=name)
 
         if not storclient:
-            storclient = j.clients.sqlitedb.client_get(nsname=name)
+            storclient = j.clients.sqlitedb.client_get(name=name)
         else:
             if j.data.types.string.check(storclient):
                 raise j.exceptions.Base("storclient cannot be str")
@@ -279,17 +287,17 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         assert isinstance(storclient.type, str)
         if storclient.type == "SDB":
-            data["nsname"] = storclient.nsname
+            data["name"] = storclient.nsname
             data["type"] = "sdb"
             # link to which redis to connect to (name of the redis client in JSX)
         elif storclient.type == "RDB":
-            data["nsname"] = storclient.nsname
+            data["name"] = storclient.nsname
             data["type"] = "rdb"
             data["redisconfig_name"] = storclient._redis.redisconfig_name
             # link to which redis to connect to (name of the redis client in JSX)
 
         else:
-            data["nsname"] = storclient.nsname
+            data["name"] = storclient.nsname
             data["admin"] = storclient.admin
             data["addr"] = storclient.addr
             data["port"] = storclient.port
@@ -297,7 +305,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             data["secret"] = storclient.secret_
             data["type"] = "zdb"
 
-        assert data["nsname"]
+        assert data["name"]
 
         self._config[name] = data
         self._config_write()

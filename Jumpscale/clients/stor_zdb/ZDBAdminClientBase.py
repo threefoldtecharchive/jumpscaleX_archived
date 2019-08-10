@@ -49,7 +49,7 @@ class ZDBAdminClientBase:
 
         self._log_debug("connect client")
 
-        ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
+        ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, name=name)
 
         assert ns.ping()
         if secret:
