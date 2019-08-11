@@ -9,6 +9,8 @@ class BuilderThreebot(j.builders.system._BaseClass):
 
     def _init(self, **kwargs):
         self.BUILD_LOCATION = self._replace("{DIR_BUILD}/threebot")
+        url = "https://github.com/threefoldtech/digitalmeX/tree/%s/sandbox" % j.core.myenv.DEFAULTBRANCH
+        self._sandbox_source = j.clients.git.getContentPathFromURLorPath(url)
 
     @builder_method()
     def install(self, reset=False):
@@ -16,6 +18,17 @@ class BuilderThreebot(j.builders.system._BaseClass):
         j.builders.runtimes.lua.install(reset=reset)
         j.builders.db.zdb.install(reset=reset)
         j.builders.apps.sonic.install(reset=reset)
+        self.base_bin()
+
+    def base_bin(self, reset=False):
+        """
+        kosmos 'j.builders.apps.threebot.base_bin()'
+        copy the files from the sandbox on jumpscale
+        :param reset:
+        :return:
+        """
+        self._copy(self._sandbox_source, "/sandbox")
+        # DO NOT CHANGE ANYTHING HERE BEFORE YOU REALLY KNOW WHAT YOU'RE DOING
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True):

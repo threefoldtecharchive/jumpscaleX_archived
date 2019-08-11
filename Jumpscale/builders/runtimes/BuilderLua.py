@@ -46,16 +46,18 @@ class BuilderLua(j.builders.system._BaseClass):
         """
 
         # set showout to False to avoid text_replace of output log
-        self._execute(C, showout=False)
+        self._execute(C, showout=True)
 
-    def profile_installer_select(self):
+    def profile_luarocks_select(self):
+        self.profile_builder_select()
+
         def _clean_env(env_paths):
             build_lua_path = self._replace("{DIR_BUILD}/luarocks/")
             clean_path = ";".join(
                 [
                     path
                     for path in env_paths.split(";")
-                    if not (path.startswith(build_lua_path) or path.startswith("/root"))
+                    if not (path.startswith(build_lua_path) or path.startswith(j.core.myenv.config["DIR_HOME"]))
                 ]
             )
             return clean_path
@@ -69,7 +71,7 @@ class BuilderLua(j.builders.system._BaseClass):
             j.builders.web.openresty.build(reset=True)
 
         # add lua_path and lua_cpath so lua libs/clibs can found by lua interpreter)
-        luarocks_profile = Profile(self.bash, self.ROCKS_PATHS_PROFILE)
+        luarocks_profile = Profile(self._bash, self.ROCKS_PATHS_PROFILE)
 
         lua_path = luarocks_profile.env_get("LUA_PATH")
         lua_path = _clean_env(lua_path)
@@ -77,13 +79,30 @@ class BuilderLua(j.builders.system._BaseClass):
         lua_cpath = luarocks_profile.env_get("LUA_CPATH")
         lua_cpath = _clean_env(lua_cpath)
 
-        self.profile.env_set("LUA_PATH", lua_path)
-        self.profile.env_set("LUA_CPATH", lua_cpath)
-        self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include/luajit-2.1")
-        # self.profile.env_set("LUA_INCDIR", "/sandbox/openresty/luajit/include")
+        # ADD items from sandbox
+        LUALIB = "/sandbox/openresty/lualib"
+        assert j.sal.fs.exists(LUALIB)
+        self.profile.env_set("LUALIB", LUALIB)
+
+        lua_path = (
+            "?.lua;$LUALIB/?/init.lua;$LUALIB/?.lua;$LUALIB/?/?.lua;$LUALIB/?/core.lua;/sandbox/openresty/lapis/?.lua;"
+            + lua_path.strip('"')
+        )
+        lua_path = lua_path.replace("$LUALIB", LUALIB)
+
+        self.profile.env_set("LUA_PATH", lua_path, quote=True)
+
+        lua_cpath = "$LUALIB/?.so" + lua_cpath.strip('"')
+        lua_cpath = lua_cpath.replace("$LUALIB", LUALIB)
+
+        self.profile.env_set("LUA_CPATH", lua_cpath, quote=True)
+
+        LUAINCDIR = "/sandbox/openresty/luajit/include/luajit-2.1"
+        assert j.sal.fs.exists(LUAINCDIR)
+        self.profile.env_set("LUA_INCDIR", LUAINCDIR)
         self.profile.path_add("/sandbox/bin")
 
-        path = luarocks_profile.env_get("PATH").replace(";", ":")
+        path = luarocks_profile.env_get("PATH")  # .replace(";", ":")
         self.profile.path_add(path, check_exists=False)
 
     def lua_rock_install(self, name, reset=False):
@@ -93,7 +112,9 @@ class BuilderLua(j.builders.system._BaseClass):
 
         if j.core.platformtype.myplatform.platform_is_osx:
             C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR "
-            C = C.replace("$CRYPTODIR", "/usr/local/opt/openssl")
+            CRYPTODIR = "/usr/local/opt/openssl"
+            assert j.sal.fs.exists(CRYPTODIR)
+            C = C.replace("$CRYPTODIR", CRYPTODIR)
         else:
             # C = "luarocks install $NAME CRYPTO_DIR=$CRYPTODIR OPENSSL_DIR=$CRYPTODIR"
             # C = "luarocks install lapis CRYPTO_DIR=/sandbox OPENSSL_DIR=/sandbox"
@@ -109,15 +130,12 @@ class BuilderLua(j.builders.system._BaseClass):
     @builder_method()
     def lua_rocks_install(self, reset=True):
         """
-        kosmos 'j.builders.runtimes.lua.lua_rocks_install()'
+        kosmos 'j.builders.runtimes.lua.install()'
+        #will call this
         :param install:
         :return:
         """
-        self.profile_installer_select()
-
-        # if j.core.platformtype.myplatform.platform_is_ubuntu:
-        #     # j.builders.system.package.mdupdate()
-        #     j.builders.system.package.ensure("geoip-database,libgeoip-dev")
+        self.profile_luarocks_select()
 
         C = """
         luaossl
@@ -232,7 +250,6 @@ class BuilderLua(j.builders.system._BaseClass):
         rm -rf /sandbox/openresty/luajit/share
         rm -rf /sandbox/var/build
         rm -rf /sandbox/root
-        mkdir -p /sandbox/root
 
         """
         self._execute(C)
@@ -249,26 +266,27 @@ class BuilderLua(j.builders.system._BaseClass):
         kosmos 'j.builders.runtimes.lua.install()'
         :return:
         """
+        j.builders.web.openresty.install(reset=deps_reset)
         self.lua_rocks_install(reset=deps_reset)
+
+        # will get the sandbox files, important that these files get there unmodified
+        j.builders.apps.threebot.base_bin()
 
         # copy some binaries
         C = """
 
         set -e
         pushd /sandbox/openresty/luarocks/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin/
-        cp lapis /sandbox/bin/lapis
+        cp lapis /sandbox/bin/_lapis.lua
         popd
         pushd '/sandbox/openresty/luarocks/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
-        cp moon /sandbox/bin/moon
-        cp moonc /sandbox/bin/moonc
+        cp moon /sandbox/bin/_moon.lua
+        cp moonc /sandbox/bin/_moonc.lua
         popd
 
 
         """
         self._execute(C)
-
-        # src = "/sandbox/code/github/threefoldtech/digitalmeX/sandbox/bin"
-        # self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):

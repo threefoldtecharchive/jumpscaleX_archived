@@ -12,6 +12,9 @@ from .BASECLASSES.JSFactoryTools import JSFactoryTools
 from .BASECLASSES.JSConfig import JSConfig
 from .BASECLASSES.JSConfigs import JSConfigs
 from .BASECLASSES.JSConfigsFactory import JSConfigsFactory
+from .BASECLASSES.ThreeBotPackageBase import ThreeBotPackageBase
+from .BASECLASSES.ThreeBotActorBase import ThreeBotActorBase
+
 
 import gc
 import sys
@@ -112,6 +115,8 @@ class Application(object):
         self.JSBaseFactoryClass = JSBaseFactoryClass
         self.JSConfigClass = JSConfig
         self.JSConfigsClass = JSConfigs
+        self.ThreeBotPackageBase = ThreeBotPackageBase
+        self.ThreeBotActorBase = ThreeBotActorBase
         self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
         self.loghandlers = self._j.core.myenv.loghandlers
         self.errorhandlers = self._j.core.myenv.errorhandlers

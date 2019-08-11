@@ -4,9 +4,9 @@ import textwrap
 builder_method = j.builders.system.builder_method
 
 
-class BuilderFreeflow(j.builders.system._BaseClass):
+class BuilderFreeflowPages(j.builders.system._BaseClass):
 
-    NAME = "freeflow"
+    NAME = "freeflowpages"
 
     @builder_method()
     def install(self, reset=False, humhub_version="1.3.13"):

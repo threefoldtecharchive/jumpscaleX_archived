@@ -2356,6 +2356,8 @@ class MyEnv:
 
     appname = "installer"
 
+    DEFAULTBRANCH = DEFAULTBRANCH
+
     FORMAT_TIME = "%a %d %H:%M:%S"
 
     MYCOLORS = {

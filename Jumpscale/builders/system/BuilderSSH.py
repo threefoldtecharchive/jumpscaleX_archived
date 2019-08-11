@@ -248,7 +248,7 @@ class BuilderSSH(j.builders.system._BaseClass):
         Removes all keys and known hosts
         """
         self._log_info("clean known hosts/autorized keys")
-        j.core.tools.dir_ensure("/root/.ssh")
+        j.core.tools.dir_ensure("%s/.ssh" % j.core.myenv.config["DIR_HOME"])
         j.builders.tools.dir_remove("%s/.ssh/known_hosts" % j.core.myenv.config["DIR_HOME"])
         j.builders.tools.dir_remove("%s/.ssh/authorized_keys" % j.core.myenv.config["DIR_HOME"])
 

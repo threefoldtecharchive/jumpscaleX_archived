@@ -43,9 +43,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
             -j8
         make -j8
         make install
-        rm -f /sandbox/bin/lua
-        ln -f -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
-
         """
         self._execute(C)
 
@@ -57,10 +54,12 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         :param kwargs:
         :return:
         """
+        # copy the files from the sandbox !!! IMPORTANT
+
+        j.builders.apps.threebot.base_bin()
         C = """
         ln -sf /sandbox/openresty/bin/resty /sandbox/bin/resty
-        ln -sf /sandbox/openresty/bin/restydoc /sandbox/bin/restydoc
-        ln -sf /sandbox/openresty/bin/restydoc-index /sandbox/bin/restydoc-index
+        ln -f -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua        
         rm  -rf /sandbox/openresty/pod
         rm  -rf /sandbox/openresty/site
         """
