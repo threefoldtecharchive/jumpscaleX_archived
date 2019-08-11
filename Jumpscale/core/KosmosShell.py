@@ -138,7 +138,7 @@ def get_current_line(document):
         else:
             prefix = ""
         return parent, member, prefix
-    raise j.exceptions.Value("nothing is written")
+    raise ValueError("nothing is written")
 
 
 def get_completions(self, document, complete_event):
