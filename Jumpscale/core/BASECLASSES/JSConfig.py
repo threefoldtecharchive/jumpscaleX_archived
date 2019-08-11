@@ -29,7 +29,7 @@ from .Attr import Attr
 
 
 class JSConfig(JSBase, Attr):
-    def _init_pre(self, jsxobject=None, datadict={}, name=None):
+    def _init_pre(self, jsxobject=None, datadict={}, name=None, **kwargs):
 
         self._triggers = []
 

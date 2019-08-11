@@ -12,8 +12,8 @@ class GedisWebsocketServer(JSConfigClient):
         @url = jumpscale.gedis.websocket.1
         name* = "default" (S)
         port = 4444
-        ssl = True (B)
-        ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key" (S)
+        ssl = False (B)
+        ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key" (S) #bad to do like this, harcoded TODO:, also should not be here can be done in openresty
         ssl_certfile = "/etc/ssl/resty-auto-ssl-fallback.crt" (S)
         """
 

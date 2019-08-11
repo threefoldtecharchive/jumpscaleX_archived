@@ -21,9 +21,10 @@
 from Jumpscale import j
 from .JSBase import JSBase
 
-from .JSConfig import JSConfig
+from .JSBase import JSBase
 
 
-class ThreeBotActorBase(JSConfig):
+class ThreeBotActorBase(JSBase):
     def _init_pre2(self, **kwargs):
-        assert ""
+        assert "gedis_server" in kwargs
+        self._gedis_server = kwargs["gedis_server"]
