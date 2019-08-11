@@ -160,7 +160,10 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
             if self.process_strings_regex != []:
                 for pid in j.sal.process.getPidsByFilter(regex_list=self.process_strings_regex):
-                    p = j.sal.process.getProcessObject(pid)
+                    try:
+                        p = j.sal.process.getProcessObject(pid)
+                    except j.exceptions.NotFound as e:
+                        continue
                     if p.pid not in pids_done:
                         pids_done.append(p.pid)
                         res.append(p)

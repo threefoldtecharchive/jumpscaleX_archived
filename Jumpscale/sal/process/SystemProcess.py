@@ -644,7 +644,7 @@ class SystemProcess(j.application.JSBaseClass):
             if process.pid == pid:
                 return process
         if die:
-            raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
+            raise j.exceptions.NotFound("Could not find process with pid:%s" % pid)
 
     def getProcessPidsFromUser(self, user):
 

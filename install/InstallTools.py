@@ -636,7 +636,7 @@ class JSExceptions:
         class Halt(BaseJSException):
             pass
 
-        class Runtime(BaseJSException):
+        class RuntimeError(BaseJSException):
             pass
 
         class Input(BaseJSException):
@@ -684,6 +684,7 @@ class JSExceptions:
         self.NotImplemented = NotImplemented
         self.Input = Input
         self.Value = Value
+        self.RuntimeError = RuntimeError
         self.Runtime = RuntimeError
         self.Halt = Halt
         self.Base = BaseJSException
