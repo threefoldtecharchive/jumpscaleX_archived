@@ -99,7 +99,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         # add certs
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "etc/ssl/certs/")
         self.tools.dir_ensure(dir_dest)
-        self._copy("/etc/ssl/certs", dir_dest)
+        self._copy("/sandbox/cfg/ssl/certs", dir_dest)
 
     @builder_method()
     def test(self):

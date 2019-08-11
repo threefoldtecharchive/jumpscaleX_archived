@@ -11,7 +11,7 @@ class BuilderCaddyFilemanager(j.builders.system._BaseClass):
         self.go_runtime = j.builders.runtimes.golang
         self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
         # self.root_dirs = {
-        #     '/etc/ssl/certs': '/etc/ssl/certs'
+        #     '/sandbox/cfg/ssl/certs': '/sandbox/cfg/ssl/certs'
         # }
 
     @builder_method()
@@ -41,7 +41,7 @@ class BuilderCaddyFilemanager(j.builders.system._BaseClass):
         bin_dest = self.tools.joinpaths(dest_path, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
 
-        self.root_dirs = {"/etc/ssl/certs": "/etc/ssl/certs"}
+        self.root_dirs = {"/sandbox/cfg/ssl/certs": "/sandbox/cfg/ssl/certs"}
 
         # empty dirs
         self.tools.dir_ensure(self.tools.joinpaths(dest_path, "sandbox", "var", "log"))
@@ -60,10 +60,10 @@ class BuilderCaddyFilemanager(j.builders.system._BaseClass):
         file_dest = self.tools.joinpaths(dest_path, ".startup.toml")
         self._write(file_dest, self.tools.file_read(startup_file))
 
-        # copy /etc/ssl/cert
+        # copy /sandbox/cfg/ssl/cert
         certs = self.tools.joinpaths(dest_path, "etc", "ssl", "certs")
         self.tools.dir_ensure(certs)
-        self.tools.dir_copy(source="/etc/ssl/certs", dest=certs)
+        self.tools.dir_copy(source="/sandbox/cfg/ssl/certs", dest=certs)
         if flist_create:
             print(self._flist_create(zhub_client=zhub_client))
         self._done_set("sandbox")

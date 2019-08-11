@@ -147,7 +147,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._bcdb_instances = {}
         storclients = []
         for name in names:
-            cl = self._get_storclient(name)
+            try:
+                cl = self._get_storclient(name)
+            except:
+                self._log_warning("cannot connect storclient:%s" % name)
+                continue
             if cl not in storclients:
                 storclients.append(cl)
         for cl in storclients:

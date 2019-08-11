@@ -134,7 +134,7 @@ class BuilderGitea(BuilderGolangTools):
         # add certs
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "etc/ssl/certs/")
         self.tools.dir_ensure(dir_dest)
-        self._copy("/etc/ssl/certs", dir_dest)
+        self._copy("/sandbox/cfg/ssl/certs", dir_dest)
 
         # gitea bin
         self.tools.dir_ensure("{DIR_SANDBOX}/sandbox/bin")

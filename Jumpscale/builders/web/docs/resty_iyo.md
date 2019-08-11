@@ -27,7 +27,7 @@ http {
     # needed by lua-resty-http
     resolver 8.8.8.8 4.2.2.2 ipv6=off;
     resolver_timeout 5s;
-    lua_ssl_trusted_certificate '/etc/ssl/certs/ca-certificates.crt';
+    lua_ssl_trusted_certificate '/sandbox/cfg/ssl/certs/ca-certificates.crt';
     lua_ssl_verify_depth 2;
 
     server {

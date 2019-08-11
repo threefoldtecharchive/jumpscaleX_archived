@@ -105,8 +105,17 @@ class BuilderLua(j.builders.system._BaseClass):
         path = luarocks_profile.env_get("PATH")  # .replace(";", ":")
         self.profile.path_add(path, check_exists=False)
 
-    def lua_rock_install(self, name, reset=False):
+    def lua_rock_install(self, name, reset=False, profileset=True):
+        """
+        kosmos 'j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")'
+        :param name:
+        :param reset:
+        :return:
+        """
         self._log_info("lua_rock_install: %s" % name)
+        if profileset:
+            self.profile_luarocks_select()
+
         if not reset and self._done_check("lua_rock_install_%s" % name):
             return
 
@@ -137,8 +146,9 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self.profile_luarocks_select()
 
-        C = """
+        C = """        
         luaossl
+        lua-resty-auto-ssl
         # luasec
         lapis
         moonscript
@@ -197,7 +207,7 @@ class BuilderLua(j.builders.system._BaseClass):
                 continue
             if line.startswith("#"):
                 continue
-            self.lua_rock_install(line, reset=reset)
+            self.lua_rock_install(line, reset=reset, profileset=False)
 
         if j.core.platformtype.myplatform.platform_is_ubuntu:
             self.lua_rock_install("lua-geoip", reset=reset)
@@ -282,11 +292,38 @@ class BuilderLua(j.builders.system._BaseClass):
         pushd '/sandbox/openresty/luarocks/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
+        ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl
         popd
 
 
         """
         self._execute(C)
+        self.install_certificates()
+
+    @builder_method()
+    def install_certificates(self, reset=False):
+        """
+        kosmos 'j.builders.runtimes.lua.install_certificates()'
+        :return:
+        """
+        assert self._exists("/sandbox/openresty/resty-auto-ssl")
+        # j.sal.unix.addSystemGroup("www")
+        # j.sal.unix.addSystemUser("www", "www")
+        ssl_path = "/sandbox/cfg/ssl"
+        j.sal.fs.createDir(ssl_path)
+        # j.sal.fs.chown(ssl_path, "www", "www")
+        # j.sal.fs.chmod(ssl_path, 0o755)
+        # Generate a self signed fallback certificate
+        cmd = """
+        openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+            -subj '/CN=sni-support-required-for-valid-ssl' \
+            -keyout %s/resty-auto-ssl-fallback.key \
+            -out %s/resty-auto-ssl-fallback.crt
+        """ % (
+            ssl_path,
+            ssl_path,
+        )
+        self._execute(cmd)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):

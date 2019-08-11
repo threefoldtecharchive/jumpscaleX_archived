@@ -88,7 +88,7 @@ class BuilderThreebot(j.builders.system._BaseClass):
 
         self.tools.dir_ensure(self.DIR_SANDBOX + "etc/ssl/")
         self.tools.dir_ensure(self.DIR_SANDBOX + "etc/resty-auto-ssl")
-        self.tools.copyTree("/etc/ssl/", self.DIR_SANDBOX + "etc/ssl/")
+        self.tools.copyTree("/sandbox/cfg/ssl/", self.DIR_SANDBOX + "etc/ssl/")
         self.tools.copyTree("/etc/resty-auto-ssl", self.DIR_SANDBOX + "etc/resty-auto-ssl")
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "threebot_startup.toml")
