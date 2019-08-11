@@ -50,7 +50,7 @@ class ZDBServer(JSConfigClient):
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
 
-        kosmos 'j.servers.zdb.start()'
+        kosmos 'j.servers.zdb.default.start()'
 
         """
         self.startupcmd.start()
@@ -66,21 +66,28 @@ class ZDBServer(JSConfigClient):
         # zdb doesn't understand hostname
         addr = socket.gethostbyname(self.addr)
 
-        idir = "%s/index/" % (self.datadir)
-        ddir = "%s/data/" % (self.datadir)
-        j.sal.fs.createDir(idir)
-        j.sal.fs.createDir(ddir)
+        # idir = "%s/index/" % (self.datadir)
+        # ddir = "%s/data/" % (self.datadir)
+        # j.sal.fs.createDir(idir)
+        # j.sal.fs.createDir(ddir)
 
-        cmd = "zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect" % (
+        # cmd = "zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect" % (
+        #     self.addr,
+        #     self.port,
+        #     idir,
+        #     ddir,
+        #     self.mode,
+        #     self.adminsecret_,
+        # )
+        cmd = "zdb --listen %s --port %s --mode %s --admin %s --protect" % (
             self.addr,
             self.port,
-            idir,
-            ddir,
             self.mode,
             self.adminsecret_,
         )
+
         return j.servers.startupcmd.get(
-            name="zdb", cmd_start=cmd, path="/tmp", ports=[self.port], executor=self.executor
+            name="zdb", cmd_start=cmd, path=self.datadir, ports=[self.port], executor=self.executor
         )
 
     def destroy(self):

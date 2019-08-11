@@ -24,7 +24,7 @@ class ZDBClientSeqMode(ZDBClientBase):
     def set(self, data, key=None):
         key1 = self._key_encode(key)
         res = self.redis.execute_command("SET", key1, data)
-        if not res:  # data already present, 0-db did nothing.
+        if not res:  # data already present and the same, 0-db did nothing.
             return res
 
         key = self._key_decode(res)

@@ -262,7 +262,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         else:
             raise j.exceptions.Base("not supported")
 
-    def stop(self, force=True, waitstop=True, die=True):
+    def stop(self, force=True, waitstop=True, die=True, timeout=None):
         """
 
         :param force: will do a hardkill after the softkill even if it measures down
@@ -272,6 +272,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
         """
         self._log_warning("stop: %s" % self.name)
 
+        if not timeout:
+            timeout = self.timeout
+
         if self.is_running() == False and force == False:  # if we don't know it will be -1
             return
 
@@ -279,14 +282,15 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if self._softkill():
             # means we really tried a softkill
-            stopped = self.wait_stopped(die=False, timeout=self.timeout)
-            if stopped == True and force == False:  # this means we really know for sure it died
-                return True
+            if force is False:
+                stopped = self.wait_stopped(die=False, timeout=timeout)
+                if stopped == True and force == False:  # this means we really know for sure it died
+                    return True
 
         self._hardkill()  # will remove tmux pane or other hard method of stopping
 
         if waitstop:
-            self.wait_stopped(die=die, timeout=self.timeout)
+            self.wait_stopped(die=die, timeout=timeout)
             if die:
                 return True
         return -1  # we could not know for sure
@@ -421,7 +425,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
                 return self._error_raise("could not stop")
             return -1  # we don't know
 
-    def wait_running(self, die=True, timeout=10):
+    def wait_running(self, die=True, timeout=120):
         if timeout is None:
             timeout = self.timeout
         end = j.data.time.epoch + timeout
@@ -515,7 +519,9 @@ class StartupCMD(j.application.JSBaseConfigClass):
             export {{key}}='{{val}}'
             {% endfor %}
             . /sandbox/env.sh
+            set +ex
             {% if cmdpath != None %}
+            mkdir -p {{cmdpath}}
             cd {{cmdpath}}
             {% endif %}
             bash -c \"exec -a startupcmd_{{name}} {{cmd}}\"

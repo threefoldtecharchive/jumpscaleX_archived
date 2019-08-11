@@ -47,6 +47,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def reset(self):
         # make everything in metadata stor empty
+        from pudb import set_trace
+
+        set_trace()
         self._reset_runtime_metadata()
         r = self._redis
         self._bcdb.storclient.delete(0)  # remove the metadata
@@ -115,7 +118,6 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _verify(self):
         check = []
-
         for s in self._data.schemas:
             if s.md5 in check:
                 raise j.exceptions.Base("corrupted metadata index, duplicate in schema (md5")

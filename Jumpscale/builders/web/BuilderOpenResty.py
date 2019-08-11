@@ -56,7 +56,6 @@ class BuilderOpenResty(j.builders.system._BaseClass):
         """
         # copy the files from the sandbox !!! IMPORTANT
 
-        j.builders.apps.threebot.base_bin()
         C = """
         ln -sf /sandbox/openresty/bin/resty /sandbox/bin/resty
         ln -f -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua        

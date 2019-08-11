@@ -273,7 +273,7 @@ class BuilderLua(j.builders.system._BaseClass):
     def install(self, reset=False, deps_reset=False):
         """
         will build & install in sandbox
-        kosmos 'j.builders.runtimes.lua.install()'
+        kosmos 'j.builders.runtimes.lua.install(reset=False)'
         :return:
         """
         j.builders.web.openresty.install(reset=deps_reset)
@@ -292,12 +292,46 @@ class BuilderLua(j.builders.system._BaseClass):
         pushd '/sandbox/openresty/luarocks/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
-        ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl
         popd
 
 
         """
         self._execute(C)
+
+        self.install_certificates()
+        self.install_autossl()
+
+    def install_autossl(self):
+        """
+        kosmos 'j.builders.runtimes.lua.install_autossl()'
+        :return:
+        """
+
+        if self.tools.platform_is_ubuntu:
+            C = """
+            ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl        
+            ln -sf /sandbox/openresty/resty-auto-ssl /bin/resty-auto-ssl
+            ln -sf /sandbox/openresty/resty-auto-ssl /bin/resty-auto-ssl
+            mkdir -p /etc/resty-auto-ssl/storage/file
+            """
+        else:
+            C = """
+            ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl
+            """
+
+            self._execute(C)
+
+        ssl_path = "/sandbox/cfg/ssl"
+        if self.tools.platform_is_ubuntu:
+            j.sal.unix.addSystemGroup("www")
+            j.sal.unix.addSystemUser("www", "www")
+            j.sal.fs.chown(ssl_path, "www", "www")
+            j.sal.fs.chmod(ssl_path, 0o755)
+            j.sal.fs.chown("/etc/resty-auto-ssl", "www", "www")
+            j.sal.fs.chmod("/etc/resty-auto-ssl", 0o755)
+            j.sal.fs.chown("/bin/resty-auto-ssl", "www", "www")
+            j.sal.fs.chmod("/bin/resty-auto-ssl", 0o755)
+
         self.install_certificates()
 
     @builder_method()
@@ -306,13 +340,10 @@ class BuilderLua(j.builders.system._BaseClass):
         kosmos 'j.builders.runtimes.lua.install_certificates()'
         :return:
         """
+
         assert self._exists("/sandbox/openresty/resty-auto-ssl")
-        # j.sal.unix.addSystemGroup("www")
-        # j.sal.unix.addSystemUser("www", "www")
         ssl_path = "/sandbox/cfg/ssl"
         j.sal.fs.createDir(ssl_path)
-        # j.sal.fs.chown(ssl_path, "www", "www")
-        # j.sal.fs.chmod(ssl_path, 0o755)
         # Generate a self signed fallback certificate
         cmd = """
         openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
