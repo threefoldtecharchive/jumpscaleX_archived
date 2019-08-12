@@ -38,8 +38,8 @@ def main(self):
     username = "" (S)           # User name
     
     """
-    bcdb = j.data.bcdb.new("test_export")
-    bcdb.reset()
+    bcdb = j.data.bcdb.new("test_export", reset=True)
+
     m = bcdb.model_get_from_schema(SCHEMA)
     for i in range(10):
         o = m.new()
