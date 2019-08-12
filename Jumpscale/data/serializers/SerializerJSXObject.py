@@ -6,7 +6,7 @@ class SerializerJSXObject(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 
-    def dumps(self, obj, model=None, test=True):
+    def dumps(self, obj, model=None, test=True, remote=False):
         """
         obj is the dataobj for JSX
 
@@ -28,7 +28,7 @@ class SerializerJSXObject(SerializerBase):
             obj._capnp_obj_ = obj._capnp_obj.as_builder()
             data = obj._capnp_obj_.to_bytes_packed()
 
-        if not model:
+        if not model or remote:
 
             version = 1
             data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(obj._schema._md5)) + data
@@ -45,7 +45,10 @@ class SerializerJSXObject(SerializerBase):
 
         if test:
             # if not md5 in j.data.schema.md5_to_schema:
-            self.loads(data=data2, model=model)
+            if remote:
+                self.loads(data=data2)
+            else:
+                self.loads(data=data2, model=model)
 
         return data2
 

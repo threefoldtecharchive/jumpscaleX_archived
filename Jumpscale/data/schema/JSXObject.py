@@ -191,6 +191,11 @@ class JSXObject(j.application.JSBaseClass):
         return j.data.serializers.jsxdata.dumps(self, model=self._model)
 
     @property
+    def _data_remote(self):
+        self._capnp_obj  # leave, is to make sure we have error if something happens
+        return j.data.serializers.jsxdata.dumps(self, model=self._model, remote=True)
+
+    @property
     def _ddict_hr(self):
         """
         human readable dict
