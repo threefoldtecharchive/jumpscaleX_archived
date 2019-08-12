@@ -188,7 +188,7 @@ class JSXObject(j.application.JSBaseClass):
     @property
     def _data(self):
         self._capnp_obj  # leave, is to make sure we have error if something happens
-        return j.data.serializers.jsxdata.dumps(self, model=self._model)
+        return j.data.serializers.jsxdata.dumps(self, model=self._model, remote=False)
 
     @property
     def _data_remote(self):

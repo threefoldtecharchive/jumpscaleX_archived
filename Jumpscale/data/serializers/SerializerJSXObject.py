@@ -6,7 +6,7 @@ class SerializerJSXObject(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 
-    def dumps(self, obj, model=None, test=True, remote=False):
+    def dumps(self, obj, model=None, test=False, remote=False):
         """
         obj is the dataobj for JSX
 
@@ -28,13 +28,21 @@ class SerializerJSXObject(SerializerBase):
             obj._capnp_obj_ = obj._capnp_obj.as_builder()
             data = obj._capnp_obj_.to_bytes_packed()
 
-        if not model or remote:
-
+        if not model and not remote:
             version = 1
             data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(obj._schema._md5)) + data
-            j.core.db.hset(
-                "debug1", obj._schema._md5, "%s:%s:%s" % (obj.id, obj._schema._md5, obj._schema.url)
-            )  # DEBUG
+        elif remote:
+            version = 2
+            if obj.id:
+                objid = obj.id
+            else:
+                objid = 0
+            data2 = (
+                version.to_bytes(1, "little")
+                + objid.to_bytes(4, "little")
+                + bytes(bytearray.fromhex(obj._schema._md5))
+                + data
+            )
         else:
             version = 10
             sid = obj._model.sid
@@ -46,7 +54,8 @@ class SerializerJSXObject(SerializerBase):
         if test:
             # if not md5 in j.data.schema.md5_to_schema:
             if remote:
-                self.loads(data=data2)
+                u = self.loads(data=data2)
+                assert u.id == objid
             else:
                 self.loads(data=data2, model=model)
 
@@ -62,23 +71,33 @@ class SerializerJSXObject(SerializerBase):
         if model:
             assert isinstance(model, j.data.bcdb._BCDBModelClass)
         versionnr = int.from_bytes(data[0:1], byteorder="little")
-        if versionnr == 1:
+        if versionnr in [1, 2]:
             if model:
                 raise j.exceptions.Base("when model need to use the sid")
-            md5bin = data[1:17]
-            md5 = md5bin.hex()
-            data2 = data[17:]
+            if versionnr == 1:
+                md5bin = data[1:17]
+                md5 = md5bin.hex()
+                data2 = data[17:]
+
+            elif versionnr == 2:
+                obj_id = int.from_bytes(data[1:5], byteorder="little")
+                md5bin = data[5:21]
+                md5 = md5bin.hex()
+                data2 = data[21:]
+
             if md5 in j.data.schema.md5_to_schema:
                 schema = j.data.schema.md5_to_schema[md5]
                 obj = schema.new(capnpdata=data2, model=model)
-
+                if versionnr == 2:
+                    obj.id = obj_id
+                    if obj.id == 0:
+                        obj.id = None
                 return obj
             else:
-                j.shell()
                 if not model:
                     raise j.exceptions.Base("could not find schema with md5:%s, no model specified" % md5)
-                j.shell()
                 raise j.exceptions.Base("could not find schema with md5:%s" % md5)
+
         elif versionnr == 10:
             if not model:
                 raise j.exceptions.Base("model needs to be specified")
