@@ -39,7 +39,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         return self._schema_
 
     def python_code_get(self, value):
-        return self.toJSON(value)
+        return None
 
     def fromString(self, val):
         """
@@ -50,8 +50,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     def toData(self, val, model=None):
         if model:
             assert isinstance(model, j.data.bcdb._BCDBModelClass)
-        val = self.clean(val)
-        return j.data.serializers.jsxdata.dumps(val, model=model)
+        val2 = self.clean(val)
+        return j.data.serializers.jsxdata.dumps(val2, model=model, remote=True)
 
     def toString(self, val):
         """

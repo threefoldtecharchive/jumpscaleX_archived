@@ -48,17 +48,23 @@ class JSXObject2(j.data.schema._JSXObjectClass):
 
         #this deals with lists and other object types which have customer JSX types
         #if a primitive type then it will just be returned immediately from the capnp
+        # {% if prop.name == "nodes" %}
+        # from pudb import set_trace; set_trace()
+        #
+        # {% endif %}
         if "{{prop.name}}" in self._deserialized_items:
             return self._deserialized_items["{{prop.name}}"]
         else:
             {% if prop.has_jsxobject %}
             v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}},model=self._model)
+            self._deserialized_items["{{prop.name}}"] = v
             {% else %}
             v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}})
-            {% endif %}
             if isinstance(v,j.data.types._TypeBaseObjClass):
                 self._deserialized_items["{{prop.name}}"] = v
-            self._deserialized_items["{{prop.name}}"] = v
+            else:
+                return v
+            {% endif %}
         return self._deserialized_items["{{prop.name}}"]
 
     @{{prop.name}}.setter

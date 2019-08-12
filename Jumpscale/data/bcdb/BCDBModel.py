@@ -409,9 +409,12 @@ class BCDBModel(j.application.JSBaseClass):
             data = self._dict_process_in(data)
         elif j.data.types.json.check(str(data)):
             data = j.data.serializers.json.loads(data)
+
         if data:
             if isinstance(data, dict):
                 obj = self.schema.new(datadict=data, model=self)
+            elif isinstance(data, bytes):
+                obj = self.schema.new(capnpdata=data, model=self)
             else:
                 raise j.exceptions.Base("need dict")
         else:
