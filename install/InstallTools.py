@@ -2773,7 +2773,7 @@ class MyEnv:
             sys.exit(1)
 
     @staticmethod
-    def exception_handle(exception_obj, die=True, stdout=True, level=50):
+    def exception_handle(exception_obj, die=True, stdout=True, level=50, stack_go_up=0):
         """
         e is the error as raised by e.g. try/except statement
         :param exception_obj: the exception obj coming from the try/except
@@ -2793,6 +2793,8 @@ class MyEnv:
 
         """
         ttype, msg, tb = sys.exc_info()
+        if stack_go_up:
+            j.shell()
         return MyEnv.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
     @staticmethod

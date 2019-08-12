@@ -6,7 +6,7 @@ name* = ""
 threebot_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
 email* = ""                             #optional, not required
 pubkey = ""                             #public key of the 3bot
-ipaddr* = ""                            #how to reach the digitalme (3bot)
+ipaddr* = ""
 
 @url = jumpscale.bcdb.circle.2          #circle of users
 name* = "circle_bcdb"

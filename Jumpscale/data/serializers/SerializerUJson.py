@@ -38,7 +38,7 @@ class SerializerUJson(SerializerBase):
                 obj, ensure_ascii=False, sort_keys=sort_keys, indent=indent, cls=Encoder.get(encoding=encoding)
             )
         except Exception as e:
-            return j.exceptions.Value("Cannot dump (package) json", data=obj, parent_exception=e)
+            raise j.exceptions.Value("Cannot dump (package) json", data=obj, parent_exception=e)
 
     def loads(self, s):
         if isinstance(s, (bytes, bytearray)):
@@ -48,4 +48,4 @@ class SerializerUJson(SerializerBase):
             try:
                 return json.loads(s)
             except Exception as e:
-                return j.exceptions.Value("Cannot load json", data=s, parent_exception=e)
+                raise j.exceptions.Value("Cannot load json", data=s, parent_exception=e)
