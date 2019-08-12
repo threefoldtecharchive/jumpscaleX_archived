@@ -585,7 +585,6 @@ class BaseJSException(Exception):
         )
 
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        # self._tb = traceback.extract_tb(exc_traceback)
         self._tb = exc_traceback
         self._exc_traceback = exc_traceback
         self._exc_value = exc_value
@@ -630,63 +629,63 @@ class BaseJSException(Exception):
 
 class JSExceptions:
     def __init__(self):
-        class Permission(BaseJSException):
+        class Permission1(BaseJSException):
             pass
 
-        class Halt(BaseJSException):
+        class Halt1(BaseJSException):
             pass
 
-        class RuntimeError(BaseJSException):
+        class RuntimeError1(BaseJSException):
             pass
 
-        class Input(BaseJSException):
+        class Input1(BaseJSException):
             pass
 
-        class Value(BaseJSException):
+        class Value1(BaseJSException):
             pass
 
-        class NotImplemented(BaseJSException):
+        class NotImplemented1(BaseJSException):
             pass
 
-        class BUG(BaseJSException):
+        class BUG1(BaseJSException):
             pass
 
-        class JSBUG(BaseJSException):
+        class JSBUG1(BaseJSException):
             pass
 
-        class Operations(BaseJSException):
+        class Operations1(BaseJSException):
             pass
 
-        class IO(BaseJSException):
+        class IO1(BaseJSException):
             pass
 
-        class NotFound(BaseJSException):
+        class NotFound1(BaseJSException):
             pass
 
-        class Timeout(BaseJSException):
+        class Timeout1(BaseJSException):
             pass
 
-        class SSHError(BaseJSException):
+        class SSHError1(BaseJSException):
             pass
 
-        class SSHTimeout(BaseJSException):
+        class SSHTimeout1(BaseJSException):
             pass
 
-        self.Permission = Permission
-        self.SSHTimeout = SSHTimeout
-        self.SSHError = SSHError
-        self.Timeout = Timeout
-        self.NotFound = NotFound
-        self.IO = IO
-        self.Operations = Operations
-        self.JSBUG = JSBUG
-        self.BUG = BUG
-        self.NotImplemented = NotImplemented
-        self.Input = Input
-        self.Value = Value
-        self.RuntimeError = RuntimeError
-        self.Runtime = RuntimeError
-        self.Halt = Halt
+        self.Permission = Permission1
+        self.SSHTimeout = SSHTimeout1
+        self.SSHError = SSHError1
+        self.Timeout = Timeout1
+        self.NotFound = NotFound1
+        self.IO = IO1
+        self.Operations = Operations1
+        self.JSBUG = JSBUG1
+        self.BUG = BUG1
+        self.NotImplemented = NotImplemented1
+        self.Input = Input1
+        self.Value = Value1
+        self.RuntimeError = RuntimeError1
+        self.Runtime = RuntimeError1
+        self.Halt = Halt1
         self.Base = BaseJSException
 
 
@@ -886,7 +885,8 @@ class Tools:
 
         # first deal with traceback
         if exception and not tb:
-            if isinstance(exception, BaseJSException):
+            # if isinstance(exception, BaseJSException):
+            if hasattr(exception, "parent_exception"):
                 tb = exception._tb
             else:
                 extype_, value_, tb = sys.exc_info()
@@ -894,7 +894,7 @@ class Tools:
         if exception:
             # make sure exceptions get the right priority
             if not msg:
-                if isinstance(exception, BaseJSException):
+                if hasattr(exception, "parent_exception"):
                     msg = exception.message
                 else:
                     msg = exception.__repr__()
@@ -903,12 +903,13 @@ class Tools:
             if cat is "":
                 cat = "exception"
 
-            if isinstance(exception, BaseJSException):
+            if hasattr(exception, "parent_exception"):
                 if not data:
                     # copy data from the exception
                     data = exception.data
                 if exception.parent_exception:
-                    if isinstance(exception.parent_exception, BaseJSException):
+                    # if isinstance(exception.parent_exception, BaseJSException):
+                    if hasattr(exception.parent_exception, "parent_exception"):
                         parent_exception = "      " + exception.parent_exception.str_1_line
                     else:
                         parent_exception = Tools.text_indent(exception.parent_exception, 6)
@@ -2751,7 +2752,6 @@ class MyEnv:
         :param level:
         :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
         """
-
         try:
             logdict = Tools.log(tb=tb, level=level, exception=exception_obj, stdout=stdout)
         except Exception as e:
@@ -2761,6 +2761,7 @@ class MyEnv:
             traceback.print_exception(etype=ttype, tb=tb, value=msg)
             Tools.pprint("{RESET}")
             sys.exit(1)
+            Tools.shell()
 
         if MyEnv.debug and traceback and pudb:
             # exception_type, exception_obj, tb = sys.exc_info()

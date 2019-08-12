@@ -144,8 +144,6 @@ class JSConfigs(JSBase, Attr):
                 jsconfig.save()
 
         jsconfig._triggers_call(jsconfig, "get")
-        # if kwargs:
-        #     jsconfig._data_update(kwargs)
         return jsconfig
 
     def _get(self, name="main", die=True):

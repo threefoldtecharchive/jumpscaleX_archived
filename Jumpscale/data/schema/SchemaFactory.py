@@ -171,6 +171,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         s = Schema(text=schema_text, md5=md5, url=url)
 
+        assert s.url
+
         # add md5 to the list if its not there yet
         if not s.url in self.url_to_md5:
             self.url_to_md5[s.url] = []
