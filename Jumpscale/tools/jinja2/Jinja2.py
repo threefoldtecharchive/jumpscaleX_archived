@@ -123,13 +123,15 @@ class Jinja2(j.application.JSBaseClass):
         if md5 in self._hash_to_codeobj:
             return self._hash_to_codeobj[md5]
 
-        if dest is None and name is not None:
-            name = name.lower()
-            dest = "%s/%s.py" % (self._codegendir, name)
-            dest_md5 = "%s/%s.md5" % (self._codegendir, name)
-        else:
-            dest = "%s/_%s.py" % (self._codegendir, md5)
-            dest_md5 = None
+        dest_md5 = None
+        if dest is None:
+            if name is not None:
+                name = name.lower()
+                dest = "%s/%s.py" % (self._codegendir, name)
+                dest_md5 = "%s/%s.md5" % (self._codegendir, name)
+            else:
+                dest = "%s/_%s.py" % (self._codegendir, md5)
+                dest_md5 = None
 
         self._log_debug("python code render:%s" % (dest))
 

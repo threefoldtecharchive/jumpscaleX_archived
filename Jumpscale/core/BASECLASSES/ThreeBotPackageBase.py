@@ -18,13 +18,15 @@
 # LICENSE END
 
 
-from Jumpscale import j
+# from Jumpscale import j
 from .JSBase import JSBase
 
 
-from .JSConfig import JSConfig
-
-
-class ThreeBotPackageBase(JSConfig):
+class ThreeBotPackageBase(JSBase):
     def _init_pre2(self, **kwargs):
-        assert ""
+
+        assert "package" in kwargs
+        self._package = kwargs["package"]
+
+        self.package_root = self._package.path
+        self.gedis_server = self._package.gedis_server

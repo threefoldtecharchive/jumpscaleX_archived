@@ -863,7 +863,8 @@ class Tools:
         data_show=True,
         exception=None,  # is jumpscale/python exception
         replace=True,  # to replace the color variables for stdout
-        stdout=True,  # return as text or send to stdount
+        stdout=True,  # return as logdict or send to stdout
+        source=None,
     ):
         """
 
@@ -931,6 +932,8 @@ class Tools:
         logdict["linenr"] = linenr
         logdict["filepath"] = fname
         logdict["processid"] = MyEnv.appname
+        if source:
+            logdict["source"] = source
 
         logdict["level"] = level
         if context:
@@ -956,17 +959,29 @@ class Tools:
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
 
-        if tb or exception:
+        iserror = tb or exception
+        return Tools.process_logdict_for_handlers(logdict, iserror)
+
+    @staticmethod
+    def process_logdict_for_handlers(logdict, iserror=True):
+        """
+
+        :param logdict:
+        :param iserror:   if error will use MyEnv.errorhandlers: otherwise MyEnv.loghandlers
+        :return:
+        """
+
+        if iserror:
             for handler in MyEnv.errorhandlers:
                 try:
-                    handler(logdict)
+                    logdict = handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
         else:
 
             for handler in MyEnv.loghandlers:
                 try:
-                    handler(logdict)
+                    logdict = handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
 
@@ -1436,6 +1451,9 @@ class Tools:
         #     logdict["context"] = ""
 
         out = ""
+
+        if "source" in logdict:
+            out += Tools.text_replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
 
         if "traceback" in logdict and logdict["traceback"]:
             out += Tools.text_replace("{RED}--TRACEBACK------------------{RESET}\n")
@@ -2723,10 +2741,19 @@ class MyEnv:
             MyEnv.config_save()
 
     @staticmethod
-    def excepthook(exception_type, exception_obj, tb, die=True):
+    def excepthook(exception_type, exception_obj, tb, die=True, stdout=True, level=50):
+        """
+        :param exception_type:
+        :param exception_obj:
+        :param tb:
+        :param die:
+        :param stdout:
+        :param level:
+        :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
+        """
 
         try:
-            Tools.log(tb=tb, level=50, exception=exception_obj)
+            logdict = Tools.log(tb=tb, level=level, exception=exception_obj, stdout=stdout)
         except Exception as e:
             Tools.pprint("{RED}ERROR IN LOG HANDLER")
             print(e)
@@ -2740,19 +2767,32 @@ class MyEnv:
             pudb.post_mortem(tb)
         # Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
         if die == False:
-            return
+            return logdict
         else:
             sys.exit(1)
 
     @staticmethod
-    def exception_handle(e, die=True):
+    def exception_handle(exception_obj, die=True, stdout=True, level=50):
         """
         e is the error as raised by e.g. try/except statement
-        :param e:
-        :return:
+        :param exception_obj: the exception obj coming from the try/except
+        :param die: die if error
+        :param stdout: if True send the error log to stdout
+        :param level: 50 is error critical
+        :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
+
+        example
+
+
+        try:
+            something
+        except Exception as e:
+            logdict = j.core.myenv.exception_handle(e,die=False,stdout=True)
+
+
         """
         ttype, msg, tb = sys.exc_info()
-        return MyEnv.excepthook(ttype, e, tb, die=die)
+        return MyEnv.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
     @staticmethod
     def init(configdir=None, reset=False):

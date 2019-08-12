@@ -222,7 +222,7 @@ class Application(object):
 
     @debug.setter
     def debug(self, value):
-        self._debug = value
+        self._j.core.myenv.debug = value
 
     def break_into_jshell(self, msg="DEBUG NOW"):
         if self.debug is True:

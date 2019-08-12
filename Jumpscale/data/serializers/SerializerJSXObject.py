@@ -85,4 +85,4 @@ class SerializerJSXObject(SerializerBase):
             return model2.schema.new(capnpdata=data2, model=model)
         else:
 
-            raise j.exceptions.Base("version wrong")
+            raise j.exceptions.Base("version wrong, versionnr found:%s (needs to be 1 or 10)" % versionnr)

@@ -547,6 +547,9 @@ class BCDB(j.application.JSBaseClass):
         """
         will walk over directory and each class needs to be a model
         when overwrite used it will overwrite the generated models (careful)
+
+        support for *.py and *.toml files
+
         :param path:
         :return: None
         """
