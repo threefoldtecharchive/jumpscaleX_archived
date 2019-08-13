@@ -378,8 +378,8 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_stop(force=True)
         if self._sqlite_index_client:
             # todo: check tht its open
-            j.shell()
-            self._sqlite_index_client.close()
+            if not self._sqlite_index_client.is_closed():
+                self._sqlite_index_client.close()
 
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
