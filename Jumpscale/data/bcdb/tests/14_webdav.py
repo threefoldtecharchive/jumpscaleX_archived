@@ -33,8 +33,7 @@ def main(self):
     # sid = "7"
     test_cmd = """
 from Jumpscale import j
-bcdb = j.data.bcdb.get("test")
-bcdb.reset()
+bcdb = j.data.bcdb.get("test", reset=True)
 vfs = j.data.bcdb._get_vfs()
 
 SCHEMA = \"\"\"

@@ -41,8 +41,8 @@ def main(self):
     # md5 = "cbf134f55d0c7149ef188cf8a52db0eb"
     # sid = "7"
 
-    bcdb = j.data.bcdb.get("test")
-    bcdb.reset()
+    bcdb = j.data.bcdb.get("test", reset=True)
+
     vfs = j.data.bcdb._get_vfs()
 
     m_wallet_test = bcdb.model_get_from_schema(SCHEMA)
@@ -72,8 +72,6 @@ def main(self):
 
     r = vfs.get("/test/data")
     namespaces = [i for i in r.list()]
-    print("TODO@@@@@@@@@@@@@@@@@@@namespaces")
-    # assert 1 in namespaces
 
     assert "system" in bcdb_names
     r = vfs.get("/system/data")
@@ -178,21 +176,20 @@ def main(self):
     r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
     obj = r.get()
     r.delete()
-
     schema_wallet_obj = j.data.serializers.json.loads(schema)
     schema_wallet_md5 = schema_wallet_obj["md5"]
     schema_wallet_sid = schema_wallet_obj["sid"]
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
+        vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_should_also_be_deleted = vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
+        vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
 
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_should_be_deleted_too = vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
+        vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
 

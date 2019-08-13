@@ -31,8 +31,8 @@ def main(self):
     tags = ["color:blue", "color:white", "font:arial", "font:tahoma", "style:italian"]
     types = ["md", "pdf", "xls", "doc", "jpg"]
     contents = ["threefold foundation", "the new internet", "change the world", "digital freedom", "the future of IT"]
-    bcdb = j.data.bcdb.get("test_fs")
-    bcdb.reset()
+    bcdb = j.data.bcdb.get("test_fs", reset=True)
+
     cl = j.clients.sonic.get_client_bcdb()
     cl.flush("test_fs")
     file_model = bcdb.model_get_from_file("{}/models_system/FILE.py".format(self._dirpath_))
