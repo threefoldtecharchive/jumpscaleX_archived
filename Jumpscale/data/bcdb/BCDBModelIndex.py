@@ -346,6 +346,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         if not nid:
             nid = 1
         self._ids_redis.delete(self._id_redis_listkey_get(nid=nid))
+        self._ids_last[nid] = 0
 
     def _ids_init(self, nid=None):
         """

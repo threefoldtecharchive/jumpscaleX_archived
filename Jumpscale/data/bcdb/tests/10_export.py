@@ -88,7 +88,7 @@ def main(self):
 
         assert obj2._ddict_hr == obj._ddict_hr
         # data contains schema ID which should be the same as import export is ID deterministic
-        assert obj2._data == obj._data
+        assert obj2._ddict_json_hr == obj._ddict_json_hr
 
         assert obj._schema == obj2._schema
 

@@ -150,7 +150,7 @@ class BCDB(j.application.JSBaseClass):
             # the index rebuild needs to completely remove the index, show a warning sign
             self._log_warning("we need to rebuild the full index because iterator was not complete")
             # there is no other way we can do this because without iterator the rebuild index cannot be done
-            self.index_rebuild()
+            # self.index_rebuild()
 
     def export(self, path=None, encrypt=True):
         if not path:
@@ -383,9 +383,6 @@ class BCDB(j.application.JSBaseClass):
 
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
-        raise RuntimeError()
-        return
-        j.shell()
         # IF WE DO A FULL BLOWN REBUILD THEN WE NEED TO ITERATE OVER ALL OBJECTS AND CANNOT START FROM THE ITERATOR PER MODEL
         # this always needs to work, independent of state of index
         for model in self.models:
