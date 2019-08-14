@@ -500,8 +500,8 @@ class Application(object):
 
         def decrypt():
             try:
-                j.data.nacl.default.signingkey
-                j.data.nacl.default.privkey.public_key.encode()
+                j.data.nacl.default.signing_key
+                j.data.nacl.default.private_key.public_key.encode()
                 return True
             except Exception as e:
                 if str(e).find("jsx check") != -1:
