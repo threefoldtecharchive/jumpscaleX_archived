@@ -1,3 +1,4 @@
+from Jumpscale import j
 from bisect import bisect_left
 from bisect import bisect_right
 from contextlib import contextmanager

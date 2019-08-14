@@ -337,7 +337,7 @@ class BCDB(j.application.JSBaseClass):
         self.storclient.flush()
         self._redis_reset()
         j.sal.fs.remove(self._data_dir)
-
+        # for sql lite existing connection will fail if we remove the store file
         # all data is now removed
 
         self._init_props()
