@@ -40,8 +40,8 @@ def main(self):
     name* = (S)
     content*** = (S)
     """
-    bcdb = j.data.bcdb.get("test")
-    bcdb.reset()
+    bcdb = j.data.bcdb.get("test", reset=True)
+
     model = bcdb.model_get_from_schema(schema)
 
     for obj in data:

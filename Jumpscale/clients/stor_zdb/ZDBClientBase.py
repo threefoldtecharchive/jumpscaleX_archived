@@ -4,7 +4,6 @@ import redis
 
 class ZDBClientBase(j.application.JSBaseConfigClass):
     def _init(self, jsxobject=None, **kwargs):
-
         if "admin" in kwargs:
             admin = kwargs["admin"]
         else:
@@ -37,15 +36,20 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
 
             # DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
             # only go inside namespace if not in admin mode
-
-            if self.secret_ is "":
-                self._log_debug("select namespace:%s with NO secret" % (self.nsname))
-                self.redis.execute_command("SELECT", self.nsname)
-            else:
-                self._log_debug("select namespace:%s with a secret" % (self.nsname))
-                self.redis.execute_command("SELECT", self.nsname, self.secret_)
+            self._select_namespace()
 
         assert self.ping()
+
+    def _select_namespace(self, nsname=None):
+        if not nsname is None:
+            self.nsname = nsname
+
+        if self.secret_ is "":
+            self._log_debug("select namespace:%s with NO secret" % (self.nsname))
+            self.redis.execute_command("SELECT", self.nsname)
+        else:
+            self._log_debug("select namespace:%s with a secret" % (self.nsname))
+            self.redis.execute_command("SELECT", self.nsname, self.secret_)
 
     def _key_encode(self, key):
         return key
@@ -72,9 +76,13 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
     def flush(self):
         """
         will remove all data from the database DANGEROUS !!!!
+        This is only allowed on private and password protected namespace
+        You need to select the namespace before running the command.
         :return:
         """
-        self.redis.execute_command("FLUSH")
+        if not self.nsname in ["default", "system"]:
+            self._select_namespace()
+            self.redis.execute_command("FLUSH")
 
     def stop(self):
         pass

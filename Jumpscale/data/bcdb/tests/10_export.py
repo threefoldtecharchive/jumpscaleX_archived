@@ -41,6 +41,7 @@ def main(self):
     bcdb = j.data.bcdb.new("test_export", reset=True)
 
     m = bcdb.model_get_from_schema(SCHEMA)
+    # model ID will go from 1 to 10
     for i in range(10):
         o = m.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -49,19 +50,19 @@ def main(self):
         o.name = "myuser_%s" % i
         o.save()
 
-    SCHEMA = """
+    SCHEMA2 = """
     @url = threefoldtoken.wallet.test2
-    name* = "wallet"
-    addr = ""                   # Address    
+    lastname* = "lienard"
+    firstname = ""                   # Address    
     """
 
-    m2 = bcdb.model_get_from_schema(SCHEMA)
-
+    m2 = bcdb.model_get_from_schema(SCHEMA2)
+    # model ID will go from 11 to 20
     for i in range(10):
         o = m2.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test2"
-        o.addr = "something:%s" % i
-        o.name = "myuser_%s" % i
+        o.firstname = "firstname:%s" % i
+        o.lastname = "lastname:%s" % i
         o.save()
 
     p = "/tmp/bcdb_export"
@@ -71,8 +72,7 @@ def main(self):
             j.sal.fs.remove(p)
             bcdb.export(path=p, encrypt=encr)
 
-        obj = m2.get(13)  # because we check the second model that's start with id 11
-
+        obj = m2.get(13)  # because we check the second model that starts with id 11
         bcdb.reset()
 
         try:
@@ -82,11 +82,12 @@ def main(self):
             pass
 
         bcdb.import_(path=p)
+        m3 = bcdb.model_get_from_schema(SCHEMA2)
 
-        m3 = bcdb.model_get_from_schema(SCHEMA)
         obj2 = m3.get(13)
 
         assert obj2._ddict_hr == obj._ddict_hr
+        # data contains schema ID which should be the same as import export is ID deterministic
         assert obj2._data == obj._data
 
         assert obj._schema == obj2._schema

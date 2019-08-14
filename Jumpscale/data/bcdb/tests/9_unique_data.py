@@ -56,9 +56,8 @@ def main(self):
     j.servers.zdb.test_instance_start()
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique", secret="1234")
-    self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901, secret="1234")
-    self.bcdb = j.data.bcdb.new("test", storclient=self.zdb)
-    self.bcdb.reset()
+    self.zdb = j.clients.zdb.client_get(name="unique", port=9901, secret="1234")
+    self.bcdb = j.data.bcdb.new("test", storclient=self.zdb, reset=True)
     schema = j.data.schema.get_from_text(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
     schema_obj = self.model.new()
@@ -136,6 +135,7 @@ def main(self):
     schema_obj3 = self.model.new()
     assert schema_obj3.id == None
     schema_obj3.name = name
+
     schema_obj3.save()
 
     self.admin_zdb.namespace_delete("unique")

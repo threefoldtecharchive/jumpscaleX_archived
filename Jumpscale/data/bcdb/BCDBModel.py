@@ -165,7 +165,7 @@ class BCDBModel(j.application.JSBaseClass):
         self.bcdb.queue.put((None, ["STOP"], {}, event, None))
 
         event.wait(1000.0)  # will wait for processing
-        self.sqlite_index_client_stop()
+        self.bcdb.sqlite_index_client_stop()
         self.storclient.stop()
 
         self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")

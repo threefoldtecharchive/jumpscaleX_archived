@@ -158,7 +158,8 @@ class BCDB(j.application.JSBaseClass):
 
         for o in list(self.meta._data.schemas):
             m = self.model_get_from_schema(o.text)
-            dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
+            # to make schema export ID deterministic we add the sid at the beginning of the file name
+            dpath = "%s/%s__%s__%s" % (path, m.sid, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
@@ -191,7 +192,7 @@ class BCDB(j.application.JSBaseClass):
         max = 0
         # first load all schemas
         for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
-            url, md5 = schema_id.split("__")
+            sid, url, md5 = schema_id.split("__")
             schema_path = "%s/%s" % (path, schema_id)
             schema_text = j.sal.fs.readFile("%s/meta.schema" % schema_path)
             schema = j.data.schema.add_from_text(schema_text)[0]
@@ -200,7 +201,7 @@ class BCDB(j.application.JSBaseClass):
         # now load the data
         for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
             schema_path = "%s/%s" % (path, schema_id)
-            url, md5 = schema_id.split("__")
+            sid, url, md5 = schema_id.split("__")
             print("MD5: %s" % md5)
             model = models[md5]
             assert model.schema._md5 == md5
@@ -377,8 +378,8 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_stop(force=True)
         if self._sqlite_index_client:
             # todo: check tht its open
-            j.shell()
-            self._sqlite_index_client.close()
+            if not self._sqlite_index_client.is_closed():
+                self._sqlite_index_client.close()
 
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX FOR ALL OBJECTS")

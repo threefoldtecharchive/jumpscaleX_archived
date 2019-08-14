@@ -2,6 +2,13 @@ from Jumpscale import j
 
 
 class ZDBAdminClientBase:
+    def auth(self):
+        assert self.admin
+        if self.secret_:
+            # authentication should only happen in zdbadmin client
+            self._log_debug("AUTH in namespace %s" % (self.nsname))
+            self.redis.execute_command("AUTH", self.secret_)
+
     def namespace_exists(self, name):
         assert self.admin
         try:

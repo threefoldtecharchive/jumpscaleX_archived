@@ -2,6 +2,14 @@
 
 BCDB is a library to index and store data
 
+## BCDB CLI
+
+there is CLI for BCDB called ```bcdb```.
+- ```~:bcdb delete ``` will delete all the data contained in bcdb
+- ```~:bcdb check ``` will check the starting point for bcdb
+- ```~:bcdb rebuild ``` will erase the indexes and rebuild it from the bcdb original data
+
+ 
 ## indexing
 Indexing is done with redis and sqlite
 

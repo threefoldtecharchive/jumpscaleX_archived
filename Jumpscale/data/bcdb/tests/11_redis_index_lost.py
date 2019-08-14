@@ -37,8 +37,7 @@ def main(self):
     username = "" (S)           # User name
     
     """
-    bcdb = j.data.bcdb.new("test")
-    bcdb.reset()
+    bcdb = j.data.bcdb.new("test", reset=True)
     m = bcdb.model_get_from_schema(SCHEMA)
 
     for i in range(10):

@@ -32,7 +32,7 @@ def main(self):
     # get zdb client
     c = j.clients.zdb.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
-    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
+    cl1 = j.clients.zdb.client_get(name="test", addr="localhost", port=9901, secret="1234")
     cl1.flush()
 
     bcdb, _ = self._load_test_model()
@@ -44,7 +44,7 @@ def main(self):
     assert s.url == "despiegk.test"
 
     m = bcdb.model_get_from_url("despiegk.test")
-    assert len(bcdb.meta._data.schemas) == 8  # we have 2 schemas with the same url despiegk.test but different md5
+    assert m.sid == s.sid
 
     schema_text = """
     @url = jumpscale.schema.test.a
@@ -59,7 +59,7 @@ def main(self):
     sid = bcdb.meta._schema_set(s)
     assert isinstance(sid, int)
 
-    assert len(bcdb.meta._data.schemas) == 9
+    assert len(bcdb.meta._data.schemas) == 8
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
@@ -77,7 +77,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9
+    assert len(bcdb.meta._data._ddict["schemas"]) == 8
 
     a = model.new()
     a.category = "acat"
@@ -106,7 +106,7 @@ def main(self):
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # should be same because is same schema, should be same md5
+    assert len(bcdb.meta._data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     schema_text = """
@@ -120,7 +120,7 @@ def main(self):
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 9  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta._data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
 
     a3 = model2.new()
     a3.category = "acat3"

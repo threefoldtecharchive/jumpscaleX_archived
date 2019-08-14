@@ -58,6 +58,9 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
     def client_admin_get(self, name="admin", addr="localhost", port=9900, secret="123456", mode="seq"):
         if self.exists(name=name):
             cl = self.get(name=name)
+            # we should make sure AUTH has been launched as zdb client admin comes from config
+            # and if we instanciated a new zdb server the AUTH command will not be executed
+            cl.auth()
         else:
             cl = self.new(name=name, nsname=name, addr=addr, port=port, secret_=secret, mode=mode, admin=True)
         assert cl.admin == True
@@ -66,7 +69,7 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
 
     def client_get(self, name="main", addr="localhost", port=9900, secret="1234", mode="seq"):
         """
-        :param nsname: namespace name
+        :param name: namespace name
         :param addr:
         :param port:
         :param secret:

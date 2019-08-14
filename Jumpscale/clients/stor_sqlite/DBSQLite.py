@@ -78,11 +78,10 @@ class DBSQLite(j.application.JSBaseClass):
                 self._table_model.update(value=data).where(self._table_model.id == (key + 1)).execute()
             else:
                 self._table_model.create(id=(key + 1), value=data)
-        v = self.get(key)
         return key
 
     def exists(self, key):
-        return len(self.get(key)) > 0
+        return self.get(key) != None
 
     def flush(self):
         """
@@ -115,7 +114,7 @@ class DBSQLite(j.application.JSBaseClass):
         return result
 
     def delete(self, key):
-        self._table_model.delete_by_id(key)
+        return self._table_model.delete_by_id(key + 1)
 
     def iterate(self, key_start=None, **kwargs):
         if key_start:
