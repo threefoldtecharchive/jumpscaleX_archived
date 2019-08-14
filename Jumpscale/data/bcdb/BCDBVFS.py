@@ -712,7 +712,6 @@ class BCDBVFS(j.application.JSBaseClass):
 
         if info["type"] == self.directories_under_root[0]:  # must be a data key
             model.delete(item)  # removing from db
-            # NOT WORKING model.get(item.id) will return the item !!!
             keys = self._get_all_data_keys_linked(key, obj_id, info)
             # removing from cache
             removed_obj_by_sid = self._dirs_cache.pop(keys[0][0], None)
