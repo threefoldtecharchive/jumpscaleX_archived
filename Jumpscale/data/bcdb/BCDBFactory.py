@@ -177,6 +177,13 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if name in self._bcdb_instances:
             self._bcdb_instances.pop(name)
         if name in self._config:
+            self._get(name=name, reset=True, storclient=None)
+        else:
+            b = BCDB(storclient=None, name=name, reset=True)
+            b.destroy()
+        if name in self._bcdb_instances:
+            self._bcdb_instances.pop(name)
+        if name in self._config:
             self._config.pop(name)
             self._config_write()
 
