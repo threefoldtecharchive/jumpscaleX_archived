@@ -996,13 +996,13 @@ class Tools:
         if iserror:
             for handler in MyEnv.errorhandlers:
                 try:
-                    logdict = handler(logdict)
+                    handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
 
         for handler in MyEnv.loghandlers:
             try:
-                logdict = handler(logdict)
+                handler(logdict)
             except Exception as e:
                 MyEnv.exception_handle(e)
 
