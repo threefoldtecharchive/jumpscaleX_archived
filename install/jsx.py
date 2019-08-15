@@ -314,6 +314,8 @@ def install(threebot=False, branch=None, reinstall=False, pull=False, no_interac
     installer.install(sandboxed=False, force=force, gitpull=pull)
     if threebot:
         IT.Tools.execute("source %s/env.sh;kosmos 'j.servers.threebot.install()'" % SANDBOX, showout=True)
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.servers.threebot.test()'" % SANDBOX, showout=True)
+
     # LETS NOT DO THE FOLinsLOWING TAKES TOO LONG
     # IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
     print("Jumpscale X installed successfully")
