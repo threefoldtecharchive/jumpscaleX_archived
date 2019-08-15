@@ -339,7 +339,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             recursive=recursive,
         )
 
-    def execute(self, cmd, interactive=False, showout=True, replace=True, die=True, timeout=None, script=None):
+    def execute(self, cmd, interactive=True, showout=True, replace=True, die=True, timeout=None, script=None):
         """
 
         :param cmd: cmd to execute, can be multiline or even a script

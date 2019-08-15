@@ -141,7 +141,7 @@ class Application(object):
     def loghandlers(self):
         return self._j.core.myenv.loghandlers
 
-    # @loghandlers.setter
+    # @loghandlers.setterkds
     # def loghandlers(self, val):
     #     self._j.core.myenv.loghandlers = val
 
