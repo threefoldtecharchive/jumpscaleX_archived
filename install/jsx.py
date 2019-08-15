@@ -184,7 +184,7 @@ def configure(
     "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
 )
 @click.option("-d", "--delete", is_flag=True, help="if set will delete the docker container if it already exists")
-@click.option("-w", "--web", is_flag=True, help="also install the web system")
+@click.option("--threebot", is_flag=True, help="also install the threebot")
 @click.option("--portrange", default=1, help="portrange, leave empty unless you know what you do.")
 @click.option(
     "--image",
@@ -210,7 +210,7 @@ def container_install(
     name="3bot",
     scratch=False,
     delete=True,
-    web=False,
+    threebot=False,
     portrange=1,
     image=None,
     branch=None,
@@ -248,7 +248,7 @@ def container_install(
 
     docker.install()
 
-    docker.jumpscale_install(branch=branch, redo=reinstall, pull=pull, web=web)
+    docker.jumpscale_install(branch=branch, redo=reinstall, pull=pull, threebot=threebot)
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
@@ -270,7 +270,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 # INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option("-w", "--web", is_flag=True, help="also install the web system")
+@click.option("--threebot", is_flag=True, help="also install the threebot system")
 # @click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
@@ -287,7 +287,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
 @click.option("-s", "--no-interactive", is_flag=True, help="default is interactive, -s = silent")
-def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=False):
+def install(threebot=False, branch=None, reinstall=False, pull=False, no_interactive=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -312,10 +312,8 @@ def install(web=False, branch=None, reinstall=False, pull=False, no_interactive=
 
     installer = IT.JumpscaleInstaller(branch=branch)
     installer.install(sandboxed=False, force=force, gitpull=pull)
-    if web:
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.db.zdb.install()'" % SANDBOX, showout=True)
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.runtimes.lua.install()'" % SANDBOX, showout=True)
-        IT.Tools.execute("source %s/env.sh;kosmos 'j.builders.apps.corex.install()'" % SANDBOX, showout=True)
+    if threebot:
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.servers.threebot.install()'" % SANDBOX, showout=True)
     # LETS NOT DO THE FOLinsLOWING TAKES TOO LONG
     # IT.Tools.execute("source %s/env.sh;kosmos 'j.core.tools.system_cleanup()'" % SANDBOX, showout=True)
     print("Jumpscale X installed successfully")

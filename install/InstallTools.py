@@ -2449,7 +2449,7 @@ class MyEnv_:
             self.platform_is_linux = True
             self.platform_is_unix = True
             self.platform_is_osx = False
-        elif "darwin" in self.platform(self):
+        elif "darwin" in self.platform():
             self.platform_is_linux = False
             self.platform_is_unix = True
             self.platform_is_osx = True
@@ -4066,7 +4066,7 @@ class DockerContainer:
             print("export docker:%s to %s, was already there (export skipped)" % (self.name, path))
         return version
 
-    def jumpscale_install(self, secret=None, privatekey=None, redo=False, web=True, pull=False, branch=None):
+    def jumpscale_install(self, secret=None, privatekey=None, redo=False, threebot=True, pull=False, branch=None):
 
         args_txt = ""
         if secret:
@@ -4075,8 +4075,8 @@ class DockerContainer:
             args_txt += " --privatekey='%s'" % privatekey
         if redo:
             args_txt += " -r"
-        if web:
-            args_txt += " -w"
+        if threebot:
+            args_txt += " --threebot"
         if pull:
             args_txt += " --pull"
         if branch:
