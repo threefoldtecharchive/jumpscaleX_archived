@@ -989,7 +989,7 @@ class Tools:
         """
 
         :param logdict:
-        :param iserror:   if error will use MyEnv.errorhandlers: otherwise MyEnv.loghandlers
+        :param iserror:   if error will use MyEnv.errorhandlers: allways MyEnv.loghandlers
         :return:
         """
 
@@ -999,13 +999,12 @@ class Tools:
                     logdict = handler(logdict)
                 except Exception as e:
                     MyEnv.exception_handle(e)
-        else:
 
-            for handler in MyEnv.loghandlers:
-                try:
-                    logdict = handler(logdict)
-                except Exception as e:
-                    MyEnv.exception_handle(e)
+        for handler in MyEnv.loghandlers:
+            try:
+                logdict = handler(logdict)
+            except Exception as e:
+                MyEnv.exception_handle(e)
 
         return logdict
 
@@ -2385,65 +2384,126 @@ class Tools:
             Tools.file_write(path, out)
 
 
-LOGFORMATBASE = (
-    "{COLOR}{TIME} {filename:<20}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
-)  # DO NOT CHANGE COLOR
+class MyEnv_:
+    def __init__(self):
+        """
 
+        :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
+        :return:
+        """
 
-class MyEnv:
+        self.readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
+        self.sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
+        self.sandbox_lua_active = False  # same for lua
+        self.config_changed = False
+        self._cmd_installed = {}
+        # should be the only location where we allow logs to be going elsewhere
+        self.loghandlers = []
+        self.errorhandlers = []
+        self.state = None
+        self.__init = False
+        self.debug = False
 
-    readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
-    sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
-    sandbox_lua_active = False  # same for lua
-    config_changed = False
-    _cmd_installed = {}
-    # should be the only location where we allow logs to be going elsewhere
-    loghandlers = []
-    errorhandlers = []
-    state = None
-    __init = False
-    debug = False
+        self.sshagent = None
+        self.interactive = False
 
-    sshagent = None
-    interactive = False
+        self.appname = "installer"
 
-    appname = "installer"
+        self.DEFAULTBRANCH = DEFAULTBRANCH
 
-    DEFAULTBRANCH = DEFAULTBRANCH
+        self.FORMAT_TIME = "%a %d %H:%M:%S"
 
-    FORMAT_TIME = "%a %d %H:%M:%S"
+        self.MYCOLORS = {
+            "RED": "\033[1;31m",
+            "BLUE": "\033[1;34m",
+            "CYAN": "\033[1;36m",
+            "GREEN": "\033[0;32m",
+            "GRAY": "\033[0;37m",
+            "YELLOW": "\033[0;33m",
+            "RESET": "\033[0;0m",
+            "BOLD": "\033[;1m",
+            "REVERSE": "\033[;7m",
+        }
 
-    MYCOLORS = {
-        "RED": "\033[1;31m",
-        "BLUE": "\033[1;34m",
-        "CYAN": "\033[1;36m",
-        "GREEN": "\033[0;32m",
-        "GRAY": "\033[0;37m",
-        "YELLOW": "\033[0;33m",
-        "RESET": "\033[0;0m",
-        "BOLD": "\033[;1m",
-        "REVERSE": "\033[;7m",
-    }
+        LOGFORMATBASE = (
+            "{COLOR}{TIME} {filename:<20}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
+        )  # DO NOT CHANGE COLOR
 
-    LOGFORMAT = {
-        "DEBUG": LOGFORMATBASE.replace("{COLOR}", "{CYAN}"),
-        "STDOUT": "{message}",
-        # 'INFO': '{BLUE}* {message}{RESET}',
-        "INFO": LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
-        "WARNING": LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
-        "ERROR": LOGFORMATBASE.replace("{COLOR}", "{RED}"),
-        "CRITICAL": "{RED}{TIME} {filename:<20} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
-    }
+        self.LOGFORMAT = {
+            "DEBUG": LOGFORMATBASE.replace("{COLOR}", "{CYAN}"),
+            "STDOUT": "{message}",
+            # 'INFO': '{BLUE}* {message}{RESET}',
+            "INFO": LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
+            "WARNING": LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
+            "ERROR": LOGFORMATBASE.replace("{COLOR}", "{RED}"),
+            "CRITICAL": "{RED}{TIME} {filename:<20} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
+        }
 
-    db = RedisTools.client_core_get(die=False)
+        self.db = RedisTools.client_core_get(die=False)
 
-    @staticmethod
-    def _init():
-        if not MyEnv.__init:
-            raise Tools.exceptions.Base("myenv should have been inited by system")
+    def init(self, reset=False, configdir=None):
 
-    @staticmethod
-    def platform():
+        args = Tools.cmd_args_get()
+
+        if self.platform() == "linux":
+            self.platform_is_linux = True
+            self.platform_is_unix = True
+            self.platform_is_osx = False
+        elif "darwin" in self.platform(self):
+            self.platform_is_linux = False
+            self.platform_is_unix = True
+            self.platform_is_osx = True
+        else:
+            raise Tools.exceptions.Base("platform not supported, only linux or osx for now.")
+
+        if not configdir:
+            if "JSX_DIR_CFG" in os.environ:
+                configdir = os.environ["JSX_DIR_CFG"]
+            else:
+                if configdir is None and "configdir" in args:
+                    configdir = args["configdir"]
+                else:
+                    configdir = self._cfgdir_get()
+
+        self.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
+        if DockerFactory.indocker():
+            # this is important it means if we push a container we keep the state file
+            self.state_file_path = os.path.join(self._homedir_get(), ".jumpscale_done.toml")
+        else:
+            self.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
+
+        if Tools.exists(self.config_file_path):
+            self._config_load()
+            if not "DIR_BASE" in self.config:
+                return
+
+            self.log_includes = [i for i in self.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
+            self.log_excludes = [i for i in self.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
+            self.log_loglevel = self.config.get("LOGGER_LEVEL", 100)
+            self.log_console = self.config.get("LOGGER_CONSOLE", True)
+            self.log_redis = self.config.get("LOGGER_REDIS", False)
+            self.debug = self.config.get("DEBUG", False)
+            self.interactive = self.config.get("INTERACTIVE", True)
+
+            if os.path.exists(os.path.join(self.config["DIR_BASE"], "bin", "python3.6")):
+                self.sandbox_python_active = True
+            else:
+                self.sandbox_python_active = False
+
+            self._state_load()
+
+            if self.config["SSH_AGENT"]:
+                self.sshagent = SSHAgent()
+
+            sys.excepthook = self.excepthook
+
+            self.__init = True
+
+    def _init(self):
+        if not self.__init:
+            raise RuntimeError("init on MyEnv did not happen yet")
+
+    def platform(self):
         """
         will return one of following strings:
             linux, darwin
@@ -2451,25 +2511,23 @@ class MyEnv:
         """
         return sys.platform
 
-    # @staticmethod
-    # def platform_is_linux():
+    #
+    # def platform_is_linux(self):
     #     return "posix" in sys.builtin_module_names
 
-    @staticmethod
-    def check_platform():
+    def check_platform(self):
         """check if current platform is supported (linux or darwin)
         for linux, the version check is done by `UbuntuInstaller.ensure_version()`
 
         :raises RuntimeError: in case platform is not supported
         """
-        platform = MyEnv.platform()
+        platform = self.platform()
         if "linux" in platform:
             UbuntuInstaller.ensure_version()
         elif "darwin" not in platform:
             raise Tools.exceptions.Base("Your platform is not supported")
 
-    @staticmethod
-    def _homedir_get():
+    def _homedir_get(self):
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
         elif "HOME" in os.environ:
@@ -2478,9 +2536,8 @@ class MyEnv:
             dir_home = "/root"
         return dir_home
 
-    @staticmethod
-    def _basedir_get():
-        if MyEnv.readonly:
+    def _basedir_get(self):
+        if self.readonly:
             return "/tmp/jumpscale"
         isroot = None
         rc, out, err = Tools.execute("whoami", showout=False, die=False)
@@ -2490,28 +2547,26 @@ class MyEnv:
         if Tools.exists("/sandbox") or isroot == 1:
             Tools.dir_ensure("/sandbox")
             return "/sandbox"
-        p = "%s/sandbox" % MyEnv._homedir_get()
+        p = "%s/sandbox" % self._homedir_get()
         if not Tools.exists(p):
             Tools.dir_ensure(p)
         return p
 
-    @staticmethod
-    def _cfgdir_get():
-        if MyEnv.readonly:
+    def _cfgdir_get(self):
+        if self.readonly:
             return "/tmp/jumpscale/cfg"
-        return "%s/cfg" % MyEnv._basedir_get()
+        return "%s/cfg" % self._basedir_get()
 
-    @staticmethod
-    def config_default_get(config={}):
+    def config_default_get(self, config={}):
 
         if "DIR_BASE" not in config:
-            config["DIR_BASE"] = MyEnv._basedir_get()
+            config["DIR_BASE"] = self._basedir_get()
 
         if "DIR_HOME" not in config:
-            config["DIR_HOME"] = MyEnv._homedir_get()
+            config["DIR_HOME"] = self._homedir_get()
 
         if not "DIR_CFG" in config:
-            config["DIR_CFG"] = MyEnv._cfgdir_get()
+            config["DIR_CFG"] = self._cfgdir_get()
 
         if not "USEGIT" in config:
             config["USEGIT"] = True
@@ -2534,7 +2589,7 @@ class MyEnv:
         config["LOGGER_REDIS"] = False
         config["LOGGER_PANEL_NRLINES"] = 15
 
-        if MyEnv.readonly:
+        if self.readonly:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"
             config["LOGGER_REDIS"] = False
             config["LOGGER_CONSOLE"] = True
@@ -2556,7 +2611,7 @@ class MyEnv:
 
         return config
 
-    # def configure_help():
+    # def configure_help(self):
     #     C = """
     #     Configuration for JSX initialisation:
     #
@@ -2573,8 +2628,8 @@ class MyEnv:
     #     """
     #     return Tools.text_strip(C)
 
-    @staticmethod
     def configure(
+        self,
         configdir=None,
         basedir=None,
         codedir=None,
@@ -2611,10 +2666,10 @@ class MyEnv:
         :return:
         """
 
-        if not os.path.exists(MyEnv.config_file_path):
-            MyEnv.config = MyEnv.config_default_get(config=config)
+        if not os.path.exists(self.config_file_path):
+            self.config = self.config_default_get(config=config)
         else:
-            MyEnv._config_load()
+            self._config_load()
 
         if interactive not in [True, False]:
             raise Tools.exceptions.Base("interactive is True or False")
@@ -2645,7 +2700,7 @@ class MyEnv:
             elif "JSX_DIR_CFG" in os.environ:
                 configdir = os.environ["JSX_DIR_CFG"]
             else:
-                configdir = MyEnv._cfgdir_get()
+                configdir = self._cfgdir_get()
         config["DIR_CFG"] = configdir
 
         # installpath = os.path.dirname(inspect.getfile(os.path))
@@ -2657,7 +2712,7 @@ class MyEnv:
             if "DIR_BASE" in config:
                 basedir = config["DIR_BASE"]
             else:
-                basedir = MyEnv._basedir_get()
+                basedir = self._basedir_get()
 
         config["DIR_BASE"] = basedir
 
@@ -2673,46 +2728,46 @@ class MyEnv:
             args = {}
             args["DIR_BASE"] = basedir
             args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
+            st = os.stat(self.config["DIR_HOME"])
             gid = st.st_gid
             args["GROUPNAME"] = grp.getgrgid(gid)[0]
             Tools.execute(script, interactive=True, args=args)
 
-        MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
+        self.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
 
-        if not os.path.exists(MyEnv.config_file_path):
-            MyEnv.config = MyEnv.config_default_get(config=config)
+        if not os.path.exists(self.config_file_path):
+            self.config = self.config_default_get(config=config)
         else:
-            MyEnv._config_load()
+            self._config_load()
 
         # merge interactive flags
-        if "INTERACTIVE" in MyEnv.config:
-            MyEnv.interactive = interactive and MyEnv.config["INTERACTIVE"]
+        if "INTERACTIVE" in self.config:
+            self.interactive = interactive and self.config["INTERACTIVE"]
             # enforce interactive flag consistency after having read the config file,
             # arguments overrides config file behaviour
-        MyEnv.config["INTERACTIVE"] = MyEnv.interactive
+        self.config["INTERACTIVE"] = self.interactive
 
-        if not "DIR_TEMP" in MyEnv.config:
-            config.update(MyEnv.config)
-            MyEnv.config = MyEnv.config_default_get(config=config)
+        if not "DIR_TEMP" in self.config:
+            config.update(self.config)
+            self.config = self.config_default_get(config=config)
 
         if readonly:
-            MyEnv.config["READONLY"] = readonly
+            self.config["READONLY"] = readonly
 
         if sshagent_use:
-            MyEnv.config["SSH_AGENT"] = sshagent_use
+            self.config["SSH_AGENT"] = sshagent_use
         if sshkey:
-            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+            self.config["SSH_KEY_DEFAULT"] = sshkey
         if debug_configure:
-            MyEnv.config["DEBUG"] = debug_configure
+            self.config["DEBUG"] = debug_configure
 
-        for key, val in config.items():
-            MyEnv.config[key] = val
+        for key, val in config.items(self):
+            self.config[key] = val
 
-        if sshagent_use and MyEnv.interactive:  # just a warning when interactive
+        if sshagent_use and self.interactive:  # just a warning when interactive
             T = """
             Is it ok to continue with SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
@@ -2722,7 +2777,7 @@ class MyEnv:
 
             """
             print(Tools.text_strip(T))
-            if MyEnv.interactive:
+            if self.interactive:
                 if not Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
 
@@ -2730,25 +2785,24 @@ class MyEnv:
         if sshagent_use:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
-            MyEnv.sshagent = SSHAgent()
-            MyEnv.sshagent.key_default
+            self.sshagent = SSHAgent()
+            self.sshagent.key_default
         if secret is None:
-            if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                MyEnv.secret_set()  # will create a new one only when it doesn't exist
+            if "SECRET" not in self.config or not self.config["SECRET"]:
+                self.secret_set()  # will create a new one only when it doesn't exist
         else:
-            MyEnv.secret_set(secret)
+            self.secret_set(secret)
 
-        if DockerFactory.indocker():
-            MyEnv.config["IN_DOCKER"] = True
+        if DockerFactory.indocker(self):
+            self.config["IN_DOCKER"] = True
         else:
-            MyEnv.config["IN_DOCKER"] = False
+            self.config["IN_DOCKER"] = False
 
-        MyEnv.config_save()
-        MyEnv.init(configdir=configdir)
+        self.config_save()
+        self.init(configdir=configdir)
 
-    @staticmethod
-    def secret_set(secret=None):
-        if MyEnv.interactive:
+    def secret_set(self, secret=None):
+        if self.interactive:
             while not secret:  # keep asking till the secret is not empty
                 secret = Tools.ask_password("provide secret to use for encrypting private key")
             secret = secret.encode()
@@ -2765,17 +2819,20 @@ class MyEnv:
 
         secret2 = m.hexdigest()
 
-        if "SECRET" not in MyEnv.config:
-            MyEnv.config["SECRET"] = ""
+        if "SECRET" not in self.config:
+            self.config["SECRET"] = ""
 
-        if MyEnv.config["SECRET"] != secret2:
+        if self.config["SECRET"] != secret2:
 
-            MyEnv.config["SECRET"] = secret2
+            self.config["SECRET"] = secret2
 
-            MyEnv.config_save()
+            self.config_save()
 
-    @staticmethod
-    def excepthook(exception_type, exception_obj, tb, die=True, stdout=True, level=50):
+    def test(self):
+        if not MyEnv.loghandlers != []:
+            j.shell()
+
+    def excepthook(self, exception_type, exception_obj, tb, die=True, stdout=True, level=50):
         """
         :param exception_type:
         :param exception_obj:
@@ -2785,6 +2842,7 @@ class MyEnv:
         :param level:
         :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
         """
+
         try:
             logdict = Tools.log(tb=tb, level=level, exception=exception_obj, stdout=stdout)
         except Exception as e:
@@ -2796,7 +2854,7 @@ class MyEnv:
             sys.exit(1)
             Tools.shell()
 
-        if MyEnv.debug and traceback and pudb:
+        if self.debug and traceback and pudb:
             # exception_type, exception_obj, tb = sys.exc_info()
             pudb.post_mortem(tb)
         # Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
@@ -2805,8 +2863,7 @@ class MyEnv:
         else:
             sys.exit(1)
 
-    @staticmethod
-    def exception_handle(exception_obj, die=True, stdout=True, level=50, stack_go_up=0):
+    def exception_handle(self, exception_obj, die=True, stdout=True, level=50, stack_go_up=0):
         """
         e is the error as raised by e.g. try/except statement
         :param exception_obj: the exception obj coming from the try/except
@@ -2828,117 +2885,43 @@ class MyEnv:
         ttype, msg, tb = sys.exc_info()
         if stack_go_up:
             j.shell()
-        return MyEnv.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
+        return self.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
-    @staticmethod
-    def init(configdir=None, reset=False):
-        """
-
-        :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
-        :return:
-        """
-        if reset is False and MyEnv.__init:
-            return
-
-            # print("MYENV INIT")
-
-        args = Tools.cmd_args_get()
-
-        if MyEnv.platform() == "linux":
-            MyEnv.platform_is_linux = True
-            MyEnv.platform_is_unix = True
-            MyEnv.platform_is_osx = False
-        elif "darwin" in MyEnv.platform():
-            MyEnv.platform_is_linux = False
-            MyEnv.platform_is_unix = True
-            MyEnv.platform_is_osx = True
-        else:
-            raise Tools.exceptions.Base("platform not supported, only linux or osx for now.")
-
-        if not configdir:
-            if "JSX_DIR_CFG" in os.environ:
-                configdir = os.environ["JSX_DIR_CFG"]
-            else:
-                if configdir is None and "configdir" in args:
-                    configdir = args["configdir"]
-                else:
-                    configdir = MyEnv._cfgdir_get()
-
-        MyEnv.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
-        if DockerFactory.indocker():
-            # this is important it means if we push a container we keep the state file
-            MyEnv.state_file_path = os.path.join(MyEnv._homedir_get(), ".jumpscale_done.toml")
-        else:
-            MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
-
-        if Tools.exists(MyEnv.config_file_path):
-            MyEnv._config_load()
-            if not "DIR_BASE" in MyEnv.config:
-                return
-
-            MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
-            MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
-            MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
-            MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
-            MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
-            MyEnv.debug = MyEnv.config.get("DEBUG", False)
-            MyEnv.interactive = MyEnv.config.get("INTERACTIVE", True)
-
-            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
-                MyEnv.sandbox_python_active = True
-            else:
-                MyEnv.sandbox_python_active = False
-
-            MyEnv._state_load()
-
-            if MyEnv.config["SSH_AGENT"]:
-                MyEnv.sshagent = SSHAgent()
-
-            sys.excepthook = MyEnv.excepthook
-
-            MyEnv.__init = True
-
-    @staticmethod
-    def config_edit():
+    def config_edit(self):
         """
         edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
-        Tools.file_edit(MyEnv.config_file_path)
+        Tools.file_edit(self.config_file_path)
 
-    @staticmethod
-    def _config_load():
+    def _config_load(self):
         """
         loads the configuration file which default is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
-        MyEnv.config = Tools.config_load(MyEnv.config_file_path)
+        self.config = Tools.config_load(self.config_file_path)
 
-    @staticmethod
-    def config_save():
-        Tools.config_save(MyEnv.config_file_path, MyEnv.config)
+    def config_save(self):
+        Tools.config_save(self.config_file_path, self.config)
 
-    @staticmethod
-    def _state_load():
+    def _state_load(self):
         """
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
-        if Tools.exists(MyEnv.state_file_path):
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=False)
-        elif not MyEnv.readonly:
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=True)
+        if Tools.exists(self.state_file_path):
+            self.state = Tools.config_load(self.state_file_path, if_not_exist_create=False)
+        elif not self.readonly:
+            self.state = Tools.config_load(self.state_file_path, if_not_exist_create=True)
         else:
-            MyEnv.state = {}
+            self.state = {}
 
-    @staticmethod
-    def state_save():
-        if MyEnv.readonly:
+    def state_save(self):
+        if self.readonly:
             return
-        Tools.config_save(MyEnv.state_file_path, MyEnv.state)
+        Tools.config_save(self.state_file_path, self.state)
 
-    @staticmethod
-    def _key_get(key):
+    def _key_get(self, key):
         key = key.split("=", 1)[0]
         key = key.split(">", 1)[0]
         key = key.split("<", 1)[0]
@@ -2946,49 +2929,47 @@ class MyEnv:
         key = key.upper()
         return key
 
-    @staticmethod
-    def state_get(key):
-        key = MyEnv._key_get(key)
-        if key in MyEnv.state:
+    def state_get(self, key):
+        key = self._key_get(key)
+        if key in self.state:
             return True
         return False
 
-    @staticmethod
-    def state_set(key):
-        if MyEnv.readonly:
+    def state_set(self, key):
+        if self.readonly:
             return
-        key = MyEnv._key_get(key)
-        MyEnv.state[key] = True
-        MyEnv.state_save()
+        key = self._key_get(key)
+        self.state[key] = True
+        self.state_save()
 
-    @staticmethod
-    def state_delete(key):
-        if MyEnv.readonly:
+    def state_delete(self, key):
+        if self.readonly:
             return
-        key = MyEnv._key_get(key)
-        if key in MyEnv.state:
-            MyEnv.state.pop(key)
-            MyEnv.state_save()
+        key = self._key_get(key)
+        if key in self.state:
+            self.state.pop(key)
+            self.state_save()
 
-    @staticmethod
-    def states_delete(prefix):
-        if MyEnv.readonly:
+    def states_delete(self, prefix):
+        if self.readonly:
             return
         prefix = prefix.upper()
-        keys = [i for i in MyEnv.state.keys()]
+        keys = [i for i in self.state.keys()]
         for key in keys:
             if key.startswith(prefix):
-                MyEnv.state.pop(key)
+                self.state.pop(key)
                 # print("#####STATEPOP:%s" % key)
-                MyEnv.state_save()
+                self.state_save()
 
-    @staticmethod
-    def state_reset():
+    def state_reset(self):
         """
         remove all state
         """
-        Tools.delete(MyEnv.state_file_path)
-        MyEnv._state_load()
+        Tools.delete(self.state_file_path)
+        self._state_load()
+
+
+MyEnv = MyEnv_()
 
 
 class BaseInstaller:

@@ -301,24 +301,26 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.state = "sandbox"
 
-        self.profile.path_add("/sandbox/bin")
+        # cannot manipuate env.sh in sandbox, should be set properly by design
+        if self.profile.profile_path != "/sandbox/env.sh":
+            self.profile.path_add("/sandbox/bin")
 
-        self.profile.env_set("PYTHONHTTPSVERIFY", 0)
+            self.profile.env_set("PYTHONHTTPSVERIFY", 0)
 
-        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib")
-        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/jumpscale")
+            self.profile.env_set_part("PYTHONPATH", "/sandbox/lib")
+            self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/jumpscale")
 
-        self.profile.env_set("LC_ALL", "en_US.UTF-8")
-        self.profile.env_set("LANG", "en_US.UTF-8")
+            self.profile.env_set("LC_ALL", "en_US.UTF-8")
+            self.profile.env_set("LANG", "en_US.UTF-8")
 
-        self.profile_sandbox_set()
+            self.profile.path_delete("${PATH}")
 
-        self.profile.path_delete("${PATH}")
+            if j.core.platformtype.myplatform.platform_is_osx:
+                self.profile.path_add("${PATH}", end=True)
 
-        if j.core.platformtype.myplatform.platform_is_osx:
-            self.profile.path_add("${PATH}", end=True)
+            self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
 
-        self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
+            self.profile_sandbox_set()
 
         self._log_info("sandbox profile path in:%s" % self.profile.profile_path)
 

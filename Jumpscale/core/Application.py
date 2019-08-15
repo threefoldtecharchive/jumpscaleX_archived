@@ -118,8 +118,6 @@ class Application(object):
         self.ThreeBotPackageBase = ThreeBotPackageBase
         self.ThreeBotActorBase = ThreeBotActorBase
         self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
-        self.loghandlers = self._j.core.myenv.loghandlers
-        self.errorhandlers = self._j.core.myenv.errorhandlers
         self.exception_handle = self._j.core.myenv.exception_handle
         self._log2fs_session_name = None
 
@@ -138,6 +136,22 @@ class Application(object):
     @interactive.setter
     def interactive(self, val):
         self._j.core.myenv.interactive = val
+
+    @property
+    def loghandlers(self):
+        return self._j.core.myenv.loghandlers
+
+    # @loghandlers.setter
+    # def loghandlers(self, val):
+    #     self._j.core.myenv.loghandlers = val
+
+    @property
+    def errorhandlers(self):
+        return self._j.core.myenv.errorhandlers
+
+    # @errorhandlers.setter
+    # def errorhandlers(self, val):
+    #     self._j.core.myenv.errorhandlers = val
 
     @property
     def bcdb_system(self):
@@ -171,15 +185,13 @@ class Application(object):
         :return:
         """
         self._log2fs_session_name = session_name
+        tt = self._j.data.time.getLocalTimeHRForFilesystem()
+        self._log2fs_path_prefix = "/sandbox/var/log/%s/%s" % (self._log2fs_session_name, tt)
         self.log2fs_context_change("init")
+
         os.makedirs(self._log2fs_path_prefix)
         assert self._log2fs_path
         self._j.core.myenv.loghandlers.append(self._log2fs)
-
-    @property
-    def _log2fs_path_prefix(self):
-        tt = self._j.data.time.getLocalTimeHRForFilesystem()
-        return "/sandbox/var/log/%s/%s" % (self._log2fs_session_name, tt)
 
     def log2fs_context_change(self, context):
         """
@@ -203,14 +215,19 @@ class Application(object):
         :param logdict:
         :return:
         """
-        out = self._j.core.tools.log2str(logdict)
-        out = out.rstrip() + "\n"
-        fp = open(self._log2fs_path, "ab")
-        # if self._j.data.types.string.check(contents):
-        fp.write(bytes(out, "UTF-8"))
-        # else:
-        # fp.write(out)
-        fp.close()
+        if self._log2fs_session_name:
+            out = self._j.core.tools.log2str(logdict)
+            out = out.rstrip() + "\n"
+            try:
+                fp = open(self._log2fs_path, "ab")
+            except:
+                self._j.shell()
+                w
+            # if self._j.data.types.string.check(contents):
+            fp.write(bytes(out, "UTF-8"))
+            # else:
+            # fp.write(out)
+            fp.close()
 
     # def bcdb_system_configure(self, addr, port, namespace, secret):
     #     """

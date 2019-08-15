@@ -48,14 +48,17 @@ def profileStop(pr):
 
 spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py" % os.path.dirname(__file__))
 
-from .core.InstallTools import MyEnv
-
-MyEnv.init()
 
 from .core.InstallTools import BaseInstaller
 from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
 from .core.InstallTools import RedisTools
+
+from .core.InstallTools import MyEnv
+
+
+MyEnv.init()
+# TODO: there is something not right we get different version of this class, this should be like a singleton !!!
 
 
 class Core:
