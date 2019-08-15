@@ -69,7 +69,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._sql_index_init()
 
         if self.index_text_needed:
-            self.sonic()  # sonic needs to be started and needs to exist !
+            self.sonic  # sonic needs to be started and needs to exist !
 
         if reset:
             self.destroy()

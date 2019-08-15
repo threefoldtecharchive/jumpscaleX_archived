@@ -420,7 +420,7 @@ class Link(j.application.JSBaseClass):
                 elif self.extension in ["md", "", None]:
                     self.cat = "doc"  # link to a markdown document
                     try:
-                        self.link_to_doc = self.docsite.doc_get(self.link_source, die=True)
+                        self.link_to_doc = self.docsite.doc_get(self.link_source, die=False)
                     except Exception as e:
                         if "Cannot find doc" in str(e):
                             return self.error(str(e))
