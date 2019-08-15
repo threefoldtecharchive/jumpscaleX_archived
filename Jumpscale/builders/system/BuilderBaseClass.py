@@ -127,6 +127,11 @@ class builder_method(object):
             :return: if the method was already done it will return BuilderBase.ALREADY_DONE_VALUE
             """
             name = func.__name__
+
+            if not j.application._log2fs_session_name:
+                j.application.log2fs_register(builder._name)
+            j.application.log2fs_context_change(name)
+
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))

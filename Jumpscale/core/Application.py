@@ -121,6 +121,7 @@ class Application(object):
         self.loghandlers = self._j.core.myenv.loghandlers
         self.errorhandlers = self._j.core.myenv.errorhandlers
         self.exception_handle = self._j.core.myenv.exception_handle
+        self._log2fs_session_name = None
 
     @property
     def appname(self):
@@ -160,6 +161,57 @@ class Application(object):
             obj._obj_cache_reset()
             obj._obj_reset()
 
+    def log2fs_register(self, session_name):
+        """
+        will write logs with ansi codes to /sandbox/var/log/session_name/$hrtime4session/$hrtime4step_context.ansi
+
+        use less -r to see the logs with color output
+
+        :param session_name: name of the session
+        :return:
+        """
+        self._log2fs_session_name = session_name
+        self.log2fs_context_change("init")
+        os.makedirs(self._log2fs_path_prefix)
+        assert self._log2fs_path
+        self._j.core.myenv.loghandlers.append(self._log2fs)
+
+    @property
+    def _log2fs_path_prefix(self):
+        tt = self._j.data.time.getLocalTimeHRForFilesystem()
+        return "/sandbox/var/log/%s/%s" % (self._log2fs_session_name, tt)
+
+    def log2fs_context_change(self, context):
+        """
+
+        :param context:
+        :return:
+        """
+        tt = self._j.data.time.getLocalTimeHRForFilesystem()
+        self._log2fs_context = context
+        self._log2fs_path = "%s/%s_%s.ansi" % (self._log2fs_path_prefix, tt, self._log2fs_context)
+
+    def _log2fs(self, logdict):
+        """
+        is a log hander for j.core.myenv.loghandlers
+
+        how to use
+
+        if j.core.myenv.loghandlers==[]:
+
+
+        :param logdict:
+        :return:
+        """
+        out = self._j.core.tools.log2str(logdict)
+        out = out.rstrip() + "\n"
+        fp = open(self._log2fs_path, "ab")
+        # if self._j.data.types.string.check(contents):
+        fp.write(bytes(out, "UTF-8"))
+        # else:
+        # fp.write(out)
+        fp.close()
+
     # def bcdb_system_configure(self, addr, port, namespace, secret):
     #     """
     #     will remember that this bcdb is being used
@@ -168,22 +220,22 @@ class Application(object):
     #     """
     #     self._j.shell()
 
-    def _trace_get(self, ttype, err, tb=None):
-
-        tblist = traceback.format_exception(ttype, err, tb)
-
-        ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
-
-        # if self._limit and len(tblist) > self._limit:
-        #     tblist = tblist[-self._limit:]
-        tb_text = ""
-        for item in tblist:
-            for ignoreitem in ignore:
-                if item.find(ignoreitem) != -1:
-                    item = ""
-            if item != "":
-                tb_text += "%s" % item
-        return tb_text
+    # def _trace_get(self, ttype, err, tb=None):
+    #
+    #     tblist = traceback.format_exception(ttype, err, tb)
+    #
+    #     ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+    #
+    #     # if self._limit and len(tblist) > self._limit:
+    #     #     tblist = tblist[-self._limit:]
+    #     tb_text = ""
+    #     for item in tblist:
+    #         for ignoreitem in ignore:
+    #             if item.find(ignoreitem) != -1:
+    #                 item = ""
+    #         if item != "":
+    #             tb_text += "%s" % item
+    #     return tb_text
 
     def _check_debug(self):
         if not "JSGENERATE_DEBUG" in os.environ:
@@ -192,17 +244,17 @@ class Application(object):
             return True
         return False
 
-    def error_init(self, cat, obj, error, die=True):
-
-        print("ERROR: %s:%s" % (cat, obj))
-        print(error)
-        trace = self._trace_get(ttype=None, err=error)
-        self.errors_init.append((cat, obj, error, trace))
-        if not self._check_debug():
-            msg = "%s:%s:%s" % (cat, obj, error)
-            # self.report_errors()
-            raise j.exceptions.Base(msg)
-        return "%s:%s:%s" % (cat, obj, error)
+    # def error_init(self, cat, obj, error, die=True):
+    #
+    #     print("ERROR: %s:%s" % (cat, obj))
+    #     print(error)
+    #     trace = self._trace_get(ttype=None, err=error)
+    #     self.errors_init.append((cat, obj, error, trace))
+    #     if not self._check_debug():
+    #         msg = "%s:%s:%s" % (cat, obj, error)
+    #         # self.report_errors()
+    #         raise j.exceptions.Base(msg)
+    #     return "%s:%s:%s" % (cat, obj, error)
 
     def reset(self):
         """

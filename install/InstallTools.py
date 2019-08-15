@@ -82,7 +82,11 @@ except:
         import json
 
         def serializer(data):
-            return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+            try:
+                return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+            except Exception as e:
+                data = str(data)
+                return data
 
     except:
 
@@ -857,17 +861,22 @@ class Tools:
         level=10,
         data=None,
         context=None,
-        _deeper=False,
+        _levelup=0,
         tb=None,
         data_show=True,
-        exception=None,  # is jumpscale/python exception
-        replace=True,  # to replace the color variables for stdout
-        stdout=True,  # return as logdict or send to stdout
+        exception=None,
+        replace=True,
+        stdout=True,
         source=None,
+        frame_=None,
     ):
         """
 
-        :param msg:
+        :param msg: what you want to log
+        :param cat: any dot notation category
+        :param context: e.g. rack aaa in datacenter, method name in class, ...
+
+        can use {RED}, {RESET}, ... see color codes
         :param level:
             - CRITICAL 	50
             - ERROR 	40
@@ -876,12 +885,27 @@ class Tools:
             - STDOUT 	15
             - DEBUG 	10
 
+
+        :param _levelup 0, if e.g. 1 means will go 1 level more back in finding line nr where log comes from
+        :param source, if you don't want to show the source (line nr in log), somewhat faster
+        :param stdout: return as logdict or send to stdout
+        :param: replace to replace the color variables for stdout
+        :param: exception is jumpscale/python exception
+
         :return:
         """
         logdict = {}
 
         if isinstance(msg, Exception):
             raise Tools.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
+
+        if not frame_:
+            frame_ = inspect.currentframe().f_back
+            if _levelup > 0:
+                levelup = 0
+                while frame_ and levelup < _levelup:
+                    frame_ = frame_.f_back
+                    levelup += 1
 
         # first deal with traceback
         if exception and not tb:
@@ -890,6 +914,16 @@ class Tools:
                 tb = exception._tb
             else:
                 extype_, value_, tb = sys.exc_info()
+
+        if tb:
+            logdict["traceback"] = Tools.traceback_format(tb)
+            fname, defname, linenr, line_, locals_ = logdict["traceback"][-1]
+        else:
+            fname = frame_.f_code.co_filename.split("/")[-1]
+            defname = frame_.f_code.co_name
+            linenr = frame_.f_code.co_firstlineno
+            # linenr = frame_.f_lineno  #DON'T KNOW WHICH ONE IS BETTER?
+            logdict["traceback"] = []
 
         if exception:
             # make sure exceptions get the right priority
@@ -917,19 +951,6 @@ class Tools:
 
         logdict["message"] = msg
 
-        if tb:
-            logdict["traceback"] = Tools.traceback_format(tb)
-            fname, defname, linenr, line_, locals_ = logdict["traceback"][-1]
-        else:
-            if _deeper:
-                frame_ = inspect.currentframe().f_back
-            else:
-                frame_ = inspect.currentframe().f_back.f_back
-            fname = frame_.f_code.co_filename.split("/")[-1]
-            defname = frame_.f_code.co_name
-            linenr = frame_.f_code.co_firstlineno
-            logdict["traceback"] = []
-
         logdict["linenr"] = linenr
         logdict["filepath"] = fname
         logdict["processid"] = MyEnv.appname
@@ -953,7 +974,7 @@ class Tools:
             elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
                 data = str(data)
             else:
-                data = serializer(data)
+                data = Tools._data_serializer_safe(data)
 
         logdict["data"] = data
 
@@ -1390,6 +1411,18 @@ class Tools:
         return out
 
     @staticmethod
+    def _data_serializer_safe(data):
+        if isinstance(data, dict):
+            data = data.copy()  # important to have a shallow copy of data so we don't change original
+            for key in ["passwd", "password", "secret"]:
+                if key in data:
+                    data[key] = "***"
+        elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
+            return str(data)
+
+        return serializer(data)
+
+    @staticmethod
     def log2stdout(logdict, data_show=True):
         text = Tools.log2str(logdict, data_show=True, replace=True)
         p = print
@@ -1453,8 +1486,8 @@ class Tools:
 
         out = ""
 
-        if "source" in logdict:
-            out += Tools.text_replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
+        # if "source" in logdict:
+        #     out += Tools.text_replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
 
         if "traceback" in logdict and logdict["traceback"]:
             out += Tools.text_replace("{RED}--TRACEBACK------------------{RESET}\n")

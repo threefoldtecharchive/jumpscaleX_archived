@@ -390,24 +390,40 @@ class JSBase:
     def _log_critical(self, msg, cat="", data=None, context=None, _levelup=1):
         self._log(msg, cat=cat, level=50, data=data, context=context, _levelup=_levelup)
 
-    def _log(self, msg, cat="", level=10, data=None, context=None, _levelup=1):
+    def _log(
+        self,
+        msg,
+        cat="",
+        level=10,
+        data=None,
+        context=None,
+        _levelup=0,
+        stdout=True,
+        tb=None,
+        data_show=True,
+        exception=None,  # is jumpscale/python exception
+        replace=True,  # to replace the color variables for stdout
+    ):
         """
 
         :param msg: what you want to log
         :param cat: any dot notation category
-        :param level: level of the log
-        :return:
+        :param context: e.g. rack aaa in datacenter, method name in class, ...
 
         can use {RED}, {RESET}, ... see color codes
+        :param level:
+            - CRITICAL 	50
+            - ERROR 	40
+            - WARNING 	30
+            - INFO 	    20
+            - STDOUT 	15
+            - DEBUG 	10
 
-        levels:
 
-        - CRITICAL 	50
-        - ERROR 	40
-        - WARNING 	30
-        - INFO 	    20
-        - STDOUT 	15
-        - DEBUG 	10
+        :param _levelup 0, if e.g. 1 means will go 1 level more back in finding line nr where log comes from
+        :param stdout: return as logdict or send to stdout
+        :param: replace to replace the color variables for stdout
+        :param: exception is jumpscale/python exception
 
         """
 
@@ -415,56 +431,32 @@ class JSBase:
             # now we will log
 
             frame_ = inspect.currentframe().f_back
-            levelup = 0
-            while frame_ and levelup < _levelup:
-                frame_ = frame_.f_back
-                levelup += 1
+            if _levelup > 0:
+                levelup = 0
+                while frame_ and levelup < _levelup:
+                    frame_ = frame_.f_back
+                    levelup += 1
 
-            fname = frame_.f_code.co_filename.split("/")[-1]
-            defname = frame_.f_code.co_name
-            linenr = frame_.f_lineno
-
-            # while obj is None and frame_:
-            #     locals_ = frame_.f_locals
-            #
-            #     if tbc2 in locals_:
-            #         obj = locals_[tbc2]
-            #     else:
-            #         frame_ = frame_.f_back
-
-            # if self._location not in [None,""]:
-            #     if not self._location.endswith(self._name):
-            #         context = "%s:%s:%s"%(self._location,self._name,defname)
-            #     else:
-            #         context = "%s:%s"%(self._location,defname)
-            # if context=="":
-            #     context = defname
-
-            logdict = {}
-            logdict["linenr"] = linenr
-            logdict["processid"] = j.application.appname
-            logdict["message"] = msg
-            logdict["filepath"] = fname
-            logdict["level"] = level
-            if context:
-                logdict["context"] = context
-            else:
+            if not context:
                 try:
-                    logdict["context"] = self._key
+                    context = self._key
                 except Exception as e:
-                    logdict["context"] = ""
+                    context = "UNKNOWN"
                     pass  # TODO:*1 is not good
-            logdict["cat"] = cat
 
-            logdict["data"] = data
-            if data and isinstance(data, dict):
-                # shallow copy the data to avoid changing the original data
-                hidden_data = data.copy()
-                if "password" in data or "secret" in data or "passwd" in data:
-                    hidden_data["password"] = "***"
-                logdict["data"] = hidden_data
-
-            j.core.tools.log2stdout(logdict)
+            return j.core.tools.log(
+                msg=msg,
+                cat=cat,
+                level=level,
+                data=data,
+                context=context,
+                tb=tb,
+                data_show=data_show,
+                exception=exception,  # is jumpscale/python exception
+                replace=replace,  # to replace the color variables for stdout
+                stdout=stdout,  # return as logdict or send to stdout
+                frame_=frame_,
+            )
 
     ################
 
