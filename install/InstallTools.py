@@ -2764,7 +2764,7 @@ class MyEnv_:
         if debug_configure:
             self.config["DEBUG"] = debug_configure
 
-        for key, val in config.items(self):
+        for key, val in config.items():
             self.config[key] = val
 
         if sshagent_use and self.interactive:  # just a warning when interactive
@@ -2793,7 +2793,7 @@ class MyEnv_:
         else:
             self.secret_set(secret)
 
-        if DockerFactory.indocker(self):
+        if DockerFactory.indocker():
             self.config["IN_DOCKER"] = True
         else:
             self.config["IN_DOCKER"] = False

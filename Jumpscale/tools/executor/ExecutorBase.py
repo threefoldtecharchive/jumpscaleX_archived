@@ -27,6 +27,7 @@ class ExecutorBase(JSBASE):
 
         self._init3()
 
+    @property
     def installer(self):
         if not self._installer:
             self._installer = ExecutorInstallers(executor=self)
