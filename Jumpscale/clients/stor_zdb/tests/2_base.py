@@ -13,7 +13,7 @@ def main(self):
     c = self.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
 
-    cl = self.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
+    cl = self.client_get(name="test", addr="localhost", port=9901, secret="1234")
     cl.flush()
     nr = cl.nsinfo["entries"]
     assert nr == 0

@@ -437,6 +437,7 @@ class BCDBModel(j.application.JSBaseClass):
         """
 
         if obj_id in [None, 0, "0", b"0"]:
+            return
             raise j.exceptions.Base("id cannot be None or 0")
 
         # if self.obj_cache is not None and usecache:

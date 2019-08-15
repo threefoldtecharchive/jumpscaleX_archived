@@ -41,10 +41,15 @@ def main(self):
         . /sandbox/env.sh;
         kosmos 'j.data.bcdb.get("test").redis_server_start(port=6380)'
         """
+        # WARNING bcdb get rest=true will delete and restore the db file
+        # this need to be executed BEFORE the redis server startup as it will connect to the same
+        # database and if the file is deleted before we end up with readonly error
+        # see https://techblog.dorogin.com/sqlite-error-8-attempt-to-write-a-readonly-database-62b80cc6c9db
+        bcdb = j.data.bcdb.get("test", reset=True)
+
         self._cmd = j.servers.startupcmd.get(name="redis_6380", cmd_start=cmd, ports=[6380], executor="tmux")
         self._cmd.start()
         j.sal.nettools.waitConnectionTest("127.0.0.1", port=6380, timeoutTotal=15)
-        bcdb = j.data.bcdb.get("test", reset=True)
 
         schema = """
         @url = despiegk.test2
@@ -60,7 +65,7 @@ def main(self):
         llist4 = "1,2,3" (L)
         """
         if zdb:
-            cl = j.clients.zdb.client_get(port=9901)
+            cl = j.clients.zdb.client_get(name="test", port=9901)
             cl.flush()
 
         schema = j.core.text.strip(schema)

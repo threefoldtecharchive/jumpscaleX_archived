@@ -69,6 +69,7 @@ def main(self):
 
     bcdb = j.data.bcdb.get("test")
     m = bcdb.model_get_from_schema(SCHEMA)
+    bcdb.index_rebuild()
 
     assert len(m.find()) == 10
     r = m.get_by_name("myuser_8")

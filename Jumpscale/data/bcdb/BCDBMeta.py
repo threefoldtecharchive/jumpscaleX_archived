@@ -125,7 +125,6 @@ class BCDBMeta(j.application.JSBaseClass):
             check.append(s.sid)
 
     def _save(self):
-
         self._log_debug("save meta:%s" % self._bcdb.name)
         self._verify()
         serializeddata = j.data.serializers.jsxdata.dumps(self._data)
