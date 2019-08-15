@@ -26,7 +26,7 @@ class RsyncServer(j.application.JSBaseClass):
         self.pathsecrets = j.tools.path.get("%s/secrets.cfg" % self.root)
         self.pathusers = j.tools.path.get("%s/users.cfg" % self.root)
         if distrdir == "":
-            distrdir = "%s/apps/agentcontroller/distrdir/" % j.dirs.JSBASEDIR
+            distrdir = "%s/apps/agentcontroller/distrdir/" % j.dirs.BASEDIR
 
         self.distrdir = j.tools.path.get(distrdir)
 

@@ -44,11 +44,12 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         # https://github.com/coredns/coredns#compilation-from-source
 
         # go to package path and build (for coredns)
+        # redis:github.com/andrewayoub/redis is used instead of arvancloud/redis to use the fork which containes fixes for dependencies
         C = """
         cd {}
         git clone https://github.com/coredns/coredns.git
         cd coredns
-        echo 'redis:github.com/arvancloud/redis' >> plugin.cfg
+        echo 'redis:github.com/andrewayoub/redis' >> plugin.cfg
         make
         """.format(
             self.package_path
