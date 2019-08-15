@@ -48,7 +48,7 @@ class JSON(StringMultiLine):
         elif isinstance(v, str):
             try:
                 v = j.data.serializers.json.loads(v)
-            except ValueError as e:
+            except j.exceptions.Value:
                 pass
         elif isinstance(v, set) or isinstance(v, list):
             pass
