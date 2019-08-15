@@ -155,10 +155,11 @@ class builder_method(object):
                 builder.profile_builder_select()
 
             if name == "install":
+                builder.profile_builder_select()
                 builder.build()
 
             if name == "sandbox":
-                builder.profile_sandbox_select()
+                builder.profile_builder_select()
                 builder.install()
                 kwargs["zhub_client"] = self.get_default_zhub_client(kwargs)
 
