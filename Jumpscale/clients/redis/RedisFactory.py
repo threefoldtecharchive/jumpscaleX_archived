@@ -121,10 +121,6 @@ class RedisFactory(j.application.JSBaseClass):
                     unix_socket_path=unixsocket,
                     # socket_timeout=timeout,
                     password=password,
-                    ssl=ssl,
-                    ssl_certfile=ssl_certfile,
-                    ssl_keyfile=ssl_keyfile,
-                    ssl_ca_certs=ssl_ca_certs,
                     **args,
                 )
 
