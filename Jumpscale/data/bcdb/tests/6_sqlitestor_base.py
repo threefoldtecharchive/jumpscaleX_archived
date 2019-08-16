@@ -30,6 +30,7 @@ def main(self):
     use a bcdb which is using sqlite
 
     """
+
     bcdb, _ = self._load_test_model(type="sqlite")
 
     mpath = self._dirpath + "/tests/models"
@@ -83,5 +84,5 @@ def main(self):
     # assert model.index.select().first().cost == 11.0  # is always in usd
 
     print("TEST FOR MODELS DONE in SQLITE")
-
+    self._log_info("TEST SQLITE DONE")
     return "OK"

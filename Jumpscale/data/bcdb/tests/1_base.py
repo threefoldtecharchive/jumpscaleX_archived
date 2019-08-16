@@ -29,48 +29,10 @@ def main(self):
 
     """
 
-    def test(name, sqlite=True):
-        def load():
+    def test(name, schema, sqlite=True):
+        def load(schema_url):
 
             # don't forget the record 0 is always a systems record
-
-            if sqlite:
-                schema = """
-                @url = despiegk.test
-                llist2 = "" (LS)
-                name** = ""
-                email** = ""
-                nr** = 0
-                date_start** = 0 (D)
-                description = ""
-                token_price** = "10 USD" (N)
-                hw_cost = 0.0 #this is a comment
-                llist = []
-                llist3 = "1,2,3" (LF)
-                llist4 = "1,2,3" (L)
-                llist5 = "1,2,3" (LI)
-                U = 0.0
-                pool_type = "managed,unmanaged" (E)
-                """
-            else:
-                schema = """
-                @url = despiegk.test
-                llist2 = "" (LS)
-                name* = ""
-                email* = ""
-                nr* = 0
-                date_start* = 0 (D)
-                description = ""
-                token_price* = "10 USD" (N)
-                hw_cost = 0.0 #this is a comment
-                llist = []
-                llist3 = "1,2,3" (LF)
-                llist4 = "1,2,3" (L)
-                llist5 = "1,2,3" (LI)
-                U = 0.0
-                pool_type = "managed,unmanaged" (E)
-                """
-
             db, model = self._load_test_model(type=name, schema=schema)
 
             for i in range(10):
@@ -99,8 +61,12 @@ def main(self):
 
             return db
 
-        db = load()
-        db_model = db.model_get_from_url(url="despiegk.test")
+        if sqlite:
+            schema_url = "despiegk.test.sqlite"
+        else:
+            schema_url = "despiegk.test"
+        db = load(schema_url)
+        db_model = db.model_get_from_url(url=schema_url)
 
         if sqlite:
             query = db_model.index.sql.select()
@@ -186,8 +152,48 @@ def main(self):
 
         self._log_info("TEST DONE: %s" % name)
 
-    test("RDB", sqlite=False)
-    test("ZDB")
-    test("SQLITE")
+    schema_sqlite = """
+    @url = despiegk.test.sqlite
+    llist2 = "" (LS)
+    name** = ""
+    email** = ""
+    nr** = 0
+    date_start** = 0 (D)
+    description = ""
+    token_price** = "10 USD" (N)
+    hw_cost = 0.0 #this is a comment
+    llist = []
+    llist3 = "1,2,3" (LF)
+    llist4 = "1,2,3" (L)
+    llist5 = "1,2,3" (LI)
+    U = 0.0
+    pool_type = "managed,unmanaged" (E)
+    """
+    schema = """
+    @url = despiegk.test
+    llist2 = "" (LS)
+    name* = ""
+    email* = ""
+    nr* = 0
+    date_start* = 0 (D)
+    description = ""
+    token_price* = "10 USD" (N)
+    hw_cost = 0.0 #this is a comment
+    llist = []
+    llist3 = "1,2,3" (LF)
+    llist4 = "1,2,3" (L)
+    llist5 = "1,2,3" (LI)
+    U = 0.0
+    pool_type = "managed,unmanaged" (E)
+    """
 
+    test("RDB", schema, sqlite=False)
+
+    test("ZDB", schema_sqlite)
+
+    test("SQLITE", schema_sqlite)
+    # CLEAN STATE
+    j.data.schema.remove_from_text(schema_sqlite)
+    j.data.schema.remove_from_text(schema)
+    self._log_info("TEST BASE DONE")
     return "OK"

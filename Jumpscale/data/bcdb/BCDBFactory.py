@@ -175,14 +175,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         assert name
         assert isinstance(name, str)
         if name in self._bcdb_instances:
-            self._bcdb_instances.pop(name)
-        if name in self._config:
-            self._get(name=name, reset=True, storclient=None)
-        else:
-            b = BCDB(storclient=None, name=name, reset=True)
-            b.destroy()
-        if name in self._bcdb_instances:
-            self._bcdb_instances.pop(name)
+            self._bcdb_instances[name].destroy()
         if name in self._config:
             self._config.pop(name)
             self._config_write()
@@ -370,10 +363,12 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         type = type.lower()
 
         if type == "rdb":
+            zdb = j.servers.zdb.test_instance_start()
             storclient = j.clients.rdb.client_get()  # will be to core redis
             bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
 
         elif type == "sqlite":
+
             bcdb = j.data.bcdb.new(name="test", reset=True)
         elif type == "zdb":
             zdb = j.servers.zdb.test_instance_start()

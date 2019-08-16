@@ -57,5 +57,5 @@ def main(self):
     # TODO:*1 need to get the sqlite index to work again
 
     print("TEST FOR MODELS DONE, but is still minimal")
-
+    self._log_info("TEST MODELS DONE")
     return "OK"

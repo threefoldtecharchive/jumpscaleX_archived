@@ -97,24 +97,12 @@ def main(self):
 
     assert a._model.schema._md5 == s0md5
 
-    schema_text = """
-    @url = jumpscale.schema.test.a
-    category*= ""
-    txt = ""
-    i = 0
-    """
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
     assert len(bcdb.meta._data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
-    schema_text = """
-    @url = jumpscale.schema.test.a
-    category*= ""
-    txt = ""
-    i = 0
-    """
     # lets upgrade schema to float
     s2 = j.data.schema.get_from_text(schema_text)
 
@@ -145,4 +133,8 @@ def main(self):
 
     assert a6.id == a3.id
     assert a6.i == a3.i
+
+    # CLEAN STATE
+    j.data.schema.remove_from_text(schema_text)
+    self._log_info("TEST META DONE")
     return "OK"

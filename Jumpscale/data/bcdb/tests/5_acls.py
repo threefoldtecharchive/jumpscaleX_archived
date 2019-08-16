@@ -79,21 +79,20 @@ def main(self):
         else:
             raise j.exceptions.Base("not supported type")
 
-        def load():
+        def load(schema):
 
             # don't forget the record 0 is always a systems record
-
-            schema = """
-            @url = despiegk.test5.acl
-            name = "" 
-            an_id = 0
-            """
 
             db, model = self._load_test_model(type=name, schema=schema)
 
             return db, model
 
-        bcdb, m = load()
+        schema = """
+            @url = despiegk.test5.acl
+            name = "" 
+            an_id = 0
+            """
+        bcdb, m = load(schema)
 
         self._log_info("POPULATE DATA")
 
@@ -164,7 +163,8 @@ def main(self):
         assert a.acl.rights_check(11, "rw") is False
 
         a.save()
-
+        # CLEAN STATE
+        j.data.schema.remove_from_text(schema)
         self._log_info("TEST ACL DONE: %s" % name)
 
     test("RDB")
