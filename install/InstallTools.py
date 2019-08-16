@@ -1390,6 +1390,7 @@ class Tools:
                         assert arg
                         line = line.replace("{%s}" % arg, val)
                 except Exception as e:
+                    from Jumpscale import j
                     j.exceptions.Runtime(
                         "failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new
                     )
