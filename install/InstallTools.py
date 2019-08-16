@@ -1428,7 +1428,11 @@ class Tools:
         if MyEnv.config.get("LOGGER_PANEL_NRLINES"):
             if Tools.custom_log_printer:
                 p = Tools.custom_log_printer
-        p(text)
+        try:
+            p(text)
+        except UnicodeEncodeError as e:
+            text = text.encode("ascii", "ignore")
+            p(text)
 
     @staticmethod
     def log2str(logdict, data_show=True, replace=True):
@@ -1497,6 +1501,9 @@ class Tools:
                     tb_code = Tools.pygments.highlight(
                         tb_line, Tools.pygments_pylexer, Tools.pygments_formatter
                     ).rstrip()
+                else:
+                    j.shell()
+                    tb_code = tb_line
                 tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
                 C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
                 out += C.rstrip() + "\n"
@@ -1532,6 +1539,8 @@ class Tools:
 
         if replace:
             out = Tools.text_replace(out)
+            if out.find("{RESET}") != -1:
+                Tools.shell()
 
         return out
 
@@ -1573,7 +1582,12 @@ class Tools:
             content = Tools.text_indent(content)
         if log:
             Tools.log(content, level=15, stdout=False)
-        print(content, end=end)
+
+        try:
+            print(content, end=end)
+        except UnicodeEncodeError as e:
+            content = content.encode("ascii", "ignore")
+            print(content)
 
     @staticmethod
     def text_md5(txt):

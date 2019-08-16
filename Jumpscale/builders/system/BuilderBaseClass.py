@@ -136,12 +136,12 @@ class builder_method(object):
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key not in ["reset", "self"]}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
             reset = kwargs.get("reset", False)
-            reset_state = kwargs.get("reset_state", False)
+            state_reset = kwargs.get("state_reset", False)
 
-            reset = reset or reset_state
+            reset = reset or state_reset
 
             # if reset:
-            #     builder.reset_state()  # lets not reset the full module
+            #     builder.state_reset()  # lets not reset the full module
 
             if self.already_done(func, builder, done_key, reset):
                 builder._log_info("no need to do: %s:%s, was already done" % (builder._name, kwargs_without_reset))
@@ -177,9 +177,6 @@ class builder_method(object):
                 res = builder._flist_create(kwargs["zhub_client"], kwargs.get("merge_base_flist"))
 
             builder._done_set(done_key)
-
-            if name == "build":
-                builder.profile_sandbox_select()
 
             if self.log:
                 builder._log_debug("action:%s() done -> %s" % (name, res))
@@ -491,7 +488,7 @@ class BuilderBaseClass(BaseClass):
         self._done_reset()
         self.clean()
 
-    def reset_state(self):
+    def state_reset(self):
         """
         reset the state of your builder, all states of builder are gone that way
         :return:

@@ -39,6 +39,20 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
         self._init3()
 
+    def state_reset(self):
+        """
+        set the following:
+
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
+
+        so it can get reloaded from remote
+
+        :return:
+        """
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
+
     def reset(self):
 
         if self._client_:
@@ -122,8 +136,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     #         else:
     #             self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
     #     return self._private
-    def execute_jumpscale(self, script):
+    def execute_jumpscale(self, script, **kwargs):
         script = "from Jumpscale import j\n{}".format(script)
+
+        script = j.core.tools.text_replace(script, **kwargs)
+
         scriptname = j.data.hash.md5_string(script)
         filename = "{}/{}".format(j.dirs.TMPDIR, scriptname)
 

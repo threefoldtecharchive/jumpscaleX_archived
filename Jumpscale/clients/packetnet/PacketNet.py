@@ -221,7 +221,7 @@ class PacketNet(JSConfigBase):
             self._devices = None
             self._log_debug("found machine, remove:%s" % name)
             res.delete()
-        j.tools.nodemgr.delete(instance=name)
+        # j.tools.nodemgr.delete(instance=name)
 
     def startDevice(
         self,
@@ -515,19 +515,10 @@ class PacketNet(JSConfigBase):
         conf["project_id"] = self.projectid
         conf["os"] = os
         conf["ipxeUrl"] = ipxeUrl
-        node = j.tools.nodemgr.set(
-            name=hostname,
-            sshclient=sshinstance,
-            cat="packet",
-            description="",
-            selected=True,
-            clienttype="j.clients.packetnet",
-        )
 
-        j.tools.executor.reset()
+        sshclient.state_reset()
 
-        node.client = self
-        node.pubconfig = conf
+        j.shell()
 
         return node
 

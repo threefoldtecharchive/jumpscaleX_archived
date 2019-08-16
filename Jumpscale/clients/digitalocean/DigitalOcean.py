@@ -213,6 +213,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         sshcl = j.clients.ssh.get(
             name="do_%s" % name, addr=droplet.ip_address, client_type="pssh", sshkey_name=sshkey.name
         )
+        sshcl.state_reset()  # important otherwise the state does not correspond
         sshcl.save()
 
         return droplet, sshcl

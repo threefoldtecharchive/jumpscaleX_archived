@@ -92,6 +92,9 @@ class ExecutorInstallers(j.application.JSBaseClass):
             interactive=True,
         )
 
+    def jumpscale_test(self):
+        self.executor.execute_jumpscale("j.tools.executor.local.test()")
+
     @executor_method()
     def mosh(self):
         self.executor.execute("apt install mosh -y")
@@ -105,6 +108,10 @@ class ExecutorInstallers(j.application.JSBaseClass):
         cmd = "cd /tmp;python3 jsx configure --sshkey %s -s" % j.core.myenv.sshagent.key_default
         self.executor.execute(cmd, interactive=True)
         self.executor.execute("/tmp/jsx install -s", interactive=True)
+
+    @executor_method()
+    def threebot(self):
+        self.executor.execute_jumpscale("j.servers.threebot.test()")
 
     @executor_method()
     def jumpscale_container(self):

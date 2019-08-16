@@ -35,25 +35,21 @@ class ExecutorBase(JSBASE):
 
     def reset(self):
         self.state_reset()
-        self.env_on_system_msgpack = ""
-        self.config_msgpack = ""
-        self.save()
         self._init3()
+        self.save()
 
     def _init3(self):
-
+        self._config = None
         self._env_on_system = None
 
-        if self.config_msgpack:
-            self.config = j.data.serializers.msgpack.loads(self.config_msgpack)
-        else:
-            self.config = {}
-
-        if not isinstance(self.config, dict):
-            j.shell()
-
-        if "state" not in self.config:
-            self.config["state"] = {}
+    @property
+    def config(self):
+        if not self._config:
+            if self.config_msgpack:
+                self._config = j.data.serializers.msgpack.loads(self.config_msgpack)
+            else:
+                self._config = {}
+        return self._config
 
     def save(self):
         """
@@ -96,14 +92,14 @@ class ExecutorBase(JSBASE):
 
     def dir_ensure(self, path):
         cmd = "mkdir -p %s" % path
-        self.execute(cmd)
+        self.execute(cmd, interactive=False)
 
     def path_isdir(self, path):
         """
         checks if the path is a directory
         :return:
         """
-        rc, out, err = self.execute('if [ -d "%s" ] ;then echo DIR ;fi' % path)
+        rc, out, err = self.execute('if [ -d "%s" ] ;then echo DIR ;fi' % path, interactive=False)
         return out.strip() == "DIR"
 
     def path_isfile(self, path):
@@ -111,7 +107,7 @@ class ExecutorBase(JSBASE):
         checks if the path is a directory
         :return:
         """
-        rc, out, err = self.execute('if [ -f "%s" ] ;then echo FILE ;fi' % path)
+        rc, out, err = self.execute('if [ -f "%s" ] ;then echo FILE ;fi' % path, interactive=False)
         return out.strip() == "FILE"
 
     @property
@@ -120,7 +116,7 @@ class ExecutorBase(JSBASE):
 
     def file_read(self, path):
         self._log_debug("file read:%s" % path)
-        rc, out, err = self.execute("cat %s" % path, showout=False)
+        rc, out, err = self.execute("cat %s" % path, showout=False, interactive=False)
         return out
 
     def file_write(self, path, content, mode=None, owner=None, group=None, append=False, sudo=False, showout=True):
@@ -163,7 +159,7 @@ class ExecutorBase(JSBASE):
             if group:
                 cmd += "chgrp %s %s\n" % (group, path)
 
-            res = self.execute(cmd, showout=False, script=False)
+            res = self.execute(cmd, showout=False, script=False, interactive=False)
 
         return None
 
@@ -232,7 +228,7 @@ class ExecutorBase(JSBASE):
         raise NotImplemented()
 
     def find(self, path):
-        rc, out, err = self.execute("find %s" % path, die=False)
+        rc, out, err = self.execute("find %s" % path, die=False, interactive=False)
         if rc > 0:
             if err.lower().find("no such file") != -1:
                 return []
@@ -270,7 +266,7 @@ class ExecutorBase(JSBASE):
         """
 
         if not "IN_DOCKER" in self.config:
-            rc, out, _ = self.execute("cat /proc/1/cgroup", die=False, showout=False)
+            rc, out, _ = self.execute("cat /proc/1/cgroup", die=False, showout=False, interactive=False)
             if rc == 0 and out.find("/docker/") != -1:
                 self.config["IN_DOCKER"] = True
             else:
@@ -320,7 +316,7 @@ class ExecutorBase(JSBASE):
     #         out = ""
     #         for key, val in self.dir_paths.items():
     #             out += "mkdir -p %s\n" % val
-    #         self.execute(out, sudo=True, showout=False)
+    #         self.execute(out, sudo=True, showout=False,interactive=False)
     #
     #     self._cache.reset()
     #
@@ -527,148 +523,6 @@ class ExecutorBase(JSBASE):
         self.env_on_system_msgpack = j.data.serializers.msgpack.dumps(res)
         self.save()
 
-    #
-    # def system_install(self,force=False,sandbox=False):
-    #
-    #     if force or notself.state_exists("myenv_init"):
-    #
-    #         if j.core.tools.platform()== "linux":
-    #             script="""
-    #             echo >> /etc/apt/sources.list
-    #             echo "# Jumpscale Setup" >> /etc/apt/sources.list
-    #             echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-    #             apt-get update
-    #
-    #             apt-get install -y curl rsync unzip
-    #             locale-gen --purge en_US.UTF-8
-    #
-    #             mkdir -p /tmp/jumpscale/scripts
-    #             mkdir -p /sandbox/var/log
-    #
-    #             """
-    #         else:
-    #             if not j.core.tools.cmd_installed("curl") or j.core.tools.cmd_installed("unzip") or j.core.tools.cmd_installed("rsync"):
-    #                 script="""
-    #                 brew install curl unzip rsync
-    #                 """
-    #             else:
-    #                 script = ""
-    #                 j.core.tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
-    #
-    #         j.core.tools.execute(script,interactive=True)
-    #
-    #
-    #         self.config_load()
-    #
-    #         if not "HOME" in self.config and "HOME" in os.environ:
-    #            self.config["DIR_HOME"] = copy.copy(os.environ["HOME"])
-    #            self.config_save()
-    #
-    #         if not os.path.exists(MyEnv.config["DIR_BASE"]):
-    #             script = """
-    #             cd /
-    #             sudo mkdir -p /sandbox/cfg
-    #             sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
-    #             """
-    #             args={}
-    #             args["USERNAME"] = getpass.getuser()
-    #             st = os.stat(MyEnv.config["DIR_HOME"])
-    #             gid = st.st_gid
-    #             args["GROUPNAME"] = grp.getgrgid(gid)[0]
-    #             j.core.tools.execute(script,interactive=True,args=args)
-    #
-    #
-    #         installed = j.core.tools.cmd_installed("git") and j.core.tools.cmd_installed("ssh-agent")
-    #        self.config["SSH_AGENT"]=installed
-    #        self.config_save()
-    #
-    #             # and
-    #         if not os.path.exists(ExecutorMyEnv.config["DIR_TEMP"]):
-    #             os.makedirs(ExecutorMyEnv.config["DIR_TEMP"], exist_ok=True)
-    #
-    #        self.state_set("myenv_init")
-    #
-    #     if os.path.exists(os.path.join(ExecutorMyEnv.config["DIR_BASE"], "bin", "python3.6")):
-    #        self.sandbox_python_active=True
-    #     else:
-    #        self.sandbox_python_active=False
-    #
-    #
-    #     #will get the sandbox installed
-    #     if force or notself.state_exists("myenv_install"):
-    #
-    #         ifself.config["INSYSTEM"]:
-    #
-    #             #DONT USE THE SANDBOX
-    #
-    #             UbuntuInstall.do_all()
-    #
-    #             j.core.tools.code_github_get(repo="sandbox_base", branch=["master"])
-    #
-    #             script="""
-    #             set -e
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-    #
-    #             #remove parts we don't use in in system deployment
-    #             rm -rf {DIR_BASE}/openresty
-    #             rm -rf {DIR_BASE}/lib/python
-    #             rm -rf {DIR_BASE}/lib/pythonbin
-    #             rm -rf {DIR_BASE}/var
-    #             rm -rf {DIR_BASE}/root
-    #
-    #             mkdir -p root
-    #             mkdir -p var
-    #
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #
-    #
-    #         else:
-    #
-    #             j.core.tools.code_github_get(repo="sandbox_base", branch=["master"])
-    #
-    #             script="""
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-    #             mkdir -p root
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #             if j.core.tools.platform() == "darwin":
-    #                 reponame = "sandbox_osx"
-    #             elif j.core.tools.platform() == "linux":
-    #                 reponame = "sandbox_ubuntu"
-    #             else:
-    #                 raise j.exceptions.Base("cannot install, j.core.tools.platform() now found")
-    #
-    #             j.core.tools.code_github_get(repo=reponame, branch=["master"])
-    #
-    #             script="""
-    #             set -ex
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/{REPONAME}/base/ .
-    #             mkdir -p root
-    #             mkdir -p var
-    #             """
-    #             args={}
-    #             args["REPONAME"]=reponame
-    #
-    #             j.core.tools.execute(script,interactive=True,args=args)
-    #
-    #             script="""
-    #             set -e
-    #             cd {DIR_BASE}
-    #             source env.sh
-    #             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #         j.core.tools.log("INSTALL FOR BASE OK")
-    #
-    #        self.state_set("myenv_install")
-
     def test(self):
 
         """
@@ -680,8 +534,8 @@ class ExecutorBase(JSBASE):
         ex.reset()
 
         assert ex.state == {}
-        assert ex.env_on_system_msgpack == ""
-        assert ex.config_msgpack == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         rc, out, err = ex.execute("ls /")
         assert rc == 0
@@ -749,8 +603,8 @@ class ExecutorBase(JSBASE):
 
         ex.reset()
         assert ex.state == {}
-        assert ex.env_on_system_msgpack == ""
-        assert ex.config_msgpack == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         # test that it does not do repeating thing & cache works
         for i in range(1000):

@@ -386,6 +386,23 @@ def container_stop(name="3bot", configdir=None):
     docker.stop()
 
 
+@click.command(name="container-docker-upload")
+@click.option("-n", "--name", default="3bot", help="name of container to push")
+@click.option("--dest", default="3bot", help="name of container image on docker hub, default despiegk/3bot")
+def container_docker_upload(name="3bot", dest=None, configdir=None):
+    """
+    stop the 3bot container
+    :param name:
+    :return:
+    """
+    if not dest:
+        dest = "despiegk/3bot"
+    _configure(configdir=configdir)
+    docker = container_get(name=name, existcheck=False)
+    cmd = "docker push %s" % dest
+    docker.stop()
+
+
 @click.command(name="container-start")
 # @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
