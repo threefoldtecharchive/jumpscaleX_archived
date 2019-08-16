@@ -58,4 +58,53 @@ def main(self):
 
     print("TEST FOR MODELS DONE, but is still minimal")
     self._log_info("TEST MODELS DONE")
+
+    # CLEAN STATE
+    schema = """
+    @url = jumpscale.bcdb.test.house
+    name* = "" (S)
+    active* = "" (B)
+    cost* = (N)
+    room = (LO) !jumpscale.bcdb.test.room
+
+    @url = jumpscale.bcdb.test.room
+    name = "" (S)
+    active = "" (B)
+    colors = []
+
+    @url = threefoldtoken.order.buy
+    comment = ""
+    currency_to_buy* = "" (S)    # currency types BTC/ETH/XRP/TFT
+    currency_mine = (LS)        # which of my currencies I am selling (can be more than 1)
+    price_max* =  (N)           # can be defined in any currency
+    amount* = (F)                # amount
+    expiration* =  (D)           # can be defined as e.g. +1h
+    buy_from = (LS)             # list of wallet addresses which I want to buy from
+    secret = "" (S)             # the optional secret to use when doing a buy order, only relevant when buy_from used
+    approved* = (B)              # if True, object will be scheduled for matching, further updates/deletes are no more possible
+    owner_email_addr = (S)      # email addr used through IYO when order was created
+    wallet_addr* = (S)           # Wallet address
+
+    @url = threefoldtoken.order.sell
+    comment = ""
+    currency_to_sell* = "" (S)   # currency types BTC/ETH/XRP/TFT
+    currency_accept = (LS)      # can accept more than one currency
+    price_min* = 0 (N)           # can be defined in any currency
+    amount* = (F)                # amount
+    expiration* =  (D)           # can be defined as e.g. +1h
+    sell_to = (LS)              # list of wallet addresses which are allowed to buy from me
+    secret = (LS)               # if used the buyers need to have one of the secrets
+    approved* = (B)              # if True, object will be scheduled for matching, further updates/deletes are no more possible
+    owner_email_addr = (S)      # email addr used through IYO when order was created
+    wallet_addr* = (S)           # Wallet address
+
+    @url = threefoldtoken.wallet
+    jwt = "" (S)                # JWT Token
+    addr* = ""                   # Address
+    ipaddr = (ipaddr)           # IP Address
+    email = "" (S)              # Email address
+    username = "" (S)           # User name
+
+    """
+    j.data.schema.remove_from_text(schema)
     return "OK"

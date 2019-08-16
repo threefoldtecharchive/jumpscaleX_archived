@@ -361,21 +361,22 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             """
 
         type = type.lower()
-
-        if type == "rdb":
-            zdb = j.servers.zdb.test_instance_start()
-            storclient = j.clients.rdb.client_get()  # will be to core redis
-            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
-
-        elif type == "sqlite":
-
-            bcdb = j.data.bcdb.new(name="test", reset=True)
-        elif type == "zdb":
+        def startZDB():
             zdb = j.servers.zdb.test_instance_start()
             storclient_admin = zdb.client_admin_get()
             assert storclient_admin.ping()
             secret = "1234"
             storclient = storclient_admin.namespace_new("test", secret=secret)
+            return storclient
+            
+        if type == "rdb":
+            storclient = startZDB()
+            storclient = j.clients.rdb.client_get()  # will be to core redis
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
+        elif type == "sqlite":
+            bcdb = j.data.bcdb.new(name="test", reset=True)
+        elif type == "zdb":
+            storclient = startZDB()
             storclient.flush()
             assert storclient.nsinfo["public"] == "no"
             assert storclient.ping()
