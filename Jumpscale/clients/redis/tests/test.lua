@@ -5,7 +5,7 @@ local message = KEYS[3]
 local logkey = "logs:data:"..processid
 local idkey = "logs:id:"..processid
 local channelkey = "logs:channel:"..processid
-
+redis.replicate_commands()
 local t = redis.call('TIME')[1]
 
 
