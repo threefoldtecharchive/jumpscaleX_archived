@@ -501,7 +501,7 @@ if redis:
             sha = data["sha"]  # .encode()
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
-            Tools.shell()
+            #Tools.shell()
             return self.evalsha(sha, data["nrkeys"], *args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)

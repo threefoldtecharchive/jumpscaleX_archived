@@ -18,7 +18,7 @@ def main(self):
     res = r.eval(j.sal.fs.readFile(lua_test_file_path), 3, "a", "b", "c")
     assert res == b"OK abc"
 
-    res = r.evalsha(dd["sha"], 3, "a", "b", "c")
+    res = r.evalsha(dd.sha, 3, "a", "b", "c")
     assert res == b"OK abc"
 
     res = r.storedprocedure_execute("test1", "a", "b", "c")

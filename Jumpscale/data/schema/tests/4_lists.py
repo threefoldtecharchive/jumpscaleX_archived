@@ -34,13 +34,13 @@ def main(self):
     """
 
     schema0 = """
-        @url = jumpscale.schema.test3.cmd
+        @url = jumpscale.schema.test4.cmd
         name = ""
         comment = ""        
         nr = 0
         """
     schemasub = j.data.schema.get_from_text(schema0)
-    schemasub2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmd")  # now get based on url
+    schemasub2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test4.cmd")  # now get based on url
     assert schemasub2._md5 == schemasub._md5  # check we get the same schema back
     assert j.data.schema.get_from_md5(md5=schemasub._md5)._md5 == schemasub._md5
 
@@ -59,8 +59,8 @@ def main(self):
         result = "" #json
         error = ""
         return_queues = (LS)
-        cmds = (LO) !jumpscale.schema.test3.cmd
-        cmd = (O) !jumpscale.schema.test3.cmd
+        cmds = (LO) !jumpscale.schema.test4.cmd
+        cmd = (O) !jumpscale.schema.test4.cmd
         
         """
 
@@ -70,9 +70,9 @@ def main(self):
     assert j.data.schema.get_from_md5(md5=schema_object2._md5)._md5 == schema_object2._md5
     assert schema_object2._md5 == j.data.schema._md5(schema1)
 
-    assert j.data.schema.url_to_md5["jumpscale.schema.test3.cmd"][-1] == schemasub2._md5
+    assert j.data.schema.url_to_md5["jumpscale.schema.test4.cmd"][-1] == schemasub2._md5
 
-    s5 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmd")
+    s5 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test4.cmd")
     assert s5._md5 == schemasub._md5
 
     q = schema_object.new()
@@ -148,6 +148,9 @@ def main(self):
         schema_test.category = "s"
     except Exception as e:
         assert str(e).find("object readonly, cannot set") != -1
+    # CLEAN STATE
+    j.data.schema.remove_from_text(schema0)
+    j.data.schema.remove_from_text(schema1)
 
     self._log_info("TEST DONE LIST")
 

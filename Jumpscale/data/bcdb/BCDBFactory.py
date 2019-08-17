@@ -175,14 +175,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         assert name
         assert isinstance(name, str)
         if name in self._bcdb_instances:
-            self._bcdb_instances.pop(name)
-        if name in self._config:
-            self._get(name=name, reset=True, storclient=None)
-        else:
-            b = BCDB(storclient=None, name=name, reset=True)
-            b.destroy()
-        if name in self._bcdb_instances:
-            self._bcdb_instances.pop(name)
+            self._bcdb_instances[name].destroy()
         if name in self._config:
             self._config.pop(name)
             self._config_write()
@@ -368,19 +361,22 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             """
 
         type = type.lower()
-
-        if type == "rdb":
-            storclient = j.clients.rdb.client_get()  # will be to core redis
-            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
-
-        elif type == "sqlite":
-            bcdb = j.data.bcdb.new(name="test", reset=True)
-        elif type == "zdb":
+        def startZDB():
             zdb = j.servers.zdb.test_instance_start()
             storclient_admin = zdb.client_admin_get()
             assert storclient_admin.ping()
             secret = "1234"
             storclient = storclient_admin.namespace_new("test", secret=secret)
+            return storclient
+            
+        if type == "rdb":
+            storclient = startZDB()
+            storclient = j.clients.rdb.client_get()  # will be to core redis
+            bcdb = j.data.bcdb.new(name="test", storclient=storclient, reset=True)
+        elif type == "sqlite":
+            bcdb = j.data.bcdb.new(name="test", reset=True)
+        elif type == "zdb":
+            storclient = startZDB()
             storclient.flush()
             assert storclient.nsinfo["public"] == "no"
             assert storclient.ping()

@@ -65,3 +65,5 @@ def main(self):
 
     schema_test.token_price = "10 EUR"
     assert schema_test.token_price.currency_code == "eur"
+    # CLEAN STATE
+    j.data.schema.remove_from_text(schema)

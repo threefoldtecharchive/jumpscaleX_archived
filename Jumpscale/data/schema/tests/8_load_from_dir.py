@@ -72,3 +72,5 @@ def main(self):
     assert s2 == j.data.schema.get_from_url_latest(s.url)
 
     self._log_info("load from dir ok")
+    # CLEAN STATE
+    j.data.schema.remove_from_text(s2.text)

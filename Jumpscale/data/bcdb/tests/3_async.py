@@ -63,6 +63,6 @@ def main(self):
 
     assert model.bcdb.queue.empty()
 
-    self._log_info("TEST DONE")
+    self._log_info("TEST ASYNC DONE")
 
     return "OK"

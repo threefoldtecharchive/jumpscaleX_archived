@@ -151,6 +151,42 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         return blocks
 
+    def remove_from_text(self, schema_text, url=None):
+        """
+        :param schema_text can be 1 or more schema's in the text
+        """
+        assert isinstance(schema_text, str)
+        res = []
+        blocks = self._schema_blocks_get(schema_text)
+        if len(blocks) > 1 and url:
+            raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
+        for block in blocks:
+            res.append(self._remove_from_text_item(block, url=url))
+        return res
+
+    def _remove_from_text_item(self, schema_text, url=None):
+        md5 = self._md5(schema_text)
+        if md5 in self.md5_to_schema:
+            return self.md5_to_schema[md5]
+
+        s = Schema(text=schema_text, md5=md5, url=url)
+
+        assert s.url
+
+        # add md5 to the list if its not there yet
+        if s.url in self.url_to_md5:
+            if s._md5 in self.url_to_md5[s.url]:
+                self.url_to_md5[s.url].remove(s._md5)
+            self.url_to_md5.pop(s.url)
+
+        # add md5 to the list if its not there yet for versionless
+        if not s.url_noversion in self.url_versionless_to_md5:
+            if not s._md5 in self.url_versionless_to_md5[s.url_noversion]:
+                self.url_versionless_to_md5[s.url_noversion].remove(s._md5)
+            self.url_versionless_to_md5.pop(s.url_noversion)
+
+        return s
+
     def add_from_text(self, schema_text, url=None):
         """
         :param schema_text can be 1 or more schema's in the text
