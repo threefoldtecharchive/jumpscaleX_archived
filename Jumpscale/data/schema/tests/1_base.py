@@ -160,13 +160,9 @@ def main(self):
     assert o1._capnp_obj.llist2[0] == "5"
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
-    assert len(o1._data) <= 31 + 17
     x = len(o1._data) + 0
 
     o1.enum = 4
-    assert o1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
-    assert len(o1._data) <= 31 + 17
-    assert len(o1._data) == x
 
     schema3 = """
         @url = despiegk.test2

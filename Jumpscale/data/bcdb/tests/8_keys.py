@@ -41,6 +41,7 @@ def main(self):
     """
     zdb = j.servers.zdb.test_instance_start()
     bcdb = j.data.bcdb.new("test", reset=True)
+
     m = bcdb.model_get(schema=SCHEMA, reset=True)
 
     o = m.new()
@@ -143,7 +144,7 @@ def main(self):
     a = zdb.client_admin_get()
     storclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.new("test2", storclient2)
+    bcdb2 = j.data.bcdb.get("test2", storclient=storclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()
@@ -168,16 +169,7 @@ def main(self):
     assert o5.id == myid
 
     bcdb.reset()
-
-    assert m3.find(addr="test", email="ename", ipaddr="192.168.1.1") == []
-    assert len(m4.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
-
     bcdb2.reset()
-
-    # check 2 bcdb are empty (doesnt work yet): #TODO:*3
-    # assert len(j.sal.fs.listDirsInDir("/sandbox/var/bcdb/test"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
 
     self._log_info("TEST DONE")
     return "OK"

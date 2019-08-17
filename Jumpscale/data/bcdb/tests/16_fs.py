@@ -33,10 +33,14 @@ def main(self):
     contents = ["threefold foundation", "the new internet", "change the world", "digital freedom", "the future of IT"]
     bcdb = j.data.bcdb.get("test_fs", reset=True)
 
+    bcdb.models_add_threebot()
+
     cl = j.clients.sonic.get_client_bcdb()
     cl.flush("test_fs")
-    file_model = bcdb.model_get_from_file("{}/models_system/FILE.py".format(self._dirpath_))
-    dir_model = bcdb.model_get_from_file("{}/models_system/DIR.py".format(self._dirpath_))
+
+    block_model = bcdb.model_get(url="jumpscale.bcdb.fs.block.2")
+    file_model = bcdb.model_get(url="jumpscale.bcdb.fs.file.2")
+    dir_model = bcdb.model_get(url="jumpscale.bcdb.fs.dir.2")
 
     root = dir_model.new()
     root.name = "/"
@@ -82,13 +86,13 @@ def main(self):
     assert len(res) == 5
 
     start_cmd = """
-from Jumpscale import j
-rack = j.servers.rack.get()
-from jumpscale.Jumpscale.data.bcdb.connectors.webdav.BCDBFSProvider import BCDBFSProvider
-
-rack.webdav_server_add(webdavprovider=BCDBFSProvider("test_fs"), port=4444)
-rack.start()
-"""
+    from Jumpscale import j
+    rack = j.servers.rack.get()
+    from jumpscale.Jumpscale.data.bcdb.connectors.webdav.BCDBFSProvider import BCDBFSProvider
+    
+    rack.webdav_server_add(webdavprovider=BCDBFSProvider("test_fs"), port=4444)
+    rack.start()
+    """
 
     s = j.servers.startupcmd.get(
         name="webdav_fs_test", cmd_start=start_cmd, interpreter="python", executor="tmux", ports=[4444]

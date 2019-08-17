@@ -29,6 +29,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self._bcdb = bcdb
         self._schema = j.data.schema.get_from_url("jumpscale.bcdb.meta.2")
         self._logger_enable()
+        self._load()
 
     def reset(self):
         # make everything in metadata stor empty

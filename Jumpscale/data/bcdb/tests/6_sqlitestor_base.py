@@ -44,8 +44,6 @@ def main(self):
     model = bcdb.model_get(url="jumpscale.bcdb.test.house")
     assert model.find() == []
 
-    assert model.bcdb.storclient is None
-
     model_obj = model.new()
     model_obj.cost = "10 USD"
     model_obj.save()

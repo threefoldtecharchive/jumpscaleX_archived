@@ -46,8 +46,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         """
         return self.clean(val)
 
-    def toData(self, val):
-        val2 = self.clean(val)
+    def toData(self, val, model=None):
+        val2 = self.clean(val, model=model)
         return j.data.serializers.jsxdata.dumps(val2)
 
     def toString(self, val):

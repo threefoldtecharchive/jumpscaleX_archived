@@ -85,7 +85,7 @@ class BCDBModel(j.application.JSBaseClass):
         self._triggers = []
 
         if reset:
-            self.reset()
+            self.destroy()
 
     @property
     def mid(self):
@@ -452,7 +452,6 @@ class BCDBModel(j.application.JSBaseClass):
         for obj in self.find(nid=nid):
             obj.delete()
         self.index.destroy()
-        self.stop()
         j.sal.fs.remove(self._data_dir)
 
     def iterate(self, nid=1):

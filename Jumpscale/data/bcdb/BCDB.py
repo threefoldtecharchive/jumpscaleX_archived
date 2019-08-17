@@ -74,7 +74,6 @@ class BCDB(j.application.JSBaseClass):
             return
         else:
             self.meta = BCDBMeta(self)
-            self.meta._load()
 
         self.dataprocessor_start()
         self._init_system_objects()
@@ -332,24 +331,25 @@ class BCDB(j.application.JSBaseClass):
 
         assert self.storclient
 
-        self.storclient.flush()
-        self._redis_reset()
-        j.sal.fs.remove(self._data_dir)
-        # all data is now removed, can be done because sqlite client should be None
+        if self.storclient.type != "SDB":
+            self.storclient.flush()  # not needed for sqlite because closed and dir will be deleted
 
-        self._init_props()
-        if not self.meta:
-            self.meta = BCDBMeta(self)
+        self._redis_reset()
+
+        j.sal.fs.remove(self._data_dir)
+        j.sal.fs.createDir(self._data_dir)
+        # all data is now removed, can be done because sqlite client should be None
 
         # since delete the data directory above, we have to re-init the storclient
         # so it can do its things and re-connect properly
         self.storclient._init(nsname=self.storclient.nsname)
 
+        self._init_props()
+        if not self.meta:
+            self.meta = BCDBMeta(self)
+
         self.meta.reset()  # will make sure the record 0 is written with empty metadata
         self._init_system_objects()
-
-        # stop the processing & sqlite client, in case it would be used again
-        self.stop()
 
     def destroy(self):
         """
@@ -376,6 +376,12 @@ class BCDB(j.application.JSBaseClass):
         self._log_info("STOP BCDB")
         self.dataprocessor_stop(force=True)
         self.sqlite_index_client_stop()
+
+        if self.storclient.type == "SDB":
+            cl = self.storclient.sqlitedb
+            if not cl.is_closed():
+                cl.close()
+            self.storclient.sqlitedb = None
 
     def index_rebuild(self):
         self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
@@ -415,6 +421,8 @@ class BCDB(j.application.JSBaseClass):
                     raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
         else:
             schema = self.schema_get(md5=md5, url=url, die=True)
+
+        self.meta._url_mid_set(schema)
 
         return self._model_get_from_schema(schema=schema, reset=reset)
 
@@ -569,6 +577,9 @@ class BCDB(j.application.JSBaseClass):
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl(self)
         return self.model_add(model)
+
+    def models_add_threebot(self):
+        self.models_add(self._dirpath + "/models_threebot")
 
     def models_add(self, path):
         """

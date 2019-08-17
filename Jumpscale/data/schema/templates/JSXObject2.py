@@ -141,7 +141,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
         #convert jsxobjects to data data
         if "{{prop.name}}" in self._deserialized_items:
             {% if prop.has_jsxobject %}
-            data =  {{prop.js_typelocation}}.toData(self._deserialized_items["{{prop.name}}"],bcdb=self._model._bcdb)
+            data =  {{prop.js_typelocation}}.toData(self._deserialized_items["{{prop.name}}"],model=self._model)
             {% else %}
             data =  {{prop.js_typelocation}}.toData(self._deserialized_items["{{prop.name}}"])
             {% endif %}

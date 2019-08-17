@@ -104,10 +104,10 @@ def main(self):
 
     for url in urls:
         md5 = j.data.schema._url_to_md5[url][0]
-        s = j.data.schema.get_from_md5(md5)
+        s = bcdb.schema_get(md5=md5)  # need to start from bcdb
         assert s._md5 == md5
 
-        bcdb.meta._schema_exists(s)
+        bcdb.meta._schema_exists(s._md5)
         assert s._md5 == md5
         assert s.url == url
 
