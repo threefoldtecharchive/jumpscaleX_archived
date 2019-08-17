@@ -71,9 +71,12 @@ class JSBase:
         self.__init_class()
         self._obj_cache_reset()
         self._init(**kwargs)
-        props, methods = self._inspect()
-        self._properties = props
         self._init_post(**kwargs)
+
+    @property
+    def _properties(self):
+        props, methods = self._inspect()
+        return props
 
     def __init_class(self):
 

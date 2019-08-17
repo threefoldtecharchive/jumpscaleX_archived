@@ -66,5 +66,5 @@ def main(self):
     o.llist2 = d
     assert o.llist2 == d
     # CLEAN STATE
-    j.data.schema.remove_from_text(schema)
+    # j.data.schema.remove_from_text(schema)
     return "OK"

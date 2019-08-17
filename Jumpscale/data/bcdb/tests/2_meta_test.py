@@ -44,7 +44,7 @@ def main(self):
     assert s.url == "despiegk.test"
 
     m = bcdb.model_get_from_url("despiegk.test")
-    assert m.sid == s.sid
+    assert m.mid == s.mid
 
     schema_text = """
     @url = jumpscale.schema.test.a
@@ -56,8 +56,8 @@ def main(self):
 
     assert s.properties_unique == []
 
-    sid = bcdb.meta._schema_set(s)
-    assert isinstance(sid, int)
+    mid = bcdb.meta._schema_set(s)
+    assert isinstance(mid, int)
 
     assert len(bcdb.meta._data.schemas) == 8
 
@@ -135,6 +135,6 @@ def main(self):
     assert a6.i == a3.i
 
     # CLEAN STATE
-    j.data.schema.remove_from_text(schema_text)
+    # j.data.schema.remove_from_text(schema_text)
     self._log_info("TEST META DONE")
     return "OK"

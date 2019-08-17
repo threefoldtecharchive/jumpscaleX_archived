@@ -73,4 +73,4 @@ def main(self):
 
     self._log_info("load from dir ok")
     # CLEAN STATE
-    j.data.schema.remove_from_text(s2.text)
+    # j.data.schema.remove_from_text(s2.text)

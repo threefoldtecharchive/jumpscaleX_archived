@@ -51,7 +51,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         if model:
             assert isinstance(model, j.data.bcdb._BCDBModelClass)
         val2 = self.clean(val)
-        return j.data.serializers.jsxdata.dumps(val2, model=model, remote=True)
+        return j.data.serializers.jsxdata.dumps(val2, model=model)
 
     def toString(self, val):
         """

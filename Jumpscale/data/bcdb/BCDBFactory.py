@@ -44,7 +44,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
-        j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
+        self._init_once_done = False
 
         self._BCDBModelClass = BCDBModel  # j.data.bcdb._BCDBModelClass
 
@@ -66,6 +66,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             self._config = {}
 
         self._system = None
+
+    def _init_once(self):
+        if not self._init_once_done:
+            j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
+            self._init_once_done = True
 
     def get_system(self, reset=False):
         """
@@ -137,13 +142,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         all data will be lost
         :return:
         """
-        names = [name for name in j.data.bcdb._config.keys()]
-        try:
-            j.servers.sonic.bcdb.destroy()
-            # can fail because maybe the config manager is upset
-        except:
-            # could not do config mgmt, lets still destroy the sonic db
-            j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/sonic_db/bcdb"))
+        names = [name for name in self._config.keys()]
+        j.servers.tmux.window_kill("sonic")
         self._bcdb_instances = {}
         storclients = []
         for name in names:
@@ -163,6 +163,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/bcdb"))
         j.sal.fs.remove(self._config_data_path)
         self._load()
+        assert self._config == {}
 
     def exists(self, name):
         if name in self._bcdb_instances:
@@ -174,11 +175,16 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
     def destroy(self, name):
         assert name
         assert isinstance(name, str)
-        if name in self._bcdb_instances:
-            self._bcdb_instances[name].destroy()
+
         if name in self._config:
-            self._config.pop(name)
-            self._config_write()
+            storclient = self._get_storclient(name)
+        else:
+            raise RuntimeError("there should always be a storclient")
+
+        dontuse = BCDB(storclient=storclient, name=name, reset=True)
+
+        assert name not in self._bcdb_instances
+        assert name not in self._config
 
     def get(self, name, storclient=None, reset=False, fromcache=True):
         """
@@ -193,6 +199,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if not fromcache:
             if name in self._bcdb_instances:
                 self._bcdb_instances.pop(name)
+        self._init_once()
         if self.exists(name):
             return self._get(name=name, reset=reset, storclient=storclient)
         else:
@@ -226,7 +233,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             raise j.exceptions.Input("type storclient not found:%s" % data["type"])
         return storclient
 
-    def _get(self, name, reset=False, storclient=None):
+    def _get(self, name, storclient=None, reset=False):
         """[summary]
         get instance of bcdb
         :param name:
@@ -234,11 +241,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :return:
         """
         # DO NOT CHANGE if_not_exist_die NEED TO BE TRUE
+        self._init_once()
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
-            if reset:
-                bcdb.reset()
             return bcdb
         elif name in self._config:
             if not storclient:
@@ -246,7 +252,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         else:
             raise j.exceptions.Base("did not find bcdb with name:%s" % name)
 
-        self._bcdb_instances[name] = BCDB(storclient=storclient, name=name, reset=reset)
+        # its the only 100% safe way to get all out for now
+        dontuse = BCDB(storclient=storclient, name=name, reset=True)
+        self._bcdb_instances[name] = BCDB(storclient=storclient, name=name)
         return self._bcdb_instances[name]
 
     def _config_write(self):
@@ -269,7 +277,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         self._log_info("new bcdb:%s" % name)
-
+        self._init_once()
         if self.exists(name=name):
             if not reset:
                 raise j.exceptions.Input("cannot create new bcdb '%s' already exists, and reset not used" % name)
@@ -361,6 +369,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             """
 
         type = type.lower()
+
         def startZDB():
             zdb = j.servers.zdb.test_instance_start()
             storclient_admin = zdb.client_admin_get()
@@ -368,7 +377,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             secret = "1234"
             storclient = storclient_admin.namespace_new("test", secret=secret)
             return storclient
-            
+
         if type == "rdb":
             storclient = startZDB()
             storclient = j.clients.rdb.client_get()  # will be to core redis
@@ -459,12 +468,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         self._test_run(name=name)
-        j.servers.zdb.test_instance_stop()
-        redis = j.servers.startupcmd.get("redis_6380")
-        redis.stop()
-        redis.wait_stopped()
-        web_dav = j.servers.startupcmd.get("webdav_test")
-        web_dav.stop()
-        web_dav.wait_stopped()
+
         self._log_info("All TESTS DONE")
         return "OK"

@@ -71,7 +71,7 @@ def main(self):
     schema_object = j.data.schema.add_from_text(schema_package)[0]
     data = schema_object.new(datadict=data)
     # CLEAN STATE
-    j.data.schema.remove_from_text(schema_package)
+    # j.data.schema.remove_from_text(schema_package)
 
     self._log_info("TEST DONE LOADDATA")
 

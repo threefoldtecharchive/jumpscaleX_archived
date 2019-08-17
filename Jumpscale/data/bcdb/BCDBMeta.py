@@ -30,11 +30,11 @@ class BCDBMeta(j.application.JSBaseClass):
 
         self._schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.meta.2")
         # self._redis_key_data = "bcdb:%s:meta:data" % bcdb.name
-        self._redis_key_lookup_sid2hash = "bcdb:%s:schemas:sid2hash" % bcdb.name
-        self._redis_key_lookup_hash2sid = "bcdb:%s:schemas:hash2sid" % bcdb.name
-        self._redis_key_lookup_sid2schema = "bcdb:%s:schemas:sid2schema" % bcdb.name
-        self._redis_key_lookup_url2sid = "bcdb:%s:schemas:url2sid " % bcdb.name
-        self._redis_key_lookup_sid2url = "bcdb:%s:schemas:sid2url" % bcdb.name
+        self._redis_key_lookup_mid2hash = "bcdb:%s:schemas:mid2hash" % bcdb.name
+        self._redis_key_lookup_hash2mid = "bcdb:%s:schemas:hash2mid" % bcdb.name
+        self._redis_key_lookup_mid2schema = "bcdb:%s:schemas:mid2schema" % bcdb.name
+        self._redis_key_lookup_url2mid = "bcdb:%s:schemas:url2mid " % bcdb.name
+        self._redis_key_lookup_mid2url = "bcdb:%s:schemas:mid2url" % bcdb.name
         self._redis_key_lookup_nid2meta = "bcdb:%s:schemas:nid2meta" % bcdb.name
 
         # the next redis is only used for readonly info, data can be lost any time
@@ -51,11 +51,11 @@ class BCDBMeta(j.application.JSBaseClass):
         self._reset_runtime_metadata()
         r = self._redis
         self._bcdb.storclient.delete(0)  # remove the metadata
-        r.delete(self._redis_key_lookup_sid2hash)
-        r.delete(self._redis_key_lookup_hash2sid)
-        r.delete(self._redis_key_lookup_sid2schema)
-        r.delete(self._redis_key_lookup_url2sid)
-        r.delete(self._redis_key_lookup_sid2url)
+        r.delete(self._redis_key_lookup_mid2hash)
+        r.delete(self._redis_key_lookup_hash2mid)
+        r.delete(self._redis_key_lookup_mid2schema)
+        r.delete(self._redis_key_lookup_url2mid)
+        r.delete(self._redis_key_lookup_mid2url)
         r.delete(self._redis_key_lookup_nid2meta)
         self._data = None
         self._load()
@@ -64,9 +64,10 @@ class BCDBMeta(j.application.JSBaseClass):
         # reset the metadata which we can afford to loose
         # all of this can be rebuild from the serialized information of the metastor
         self._data = None
-        self._schema_last_id = 0
+        self._schema_last_id = 1  # should never be 0
         # self._namespace_last_id = 0
-        self._schema_md5_to_sid = {}
+        self._schema_url_to_mid = {}
+        self.schemas_md5 = []  # just to know which ones we already know
 
     def _load(self):
 
@@ -97,12 +98,13 @@ class BCDBMeta(j.application.JSBaseClass):
             if s.md5 in check:
                 raise j.exceptions.Base("corrupted metadata index, duplicate in schema")
             check.append(s.md5)
-            schema = j.data.schema.get_from_text(s.text)  # make sure jumpscale knows about the schema
+            # make sure jumpscale knows about the schema
+            schema = j.data.schema._add_from_text_item(s.text, bcdb_check=False)
             schema.hasdata = s.hasdata  # we need to know if there was data in the DB per specific Schema
             self._schema_jsxobj_load(s)
             self._bcdb.model_get_from_schema(schema, schema_set=False)  # IMPORTANT leave schema_set False
-            assert self._bcdb._sid_to_model[s.sid].schema._md5  # make sure its not empty
-            assert self._bcdb._sid_to_model[s.sid].schema._md5 == s.md5
+            assert self._bcdb._mid_to_model[s.mid].schema._md5  # make sure its not empty
+            assert self._bcdb._mid_to_model[s.mid].schema._md5 == s.md5
 
         # Probably not used anywhere
         # for n in self._data.namespaces:
@@ -112,17 +114,14 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _schemas_in_data_print(self):
         for s in self._data.schemas:
-            print(" - %s:%s:%s (%s)" % (s.sid, s.md5, s.url, s.hasdata))
+            print(" - %s:%s:%s (%s)" % (s.mid, s.md5, s.url, s.hasdata))
 
     def _verify(self):
         check = []
         for s in self._data.schemas:
             if s.md5 in check:
                 raise j.exceptions.Base("corrupted metadata index, duplicate in schema (md5")
-            if s.sid in check:
-                raise j.exceptions.Base("corrupted metadata index, duplicate in schema (sid)")
             check.append(s.md5)
-            check.append(s.sid)
 
     def _save(self):
         self._log_debug("save meta:%s" % self._bcdb.name)
@@ -140,51 +139,61 @@ class BCDBMeta(j.application.JSBaseClass):
 
         assert isinstance(s, j.data.schema._JSXObjectClass)
 
-        if s.sid > self._schema_last_id:
-            self._schema_last_id = s.sid
+        if s.mid > self._schema_last_id:
+            self._schema_last_id = s.mid
 
         # its only for reference purposes & maybe 3e party usage
-        r.hset(self._redis_key_lookup_sid2hash, s.sid, s.md5)
-        r.hset(self._redis_key_lookup_hash2sid, s.md5, s.sid)
-        r.hset(self._redis_key_lookup_sid2schema, s.sid, s._json)
-        r.hset(self._redis_key_lookup_url2sid, s.url, s.sid)
-        r.hset(self._redis_key_lookup_sid2url, s.sid, s.url)
+        r.hset(self._redis_key_lookup_mid2hash, s.mid, s.md5)
+        r.hset(self._redis_key_lookup_hash2mid, s.md5, s.mid)
+        r.hset(self._redis_key_lookup_mid2schema, s.mid, s._json)
+        r.hset(self._redis_key_lookup_url2mid, s.url, s.mid)
+        r.hset(self._redis_key_lookup_mid2url, s.mid, s.url)
 
-        self._schema_md5_to_sid[s.md5] = s.sid
+        self._schema_url_to_mid[s.url] = s.mid
+
+    def schema_register(self, schema):
+        mid = self._schema_set(schema)
+        model = self._bcdb._mid_to_model[mid]
+        # we need to make sure that the current model uses the newest schema
+        model.schema_change(schema)
 
     def _schema_set(self, schema):
         """
         add the schema to the metadata if it was not done yet
         :param schema:
-        :return:
+        :return: the model id
         """
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        # check if the data is already in metadatastor
-        if schema._md5 in self._schema_md5_to_sid:
-            self._log_debug("schema set in BCDB:%s meta:%s (EXISTING)" % (self._bcdb.name, schema.url))
-            return self._schema_md5_to_sid[schema._md5]
-        else:
-            self._log_debug("schema set in BCDB:%s meta:%s (md5:'%s')" % (self._bcdb.name, schema.url, schema._md5))
-            # not known yet in namespace, so is new one
-            self._schema_last_id += 1
-            s = self._data.schemas.new()
-            s.url = schema.url
-            s.sid = self._schema_last_id
-            s.text = schema.text  # + "\n"  # only 1 \n at end
-            s.md5 = schema._md5
-            s.hasdata = schema.hasdata
-            self._schema_jsxobj_load(s)
-            self._log_info("new schema in meta:\n%s: %s:%s" % (self._bcdb.name, s.url, s.md5))
+        # mid is unique per url without version !!!! (THIS IS NEW BEHAVIOR)
+
+        if not self._schema_exists(schema):
+            s_obj = self._data.schemas.new()
+            s_obj.url = schema.url_noversion
+
+            if schema.url_noversion in self._schema_url_to_mid:
+                # means we know the mid not need to do anything
+                s_obj.mid = self._schema_url_to_mid
+                # self._log_debug("schema was set in BCDB:%s meta:%s (EXISTING)" % (self._bcdb.name, schema.url))
+            else:
+                s_obj.mid = self._schema_last_id + 0  # make sure copy
+                # mid was not known yet so we need to create a new one and remember
+                self._schema_url_to_mid[schema.url_noversion] = s_obj.mid
+                self._schema_last_id += 1
+                self._log_info("new schema in meta:\n%s: %s:%s" % (self._bcdb.name, s_obj.url, s_obj.md5))
+
+            s_obj.text = schema.text  # + "\n"  # only 1 \n at end
+            s_obj.md5 = schema._md5
+            s_obj.hasdata = schema.hasdata
+            self._schema_jsxobj_load(s_obj)
             self._save()
-            return s.sid
+            self.schemas_md5.append(schema._md5)
+
+        return self._schema_url_to_mid[schema.url_noversion]
 
     def _schema_exists(self, schema):
-        if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
-
-        return schema._md5 in self._schema_md5_to_sid
+        return schema._md5 in self.schemas_md5
 
     def hasdata_set(self, schema):
         assert schema.hasdata  # needs to be True because thats what we need to set

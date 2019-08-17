@@ -51,4 +51,4 @@ def main(self):
     o = schema_object.new()
     o.obj_json = [1, "a"]
     # CLEAN STATE
-    j.data.schema.remove_from_text(schema)
+    # j.data.schema.remove_from_text(schema)

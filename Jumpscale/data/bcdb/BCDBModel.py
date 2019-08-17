@@ -32,7 +32,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, sid=None, schema=None, reset=False):
+    def __init__(self, bcdb, mid=None, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -59,17 +59,18 @@ class BCDBModel(j.application.JSBaseClass):
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
 
-        if not sid:
-            if schema._md5 in bcdb.meta._schema_md5_to_sid:
-                sid = bcdb.meta._schema_md5_to_sid[schema._md5]
+        if not mid:
+            if schema.url_noversion in bcdb.meta._schema_url_to_mid:
+                mid = bcdb.meta._schema_url_to_mid[schema.url_noversion]
             else:
                 # means we create a model from code
-                sid = bcdb.meta._schema_set(self.schema)  # only if sid was not specified we need to register
+                mid = bcdb.meta._schema_set(self.schema)  # only if mid was not specified we need to register
 
-        self.sid = sid
+        self.mid = mid
+        assert mid
 
-        assert schema._md5 in bcdb.meta._schema_md5_to_sid
-        assert bcdb.meta._schema_md5_to_sid[self.schema._md5] == self.sid
+        assert schema.url_noversion in bcdb.meta._schema_url_to_mid
+        assert bcdb.meta._schema_url_to_mid[self.schema.url_noversion] == self.mid
 
         self.bcdb = bcdb
         self.readonly = False
@@ -97,6 +98,13 @@ class BCDBModel(j.application.JSBaseClass):
 
         if reset:
             self.reset()
+
+    def schema_change(self, schema):
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        # make sure model has the latest schema
+        if self.schema._md5 != schema._md5:
+            self.schema = schema
+            self._triggers_call(None, "schema_change", None)
 
     @property
     def sonic_client(self):
@@ -153,28 +161,6 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         return True
-
-    def stop(self):
-        """
-        stops the data processor
-        """
-        if self.bcdb.dataprocessor_greenlet is None:
-            # is already stopped
-            return True
-        event = Event()
-        self.bcdb.queue.put((None, ["STOP"], {}, event, None))
-
-        event.wait(1000.0)  # will wait for processing
-        self.bcdb.sqlite_index_client_stop()
-        self.storclient.stop()
-
-        self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
-        return True
-
-    # def start(self):
-    #     if self.dataprocessor_greenlet is None:
-    #         self.bcdb.dataprocessor_start()
-    #     self.index_ready() #will only return when dataprocessor working
 
     @queue_method
     def index_rebuild(self, nid=1):
@@ -267,7 +253,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def search(self, text, property_name=None):
         # FIXME: get the real nids
-        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.sid), text)
+        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.mid), text)
         res = []
         for obj in objs:
             parts = obj.split(":")
@@ -360,7 +346,7 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj._model.mid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self._triggers_call(obj, action="set_pre")

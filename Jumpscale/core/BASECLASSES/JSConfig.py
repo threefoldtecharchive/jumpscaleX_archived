@@ -65,6 +65,8 @@ class JSConfig(JSBase, Attr):
             self._data.name = name
 
     def _init_post(self, **kwargs):
+        props, methods = self._inspect()
+        self._properties_ = props
         self._protected = True
 
     # def _obj_cache_reset(self):
@@ -78,6 +80,10 @@ class JSConfig(JSBase, Attr):
     def __init_class_post(self):
         if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
             raise j.exceptions.Base("combination not allowed of config and configsclass")
+
+    @property
+    def _properties(self):
+        return self._properties_
 
     def _trigger_add(self, method):
         """

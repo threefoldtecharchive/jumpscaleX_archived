@@ -70,7 +70,8 @@ def main(self):
         o3 = so.new(serializeddata=data)
         assert o3.cmd.name == "a"
         # CLEAN STATE
-        j.data.schema.remove_from_text(schema0)
+
+    # j.data.schema.remove_from_text(schema0)
 
     def onelevellist():
 
@@ -131,7 +132,7 @@ def main(self):
         assert len(o.cmds) == 2
         assert o.cmds[1].name == "cc"
         # CLEAN STATE
-        j.data.schema.remove_from_text(schema1)
+        # j.data.schema.remove_from_text(schema1)
 
     onelevel()
     onelevellist()
@@ -184,7 +185,7 @@ def main(self):
     assert schema_test3._data == schema_test4._data
 
     # CLEAN STATE
-    j.data.schema.remove_from_text(schema2)
+    # j.data.schema.remove_from_text(schema2)
     self._log_info("TEST DONE SCHEMA EMBED")
 
     return "OK"

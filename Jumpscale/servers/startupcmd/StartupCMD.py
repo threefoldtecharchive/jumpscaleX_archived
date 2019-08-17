@@ -504,6 +504,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
         if not self.cmd_start:
             raise j.exceptions.Value("please make sure self.cmd_start has been specified")
 
+        self._hardkill()
+
         if "\n" in self.cmd_start.strip():
             C = self.cmd_start
         elif self.interpreter == "bash":

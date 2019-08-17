@@ -1,13 +1,9 @@
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
 import socket
 
 
-JSConfigClient = j.application.JSBaseConfigClass
-
-
-class ZDBServer(JSConfigClient):
+class ZDBServer(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
            @url =  jumpscale.zdb.server.1
            name* = "default" (S)
@@ -20,6 +16,7 @@ class ZDBServer(JSConfigClient):
 
     def _init(self, **kwargs):
         self._datadir = ""
+        j.shell()
 
     @property
     def datadir(self):
@@ -66,19 +63,6 @@ class ZDBServer(JSConfigClient):
         # zdb doesn't understand hostname
         addr = socket.gethostbyname(self.addr)
 
-        # idir = "%s/index/" % (self.datadir)
-        # ddir = "%s/data/" % (self.datadir)
-        # j.sal.fs.createDir(idir)
-        # j.sal.fs.createDir(ddir)
-
-        # cmd = "zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect" % (
-        #     self.addr,
-        #     self.port,
-        #     idir,
-        #     ddir,
-        #     self.mode,
-        #     self.adminsecret_,
-        # )
         cmd = "zdb --listen %s --port %s --mode %s --admin %s --protect" % (
             self.addr,
             self.port,

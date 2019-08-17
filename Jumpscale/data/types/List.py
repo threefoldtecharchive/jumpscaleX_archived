@@ -254,7 +254,7 @@ class List(TypeBaseObjFactory):
     def toData(self, val=None, model=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "JSXOBJ":
-            return [j.data.serializers.jsxdata.dumps(i, model=model, remote=True) for i in val2]
+            return [j.data.serializers.jsxdata.dumps(i, model=model) for i in val2]
         else:
             return val2._inner_list
 
