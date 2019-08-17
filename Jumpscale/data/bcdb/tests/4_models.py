@@ -39,9 +39,7 @@ def main(self):
 
     bcdb, _ = self._load_test_model()
 
-    bcdb in j.data.bcdb.instances
-
-    j.shell()
+    assert bcdb in j.data.bcdb.instances
 
     bcdb.models_add(mpath)
 
@@ -73,7 +71,8 @@ def main(self):
 
     assert len(model.find()) == 1
 
-    s = bcdb.schema_get(schema_updated)
+    model = bcdb.model_get(schema=schema_updated)
+    s = model.schema
     assert s._md5 != schema_md5
 
     model2 = bcdb.model_get(url="jumpscale.bcdb.test.house")

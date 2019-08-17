@@ -23,7 +23,7 @@ from Jumpscale import j
 
 class USER(j.data.bcdb._BCDBModelClass):
     def _schema_get(self):
-        return j.data.schema.get_from_url_latest("jumpscale.bcdb.user.2")
+        return j.data.schema.get_from_url("jumpscale.bcdb.user.2")
 
     @property
     def acl(self):

@@ -29,10 +29,9 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
             if self._default.startswith("md5:"):
                 self._schema_md5 = self._default[4:]  # md5 is directly given
             elif self._default.startswith("sid:"):
-                j.shell()  # need to find schema based on sid
-                self._schema_md5 = self._default[4:]  # md5 is directly given
+                raise j.exceptions.JSBUG("sid no longer used")
             else:
-                s = j.data.schema.get_from_url_latest(url=self._default)
+                s = j.data.schema.get_from_url(url=self._default)
             self._schema_md5 = s._md5
 
             self._schema_ = j.data.schema.get_from_md5(md5=self._schema_md5)
@@ -63,7 +62,11 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     def check(self, value):
         return isinstance(value, j.data.schema._JSXObjectClass)
 
-    def default_get(self, bcdb=None):
+    def default_get(self, model=None):
+        if model:
+            bcdb = model._bcdb
+        else:
+            bcdb = None
         return self._schema.new(bcdb=bcdb)
 
     def clean(self, value, model=None):

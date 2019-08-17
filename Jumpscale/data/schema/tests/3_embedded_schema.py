@@ -42,8 +42,8 @@ def main(self):
             """
 
         j.data.schema.add_from_text(schema0)
-        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
-        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
+        so = j.data.schema.get_from_url(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.b")
         o = so.new()
         o.x = "2"
         assert o._changed
@@ -86,8 +86,8 @@ def main(self):
             """
 
         j.data.schema.add_from_text(schema1)
-        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.c")
-        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
+        so = j.data.schema.get_from_url(url="jumpscale.schema.test3.c")
+        so2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.b")
         o = so.new()
 
         cmd = o.cmds.new()
@@ -155,8 +155,8 @@ def main(self):
         
         """
     j.data.schema.add_from_text(schema2)  # just add
-    schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.serverschema")
-    schema_object3 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmdbox")
+    schema_object2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.serverschema")
+    schema_object3 = j.data.schema.get_from_url(url="jumpscale.schema.test3.cmdbox")
 
     schema_test = schema_object2.new()
 

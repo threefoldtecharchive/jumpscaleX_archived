@@ -62,15 +62,12 @@ class SerializerJSXObject(SerializerBase):
             md5 = md5bin.hex()
             data2 = data[21:]
 
-            if md5 in j.data.schema.md5_to_schema:
-                schema = j.data.schema.md5_to_schema[md5]
-                obj = schema.new(capnpdata=data2, bcdb=bcdb)
-                obj.id = obj_id
-                if obj.id == 0:
-                    obj.id = None
-                return obj
-            else:
-                raise j.exceptions.Base("could not find schema with md5:%s" % md5)
+            schema = j.data.schema.get_from_md5(md5)
+            obj = schema.new(capnpdata=data2, bcdb=bcdb)
+            obj.id = obj_id
+            if obj.id == 0:
+                obj.id = None
+            return obj
 
         else:
 

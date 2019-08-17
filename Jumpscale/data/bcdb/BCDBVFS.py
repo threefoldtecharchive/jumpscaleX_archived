@@ -450,7 +450,7 @@ class BCDBVFS(j.application.JSBaseClass):
         for s in self._bcdb.meta._data.schemas:
             if s.url == url:
                 return s
-        return j.data.schema.get_from_url_latest(url)
+        return j.data.schema.get_from_url(url)
 
     def _find_schema_by_hash(self, hash):
         # TODO OPTIMIZE OR FIND ANOTHER WAY

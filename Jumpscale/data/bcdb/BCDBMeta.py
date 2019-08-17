@@ -27,7 +27,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self._bcdb = bcdb
-        self._schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.meta.2")
+        self._schema = j.data.schema.get_from_url("jumpscale.bcdb.meta.2")
         self._logger_enable()
 
     def reset(self):
@@ -64,11 +64,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # walk over all schema's let the j.data.schema know that these schema's exist in right order
         for s in self._data.schemas:
-            isok = j.data.schema._add_url_to_md5(s.url, s.md5)
-            if not isok:
-                # means there is a newer one in memory
-                schema = j.data.schema.get_from_url_latest(s.url)
-                self._schema_set(schema)  # tell our bdcdb metadata that this exists
+            self._add_to_schema_factory(s)
 
     def _schemas_in_data_print(self):
         for s in self._data.schemas:
@@ -88,15 +84,31 @@ class BCDBMeta(j.application.JSBaseClass):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        if not self._schema_exists(schema):
+        if not self._schema_exists(schema._md5):
             s_obj = self._data.schemas.new()
             s_obj.url = schema.url
             s_obj.text = schema.text  # + "\n"  # only 1 \n at end
             s_obj.md5 = schema._md5
             s_obj.hasdata = schema.hasdata
-            self.schemas_md5.append(schema._md5)
             self._url_mid_set(schema)
             self._save()
+
+    def _add_to_schema_factory(self, schema_obj):
+        """
+        will make sure that everyone in kosmos has access to the schema's as found in the metadata of this bcdb
+        :param schema_obj:
+        :return:
+        """
+        s = schema_obj
+        isok = j.data.schema._add_url_to_md5(s.url, s.md5)
+        if not isok:
+            # means there is a newer one in memory
+            schema = j.data.schema.get_from_url(s.url)
+            self._schema_set(schema)  # tell our bdcdb metadata that this exists
+
+        # don't load the full schema but put the text of schema there
+        if not j.data.schema.exists(md5=s.md5):
+            j.data.schema._md5_to_schema[s.md5] = s.text
 
     def _url_mid_set(self, schema):
         url = schema.url
@@ -108,8 +120,13 @@ class BCDBMeta(j.application.JSBaseClass):
                     last = int(item)
             self._data.url_to_mid[url] = last + 1
 
-    def _schema_exists(self, schema):
-        return schema._md5 in self.schemas_md5
+    def _schema_exists(self, md5):
+        assert isinstance(md5, str)
+        for s in self._data.schemas:
+            # self._log_debug("check hasdata for meta:%s" % s.url)
+            if s.md5 == md5:
+                return True
+        return False
 
     def hasdata_set(self, schema):
         assert schema.hasdata  # needs to be True because thats what we need to set

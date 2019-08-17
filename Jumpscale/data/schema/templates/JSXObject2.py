@@ -52,7 +52,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             return self._deserialized_items["{{prop.name}}"]
         else:
             {% if prop.has_jsxobject %}
-            v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}},bcdb=self._model._bcdb)
+            v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}},model=self._model)
             self._deserialized_items["{{prop.name}}"] = v
             {% else %}
             v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}})

@@ -134,10 +134,10 @@ class TFChainCapacity:
             "reverse_proxy": "tfchain.reservation.reverse_proxy",
         }
         reservation["duration"] = duration
-        reservation = j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
+        reservation = j.data.schema.get_from_url(url=templates[reservation["type"]]).new(data=reservation)
 
         amount = reservation_amount(reservation)
-        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(
+        extension = j.data.schema.get_from_url(url="tfchain.reservation.extend").new(
             data={"duration": duration, "transaction_id": transaction.id, "email": email}
         )
 
@@ -172,7 +172,7 @@ class TFChainCapacity:
         :rtype: tuple
         """
 
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.s3").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.s3").new(
             data={
                 "size": size,
                 "email": email,
@@ -215,7 +215,7 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.zos_vm").new(
             datadict={
                 "size": size,
                 "email": email,
@@ -268,7 +268,7 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zdb_namespace").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.zdb_namespace").new(
             data={
                 "type": "namespace",
                 "size": size,
@@ -310,7 +310,7 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.reverse_proxy").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.reverse_proxy").new(
             data={
                 "type": "reverse_proxy",
                 "email": email,

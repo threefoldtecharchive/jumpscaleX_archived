@@ -41,9 +41,7 @@ def main(self):
     """
     zdb = j.servers.zdb.test_instance_start()
     bcdb = j.data.bcdb.new("test", reset=True)
-    m = bcdb.model_get(schema=SCHEMA)
-
-    m.destroy()
+    m = bcdb.model_get(schema=SCHEMA, reset=True)
 
     o = m.new()
     assert o._model.schema.url == "threefoldtoken.wallet.test"

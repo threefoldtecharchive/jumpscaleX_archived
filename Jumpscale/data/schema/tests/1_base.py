@@ -114,12 +114,12 @@ def main(self):
 
     j.data.schema.add_from_text(schema_text=schema2)
 
-    s = j.data.schema.get_from_url_latest(url="despiegk.test2")
+    s = j.data.schema.get_from_url(url="despiegk.test2")
     e = s.properties[0]  # is the enumerator
     assert e.js_typelocation != "j.data.types.enum"  # should not the default location
 
-    schema_object1 = j.data.schema.get_from_url_latest(url="despiegk.test2")
-    schema_object2 = j.data.schema.get_from_url_latest(url="despiegk.test3")
+    schema_object1 = j.data.schema.get_from_url(url="despiegk.test2")
+    schema_object2 = j.data.schema.get_from_url(url="despiegk.test3")
 
     o1 = schema_object1.new()
     o2 = schema_object2.new()
@@ -210,7 +210,7 @@ def main(self):
 
     assert s0._md5 != s1._md5
 
-    s2 = j.data.schema.get_from_url_latest(url="despiegk.doubletest")
+    s2 = j.data.schema.get_from_url(url="despiegk.doubletest")
     assert s2._md5 == s1._md5
     assert s2._md5 != s0._md5
 

@@ -178,8 +178,12 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         dontuse = BCDB(storclient=storclient, name=name, reset=True)
 
-        assert name not in self._bcdb_instances
-        assert name not in self._config
+        if name in self._bcdb_instances:
+            self._bcdb_instances.pop(name)
+
+        if name in self._config:
+            self._config.pop(name)
+            self._config_write()
 
     def get(self, name, storclient=None, reset=False, fromcache=True):
         """
@@ -238,6 +242,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
+            assert name in self._config
             return bcdb
         elif name in self._config:
             if not storclient:
@@ -310,7 +315,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._config_write()
         self._load()
 
-        bcdb = self._get(name=name, reset=reset, storclient=storclient)
+        bcdb = self._get(name=name, reset=False, storclient=storclient)
 
         assert bcdb.storclient
         assert bcdb.storclient.type == storclient.type

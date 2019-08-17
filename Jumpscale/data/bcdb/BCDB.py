@@ -70,7 +70,7 @@ class BCDB(j.application.JSBaseClass):
 
         if reset:
             self.meta = None
-            self.destroy()
+            self.reset()
             return
         else:
             self.meta = BCDBMeta(self)
@@ -400,7 +400,7 @@ class BCDB(j.application.JSBaseClass):
 
     def model_get(self, schema=None, md5=None, url=None, namespaceid=1, reset=False):
         """
-        will return the latest model found based on url
+        will return the latest model found based on url, md5 or schema
         :param url:
         :return:
         """
@@ -435,15 +435,15 @@ class BCDB(j.application.JSBaseClass):
         if url:
             assert md5 == None
 
-            if url not in j.data.schema.url_to_md5:
+            if not j.data.schema.exists(url=url):
                 # means we don't know it and it is not in BCDB either because the load has already happened
                 raise j.exceptions.Input("we could not find model from:%s, was not in bcdb or j.data.schema" % url)
 
-            schema_mem = j.data.schema.get_from_url_latest(url=url, die=False)
+            schema_mem = j.data.schema.get_from_url(url=url, die=False)
             if not schema_mem:
                 # means we don't have the schema in memory yet in j.data.schema
                 # we need to find
-                md5_newest = j.data.url_to_md5[url][-1]  # the latest known one
+                md5_newest = j.data.schema.get_from_url(url)  # the latest known one
                 for s in self.meta._data:
                     if s.md5 == md5_newest:
                         schema_mem = j.data.schema._add_from_text_item(s.text)
@@ -458,12 +458,11 @@ class BCDB(j.application.JSBaseClass):
             if j.data.schema.exists(md5=md5):
                 schema_mem = j.data.schema.get_from_md5(md5=md5)
             else:
-                for s in self.meta._data:
+                for s in self.meta._data.schemas:
                     if s.md5 == md5:
                         schema_mem = j.data.schema._add_from_text_item(s.text)
-                        schema_mem.hasdata = (
-                            s.hasdata
-                        )  # we need to know if there was data in the DB per specific Schema
+                        # we need to know if there was data in the DB per specific Schema
+                        schema_mem.hasdata = s.hasdata
 
             if not schema_mem and die:
                 raise j.exceptions.Input("we could not find model from:%s, was not in bcdb meta" % md5)
@@ -606,18 +605,22 @@ class BCDB(j.application.JSBaseClass):
             dest = "%s/%s.py" % (path, bname)
             schema_text = j.sal.fs.readFile(schemapath)
             try:
-                model = self.model_get(schema=schema)
-                toml_path = "%s.toml" % (schema.key)
-                if j.sal.fs.getBaseName(schemapath) != toml_path:
-                    toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
-                    j.sal.fs.renameFile(schemapath, toml_path)
-                    schemapath = toml_path
+                model = self.model_get(schema=schema_text)
             except Exception as e:
-                error_count = errored.get(schemapath, 0)
-                if error_count > 3:
+                if schemapath not in errored:
+                    errored[schemapath] = 0
+                errored[schemapath] += 1
+                if errored[schemapath] > 4:
                     raise e
                 tocheck.insert(0, schemapath)
                 continue
+
+            schema = model.schema
+            toml_path = "%s.toml" % (schema.key)
+            if j.sal.fs.getBaseName(schemapath) != toml_path:
+                toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
+                j.sal.fs.renameFile(schemapath, toml_path)
+                schemapath = toml_path
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):

@@ -54,17 +54,16 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         return self.__code_generation_dir
 
     def reset(self):
-        self.url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
-        # self.url_versionless_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
-        self.md5_to_schema = {}
+        self._url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
+        self._md5_to_schema = {}
 
     def exists(self, md5=None, url=None):
         if md5:
-            return md5 in self.md5_to_schema
+            return md5 in self._md5_to_schema
         elif url:
-            if not url in self.url_to_md5:
+            if not url in self._url_to_md5:
                 return False
-            return len(self.url_to_md5[url]) > 0
+            return len(self._url_to_md5[url]) > 0
         return False
 
     def get_from_md5(self, md5):
@@ -74,23 +73,26 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         assert isinstance(md5, str)
         md5 = md5.lower()
-        if md5 in self.md5_to_schema:
-            return self.md5_to_schema[md5]
+        if md5 in self._md5_to_schema:
+            item = self._md5_to_schema[md5]
+            if isinstance(item, str):
+                return self.get_from_text(item)
+            return item
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
 
-    def get_from_url_latest(self, url, die=True):
+    def get_from_url(self, url, die=True):
         """
         :param url: url is e.g. jumpscale.bcdb.user.1
         :return: will return the most recent schema, there can be more than 1 schema with same url (changed over time)
         """
         assert isinstance(url, str)
         url = self._urlclean(url)
-        if url in self.url_to_md5:
-            if len(self.url_to_md5[url]) > 0:
-                md5 = self.url_to_md5[url][-1]
-                if md5 in self.md5_to_schema:
-                    return self.md5_to_schema[md5]
+        if url in self._url_to_md5:
+            if len(self._url_to_md5[url]) > 0:
+                md5 = self._url_to_md5[url][-1]
+                if md5 in self._md5_to_schema:
+                    return self.get_from_md5(md5)
                 else:
                     if die:
                         raise j.exceptions.Input("Could not find schema with url:%s, schema not loaded yet" % url)
@@ -107,13 +109,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
             Schema
         """
         assert isinstance(schema_text, str)
-        if schema_text != "":
-            if j.data.types.string.check(schema_text):
-                schema = self.add_from_text(schema_text=schema_text, url=url)[0]
-            else:
-                raise j.exceptions.Input("Schema needs to be text ")
-
-        return schema
+        return self.add_from_text(schema_text=schema_text, url=url)[0]
 
     def _md5(self, text):
         """
@@ -163,42 +159,6 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         return blocks
 
-    # def remove_from_text(self, schema_text, url=None):
-    #     """
-    #     :param schema_text can be 1 or more schema's in the text
-    #     """
-    #     assert isinstance(schema_text, str)
-    #     res = []
-    #     blocks = self._schema_blocks_get(schema_text)
-    #     if len(blocks) > 1 and url:
-    #         raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
-    #     for block in blocks:
-    #         res.append(self._remove_from_text_item(block, url=url))
-    #     return res
-    #
-    # def _remove_from_text_item(self, schema_text, url=None):
-    #     md5 = self._md5(schema_text)
-    #     if md5 in self.md5_to_schema:
-    #         return self.md5_to_schema[md5]
-    #
-    #     s = Schema(text=schema_text, md5=md5, url=url)
-    #
-    #     assert s.url
-    #
-    #     # add md5 to the list if its not there yet
-    #     if s.url in self.url_to_md5:
-    #         if s._md5 in self.url_to_md5[s.url]:
-    #             self.url_to_md5[s.url].remove(s._md5)
-    #         self.url_to_md5.pop(s.url)
-    #
-    #     # add md5 to the list if its not there yet for versionless
-    #     if not s.url in self.url_versionless_to_md5:
-    #         if not s._md5 in self.url_versionless_to_md5[s.url]:
-    #             self.url_versionless_to_md5[s.url].remove(s._md5)
-    #         self.url_versionless_to_md5.pop(s.url)
-    #
-    #     return s
-
     def add_from_text(self, schema_text, url=None):
         """
         :param schema_text can be 1 or more schema's in the text
@@ -214,8 +174,11 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
     def _add_from_text_item(self, schema_text, url=None):
         md5 = self._md5(schema_text)
-        if md5 in self.md5_to_schema:
-            return self.md5_to_schema[md5]
+        if md5 in self._md5_to_schema:
+            r = self._md5_to_schema[md5]
+            if not isinstance(r, str):
+                # it can be there is already a string there, then we can ignore
+                return self._md5_to_schema[md5]
 
         s = Schema(text=schema_text, md5=md5, url=url)
 
@@ -224,8 +187,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         isok = self._add_url_to_md5(s.url, s._md5)
         if isok:
             # means did not exist yet so all ok or is same as latest one already known
-            self.md5_to_schema[s._md5] = s
-            return self.md5_to_schema[s._md5]
+            self._md5_to_schema[s._md5] = s
+            return self._md5_to_schema[s._md5]
         else:
             raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
 
@@ -238,12 +201,12 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         # add md5 to the list if its not there yet
         url = self._urlclean(url)
-        if not url in self.url_to_md5:
-            self.url_to_md5[url] = []
-        if not md5 in self.url_to_md5[url]:
-            self.url_to_md5[url].append(md5)
+        if not url in self._url_to_md5:
+            self._url_to_md5[url] = []
+        if not md5 in self._url_to_md5[url]:
+            self._url_to_md5[url].append(md5)
             return True
-        if self.url_to_md5[url][-1] == md5:
+        if self._url_to_md5[url][-1] == md5:
             return True
         return False
 

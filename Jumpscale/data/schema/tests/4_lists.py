@@ -40,7 +40,7 @@ def main(self):
         nr = 0
         """
     schemasub = j.data.schema.get_from_text(schema0)
-    schemasub2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test4.cmd")  # now get based on url
+    schemasub2 = j.data.schema.get_from_url(url="jumpscale.schema.test4.cmd")  # now get based on url
     assert schemasub2._md5 == schemasub._md5  # check we get the same schema back
     assert j.data.schema.get_from_md5(md5=schemasub._md5)._md5 == schemasub._md5
 
@@ -65,14 +65,14 @@ def main(self):
         """
 
     schema_object = j.data.schema.get_from_text(schema1)
-    schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.myjobs.job")  # now get based on url
+    schema_object2 = j.data.schema.get_from_url(url="jumpscale.myjobs.job")  # now get based on url
     assert schema_object2._md5 == schema_object._md5  # check we get the same schema back
     assert j.data.schema.get_from_md5(md5=schema_object2._md5)._md5 == schema_object2._md5
     assert schema_object2._md5 == j.data.schema._md5(schema1)
 
-    assert j.data.schema.url_to_md5["jumpscale.schema.test4.cmd"][-1] == schemasub2._md5
+    assert j.data.schema._url_to_md5["jumpscale.schema.test4.cmd"][-1] == schemasub2._md5
 
-    s5 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test4.cmd")
+    s5 = j.data.schema.get_from_url(url="jumpscale.schema.test4.cmd")
     assert s5._md5 == schemasub._md5
 
     q = schema_object.new()

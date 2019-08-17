@@ -103,7 +103,7 @@ def main(self):
     urls.append("jsx.subschema.3.2.2")
 
     for url in urls:
-        md5 = j.data.schema.url_to_md5[url][0]
+        md5 = j.data.schema._url_to_md5[url][0]
         s = j.data.schema.get_from_md5(md5)
         assert s._md5 == md5
 
