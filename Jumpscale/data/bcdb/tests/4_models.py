@@ -39,9 +39,13 @@ def main(self):
 
     bcdb, _ = self._load_test_model()
 
+    bcdb in j.data.bcdb.instances
+
+    j.shell()
+
     bcdb.models_add(mpath)
 
-    model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
+    model = bcdb.model_get(url="jumpscale.bcdb.test.house")
 
     schema_md5 = model.schema._md5
 
@@ -51,15 +55,12 @@ def main(self):
 
     data = model.get(model_obj.id)
 
+    # make sure the data from first one has right schema md5
+    assert data._schema._md5 == schema_md5
+
     assert data.cost_usd == 10
 
     assert model_obj.cost_usd == 10
-
-    # assert model.index.select().first().cost == 10.0  # is always in usd
-    # TODO:*1 need to get the sqlite index to work again
-
-    print("TEST FOR MODELS DONE, but is still minimal")
-    self._log_info("TEST MODELS DONE")
 
     schema_updated = """
     @url = jumpscale.bcdb.test.house
@@ -70,12 +71,33 @@ def main(self):
     room = (LO) !jumpscale.bcdb.test.room
     """
 
-    s = j.data.schema.add_from_text(schema_updated)
-    model2 = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
+    assert len(model.find()) == 1
+
+    s = bcdb.schema_get(schema_updated)
+    assert s._md5 != schema_md5
+
+    model2 = bcdb.model_get(url="jumpscale.bcdb.test.house")
+
+    assert model2.schema._md5 == s._md5
+
     assert model2 == model
-    assert model2.mid == model.mid
 
-    j.shell()
+    assert len(model2.find()) == 1
 
-    # j.data.schema.remove_from_text(schema)
+    model_obj = model.new()
+    model_obj.cost = 15
+    model_obj.save()
+
+    assert len(model2.find()) == 2
+    assert len(model.find()) == 2
+
+    data2 = model.find()[1]
+    assert data2._schema._md5 == s._md5  # needs to be the new md5
+
+    model.find()[0].cost == "10 USD"
+    model.find()[1].cost == 15
+
+    # the schema's need to be different
+    assert model.find()[0]._schema._md5 != model.find()[1]._schema._md5
+
     return "OK"

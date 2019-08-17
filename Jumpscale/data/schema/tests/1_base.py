@@ -215,10 +215,5 @@ def main(self):
     assert s2._md5 != s0._md5
 
     self._log_info("TEST DONE BASE")
-    # CLEAN STATE
-    # j.data.schema.remove_from_text(schema0)
-    # j.data.schema.remove_from_text(schema2)
-    # j.data.schema.remove_from_text(schema3)
-    # j.data.schema.remove_from_text(schema4)
-    # j.data.schema.remove_from_text(schema4prime)
+
     return "OK"

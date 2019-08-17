@@ -69,7 +69,7 @@ def main(self):
             cl.flush()
 
         schema = j.core.text.strip(schema)
-        m = bcdb.model_get_from_schema(schema)
+        m = bcdb.model_get(schema=schema)
 
         def get_obj(i):
             schema_obj = m.new()

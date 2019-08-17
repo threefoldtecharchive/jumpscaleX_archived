@@ -41,7 +41,7 @@ def main(self):
     """
     zdb = j.servers.zdb.test_instance_start()
     bcdb = j.data.bcdb.new("test", reset=True)
-    m = bcdb.model_get_from_schema(SCHEMA)
+    m = bcdb.model_get(schema=SCHEMA)
 
     m.destroy()
 
@@ -98,7 +98,7 @@ def main(self):
             if o.id in data__:
                 raise j.exceptions.Base("the id should not be in the redis index")
 
-    m2 = bcdb.model_get_from_schema(SCHEMA)
+    m2 = bcdb.model_get(schema=SCHEMA)
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
@@ -114,7 +114,7 @@ def main(self):
     date = (D)   
     
     """
-    m3 = bcdb.model_get_from_schema(SCHEMA3)
+    m3 = bcdb.model_get(schema=SCHEMA3)
     o = m3.new()
 
     # default
@@ -153,7 +153,7 @@ def main(self):
 
     # now we know that the previous indexes where not touched
 
-    m4 = bcdb2.model_get_from_schema(SCHEMA3)
+    m4 = bcdb2.model_get(schema=SCHEMA3)
     o = m4.new()
     o.ipaddr = "192.168.1.1"
     o.email = "ename"

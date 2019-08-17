@@ -41,6 +41,9 @@ class TypeBaseObjClass:
     def value(self):
         raise j.exceptions.NotImplemented()
 
+    def default_get():
+        return None
+
     @value.setter
     def value(self, val):
         self._data = self._typebase.toData(val)
@@ -261,3 +264,9 @@ class TypeBaseObjFactory(TypeBaseClass):
 
     def clean(self, v):
         raise j.exceptions.NotImplemented()
+
+
+class TypeBaseClassUnserialized(TypeBaseClass):
+    """
+    needed to make sure that in the schema this one gets to the unserialized dict
+    """

@@ -16,7 +16,6 @@ class ZDBServer(j.application.JSBaseConfigClass):
 
     def _init(self, **kwargs):
         self._datadir = ""
-        j.shell()
 
     @property
     def datadir(self):

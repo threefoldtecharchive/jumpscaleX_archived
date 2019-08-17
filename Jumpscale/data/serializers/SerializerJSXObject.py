@@ -6,7 +6,7 @@ class SerializerJSXObject(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 
-    def dumps(self, obj, model=None, test=True):
+    def dumps(self, obj, test=True):
         """
         obj is the dataobj for JSX
 
@@ -17,8 +17,6 @@ class SerializerJSXObject(SerializerBase):
         :return:
         """
         assert isinstance(obj, j.data.schema._JSXObjectClass)
-        if model:
-            assert isinstance(model, j.data.bcdb._BCDBModelClass)
 
         try:
             obj._capnp_obj.clear_write_flag()
@@ -48,15 +46,13 @@ class SerializerJSXObject(SerializerBase):
 
         return data2
 
-    def loads(self, data, model=None):
+    def loads(self, data, bcdb=None):
         """
         j.data.serializers.jsxdata.loads(..
         :param data:
         :return: obj
         """
         assert data
-        if model:
-            assert isinstance(model, j.data.bcdb._BCDBModelClass)
 
         versionnr = int.from_bytes(data[0:1], byteorder="little")
 
@@ -66,10 +62,9 @@ class SerializerJSXObject(SerializerBase):
             md5 = md5bin.hex()
             data2 = data[21:]
 
-            # self._log_debug("LOADS:%s:%s" % (versionnr, obj_id))
             if md5 in j.data.schema.md5_to_schema:
                 schema = j.data.schema.md5_to_schema[md5]
-                obj = schema.new(capnpdata=data2, model=model)
+                obj = schema.new(capnpdata=data2, bcdb=bcdb)
                 obj.id = obj_id
                 if obj.id == 0:
                     obj.id = None

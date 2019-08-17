@@ -59,7 +59,7 @@ def main(self):
     self.zdb = j.clients.zdb.client_get(name="unique", port=9901, secret="1234")
     self.bcdb = j.data.bcdb.new("test", storclient=self.zdb, reset=True)
     schema = j.data.schema.get_from_text(scm)
-    self.model = self.bcdb.model_get_from_schema(schema)
+    self.model = self.bcdb.model_get(schema=schema)
     schema_obj = self.model.new()
     name = "s" + str(uuid4()).replace("-", "")[:10]
     new_name = "s" + str(uuid4()).replace("-", "")[:10]

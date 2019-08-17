@@ -88,7 +88,7 @@ def main(self):
     # bcdb = j.data.bcdb.get("test")
     bcdb, model = self._load_test_model(type="sqlite")
     bcdb.reset()
-    m = bcdb.model_get_from_schema(schema)
+    m = bcdb.model_get(schema=schema)
 
     urls = []
     urls.append("jsx.master.1")

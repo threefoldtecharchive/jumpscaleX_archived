@@ -32,7 +32,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, mid=None, schema=None, reset=False):
+    def __init__(self, bcdb, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -59,20 +59,8 @@ class BCDBModel(j.application.JSBaseClass):
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
 
-        if not mid:
-            if schema.url_noversion in bcdb.meta._schema_url_to_mid:
-                mid = bcdb.meta._schema_url_to_mid[schema.url_noversion]
-            else:
-                # means we create a model from code
-                mid = bcdb.meta._schema_set(self.schema)  # only if mid was not specified we need to register
-
-        self.mid = mid
-        assert mid
-
-        assert schema.url_noversion in bcdb.meta._schema_url_to_mid
-        assert bcdb.meta._schema_url_to_mid[self.schema.url_noversion] == self.mid
-
         self.bcdb = bcdb
+
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
@@ -98,6 +86,12 @@ class BCDBModel(j.application.JSBaseClass):
 
         if reset:
             self.reset()
+
+    @property
+    def mid(self):
+        if not self.schema.url in self.bcdb.meta._data.url_to_mid:
+            raise j.exceptions.BUG("cannot find url:%s in the metadata of bcdb" % self.schema.url)
+        return self.bcdb.meta._data.url_to_mid[self.schema.url]
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
@@ -211,10 +205,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise j.exceptions.Base("need to specify nid")
-            obj = self.schema.new(datadict=data, model=self)
+            obj = self.schema.new(datadict=data, bcdb=self.bcdb)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.new(serializeddata=data, model=self)
+            obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             if obj_id is None:
                 raise j.exceptions.Base("objid cannot be None")
             if not obj.nid:
@@ -346,7 +340,7 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            l = [obj.nid, obj._model.mid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self._triggers_call(obj, action="set_pre")
@@ -397,13 +391,13 @@ class BCDBModel(j.application.JSBaseClass):
 
         if data:
             if isinstance(data, dict):
-                obj = self.schema.new(datadict=data, model=self)
+                obj = self.schema.new(datadict=data, bcdb=self.bcdb)
             elif isinstance(data, bytes):
-                obj = self.schema.new(capnpdata=data, model=self)
+                obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             else:
                 raise j.exceptions.Base("need dict")
         else:
-            obj = self.schema.new(model=self)
+            obj = self.schema.new(bcdb=self.bcdb)
         obj = self._methods_add(obj)
         obj.nid = nid
         obj = self._triggers_call(obj=obj, action="new")
@@ -443,7 +437,7 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 return None
 
-        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
+        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp)
 
         if obj._schema.url == self.schema.url:
             obj = self._triggers_call(obj=obj, action="get")

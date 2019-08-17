@@ -148,9 +148,6 @@ def main(self):
         schema_test.category = "s"
     except Exception as e:
         assert str(e).find("object readonly, cannot set") != -1
-    # CLEAN STATE
-    # j.data.schema.remove_from_text(schema0)
-    # j.data.schema.remove_from_text(schema1)
 
     self._log_info("TEST DONE LIST")
 

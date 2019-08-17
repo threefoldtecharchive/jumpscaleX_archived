@@ -257,7 +257,7 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "%s_data_%s_hash_%s" % (self.current_bcbd_name, nid, hsh)
                         # if we go through md5 url or mid that will points to the same objects
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_schema(schema)
+                            m = self._bcdb.model_get(schema=schema)
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, [i for i in m.iterate(nid)], m)
                     else:
                         # fifth element must be the object identifier e.g. /data/5/mid/1/7 or /data/5/url/ben.test.1/7
@@ -267,7 +267,7 @@ class BCDBVFS(j.application.JSBaseClass):
                             raise Exception("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
                         key = "%s_data_%s_hash_%s_%s" % (self.current_bcbd_name, nid, hsh, id)
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_schema(schema)
+                            m = self._bcdb.model_get(schema=schema)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             else:  # URL
                 if path_length == 3:
@@ -283,7 +283,7 @@ class BCDBVFS(j.application.JSBaseClass):
                         key = "%s_data_%s_url_%s" % (self.current_bcbd_name, nid, url)
                         # if we go through md5 url or mid that will points to the same objects
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_url(url)
+                            m = self._bcdb.model_get(url=url)
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, [i for i in m.iterate(nid)], m)
                     else:
                         # fifth element must be the object identifier e.g. /data/5/mid/1/7 or /data/5/url/ben.test.1/7
@@ -293,7 +293,7 @@ class BCDBVFS(j.application.JSBaseClass):
                             raise Exception("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
                         key = "%s_data_%s_url_%s_%s" % (self.current_bcbd_name, nid, url, id)
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_url(url)
+                            m = self._bcdb.model_get(url=url)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
         else:
             raise Exception("path:%s too long " % (path))
@@ -494,7 +494,7 @@ class BCDBVFS(j.application.JSBaseClass):
             if schemas:
                 for s in schemas:
                     r = self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta
-                    self._bcdb.model_get_from_schema(s)  # should create the model based on the schema
+                    self._bcdb.model_get(schema=s)  # should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
                     key_mid = "%s_schemas_mid_%s" % (self.current_bcbd_name, s_obj.mid)
@@ -604,10 +604,10 @@ class BCDBVFS(j.application.JSBaseClass):
         if info["identifier_type"] == "mid":
             return self._bcdb.model_get_from_mid(info["identifier"])
         elif info["identifier_type"] == "url":
-            return self._bcdb.model_get_from_url(info["identifier"])
+            return self._bcdb.model_get(url=info["identifier"])
         elif info["identifier_type"] == "hash":
             schema = j.data.schema.get_from_md5(info["identifier"])
-            return self._bcdb.model_get_from_schema(schema)
+            return self._bcdb.model_get(schema=schema)
         else:
             raise Exception("impossible to model from info:%s" % info)
 

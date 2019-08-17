@@ -25,30 +25,29 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.schema.test(name="json")' --debug
+    kosmos 'j.data.schema.test(name="dict")'
     """
 
-    schema = """
-        @url = despiegk.test.set
-        list_json = (LJSON)
-        obj_json = (JSON)  #is same H = SET
-        s = "something"
+    schema0 = """
+        @url = despiegk.test.dict
+        dd = {} (DICT)
         """
 
-    schema_object = j.data.schema.get_from_text(schema_text=schema)
+    schema_object = j.data.schema.get_from_text(schema_text=schema0)
 
     o = schema_object.new()
 
-    o.obj_json["a"] = 1
-    o.obj_json["2"] = 1
-    assert o.obj_json == {"a": 1, "2": 1}
+    o.dd["a"] = 1
+    o.dd["b"] = "a"
 
-    serializeddata = o._data
+    assert o.dd == {"a": 1, "b": "a"}
 
-    o2 = schema_object.new(serializeddata=serializeddata)
+    data = o._data
 
-    assert o2.obj_json == {"a": 1, "2": 1}
+    o3 = schema_object.new(serializeddata=data)
 
-    self._log_info("test for json ok")
+    assert o3.dd == {"a": 1, "b": "a"}
+
+    self._log_info("test for dict ok")
 
     return "OK"

@@ -30,7 +30,7 @@ class DIR(j.data.bcdb._BCDBModelClass):
     @property
     def _file_model(self):
         if not self._file_model_:
-            self._file_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.file.2")
+            self._file_model_ = self.bcdb.model_get(url="jumpscale.bcdb.fs.file.2")
         return self._file_model_
 
     def _create_root_dir(self):

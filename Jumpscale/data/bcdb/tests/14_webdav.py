@@ -45,7 +45,7 @@ def main(self):
     username = "" (S)           # User name
     
     \"\"\"
-    m_wallet_test = bcdb.model_get_from_schema(SCHEMA)
+    m_wallet_test = bcdb.model_get(schema=SCHEMA)
     for i in range(10):
         o = m_wallet_test.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test"

@@ -64,27 +64,27 @@ class Schema(j.application.JSBaseClass):
         else:
             raise j.exceptions.Input("url not defined in schema", data=text)
 
-        urls = self.url.split(".")
-        if len(urls) > 0:
-            try:
-                v = int(urls[-1])
-            except:
-                v = None
-                self.version = 1
-                self.url_noversion = self.url
-            if v is not None:
-                self.version = urls.pop(len(urls) - 1)
-                self.url_noversion = ".".join(urls)
-            # if self.url_noversion in j.data.schema.schemas_versionless:
-            #     if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
-            #         # version itself can be replaced as well, there could be an update
-            #         j.data.schema.schemas_versionless[self.url_noversion] = self
-            # else:
-            #     j.data.schema.schemas_versionless[self.url_noversion] = self
+        # urls = self.url.split(".")
+        # if len(urls) > 0:
+        #     try:
+        #         v = int(urls[-1])
+        #     except:
+        #         v = None
+        #         self.version = 1
+        #         self.url = self.url
+        #     if v is not None:
+        #         self.version = urls.pop(len(urls) - 1)
+        #         self.url = ".".join(urls)
+        #     # if self.url in j.data.schema.schemas_versionless:
+        #     #     if j.data.schema.schemas_versionless[self.url].version < self.version + 1:
+        #     #         # version itself can be replaced as well, there could be an update
+        #     #         j.data.schema.schemas_versionless[self.url] = self
+        #     # else:
+        #     #     j.data.schema.schemas_versionless[self.url] = self
 
     @property
     def url_str(self):
-        u = self.url_noversion + ""
+        u = self.url + ""
         # self._log_debug(u)
         if "schema" in u:
             u = u.split("schema", 1)[1]
@@ -350,7 +350,7 @@ class Schema(j.application.JSBaseClass):
                 index_key = True
         return (index_key, index_sql, index_text)
 
-    def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
+    def new(self, capnpdata=None, serializeddata=None, datadict=None, bcdb=None):
         """
         new schema_object using data and capnpbin
 
@@ -361,22 +361,31 @@ class Schema(j.application.JSBaseClass):
         :param model: will make sure we save in the model
         :return:
         """
-        if model:
-            assert isinstance(model, j.data.bcdb._BCDBModelClass)
-        if serializeddata and isinstance(serializeddata, bytes):
-            return j.data.serializers.jsxdata.loads(serializeddata, model=model)
-        elif capnpdata and isinstance(capnpdata, bytes):
-            obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
-            return obj
-        elif datadict and datadict != {}:
-            obj = self.objclass(schema=self, datadict=datadict, model=model)
-            return obj
-        elif capnpdata is None and serializeddata is None and datadict == None:
-            return self.objclass(schema=self, model=model)
+
+        # self._log_debug("LOADS:%s:%s" % (versionnr, obj_id))
+
+        if bcdb:
+            model = bcdb.model_get(url=self.url)
         else:
-            raise j.exceptions.Base("wrong arguments to new on schema")
+            model = None
+
+        if serializeddata:
+            assert isinstance(serializeddata, bytes)
+            obj = j.data.serializers.jsxdata.loads(serializeddata, bcdb=bcdb)
+        else:
+            if capnpdata and isinstance(capnpdata, bytes):
+                obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
+            elif datadict and datadict != {}:
+                obj = self.objclass(schema=self, datadict=datadict, model=model)
+            elif capnpdata is None and serializeddata is None and datadict == None:
+                obj = self.objclass(schema=self, model=model)
+            else:
+                raise j.exceptions.Base("wrong arguments to new on schema")
+
         if model is not None:
-            model._triggers_call(r, "new")
+            model._triggers_call(obj, "new")
+
+        return obj
 
     # @property
     # def propertynames_index_sql(self):

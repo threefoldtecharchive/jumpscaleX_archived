@@ -205,11 +205,11 @@ class RedisServer(j.application.JSBaseClass):
             for i in list(self.bcdb.meta._data.schemas):
 
                 if url == i.url:
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
                 elif url == i.md5:
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
                 elif url == str(i.sid):
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
 
         return (cat, url, key, m)
 

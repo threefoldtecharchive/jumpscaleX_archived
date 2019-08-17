@@ -8,7 +8,7 @@ has no notion of config management, its just the data object by itself.
 #how to get 
 j.data.schema...  
 
-def new(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
+def new(self, capnpdata=None, serializeddata=None, datadict=None, bcdb=None):
     """
     new schema_object using data and capnpbin
 

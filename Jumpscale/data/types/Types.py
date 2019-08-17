@@ -48,6 +48,7 @@ class Types(j.application.JSBaseFactoryClass):
         ]
 
         self._TypeBaseObjClass = TypeBaseObjClass
+        self._TypeBaseClassUnserialized = TypeBaseClassUnserialized
 
         self._type_check_list = []
         self._aliases = {}

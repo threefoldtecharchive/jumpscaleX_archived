@@ -47,11 +47,9 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         """
         return self.clean(val)
 
-    def toData(self, val, model=None):
-        if model:
-            assert isinstance(model, j.data.bcdb._BCDBModelClass)
+    def toData(self, val):
         val2 = self.clean(val)
-        return j.data.serializers.jsxdata.dumps(val2, model=model)
+        return j.data.serializers.jsxdata.dumps(val2)
 
     def toString(self, val):
         """
@@ -65,8 +63,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     def check(self, value):
         return isinstance(value, j.data.schema._JSXObjectClass)
 
-    def default_get(self, model=None):
-        return self._schema.new(model=model)
+    def default_get(self, bcdb=None):
+        return self._schema.new(bcdb=bcdb)
 
     def clean(self, value, model=None):
         """
@@ -75,16 +73,20 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         :param model: when model specified (BCDB model) can be stored in BCDB
         :return:
         """
+        if model:
+            bcdb = model._bcdb
+        else:
+            bcdb = None
         if isinstance(value, j.data.schema._JSXObjectClass):
             return value
         elif not value:
-            return self._schema.new(model=model)
+            return self._schema.new(bcdb=bcdb)
         elif isinstance(value, bytes):
-            obj = j.data.serializers.jsxdata.loads(value, model=model)
+            obj = j.data.serializers.jsxdata.loads(value, bcdb=bcdb)
             # when bytes the version of the jsxobj & the schema is embedded in the bin data
             return obj
         elif isinstance(value, dict):
-            return self._schema.new(datadict=value, model=model)
+            return self._schema.new(datadict=value, bcdb=bcdb)
         elif isinstance(value, j.application.JSConfigClass):
             return value._data
         else:

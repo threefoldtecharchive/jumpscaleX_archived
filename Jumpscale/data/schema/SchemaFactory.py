@@ -55,7 +55,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
     def reset(self):
         self.url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
-        self.url_versionless_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
+        # self.url_versionless_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
         self.md5_to_schema = {}
 
     def exists(self, md5=None, url=None):
@@ -79,7 +79,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
 
-    def get_from_url_latest(self, url):
+    def get_from_url_latest(self, url, die=True):
         """
         :param url: url is e.g. jumpscale.bcdb.user.1
         :return: will return the most recent schema, there can be more than 1 schema with same url (changed over time)
@@ -89,8 +89,15 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if url in self.url_to_md5:
             if len(self.url_to_md5[url]) > 0:
                 md5 = self.url_to_md5[url][-1]
-                return self.md5_to_schema[md5]
-        raise j.exceptions.Input("Could not find schema with url:%s" % url)
+                if md5 in self.md5_to_schema:
+                    return self.md5_to_schema[md5]
+                else:
+                    if die:
+                        raise j.exceptions.Input("Could not find schema with url:%s, schema not loaded yet" % url)
+                    else:
+                        return md5
+        if die:
+            raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
     def get_from_text(self, schema_text, url=None):
         """
@@ -118,6 +125,11 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         return j.data.hash.md5_string(original_text)
 
     def _urlclean(self, url):
+        """
+        url = j.data.schema._urlclean(url)
+        :param url:
+        :return:
+        """
         return url.strip().strip("'\"").strip()
 
     def _schema_blocks_get(self, schema_text):
@@ -180,10 +192,10 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
     #         self.url_to_md5.pop(s.url)
     #
     #     # add md5 to the list if its not there yet for versionless
-    #     if not s.url_noversion in self.url_versionless_to_md5:
-    #         if not s._md5 in self.url_versionless_to_md5[s.url_noversion]:
-    #             self.url_versionless_to_md5[s.url_noversion].remove(s._md5)
-    #         self.url_versionless_to_md5.pop(s.url_noversion)
+    #     if not s.url in self.url_versionless_to_md5:
+    #         if not s._md5 in self.url_versionless_to_md5[s.url]:
+    #             self.url_versionless_to_md5[s.url].remove(s._md5)
+    #         self.url_versionless_to_md5.pop(s.url)
     #
     #     return s
 
@@ -200,7 +212,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
             res.append(self._add_from_text_item(block, url=url))
         return res
 
-    def _add_from_text_item(self, schema_text, url=None, bcdb_check=True):
+    def _add_from_text_item(self, schema_text, url=None):
         md5 = self._md5(schema_text)
         if md5 in self.md5_to_schema:
             return self.md5_to_schema[md5]
@@ -209,25 +221,31 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         assert s.url
 
+        isok = self._add_url_to_md5(s.url, s._md5)
+        if isok:
+            # means did not exist yet so all ok or is same as latest one already known
+            self.md5_to_schema[s._md5] = s
+            return self.md5_to_schema[s._md5]
+        else:
+            raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
+
+    def _add_url_to_md5(self, url, md5):
+        """
+
+        :param url:
+        :param md5:
+        :return: True if the url & md5 combination is new or latest in row which is ok, otherwise False
+        """
         # add md5 to the list if its not there yet
-        if not s.url in self.url_to_md5:
-            self.url_to_md5[s.url] = []
-        if not s._md5 in self.url_to_md5[s.url]:
-            self.url_to_md5[s.url].append(s._md5)
-
-        # add md5 to the list if its not there yet for versionless
-        if not s.url_noversion in self.url_versionless_to_md5:
-            self.url_versionless_to_md5[s.url_noversion] = []
-        if not s._md5 in self.url_versionless_to_md5[s.url_noversion]:
-            self.url_versionless_to_md5[s.url_noversion].append(s._md5)
-
-        self.md5_to_schema[s._md5] = s
-
-        if bcdb_check:
-            for bcdb in j.data.bcdb.instances:
-                bcdb.meta.schema_register(s)
-
-        return s
+        url = self._urlclean(url)
+        if not url in self.url_to_md5:
+            self.url_to_md5[url] = []
+        if not md5 in self.url_to_md5[url]:
+            self.url_to_md5[url].append(md5)
+            return True
+        if self.url_to_md5[url][-1] == md5:
+            return True
+        return False
 
     def add_from_path(self, path=None):
         """

@@ -44,8 +44,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
-        self._init_once_done = False
-
         self._BCDBModelClass = BCDBModel  # j.data.bcdb._BCDBModelClass
 
         self._load()
@@ -67,11 +65,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         self._system = None
 
-    def _init_once(self):
-        if not self._init_once_done:
-            j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
-            self._init_once_done = True
-
     def get_system(self, reset=False):
         """
         sqlite based BCDB, don't need ZDB for this
@@ -80,6 +73,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if not self._system:
             # storclient = j.clients.sqlitedb.client_get(name="system")
             storclient = j.clients.rdb.client_get(name="system")
+            j.data.schema.add_from_path("%s/models_system" % self._dirpath)
             self._system = self.get("system", storclient=storclient, reset=reset)
         return self._system
 
@@ -102,12 +96,11 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
     @property
     def instances(self):
         res = []
-
-        for name, data in self._config.items():
+        config = self._config.copy()
+        for name, data in config.items():
             self._log_debug(data)
-            if self.exists(name):
-                bcdb = self.get(name)
-                res.append(bcdb)
+            bcdb = self.get(name)
+            res.append(bcdb)
         return res
 
     def index_rebuild(self):
@@ -167,6 +160,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
     def exists(self, name):
         if name in self._bcdb_instances:
+            if not name in self._config:
+                j.shell()
             assert name in self._config
             return True
 
@@ -199,7 +194,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if not fromcache:
             if name in self._bcdb_instances:
                 self._bcdb_instances.pop(name)
-        self._init_once()
         if self.exists(name):
             return self._get(name=name, reset=reset, storclient=storclient)
         else:
@@ -241,7 +235,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         :return:
         """
         # DO NOT CHANGE if_not_exist_die NEED TO BE TRUE
-        self._init_once()
         data = {}
         if name in self._bcdb_instances:
             bcdb = self._bcdb_instances[name]
@@ -252,8 +245,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         else:
             raise j.exceptions.Base("did not find bcdb with name:%s" % name)
 
-        # its the only 100% safe way to get all out for now
-        dontuse = BCDB(storclient=storclient, name=name, reset=True)
+        if reset:
+            # its the only 100% safe way to get all out for now
+            dontuse = BCDB(storclient=storclient, name=name, reset=reset)
         self._bcdb_instances[name] = BCDB(storclient=storclient, name=name)
         return self._bcdb_instances[name]
 
@@ -277,7 +271,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         self._log_info("new bcdb:%s" % name)
-        self._init_once()
         if self.exists(name=name):
             if not reset:
                 raise j.exceptions.Input("cannot create new bcdb '%s' already exists, and reset not used" % name)
@@ -317,10 +310,12 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._config_write()
         self._load()
 
-        bcdb = self._get(name=name, reset=reset)
+        bcdb = self._get(name=name, reset=reset, storclient=storclient)
 
         assert bcdb.storclient
         assert bcdb.storclient.type == storclient.type
+
+        assert bcdb.name in self._config
 
         return bcdb
 
@@ -400,7 +395,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         assert bcdb.name == "test"
 
         schemaobj = j.data.schema.get_from_text(schema)
-        model = bcdb.model_get_from_schema(schemaobj)
+        model = bcdb.model_get(schema=schemaobj)
 
         self._log_debug("bcdb already exists")
 

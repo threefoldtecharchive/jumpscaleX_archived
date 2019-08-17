@@ -45,7 +45,7 @@ def main(self):
 
     vfs = j.data.bcdb._get_vfs()
 
-    m_wallet_test = bcdb.model_get_from_schema(SCHEMA)
+    m_wallet_test = bcdb.model_get(schema=SCHEMA)
     test_case = TestCase()
     for i in range(10):
         o = m_wallet_test.new()

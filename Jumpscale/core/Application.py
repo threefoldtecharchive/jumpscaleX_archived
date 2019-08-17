@@ -96,7 +96,6 @@ class Application(object):
         self.schemas = None
 
         self.errors_init = []
-        self._bcdb_system = None
 
         self._JSGroup = JSGroup
 
@@ -155,10 +154,7 @@ class Application(object):
 
     @property
     def bcdb_system(self):
-        if self._bcdb_system is None:
-            bcdb = self._j.data.bcdb.get_system(reset=False)
-            self._bcdb_system = bcdb
-        return self._bcdb_system
+        return self._j.data.bcdb.get_system(reset=False)
 
     def bcdb_system_destroy(self):
         s = self._j.data.bcdb.get_system()

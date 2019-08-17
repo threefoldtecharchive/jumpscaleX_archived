@@ -68,7 +68,7 @@ class JSConfigs(JSBase, Attr):
             else:
                 s = self.__class__._CHILDCLASS._SCHEMATEXT
             t = self._process_schematext(s)
-            self._model_ = bcdb.model_get_from_schema(t)
+            self._model_ = bcdb.model_get(schema=t)
         return self._model_
 
     def _bcdb_selector(self):

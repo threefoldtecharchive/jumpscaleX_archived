@@ -2,14 +2,12 @@
 
 from Jumpscale import j
 
-from Jumpscale.data.types.PrimitiveTypes import String, StringMultiLine
-from Jumpscale.data.types.TypeBaseClasses import TypeBaseClass
 
 import struct
 from .TypeBaseClasses import *
 
 
-class JSON(StringMultiLine):
+class JSON(TypeBaseClassUnserialized):
 
     NAME = "json"
 
@@ -144,7 +142,7 @@ class YAML(JSON):
         return j.data.serializers.yaml.dumps(v)
 
 
-class Dictionary(TypeBaseClass):
+class Dictionary(TypeBaseClassUnserialized):
     """Generic dictionary type"""
 
     NAME = "dict"
@@ -217,7 +215,7 @@ class Dictionary(TypeBaseClass):
         return "%s @%s :Data;" % (name, nr)
 
 
-class Set(TypeBaseClass):
+class Set(TypeBaseClassUnserialized):
 
     """
     hash is 2 value list, represented as 2 times 4 bytes

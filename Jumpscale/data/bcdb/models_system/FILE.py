@@ -32,7 +32,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
     @property
     def _dir_model(self):
         if not self._dir_model_:
-            self._dir_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.dir.2")
+            self._dir_model_ = self.bcdb.model_get(url="jumpscale.bcdb.fs.dir.2")
         return self._dir_model_
 
     _block_model_ = None
@@ -40,7 +40,7 @@ class FILE(j.data.bcdb._BCDBModelClass):
     @property
     def _block_model(self):
         if not self._block_model_:
-            self._block_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.block.2")
+            self._block_model_ = self.bcdb.model_get(url="jumpscale.bcdb.fs.block.2")
         return self._block_model_
 
     def _text_index_content_pre_(self, property_name, val, obj_id, nid=1):
@@ -179,7 +179,7 @@ class FileStream:
     @property
     def _block_model(self):
         if not self._block_model_:
-            self._block_model_ = self._bcdb.model_get_from_url("jumpscale.bcdb.fs.block.2")
+            self._block_model_ = self._bcdb.model_get(url="jumpscale.bcdb.fs.block.2")
         return self._block_model_
 
     def writelines(self, stream, append=True):

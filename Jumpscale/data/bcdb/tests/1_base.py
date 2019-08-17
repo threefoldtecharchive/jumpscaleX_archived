@@ -66,7 +66,7 @@ def main(self):
         else:
             schema_url = "despiegk.test"
         db = load(schema_url)
-        db_model = db.model_get_from_url(url=schema_url)
+        db_model = db.model_get(url=url=schema_url)
 
         if sqlite:
             query = db_model.index.sql.select()

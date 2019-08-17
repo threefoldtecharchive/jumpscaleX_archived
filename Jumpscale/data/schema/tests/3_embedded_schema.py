@@ -184,8 +184,6 @@ def main(self):
 
     assert schema_test3._data == schema_test4._data
 
-    # CLEAN STATE
-    # j.data.schema.remove_from_text(schema2)
     self._log_info("TEST DONE SCHEMA EMBED")
 
     return "OK"

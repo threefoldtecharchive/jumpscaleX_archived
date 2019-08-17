@@ -57,18 +57,18 @@ A Model is based on only one schema. think of the schema as a text defining the 
 of a data table and the model is the databale object.
 To get a model corresponding to a schema we have several options 
 * through the schema text itself 
-    * the fastest and more straight forward method  `bcdb.model_get_from_schema()`
+    * the fastest and more straight forward method  `bcdb.model_get(schema=)`
 * through the property url of the schema  
-    * we find the corresponding schema text based on the schema url to call the method `bcdb.model_get_from_schema()`
+    * we find the corresponding schema text based on the schema url to call the method `bcdb.model_get()`
 * through the md5 hash of the schema  
-    * we find the corresponding schema text based on the schema md5 hash to call the method `bcdb.model_get_from_schema()`
+    * we find the corresponding schema text based on the schema md5 hash to call the method `bcdb.model_get()`
 * through the schema id 
-    * we find the corresponding schema text based on the schema id to call the method `bcdb.model_get_from_schema()`
+    * we find the corresponding schema text based on the schema id to call the method `bcdb.model_get()`
 
 ### BCDBModel
 A BCDBModel object is iterable and take the namespace id as parameter.
 ```
-JSX> model = bcdb.model_get_from_schema(schema_text)
+JSX> model = bcdb.model_get(schema=schema_text)
 JSX> model.iterate($nid)
 ```
 Or ,as the ID is incremented for all the database, meaning that you __will not have the same object id__ for objects in different namespace, we can get the object directly with its id.

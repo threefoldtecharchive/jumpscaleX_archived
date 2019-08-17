@@ -43,7 +43,7 @@ class JSConfig(JSBase, Attr):
                 s = self._parent.__class__._SCHEMATEXT
 
             # is a fall back for situation we want to use a JSConfig class without factory JSConfigs
-            self._model = j.application.bcdb_system.model_get_from_schema(s)
+            self._model = j.application.bcdb_system.model_get(schema=s)
 
         # self._model._kosmosinstance = self
 

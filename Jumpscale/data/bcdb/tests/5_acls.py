@@ -56,7 +56,7 @@ def main(self):
             an_id = 0
                 """
 
-        model = bcdb.model_get_from_schema(schema)
+        model = bcdb.model_get(schema=schema)
         a = model.new()
 
         # that will add right to the circle and all users in the circle

@@ -45,11 +45,11 @@ schemas = (LO) !jumpscale.bcdb.meta.schema.2
 namespaces = (LO) !jumpscale.bcdb.meta.namespace.2
 nid = 0  #namespace id
 name = "" (S)
+url_to_mid = {} (DICT)
 
 @url = jumpscale.bcdb.meta.schema.2
 @sub = true
 url = ""
-mid = 0  #schema id
 text = ""
 md5 = ""
 hasdata = False (B) #if True then we know there needs to be id's in the metadata for the iterator
@@ -58,137 +58,3 @@ hasdata = False (B) #if True then we know there needs to be id's in the metadata
 name* = ""                              #chosen name needs to be unique
 acls = (LO) !jumpscale.bcdb.acl.2
 write_once = False (B)  #means in this namespace records can only be written once, no modification possible
-
-#BCDB EXTERNAL SCHEMAS
-
-@url = jumpscale.bcdb.recordchain.1
-recordchain = (LO) !jumpscale.bcdb.record.1
-
-@url = jumpscale.bcdb.record.1
-data = ""           #capnp optionally encrypted data (symmetric encryption)
-schema_mid = (I)
-authors = (LO) !jumpscale.ebcdb.record.author.1
-md5 = ""            #md5 of encrypted data
-epoch = (T)
-multisig_write = (LI)           #list of 3botid's of who need to agree on 
-multisig_delete = (LI)          #list of 3botid's of who need to agree on 
-multisig_admin = (LI)           #list of 3botid's of who need to agree on
-multisig_write_min = (I)       #min nr of people who need to sign from the list
-multisig_delete_min = (I)
-multisig_admin_min = (I)
-timeout = 3600 (I)
-author_last = (I)
-state = "first,ok,deleted" (E)
-
-
-@url = jumpscale.ebcdb.record.author.1
-threebot_id = (I)
-admin = (B)  #admin is the only one who can change admin rights, multisig, delete
-encr_key = "" #is the encryption key for the data used but encrypted with public key of this author
-signature = "" #as when the author changed the data last otherwise empty, sign the md5 of above
-               #or when multisignature was needed then you need this field too
-rights = "write,delete" (E)
-
-
-
-
-#BCDB BLOCKCHAIN REGISTRY
-
-@url = jumpscale.ebcdb.block.chain.1
-zdb_block_md5 = ""
-zdb_block_id* = ""
-last_block_id = (I)
-last_block_md5 = ""
-dispersal_meta = (LO) !jumpscale.ebcdb.block.disperal.profile.1
-
-@url = jumpscale.ebcdb.block.disperal.profile.1
-name* = ""
-profile = (LO) !jumpscale.ebcdb.block.disperal.item.1
-
-@url = jumpscale.ebcdb.block.disperal.item.1
-zdb_id =  (I)  #reference to the zerodb instance
-key = (I)
-namespace = "" (S)
-secret_ = "" (S)
-
-
-#BCDB TFGRID
-
-@url = jumpscale.tfgrid.node.1
-ipaddr** = "" (S)
-#TODO: properties per 3node
-
-
-@url = jumpscale.tfgrid.zdb.1
-ipaddr** = "" (S)
-type*** = "ssd,hd" (E)
-space_total_gb = (I)
-space_available_gb = (I)
-location_id** = (I)
-farmer_id** = (I)
-
-
-@url = jumpscale.tfgrid.farmer.1
-name = ""
-description = ""
-locations = (LO) !jumpscale.tfgrid.farmer.location.1
-wallet_addr = (S)
-farmer_threebot_id = (I)
-
-@url = jumpscale.tfgrid.farmer.location.1
-name = ""
-description = ""
-#TODO: location #GOOGLE MAP LOCATION?
-
-
-
-
-
-
-
-#FILE & FILE METADATA OBJECTS
-
-
-@url = jumpscale.bcdb.fs.dir.2
-nid = 0  #namespace id
-name = "" (S)
-files = (LI)
-dirs = (LI)
-links = (LO) !jumpscale.bcdb.fs.link.2
-#posixattr = (O) !jumpscale.bcdb.meta.posixattr.2
-epoch = (T)
-
-@url = jumpscale.bcdb.fs.file.2
-name = "" (S)
-dir_id = (I)
-description*** = "" (S)
-content*** = "" (S)                                                             #optional e.g. for a markdown document
-content_type = "text/plain" (S)
-size_bytes = 0 (I)
-tags*** = (LS)
-#posixattr = (O) !jumpscale.bcdb.fs.posixattr.2
-blocks = (LI)                                                                   #is link to the blocks which are the content
-type = (S) #"doc,markdown,spreadsheet,web,code,text,presentation,image,video"
-extension = ""#e.g. xls
-epoch = (T)
-
-@url = jumpscale.bcdb.fs.link.2
-@sub = true
-name* = "" (S)
-destination = (I)
-destination_bot_id = 0 (I)
-#posixattr = (O) !jumpscale.bcdb.meta.posixattr.2
-epoch = (T)
-
-
-
-#max 1 MB
-@url = jumpscale.bcdb.fs.block.2
-md5* = ""
-size = (I)
-content = (BIN)
-epoch = (T)
-
-@url = jumpscale.bcdb.fs.posixattr.2
-attrs = (LS)
-#TODO: need posix attributes modeled here
