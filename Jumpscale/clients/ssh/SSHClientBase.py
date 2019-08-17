@@ -19,7 +19,6 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         #port_priv = 22
         login = "root"
         passwd = ""
-        use_mosh = False 
         sshkey_name = ""
         proxy = ""
         stdout = True (B)
@@ -202,12 +201,20 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     def shell(self, cmd=None):
         if cmd:
             j.shell()
-        if self.use_mosh:
-            cmd = "mosh {LOGIN}@{ADDR} -p {PORT}"
-        else:
-            cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
+        cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
+
+    def mosh(self, ssh_private_key_push=False):
+        self.executor.installer.mosh()
+        if ssh_private_key_push:
+            j.shell()
+        cmd = "mosh -ssh='ssh -oStrictHostKeyChecking=no -t -p {PORT}' {LOGIN}@{ADDR}"
+        # cmd = "mosh -p {PORT} {LOGIN}@{ADDR} -A"
+        cmd = self._replace(cmd)
+        j.sal.process.executeWithoutPipe(cmd)
+
+        return self.shell()
 
     def kosmos(self, cmd=None):
         j.shell()

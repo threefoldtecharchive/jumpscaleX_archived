@@ -178,7 +178,6 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def index_rebuild(self, nid=1):
-        raise RuntimeError()
         self.stop()
         self.index.destroy(nid=nid)
         self._log_warning("will rebuild index for:%s" % self)

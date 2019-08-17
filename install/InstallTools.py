@@ -1390,8 +1390,7 @@ class Tools:
                         assert arg
                         line = line.replace("{%s}" % arg, val)
                 except Exception as e:
-                    from Jumpscale import j
-                    j.exceptions.Runtime(
+                    raise RuntimeError(
                         "failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new
                     )
             line = line.replace(">>EMPTYDICT<<", "{}")
@@ -1400,7 +1399,7 @@ class Tools:
 
         for replace_args in args_list:
             if not isinstance(replace_args, dict):
-                raise j.exceptions.Input("replace args need to be dict", data=replace_args)
+                raise Tools.exceptions.Input("replace args need to be dict", data=replace_args)
         out = ""
         for line in content.split("\n"):
             if "{" in line:
