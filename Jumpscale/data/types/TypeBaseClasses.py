@@ -11,16 +11,16 @@ class TypeBaseObjClass:
         self._typebase = typebase  # is the factory for this object
 
         if value is None:
-            self._data = None
+            self._data = 0
         else:
-            self._data_from_init_val(value)
+            self._data = self._data_from_init_val(value)
 
     def _data_from_init_val(self, value):
         """
         convert init value to raw type inside this object
         :return:
         """
-        self._data = value
+        return value
 
     def _capnp_schema_get(self, name, nr):
         return self._typebase.capnp_schema_get(name, nr)

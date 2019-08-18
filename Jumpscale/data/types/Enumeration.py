@@ -13,20 +13,22 @@ class EnumerationObj(TypeBaseObjClass):
         except:
             pass
         if isinstance(value, str):
-            value_str = value.upper().strip()
-            if value_str not in self._typebase.values:
-                self._data = 0
-                raise j.exceptions.Value("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
-            value_id = self._typebase.values.index(value_str) + 1
+            if value == "":
+                return 0
+            else:
+                value_str = value.upper().strip()
+                if value_str not in self._typebase.values:
+                    return 0
+                return self._typebase.values.index(value_str) + 1
         elif isinstance(value, int):
             if value > len(self._typebase.values) + 1:
-                self._data = 0
-                raise j.exceptions.Value("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
-            value_id = value
+                return 0
+            if value == 0:
+                return 0
+            return value
         else:
             raise j.exceptions.Value("unsupported type for enum, is int or string")
-
-        self._data = value_id
+        raise
 
     @property
     def _string(self):
@@ -53,6 +55,8 @@ class EnumerationObj(TypeBaseObjClass):
     __repr__ = __str__
 
     def __eq__(self, other):
+        if other in [None, ""]:
+            return False
         try:
             other = self._typebase.clean(other)
         except Exception as e:

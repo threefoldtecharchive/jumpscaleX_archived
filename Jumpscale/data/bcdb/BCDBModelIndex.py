@@ -72,7 +72,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         if reset:
             self.destroy()
 
-    def destroy(self, nid=None):
+    def destroy(self, nid=1):
         """
         if nid is None will remove all namespaces indexes
         otherwise only remove indexing info for that specific namespace as identified by nid
@@ -161,7 +161,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         else:
             return text.replace("\n", " ")
 
-    def _text_index_keys_get_(self, property_name, val, obj_id, nid=None):
+    def _text_index_keys_get_(self, property_name, val, obj_id, nid=1):
         """
         gets the keys to be used to index data to sonic:
         Collection: {BCDB_NAME}
@@ -182,7 +182,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         else:
             return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.mid), "{}:{}".format(obj_id, property_name)
 
-    def _text_index_set_(self, property_name, val, obj_id, nid=None):
+    def _text_index_set_(self, property_name, val, obj_id, nid=1):
         if not nid:
             nid = 1
         args = self.bcdbmodel._text_index_content_pre_(property_name, val, obj_id, nid)
@@ -190,16 +190,14 @@ class BCDBModelIndex(j.application.JSBaseClass):
         for chunk in self._chunks(text, int(self.sonic.bufsize) // 2):
             self.sonic.push(bucket, collection, object_tag, chunk)
 
-    def _text_index_delete_(self, property_name, val, obj_id, nid=None):
+    def _text_index_delete_(self, property_name, val, obj_id, nid=1):
         if not nid:
             nid = 1
         keys = self._text_index_keys_get_(property_name, None, obj_id, nid)
         self.sonic.flush_object(*keys)
 
-    def _text_index_destroy_(self, nid=None):
-        assert nid is None  # do not support nid's yet
-        if not nid:
-            nid = 1
+    def _text_index_destroy_(self, nid=1):
+        assert isinstance(nid, int)
         self.sonic.flush(self.bcdb.name)
 
     ###### INDEXER ON KEYS:
@@ -326,7 +324,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
     ##### ID METHODS, this allows us to see which id's are in which namespace
 
-    def _id_redis_listkey_get(self, nid=None):
+    def _id_redis_listkey_get(self, nid=1):
         """
         :param namespaceid: default is 1 namespace = 1
         :return: list key for the storing the id's in redis
@@ -340,13 +338,13 @@ class BCDBModelIndex(j.application.JSBaseClass):
             nid = 1
         return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.bcdbmodel.mid)
 
-    def _ids_destroy(self, nid=None):
+    def _ids_destroy(self, nid=1):
         if not nid:
             nid = 1
         self._ids_redis.delete(self._id_redis_listkey_get(nid=nid))
         self._ids_last[nid] = 0
 
-    def _ids_init(self, nid=None):
+    def _ids_init(self, nid=1):
         """
         we keep track of id's per namespace and per model, this to allow easy enumeration
         :return:
@@ -383,7 +381,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     self._ids_last[nid] = struct.unpack(b"<I", bindata)[0]
                     f.close()
 
-    def _id_set(self, id, nid=None):
+    def _id_set(self, id, nid=1):
         if not nid:
             nid = 1
 
@@ -404,7 +402,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                 j.sal.fs.writeFile(ids_file_path, bin_id, append=True)
             self._ids_last[nid] = id
 
-    def _ids_exists(self, nid=None):
+    def _ids_exists(self, nid=1):
         """
         is the iterator empty?
         :return:
@@ -429,7 +427,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         else:
             raise j.exceptions.BASE("not implemented")
 
-    def _id_iterator(self, nid=None):
+    def _id_iterator(self, nid=1):
         """
         if nid==None then will iterate over all namespaces
 
@@ -467,7 +465,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     else:
                         break
 
-    def _id_get_objid_redis(self, pos, nid=None, die=True):
+    def _id_get_objid_redis(self, pos, nid=1, die=True):
         if not nid:
             nid = 1
 
@@ -479,7 +477,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             return None
         return struct.unpack("<I", chunk)[0]
 
-    def _id_delete(self, id, nid=None):
+    def _id_delete(self, id, nid=1):
         if not nid:
             nid = 1
 
@@ -499,7 +497,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
                     out += struct.pack("<I", id_)
             j.sal.fs.writeFile(ids_file_path, out)
 
-    def _id_exists(self, id, nid=None):
+    def _id_exists(self, id, nid=1):
         """ 
         Check if an object eist based on its id 
         TODO: Improve it with a binary search 
@@ -551,7 +549,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
     ######## SQL INDEX
 
-    def _sql_index_destroy(self, nid=None):
+    def _sql_index_destroy(self, nid=1):
         """
         will remove all namespaces indexes
         :param nid:
