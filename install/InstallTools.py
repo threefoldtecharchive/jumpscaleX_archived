@@ -2826,8 +2826,6 @@ class MyEnv:
 
         """
         ttype, msg, tb = sys.exc_info()
-        if stack_go_up:
-            j.shell()
         return MyEnv.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
     @staticmethod
