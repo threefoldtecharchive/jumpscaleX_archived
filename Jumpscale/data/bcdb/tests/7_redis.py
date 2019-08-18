@@ -69,7 +69,7 @@ def main(self):
             cl.flush()
 
         schema = j.core.text.strip(schema)
-        m = bcdb.model_get_from_schema(schema)
+        m = bcdb.model_get(schema=schema)
 
         def get_obj(i):
             schema_obj = m.new()
@@ -102,7 +102,7 @@ def main(self):
 
         # assert redis_cl.hlen("schemas:url") == 9
         assert redis_cl.hlen("schemas:url:despiegk.test2") == 1
-        assert redis_cl.hlen("data:1:sid:7") == 10
+        assert redis_cl.hlen("data:1:mid:7") == 10
 
         if zdb:
             self._log_debug("validate list")
@@ -111,14 +111,14 @@ def main(self):
         self._log_debug("validate added objects")
         print(redis_cl.delete("data:1:url:despiegk.test2:5"))
 
-        print(redis_cl.get("data:1:sid:7"))
+        print(redis_cl.get("data:1:mid:7"))
         # it's deleted
         try:
             redis_cl.get("data:1:url:despiegk.test2:5")
         except Exception as e:
             assert str(e).find("cannot get, key:'data/1/url/despiegk.test2/5' not found") != -1
 
-        assert redis_cl.hlen("data:1:sid:7") == 9
+        assert redis_cl.hlen("data:1:mid:7") == 9
         # there should be 10 items now there
         if zdb:
             self._log_debug("validate list2")
@@ -141,6 +141,10 @@ def main(self):
 
     sqlite_test()
     zdb_test()
+
+    redis = j.servers.startupcmd.get("redis_6380")
+    redis.stop()
+    redis.wait_stopped()
 
     self._log_debug("TEST OK")
 

@@ -25,7 +25,7 @@ import types
 
 class ACL(j.data.bcdb._BCDBModelClass):
     def _schema_get(self):
-        return j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.2")
+        return j.data.schema.get_from_url("jumpscale.bcdb.acl.2")
 
     @property
     def acl(self):
@@ -33,13 +33,13 @@ class ACL(j.data.bcdb._BCDBModelClass):
 
     @property
     def user(self):
-        schemaobj = j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.user.2")
-        return self.bcdb.model_get_from_schema(schemaobj)
+        schemaobj = j.data.schema.get_from_url("jumpscale.bcdb.acl.user.2")
+        return self.bcdb.model_get(schema=schemaobj)
 
     @property
     def circle(self):
-        schemaobj = j.data.schema.get_from_url_latest("jumpscale.bcdb.acl.circle.2")
-        return self.bcdb.model_get_from_schema(schemaobj)
+        schemaobj = j.data.schema.get_from_url("jumpscale.bcdb.acl.circle.2")
+        return self.bcdb.model_get(schema=schemaobj)
 
     def add_acl_users(self, users):
         acl_users = []

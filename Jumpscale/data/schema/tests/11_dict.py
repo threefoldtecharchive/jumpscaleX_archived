@@ -25,46 +25,29 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.schema.test(name="set")' --debug
+    kosmos 'j.data.schema.test(name="dict")'
     """
 
-    schema = """
-        @url = despiegk.test.set
-        llist = (LSET)
-        llist2 = (LH)  #is same H = SET
-        hash = (SET)
+    schema0 = """
+        @url = despiegk.test.dict
+        dd = {} (DICT)
         """
 
-    schema_object = j.data.schema.get_from_text(schema_text=schema)
-
-    assert schema_object.url == "despiegk.test.set"
-    print(schema_object)
+    schema_object = j.data.schema.get_from_text(schema_text=schema0)
 
     o = schema_object.new()
 
-    assert o.hash == (0, 0)
-    assert o.llist == []
+    o.dd["a"] = 1
+    o.dd["b"] = "a"
 
-    o.hash = 1
-    assert o.hash == (0, 1)
+    assert o.dd == {"a": 1, "b": "a"}
 
-    o.hash = "0:1"
-    assert o.hash == (0, 1)
+    data = o._data
 
-    o.hash = "1:2"
-    assert o.hash == (1, 2)
+    o3 = schema_object.new(serializeddata=data)
 
-    o.llist.append("1:2")
-    o.llist.append("2:3")
+    assert o3.dd == {"a": 1, "b": "a"}
 
-    assert ["1:2", "2:3"] == o.llist
+    self._log_info("test for dict ok")
 
-    o.llist = [1, 2]
-    assert o.llist == [1, 2]
-
-    d = [(0, x) for x in range(10)]
-    o.llist2 = d
-    assert o.llist2 == d
-    # CLEAN STATE
-    # j.data.schema.remove_from_text(schema)
     return "OK"

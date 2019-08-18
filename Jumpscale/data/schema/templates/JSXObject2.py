@@ -48,10 +48,6 @@ class JSXObject2(j.data.schema._JSXObjectClass):
 
         #this deals with lists and other object types which have customer JSX types
         #if a primitive type then it will just be returned immediately from the capnp
-        # {% if prop.name == "nodes" %}
-        # from pudb import set_trace; set_trace()
-        #
-        # {% endif %}
         if "{{prop.name}}" in self._deserialized_items:
             return self._deserialized_items["{{prop.name}}"]
         else:
@@ -61,6 +57,9 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             {% else %}
             v = {{prop.js_typelocation}}.clean(self._capnp_obj_.{{prop.name_camel}})
             if isinstance(v,j.data.types._TypeBaseObjClass):
+                self._deserialized_items["{{prop.name}}"] = v
+            #to make sure that we keep list, json, ... in deserialized items
+            elif isinstance({{prop.js_typelocation}},j.data.types._TypeBaseClassUnserialized):
                 self._deserialized_items["{{prop.name}}"] = v
             else:
                 return v
@@ -73,7 +72,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             raise j.exceptions.Base("object readonly, cannot set.\n%s"%self)
         #CLEAN THE OBJ
         {% if prop.has_jsxobject %}
-        val = {{prop.js_typelocation}}.clean(val,model=self._model)
+        val = {{prop.js_typelocation}}.clean(val,bcdb=self._model._bcdb)
         {% else %}
         val = {{prop.js_typelocation}}.clean(val)
         {% endif %}

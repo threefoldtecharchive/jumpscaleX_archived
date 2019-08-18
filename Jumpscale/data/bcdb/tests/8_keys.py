@@ -41,9 +41,8 @@ def main(self):
     """
     zdb = j.servers.zdb.test_instance_start()
     bcdb = j.data.bcdb.new("test", reset=True)
-    m = bcdb.model_get_from_schema(SCHEMA)
 
-    m.destroy()
+    m = bcdb.model_get(schema=SCHEMA, reset=True)
 
     o = m.new()
     assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -98,7 +97,7 @@ def main(self):
             if o.id in data__:
                 raise j.exceptions.Base("the id should not be in the redis index")
 
-    m2 = bcdb.model_get_from_schema(SCHEMA)
+    m2 = bcdb.model_get(schema=SCHEMA)
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
@@ -114,7 +113,7 @@ def main(self):
     date = (D)   
     
     """
-    m3 = bcdb.model_get_from_schema(SCHEMA3)
+    m3 = bcdb.model_get(schema=SCHEMA3)
     o = m3.new()
 
     # default
@@ -145,7 +144,7 @@ def main(self):
     a = zdb.client_admin_get()
     storclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.new("test2", storclient2)
+    bcdb2 = j.data.bcdb.get("test2", storclient=storclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()
@@ -153,7 +152,7 @@ def main(self):
 
     # now we know that the previous indexes where not touched
 
-    m4 = bcdb2.model_get_from_schema(SCHEMA3)
+    m4 = bcdb2.model_get(schema=SCHEMA3)
     o = m4.new()
     o.ipaddr = "192.168.1.1"
     o.email = "ename"
@@ -170,16 +169,7 @@ def main(self):
     assert o5.id == myid
 
     bcdb.reset()
-
-    assert m3.find(addr="test", email="ename", ipaddr="192.168.1.1") == []
-    assert len(m4.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
-
     bcdb2.reset()
-
-    # check 2 bcdb are empty (doesnt work yet): #TODO:*3
-    # assert len(j.sal.fs.listDirsInDir("/sandbox/var/bcdb/test"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
 
     self._log_info("TEST DONE")
     return "OK"

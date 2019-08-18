@@ -42,7 +42,7 @@ def main(self):
     """
     bcdb = j.data.bcdb.get("test", reset=True)
 
-    model = bcdb.model_get_from_schema(schema)
+    model = bcdb.model_get(schema=schema)
 
     for obj in data:
         o = model.new()

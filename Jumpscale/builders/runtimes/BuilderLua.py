@@ -298,8 +298,9 @@ class BuilderLua(j.builders.system._BaseClass):
         """
         self._execute(C)
 
-        self.install_certificates()
         self.install_autossl()
+
+        self.install_certificates()
 
     def install_autossl(self):
         """
@@ -312,8 +313,9 @@ class BuilderLua(j.builders.system._BaseClass):
             ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl        
             ln -sf /sandbox/openresty/resty-auto-ssl /bin/resty-auto-ssl
             ln -sf /sandbox/openresty/resty-auto-ssl /bin/resty-auto-ssl
-            mkdir -p /etc/resty-auto-ssl/storage/file
+            mkdir -p /etc/resty-auto-ssl/storage/file            
             """
+            self._execute(C)
         else:
             C = """
             ln -sf /sandbox/openresty/luarocks/bin/resty-auto-ssl /sandbox/openresty/resty-auto-ssl
@@ -322,6 +324,7 @@ class BuilderLua(j.builders.system._BaseClass):
             self._execute(C)
 
         ssl_path = "/sandbox/cfg/ssl"
+        j.sal.fs.createDir(ssl_path)
         if self.tools.platform_is_ubuntu:
             j.sal.unix.addSystemGroup("www")
             j.sal.unix.addSystemUser("www", "www")
@@ -340,7 +343,6 @@ class BuilderLua(j.builders.system._BaseClass):
         kosmos 'j.builders.runtimes.lua.install_certificates()'
         :return:
         """
-
         assert self._exists("/sandbox/openresty/resty-auto-ssl")
         ssl_path = "/sandbox/cfg/ssl"
         j.sal.fs.createDir(ssl_path)

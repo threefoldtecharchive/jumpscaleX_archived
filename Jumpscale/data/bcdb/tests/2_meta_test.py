@@ -43,8 +43,7 @@ def main(self):
     s = bcdb.meta._data.schemas[-1]
     assert s.url == "despiegk.test"
 
-    m = bcdb.model_get_from_url("despiegk.test")
-    assert m.sid == s.sid
+    m = bcdb.model_get(url="despiegk.test")
 
     schema_text = """
     @url = jumpscale.schema.test.a
@@ -56,24 +55,23 @@ def main(self):
 
     assert s.properties_unique == []
 
-    sid = bcdb.meta._schema_set(s)
-    assert isinstance(sid, int)
+    bcdb.meta._schema_set(s)
 
     assert len(bcdb.meta._data.schemas) == 8
 
-    assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
-    assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
+    assert "jumpscale.schema.test.a" in j.data.schema._url_to_md5
+    assert "jumpscale.bcdb.circle.2" in j.data.schema._url_to_md5
 
-    schema = bcdb.model_get_from_url("jumpscale.schema.test.a")
+    schema = bcdb.model_get(url="jumpscale.schema.test.a")
     o = schema.new()
 
-    assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
-    assert "jumpscale.bcdb.circle.2" in j.data.schema.url_to_md5
+    assert "jumpscale.schema.test.a" in j.data.schema._url_to_md5
+    assert "jumpscale.bcdb.circle.2" in j.data.schema._url_to_md5
 
-    s0 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test.a")
+    s0 = j.data.schema.get_from_url(url="jumpscale.schema.test.a")
     s0md5 = s0._md5 + ""
 
-    model = bcdb.model_get_from_schema(schema=s0)
+    model = bcdb.model_get(schema=s0)
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
@@ -97,28 +95,16 @@ def main(self):
 
     assert a._model.schema._md5 == s0md5
 
-    schema_text = """
-    @url = jumpscale.schema.test.a
-    category*= ""
-    txt = ""
-    i = 0
-    """
     # lets upgrade schema to float
     s_temp = j.data.schema.get_from_text(schema_text)
 
     assert len(bcdb.meta._data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
-    schema_text = """
-    @url = jumpscale.schema.test.a
-    category*= ""
-    txt = ""
-    i = 0
-    """
     # lets upgrade schema to float
     s2 = j.data.schema.get_from_text(schema_text)
 
-    model2 = bcdb.model_get_from_schema(schema=s2)
+    model2 = bcdb.model_get(schema=s2)
 
     assert len(bcdb.meta._data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
 
@@ -145,4 +131,8 @@ def main(self):
 
     assert a6.id == a3.id
     assert a6.i == a3.i
+
+    # CLEAN STATE
+    # j.data.schema.remove_from_text(schema_text)
+    self._log_info("TEST META DONE")
     return "OK"

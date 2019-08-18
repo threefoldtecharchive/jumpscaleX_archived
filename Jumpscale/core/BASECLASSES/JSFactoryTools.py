@@ -102,14 +102,29 @@ class JSFactoryTools:
             # self._log_debug(bname)
             return bname.lower()
 
+        # we should test whitout underscore process first
+        # to avoid taking twice the same file if it ends by the same prefix
+        # e.g. base and x_base
+        files = j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py")
+        files_dict = {get_shortname(j.sal.fs.getBaseName(f)): f for f in files}
+        target_file_shortened = get_shortname(name, underscoreprocess=False)
+        if target_file_shortened in files_dict:
+            return files_dict[target_file_shortened]
+        else:
+            target_file_shortened_no_underscore = get_shortname(name, underscoreprocess=True)
+            if target_file_shortened_no_underscore in files_dict:
+                return files_dict[target_file_shortened_no_underscore]
+
+        """ j.shell()
         for item in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.py"):
             bname = j.sal.fs.getBaseName(item)
             bname2 = get_shortname(bname)
             self._log_debug("%s:%s" % (bname2, name))
-            if bname2 == get_shortname(name, underscoreprocess=True):
-                return item
+            
             if bname2 == get_shortname(name, underscoreprocess=False):
                 return item
+            if bname2 == get_shortname(name, underscoreprocess=True):
+                return item """
         raise j.exceptions.Base("Could not find code: '%s' in %s" % (name, path))
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):

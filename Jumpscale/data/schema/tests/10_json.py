@@ -43,10 +43,12 @@ def main(self):
     o.obj_json["2"] = 1
     assert o.obj_json == {"a": 1, "2": 1}
 
-    capnpdata = o._data
+    serializeddata = o._data
 
-    # TODO: IS NOT WORKING YET
-    # o2 = schema_object.new(capnpdata=capnpdata)
+    o2 = schema_object.new(serializeddata=serializeddata)
 
-    o = schema_object.new()
-    o.obj_json = [1, "a"]
+    assert o2.obj_json == {"a": 1, "2": 1}
+
+    self._log_info("test for json ok")
+
+    return "OK"

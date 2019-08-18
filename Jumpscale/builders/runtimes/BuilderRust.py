@@ -18,7 +18,6 @@ class BuilderRust(j.builders.system._BaseClass):
         :return:
         """
         self._execute("curl https://sh.rustup.rs -sSf | sh -s -- -y")
-        self.profile_sandbox_select()
         self.profile.env_set_part("PATH", self.DIR_CARGOBIN)
 
     @builder_method()

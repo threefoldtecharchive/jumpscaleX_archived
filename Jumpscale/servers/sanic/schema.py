@@ -26,7 +26,7 @@ class Query(graphene.ObjectType, j.application.JSBaseConfigsClass):
         author = (S)
         name = (S)
         """
-        model = j.application.bcdb_system.model_get_from_schema(_SCHEMA_TEXT)
+        model = j.application.bcdb_system.model_get(schema=_SCHEMA_TEXT)
 
         results = []
         for item in model.iterate():

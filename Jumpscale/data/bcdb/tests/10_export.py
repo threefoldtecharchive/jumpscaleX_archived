@@ -40,7 +40,7 @@ def main(self):
     """
     bcdb = j.data.bcdb.new("test_export", reset=True)
 
-    m = bcdb.model_get_from_schema(SCHEMA)
+    m = bcdb.model_get(schema=SCHEMA)
     # model ID will go from 1 to 10
     for i in range(10):
         o = m.new()
@@ -56,7 +56,7 @@ def main(self):
     firstname = ""                   # Address    
     """
 
-    m2 = bcdb.model_get_from_schema(SCHEMA2)
+    m2 = bcdb.model_get(schema=SCHEMA2)
     # model ID will go from 11 to 20
     for i in range(10):
         o = m2.new()
@@ -82,7 +82,7 @@ def main(self):
             pass
 
         bcdb.import_(path=p)
-        m3 = bcdb.model_get_from_schema(SCHEMA2)
+        m3 = bcdb.model_get(schema=SCHEMA2)
 
         obj2 = m3.get(13)
 

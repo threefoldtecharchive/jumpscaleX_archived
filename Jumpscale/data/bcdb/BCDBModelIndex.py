@@ -69,7 +69,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._sql_index_init()
 
         if self.index_text_needed:
-            self.sonic()  # sonic needs to be started and needs to exist !
+            self.sonic  # sonic needs to be started and needs to exist !
 
         if reset:
             self.destroy()
@@ -177,12 +177,12 @@ class BCDBModelIndex(j.application.JSBaseClass):
         if val:
             return (
                 self.bcdb.name,
-                "{}:{}".format(nid, self.bcdbmodel.sid),
+                "{}:{}".format(nid, self.bcdbmodel.mid),
                 "{}:{}".format(obj_id, property_name),
                 self._clean_text_for_sonic(val),
             )
         else:
-            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.sid), "{}:{}".format(obj_id, property_name)
+            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.mid), "{}:{}".format(obj_id, property_name)
 
     def _text_index_set_(self, property_name, val, obj_id, nid=None):
         if not nid:
@@ -216,7 +216,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._key_index_hsetkey_get(nid)
 
         """
-        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.bcdbmodel.sid)
+        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.bcdbmodel.mid)
 
     def _key_index_set_(self, property_name, val, obj_id, nid=1):
         """
@@ -295,7 +295,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
     # def get_id_from_key(self, key):
     #     """
     #
-    #     :param sid: schema id
+    #     :param mid: schema id
     #     :param key: key used to store
     #     :return:
     #     """
@@ -340,7 +340,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         """
         if not nid:
             nid = 1
-        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.bcdbmodel.sid)
+        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.bcdbmodel.mid)
 
     def _ids_destroy(self, nid=None):
         if not nid:

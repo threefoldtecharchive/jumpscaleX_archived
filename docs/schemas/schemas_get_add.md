@@ -9,7 +9,7 @@ j.data.schema.get_from_md5(md5):
     :return: Schema
     """
 
-j.data.schema.get_from_url_latest(url):
+j.data.schema.get_from_url(url):
     """
     :param url: url is e.g. jumpscale.bcdb.user.1
     :return: will return the most recent schema, there can be more than 1 schema with same url (changed over time)
@@ -39,7 +39,7 @@ abool = true (B)
 s=j.data.schema.get_from_text(SCHEMA)
 
 #if the schema already exists then can do
-s=j.data.schema.get_from_url_latest(url="jumpscale.digitalme.package.1") #will die if not exists
+s=j.data.schema.get_from_url(url="jumpscale.digitalme.package.1") #will die if not exists
 
 #if the schema already exists then can do
 md5 = s.md5  #get md5 from the schema above, the next should deliver same schema
@@ -72,6 +72,6 @@ example
 
 ```python
 j.data.schema.add_from_path(mpath)
-s = j.data.schema.get_from_url_latest("threefoldtoken.wallet")
+s = j.data.schema.get_from_url("threefoldtoken.wallet")
 
 ```

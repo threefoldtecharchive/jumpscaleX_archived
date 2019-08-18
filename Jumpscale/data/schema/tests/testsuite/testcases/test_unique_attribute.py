@@ -61,7 +61,7 @@ class Unique(BaseTest):
         &number = 0 (I)
         """
         schema = j.data.schema.get_from_text(scm)
-        self.model = self.bcdb.model_get_from_schema(schema)
+        self.model = self.bcdb.model_get(schema=schema)
         schema_obj = self.model.new()
         name = self.random_string()
         new_name = self.random_string()

@@ -32,7 +32,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, sid=None, schema=None, reset=False):
+    def __init__(self, bcdb, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -59,19 +59,8 @@ class BCDBModel(j.application.JSBaseClass):
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
 
-        if not sid:
-            if schema._md5 in bcdb.meta._schema_md5_to_sid:
-                sid = bcdb.meta._schema_md5_to_sid[schema._md5]
-            else:
-                # means we create a model from code
-                sid = bcdb.meta._schema_set(self.schema)  # only if sid was not specified we need to register
-
-        self.sid = sid
-
-        assert schema._md5 in bcdb.meta._schema_md5_to_sid
-        assert bcdb.meta._schema_md5_to_sid[self.schema._md5] == self.sid
-
         self.bcdb = bcdb
+
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
 
@@ -96,7 +85,20 @@ class BCDBModel(j.application.JSBaseClass):
         self._triggers = []
 
         if reset:
-            self.reset()
+            self.destroy()
+
+    @property
+    def mid(self):
+        if not self.schema.url in self.bcdb.meta._data.url_to_mid:
+            raise j.exceptions.BUG("cannot find url:%s in the metadata of bcdb" % self.schema.url)
+        return self.bcdb.meta._data.url_to_mid[self.schema.url]
+
+    def schema_change(self, schema):
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        # make sure model has the latest schema
+        if self.schema._md5 != schema._md5:
+            self.schema = schema
+            self._triggers_call(None, "schema_change", None)
 
     @property
     def sonic_client(self):
@@ -154,31 +156,8 @@ class BCDBModel(j.application.JSBaseClass):
         """
         return True
 
-    def stop(self):
-        """
-        stops the data processor
-        """
-        if self.bcdb.dataprocessor_greenlet is None:
-            # is already stopped
-            return True
-        event = Event()
-        self.bcdb.queue.put((None, ["STOP"], {}, event, None))
-
-        event.wait(1000.0)  # will wait for processing
-        self.bcdb.sqlite_index_client_stop()
-        self.storclient.stop()
-
-        self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
-        return True
-
-    # def start(self):
-    #     if self.dataprocessor_greenlet is None:
-    #         self.bcdb.dataprocessor_start()
-    #     self.index_ready() #will only return when dataprocessor working
-
     @queue_method
     def index_rebuild(self, nid=1):
-        raise RuntimeError()
         self.stop()
         self.index.destroy(nid=nid)
         self._log_warning("will rebuild index for:%s" % self)
@@ -226,10 +205,10 @@ class BCDBModel(j.application.JSBaseClass):
                     nid = data["nid"]
                 else:
                     raise j.exceptions.Base("need to specify nid")
-            obj = self.schema.new(datadict=data, model=self)
+            obj = self.schema.new(datadict=data, bcdb=self.bcdb)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.new(serializeddata=data, model=self)
+            obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             if obj_id is None:
                 raise j.exceptions.Base("objid cannot be None")
             if not obj.nid:
@@ -268,7 +247,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def search(self, text, property_name=None):
         # FIXME: get the real nids
-        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.sid), text)
+        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.mid), text)
         res = []
         for obj in objs:
             parts = obj.split(":")
@@ -361,7 +340,7 @@ class BCDBModel(j.application.JSBaseClass):
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
             obj = self._triggers_call(obj, action="set_pre")
@@ -412,13 +391,13 @@ class BCDBModel(j.application.JSBaseClass):
 
         if data:
             if isinstance(data, dict):
-                obj = self.schema.new(datadict=data, model=self)
+                obj = self.schema.new(datadict=data, bcdb=self.bcdb)
             elif isinstance(data, bytes):
-                obj = self.schema.new(capnpdata=data, model=self)
+                obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             else:
                 raise j.exceptions.Base("need dict")
         else:
-            obj = self.schema.new(model=self)
+            obj = self.schema.new(bcdb=self.bcdb)
         obj = self._methods_add(obj)
         obj.nid = nid
         obj = self._triggers_call(obj=obj, action="new")
@@ -458,7 +437,7 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 return None
 
-        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
+        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp)
 
         if obj._schema.url == self.schema.url:
             obj = self._triggers_call(obj=obj, action="get")
@@ -473,7 +452,6 @@ class BCDBModel(j.application.JSBaseClass):
         for obj in self.find(nid=nid):
             obj.delete()
         self.index.destroy()
-        self.stop()
         j.sal.fs.remove(self._data_dir)
 
     def iterate(self, nid=1):

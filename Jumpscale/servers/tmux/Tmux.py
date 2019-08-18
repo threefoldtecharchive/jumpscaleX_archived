@@ -105,6 +105,11 @@ class Tmux(j.application.JSBaseClass):
         s = self.session
         return s.window_get(window, reset=reset)
 
+    def window_kill(self, window="main"):
+        s = self.session
+        w = s.window_get(window)
+        w.kill()
+
     def execute(self, cmd, window="main", pane="main", reset=True):
         """
         """

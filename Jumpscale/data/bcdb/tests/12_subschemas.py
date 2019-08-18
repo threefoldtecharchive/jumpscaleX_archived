@@ -88,7 +88,7 @@ def main(self):
     # bcdb = j.data.bcdb.get("test")
     bcdb, model = self._load_test_model(type="sqlite")
     bcdb.reset()
-    m = bcdb.model_get_from_schema(schema)
+    m = bcdb.model_get(schema=schema)
 
     urls = []
     urls.append("jsx.master.1")
@@ -103,11 +103,11 @@ def main(self):
     urls.append("jsx.subschema.3.2.2")
 
     for url in urls:
-        md5 = j.data.schema.url_to_md5[url][0]
-        s = j.data.schema.get_from_md5(md5)
+        md5 = j.data.schema._url_to_md5[url][0]
+        s = bcdb.schema_get(md5=md5)  # need to start from bcdb
         assert s._md5 == md5
 
-        bcdb.meta._schema_exists(s)
+        bcdb.meta._schema_exists(s._md5)
         assert s._md5 == md5
         assert s.url == url
 

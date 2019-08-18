@@ -30,7 +30,7 @@ def main(self):
 
     def onelevel():
 
-        schema = """
+        schema0 = """
             @url = jumpscale.schema.test3.a
             cmd = (O) !jumpscale.schema.test3.b
             x = "1"
@@ -41,9 +41,9 @@ def main(self):
             schemacode = ""
             """
 
-        j.data.schema.add_from_text(schema)
-        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
-        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
+        j.data.schema.add_from_text(schema0)
+        so = j.data.schema.get_from_url(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.b")
         o = so.new()
         o.x = "2"
         assert o._changed
@@ -69,10 +69,13 @@ def main(self):
         assert o2.cmd.name == "a"
         o3 = so.new(serializeddata=data)
         assert o3.cmd.name == "a"
+        # CLEAN STATE
+
+    # j.data.schema.remove_from_text(schema0)
 
     def onelevellist():
 
-        schema = """
+        schema1 = """
             @url = jumpscale.schema.test3.c
             cmds = (LO) !jumpscale.schema.test3.b
     
@@ -82,9 +85,9 @@ def main(self):
             schemacode = ""
             """
 
-        j.data.schema.add_from_text(schema)
-        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.c")
-        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
+        j.data.schema.add_from_text(schema1)
+        so = j.data.schema.get_from_url(url="jumpscale.schema.test3.c")
+        so2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.b")
         o = so.new()
 
         cmd = o.cmds.new()
@@ -128,13 +131,15 @@ def main(self):
 
         assert len(o.cmds) == 2
         assert o.cmds[1].name == "cc"
+        # CLEAN STATE
+        # j.data.schema.remove_from_text(schema1)
 
     onelevel()
     onelevellist()
 
     # more deep embedded (2 levels)
 
-    schema = """
+    schema2 = """
         @url = jumpscale.schema.test3.cmd
         name = ""
         comment = ""
@@ -149,9 +154,9 @@ def main(self):
         cmd2 = (O) !jumpscale.schema.test3.cmd
         
         """
-    j.data.schema.add_from_text(schema)  # just add
-    schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.serverschema")
-    schema_object3 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmdbox")
+    j.data.schema.add_from_text(schema2)  # just add
+    schema_object2 = j.data.schema.get_from_url(url="jumpscale.schema.test3.serverschema")
+    schema_object3 = j.data.schema.get_from_url(url="jumpscale.schema.test3.cmdbox")
 
     schema_test = schema_object2.new()
 

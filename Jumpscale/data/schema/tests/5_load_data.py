@@ -71,6 +71,8 @@ def main(self):
     schema_object = j.data.schema.add_from_text(schema_package)[0]
     data = schema_object.new(datadict=data)
 
-    self._log_info("TEST DONE LOADDATA")
+    # TODO: needs some tests here
+
+    self._log_info("TEST DONE LOAD DATA")
 
     return "OK"

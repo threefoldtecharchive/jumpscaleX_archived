@@ -23,14 +23,14 @@ from Jumpscale import j
 
 class DIR(j.data.bcdb._BCDBModelClass):
     def _schema_get(self):
-        return j.data.schema.get_from_url_latest("jumpscale.bcdb.fs.dir.2")
+        return j.data.schema.get_from_url("jumpscale.bcdb.fs.dir.2")
 
     _file_model_ = None
 
     @property
     def _file_model(self):
         if not self._file_model_:
-            self._file_model_ = self.bcdb.model_get_from_url("jumpscale.bcdb.fs.file.2")
+            self._file_model_ = self.bcdb.model_get(url="jumpscale.bcdb.fs.file.2")
         return self._file_model_
 
     def _create_root_dir(self):

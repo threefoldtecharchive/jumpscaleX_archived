@@ -19,7 +19,6 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         #port_priv = 22
         login = "root"
         passwd = ""
-        use_mosh = False 
         sshkey_name = ""
         proxy = ""
         stdout = True (B)
@@ -38,6 +37,20 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.executor = j.tools.executor.ssh_get(self)
 
         self._init3()
+
+    def state_reset(self):
+        """
+        set the following:
+
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
+
+        so it can get reloaded from remote
+
+        :return:
+        """
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
 
     def reset(self):
 
@@ -122,8 +135,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     #         else:
     #             self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
     #     return self._private
-    def execute_jumpscale(self, script):
+    def execute_jumpscale(self, script, **kwargs):
         script = "from Jumpscale import j\n{}".format(script)
+
+        script = j.core.tools.text_replace(script, **kwargs)
+
         scriptname = j.data.hash.md5_string(script)
         filename = "{}/{}".format(j.dirs.TMPDIR, scriptname)
 
@@ -185,12 +201,20 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     def shell(self, cmd=None):
         if cmd:
             j.shell()
-        if self.use_mosh:
-            cmd = "mosh {LOGIN}@{ADDR} -p {PORT}"
-        else:
-            cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
+        cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
+
+    def mosh(self, ssh_private_key_push=False):
+        self.executor.installer.mosh()
+        if ssh_private_key_push:
+            j.shell()
+        cmd = "mosh -ssh='ssh -oStrictHostKeyChecking=no -t -p {PORT}' {LOGIN}@{ADDR}"
+        # cmd = "mosh -p {PORT} {LOGIN}@{ADDR} -A"
+        cmd = self._replace(cmd)
+        j.sal.process.executeWithoutPipe(cmd)
+
+        return self.shell()
 
     def kosmos(self, cmd=None):
         j.shell()
@@ -339,7 +363,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             recursive=recursive,
         )
 
-    def execute(self, cmd, interactive=False, showout=True, replace=True, die=True, timeout=None, script=None):
+    def execute(self, cmd, interactive=True, showout=True, replace=True, die=True, timeout=None, script=None):
         """
 
         :param cmd: cmd to execute, can be multiline or even a script

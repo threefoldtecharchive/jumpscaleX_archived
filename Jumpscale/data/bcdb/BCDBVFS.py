@@ -35,7 +35,7 @@ class BCDBVFS(j.application.JSBaseClass):
      /$(bcdb_name)
         /data
             /$(nid)
-                /sid
+                /mid
                     /1
                         object1
                         object2
@@ -48,13 +48,13 @@ class BCDBVFS(j.application.JSBaseClass):
                         object1
                         object2
         /schemas
-            /sid
+            /mid
                 1
             /hash
                 0eccf565df45
             /url
                 ben.test.1 (url / properties of the schema itself)
-            /url2sid
+            /url2mid
                 /ben.test.1
                     1
 
@@ -101,8 +101,8 @@ class BCDBVFS(j.application.JSBaseClass):
         self._bcdb_names = list(bcdb_instances.keys())
         self.current_bcbd_name = self._bcdb_names[0]
         self._bcdb = bcdb_instances[self.current_bcbd_name]
-        self.directories_under_data_namespace = ["sid", "hash", "url"]
-        self.directories_under_schemas = ["sid", "hash", "url", "url2sid"]
+        self.directories_under_data_namespace = ["mid", "hash", "url"]
+        self.directories_under_schemas = ["mid", "hash", "url", "url2mid"]
         self.directories_under_root = ["data", "schemas", "info"]
 
     def change_current_bcdb(self, bcdb_name):
@@ -209,36 +209,36 @@ class BCDBVFS(j.application.JSBaseClass):
     def _get_data_items(self, splitted, nid, path):
         path_length = len(splitted)
         if path_length >= 3 and path_length <= 5:
-            if splitted[2] == "sid":
+            if splitted[2] == "mid":
                 if path_length == 3:
-                    # third element must be the in the list e.g. /data/5/sid
-                    key = "%s_data_%s_sid" % (self.current_bcbd_name, nid)
+                    # third element must be the in the list e.g. /data/5/mid
+                    key = "%s_data_%s_mid" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(
-                            self, key, items=self._bcdb.meta._schema_md5_to_sid.values()
+                            self, key, items=self._bcdb.meta._schema_url_to_mid.values()
                         )
                 else:
                     try:
-                        sid = int(splitted[3])
+                        mid = int(splitted[3])
                     except:
-                        raise Exception("sid element:%s of path:%s must be an integer" % (splitted[3], path))
+                        raise Exception("mid element:%s of path:%s must be an integer" % (splitted[3], path))
                     if path_length == 4:
-                        # fourth element must be the schema identifier e.g. /data/5/sid/5
+                        # fourth element must be the schema identifier e.g. /data/5/mid/5
                         # we should get all the object under the namespace id
-                        key = "%s_data_%s_sid_%s" % (self.current_bcbd_name, nid, sid)
-                        # if we go through md5 url or sid that will points to the same objects
+                        key = "%s_data_%s_mid_%s" % (self.current_bcbd_name, nid, mid)
+                        # if we go through md5 url or mid that will points to the same objects
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_sid(sid)
+                            m = self._bcdb.model_get_from_mid(mid)
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, [i for i in m.iterate(nid)], m)
                     else:
-                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/mid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
                             raise Exception("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
-                        key = "%s_data_%s_sid_%s_%s" % (self.current_bcbd_name, nid, sid, id)
+                        key = "%s_data_%s_mid_%s_%s" % (self.current_bcbd_name, nid, mid, id)
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_sid(sid)
+                            m = self._bcdb.model_get_from_mid(mid)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             elif splitted[2] == "hash":
                 if path_length == 3:
@@ -255,23 +255,23 @@ class BCDBVFS(j.application.JSBaseClass):
                         # fourth element must be the schema identifier e.g. /data/5/hash/ec541123d21b
                         # we should get all the object under the namespace id
                         key = "%s_data_%s_hash_%s" % (self.current_bcbd_name, nid, hsh)
-                        # if we go through md5 url or sid that will points to the same objects
+                        # if we go through md5 url or mid that will points to the same objects
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_schema(schema)
+                            m = self._bcdb.model_get(schema=schema)
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, [i for i in m.iterate(nid)], m)
                     else:
-                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/mid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
                             raise Exception("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
                         key = "%s_data_%s_hash_%s_%s" % (self.current_bcbd_name, nid, hsh, id)
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_schema(schema)
+                            m = self._bcdb.model_get(schema=schema)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
             else:  # URL
                 if path_length == 3:
-                    # third element must be the in the list e.g. /data/5/sid
+                    # third element must be the in the list e.g. /data/5/mid
                     key = "%s_data_%s_url" % (self.current_bcbd_name, nid)
                     if not key in self._dirs_cache:
                         self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key=key, items=j.data.schema.url_to_md5.keys())
@@ -281,19 +281,19 @@ class BCDBVFS(j.application.JSBaseClass):
                         # fourth element must be the schema identifier e.g. /data/5/url/ben.test.1
                         # we should get all the object under the namespace id
                         key = "%s_data_%s_url_%s" % (self.current_bcbd_name, nid, url)
-                        # if we go through md5 url or sid that will points to the same objects
+                        # if we go through md5 url or mid that will points to the same objects
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_url(url)
+                            m = self._bcdb.model_get(url=url)
                             self._dirs_cache[key] = BCDBVFS_Data_Dir(self, key, [i for i in m.iterate(nid)], m)
                     else:
-                        # fifth element must be the object identifier e.g. /data/5/sid/1/7 or /data/5/url/ben.test.1/7
+                        # fifth element must be the object identifier e.g. /data/5/mid/1/7 or /data/5/url/ben.test.1/7
                         try:
                             id = int(splitted[4])
                         except:
                             raise Exception("fifth id element:%s of path:%s must be an integer" % (splitted[4], path))
                         key = "%s_data_%s_url_%s_%s" % (self.current_bcbd_name, nid, url, id)
                         if not key in self._dirs_cache:
-                            m = self._bcdb.model_get_from_url(url)
+                            m = self._bcdb.model_get(url=url)
                             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, model=m, item=m.get(id))
         else:
             raise Exception("path:%s too long " % (path))
@@ -353,26 +353,26 @@ class BCDBVFS(j.application.JSBaseClass):
                     "Second element:%s of path:%s should be in:%s" % (splitted[1], path, self.directories_under_schemas)
                 )
 
-            if splitted[1] == "sid":
+            if splitted[1] == "mid":
                 if len(splitted) == 2:
                     ## directory listing
-                    key = "schemas_sid"
+                    key = "schemas_mid"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_md5_to_sid.values())
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_url_to_mid.values())
                 else:
                     try:
-                        sid = int(splitted[2])
-                        key = "schemas_sid_%s" % (sid)
+                        mid = int(splitted[2])
+                        key = "schemas_mid_%s" % (mid)
                         if not key in self._dirs_cache:
-                            res = BCDBVFS_Schema(self, key=key, item=self._find_schema_by_id(sid))
+                            res = BCDBVFS_Schema(self, key=key, item=self._find_schema_by_id(mid))
                     except:
-                        raise Exception("sid element:%s of path:%s must be an integer" % (splitted[2], path))
+                        raise Exception("mid element:%s of path:%s must be an integer" % (splitted[2], path))
             elif splitted[1] == "hash":
                 if len(splitted) == 2:
                     ## directory listing
                     key = "schemas_hash"
                     if not key in self._dirs_cache:
-                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_md5_to_sid.keys())
+                        res = BCDBVFS_Schema_Dir(self, items=self._bcdb.meta._schema_url_to_mid.keys())
                 else:
                     hsh = splitted[2]
                     key = "schemas_hash_%s" % (hsh)
@@ -389,7 +389,7 @@ class BCDBVFS(j.application.JSBaseClass):
                     key = "schemas_url_%s" % (url)
                     if not key in self._dirs_cache:
                         res = BCDBVFS_Schema(self, key=key, item=self._find_schema_by_url(url))
-            elif splitted[1] == "url2sid":
+            elif splitted[1] == "url2mid":
                 if len(splitted) == 2:
                     ## directory listing same as schemas_url
                     key = "schemas_url"
@@ -397,21 +397,21 @@ class BCDBVFS(j.application.JSBaseClass):
                         res = BCDBVFS_Schema_Dir(self, items=j.data.schema.url_to_md5.keys())
                 else:
                     url = splitted[2]
-                    key = "schemas_url2sid_%s" % (url)
+                    key = "schemas_url2mid_%s" % (url)
                     # should not be cached or should be redone after new schema
                     if not key in self._dirs_cache:
-                        s = self._get_url_to_sid_and_hash()
+                        s = self._get_url_to_mid_and_hash()
                         res = BCDBVFS_Schema(self, key=key, item=s[url][0])
             else:
-                raise Exception("Second element:%s of path:%s should be either sid hash or url" % (splitted[2], path))
+                raise Exception("Second element:%s of path:%s should be either mid hash or url" % (splitted[2], path))
         if res is not None:
             self._dirs_cache[key] = res
         return key
 
-    def _get_url_to_sid_and_hash(self):
+    def _get_url_to_mid_and_hash(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
-        for k, v in self._bcdb.meta._schema_md5_to_sid.items():
+        for k, v in self._bcdb.meta._schema_url_to_mid.items():
             res[md5_to_url[k]] = (v, k)
         return res
 
@@ -421,27 +421,27 @@ class BCDBVFS(j.application.JSBaseClass):
         else:
             raise Exception("Can't find schema with hash:%s" % (schema_hash), 5)
 
-    def _get_hash_to_sid_and_url(self):
+    def _get_hash_to_mid_and_url(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
         for k, v in md5_to_url.items():
-            if not k in self._bcdb.meta._schema_md5_to_sid:
+            if not k in self._bcdb.meta._schema_url_to_mid:
                 self._force_schema_add(k)
-            res[k] = (self._bcdb.meta._schema_md5_to_sid[k], v)
+            res[k] = (self._bcdb.meta._schema_url_to_mid[k], v)
         return res
 
-    def _get_sid_to_url_and_hash(self):
+    def _get_mid_to_url_and_hash(self):
         md5_to_url = {v[0]: k for k, v in j.data.schema.url_to_md5.items()}
         res = {}
         for k, v in md5_to_url.items():
-            if k in self._bcdb.meta._schema_md5_to_sid:
-                res[self._bcdb.meta._schema_md5_to_sid[k]] = (v, k)
+            if k in self._bcdb.meta._schema_url_to_mid:
+                res[self._bcdb.meta._schema_url_to_mid[k]] = (v, k)
         return res
 
-    def _find_schema_by_id(self, sid):
+    def _find_schema_by_id(self, mid):
         # TODO OPTIMIZE OR FIND ANOTHER WAY
         for s in self._bcdb.meta._data.schemas:
-            if s.sid == sid:
+            if s.mid == mid:
                 return s
         return None
 
@@ -450,7 +450,7 @@ class BCDBVFS(j.application.JSBaseClass):
         for s in self._bcdb.meta._data.schemas:
             if s.url == url:
                 return s
-        return j.data.schema.get_from_url_latest(url)
+        return j.data.schema.get_from_url(url)
 
     def _find_schema_by_hash(self, hash):
         # TODO OPTIMIZE OR FIND ANOTHER WAY
@@ -465,17 +465,17 @@ class BCDBVFS(j.application.JSBaseClass):
     def is_dir(self, path):
         self.get(path).is_dir()
 
-    def add_datas(self, data_items, nid, sid, bcdb_name=None):
+    def add_datas(self, data_items, nid, mid, bcdb_name=None):
         """set new data items. To set data we need the bcdb name, namespace id and schema id
         Arguments:
             data_items {list(JSXObject) | JSXObject} -- items to be added in the specified directory 
             bcdb_name {string} -- the bcdb name to be added to if None will use the current one
             nid {integer} -- the namespace to be added to
-            sid {integer} -- the schema that the objects follow
+            mid {integer} -- the schema that the objects follow
         """
         if bcdb_name == None:
             bcdb_name = self.current_bcbd_name
-        data_dir = self.get("/%s/data/%s/sid/%s" % (bcdb_name, nid, sid))
+        data_dir = self.get("/%s/data/%s/mid/%s" % (bcdb_name, nid, mid))
         return data_dir.set(data_items)
 
     def add_schemas(self, schemas_text=None, bcdb_name=None):
@@ -494,16 +494,16 @@ class BCDBVFS(j.application.JSBaseClass):
             if schemas:
                 for s in schemas:
                     r = self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta
-                    self._bcdb.model_get_from_schema(s)  # should create the model based on the schema
+                    self._bcdb.model_get(schema=s)  # should create the model based on the schema
                     s_obj = self._find_schema_by_id(r)
                     key_url = "%s_schemas_url_%s" % (self.current_bcbd_name, s_obj.url)
-                    key_sid = "%s_schemas_sid_%s" % (self.current_bcbd_name, s_obj.sid)
+                    key_mid = "%s_schemas_mid_%s" % (self.current_bcbd_name, s_obj.mid)
                     key_hash = "%s_schemas_hash_%s" % (self.current_bcbd_name, s_obj.md5)
                     added_schemas.append(s_obj)
                     # we do not check if it exist as anyway it will
                     # replace the latest schema with this url
                     self._dirs_cache[key_url] = BCDBVFS_Schema(self, key=key_url, item=s_obj)
-                    self._dirs_cache[key_sid] = BCDBVFS_Schema(self, key=key_sid, item=s_obj)
+                    self._dirs_cache[key_mid] = BCDBVFS_Schema(self, key=key_mid, item=s_obj)
                     self._dirs_cache[key_hash] = BCDBVFS_Schema(self, key=key_hash, item=s_obj)
         return added_schemas
 
@@ -582,7 +582,7 @@ class BCDBVFS(j.application.JSBaseClass):
                                 "key element:%s must be in:%s" % (splitted[2], self.directories_under_data_namespace)
                             )
                         info_dict["identifier_type"] = splitted[2]
-                        if len(splitted) > 3:  # if true then it is a data sid hash or url
+                        if len(splitted) > 3:  # if true then it is a data mid hash or url
                             info_dict["identifier"] = splitted[3]
                             if len(splitted) > 4:  # if true then it is a data id
                                 info_dict["obj_id"] = splitted[4]
@@ -601,13 +601,13 @@ class BCDBVFS(j.application.JSBaseClass):
         return info_dict
 
     def _get_model_based_on_info(self, info):
-        if info["identifier_type"] == "sid":
-            return self._bcdb.model_get_from_sid(info["identifier"])
+        if info["identifier_type"] == "mid":
+            return self._bcdb.model_get_from_mid(info["identifier"])
         elif info["identifier_type"] == "url":
-            return self._bcdb.model_get_from_url(info["identifier"])
+            return self._bcdb.model_get(url=info["identifier"])
         elif info["identifier_type"] == "hash":
             schema = j.data.schema.get_from_md5(info["identifier"])
-            return self._bcdb.model_get_from_schema(schema)
+            return self._bcdb.model_get(schema=schema)
         else:
             raise Exception("impossible to model from info:%s" % info)
 
@@ -630,7 +630,7 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def _get_all_data_keys_linked(self, key, obj_id=None, info=None):
         """return all the data key related to the specified key
-        will return 3 tuples for sid url and hash and each tuple 
+        will return 3 tuples for mid url and hash and each tuple
         is composed by the data key and its directory key
         Arguments:
             key {[type]} -- [description]
@@ -645,41 +645,41 @@ class BCDBVFS(j.application.JSBaseClass):
             o_id = obj_id
         if info["type"] == self.directories_under_root[0]:  # must be a data key
             keybase = "%s_data_%s_" % (info["bcdb_name"], info["nid"])
-            if info["identifier_type"] == self.directories_under_data_namespace[0]:  # sid
-                keybase_with_sid = "%ssid_%s" % (keybase, info["identifier"])
-                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
+            if info["identifier_type"] == self.directories_under_data_namespace[0]:  # mid
+                keybase_with_mid = "%smid_%s" % (keybase, info["identifier"])
+                key_with_mid = "%s_%s" % (keybase_with_mid, o_id)
                 # get hash and url corresponding to that id
-                conv = self._get_sid_to_url_and_hash()
-                url_for_sid = conv[int(info["identifier"])][0]
-                keybase_with_url = "%surl_%s" % (keybase, url_for_sid)
+                conv = self._get_mid_to_url_and_hash()
+                url_for_mid = conv[int(info["identifier"])][0]
+                keybase_with_url = "%surl_%s" % (keybase, url_for_mid)
                 key_with_url = "%s_%s" % (keybase_with_url, o_id)
-                hash_for_sid = conv[int(info["identifier"])][1]
-                keybase_with_hash = "%shash_%s" % (keybase, hash_for_sid)
+                hash_for_mid = conv[int(info["identifier"])][1]
+                keybase_with_hash = "%shash_%s" % (keybase, hash_for_mid)
                 key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
             elif info["identifier_type"] == self.directories_under_data_namespace[1]:  # hash
                 keybase_with_hash = "%shash_%s" % (keybase, info["identifier"])
                 key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
-                # get sid and url corresponding to that id
-                conv = self._get_hash_to_sid_and_url()
-                sid_for_hash = conv[info["identifier"]][0]
-                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_hash)
-                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
+                # get mid and url corresponding to that id
+                conv = self._get_hash_to_mid_and_url()
+                mid_for_hash = conv[info["identifier"]][0]
+                keybase_with_mid = "%smid_%s" % (keybase, mid_for_hash)
+                key_with_mid = "%s_%s" % (keybase_with_mid, o_id)
                 url_for_hash = conv[info["identifier"]][1]
                 keybase_with_url = "%surl_%s" % (keybase, url_for_hash)
                 key_with_url = "%s_%s" % (keybase_with_url, o_id)
             elif info["identifier_type"] == self.directories_under_data_namespace[2]:  # url
                 keybase_with_url = "%surl_%s" % (keybase, info["identifier"])
                 key_with_url = "%s_%s" % (keybase_with_url, o_id)
-                # get hash and sid corresponding to that id
-                conv = self._get_url_to_sid_and_hash()
-                sid_for_url = conv[info["identifier"]][0]
-                keybase_with_sid = "%ssid_%s" % (keybase, sid_for_url)
-                key_with_sid = "%s_%s" % (keybase_with_sid, o_id)
+                # get hash and mid corresponding to that id
+                conv = self._get_url_to_mid_and_hash()
+                mid_for_url = conv[info["identifier"]][0]
+                keybase_with_mid = "%smid_%s" % (keybase, mid_for_url)
+                key_with_mid = "%s_%s" % (keybase_with_mid, o_id)
                 hash_for_url = conv[info["identifier"]][1]
                 keybase_with_hash = "%shash_%s" % (keybase, hash_for_url)
                 key_with_hash = "%s_%s" % (keybase_with_hash, o_id)
             return [
-                (key_with_sid, keybase_with_sid),
+                (key_with_mid, keybase_with_mid),
                 (key_with_url, keybase_with_url),
                 (key_with_hash, keybase_with_hash),
             ]
@@ -714,21 +714,21 @@ class BCDBVFS(j.application.JSBaseClass):
             model.delete(item)  # removing from db
             keys = self._get_all_data_keys_linked(key, obj_id, info)
             # removing from cache
-            removed_obj_by_sid = self._dirs_cache.pop(keys[0][0], None)
+            removed_obj_by_mid = self._dirs_cache.pop(keys[0][0], None)
             self._dirs_cache.pop(keys[0][1], None)
             removed_obj_by_url = self._dirs_cache.pop(keys[1][0], None)
             self._dirs_cache.pop(keys[1][1], None)
             removed_obj_by_hash = self._dirs_cache.pop(keys[2][0], None)
             self._dirs_cache.pop(keys[2][1], None)
             # update data dir after delete
-            key_sid = keys[0][1].replace("_", "/")
+            key_mid = keys[0][1].replace("_", "/")
             key_url = keys[1][1].replace("_", "/")
             key_hash = keys[2][1].replace("_", "/")
-            self._get_data_items(self._split_clean_path(key_sid), self._get_nid_from_data_key(keys[0][1]), key_sid)
+            self._get_data_items(self._split_clean_path(key_mid), self._get_nid_from_data_key(keys[0][1]), key_mid)
             self._get_data_items(self._split_clean_path(key_url), self._get_nid_from_data_key(keys[1][1]), key_url)
             self._get_data_items(self._split_clean_path(key_hash), self._get_nid_from_data_key(keys[2][1]), key_hash)
 
-            return [removed_obj_by_sid, removed_obj_by_url, removed_obj_by_hash]
+            return [removed_obj_by_mid, removed_obj_by_url, removed_obj_by_hash]
         else:
             raise Exception("key:%s is not a data key. Update cache data can only work with data keys" % key)
 
@@ -737,7 +737,7 @@ class BCDBVFS(j.application.JSBaseClass):
         and then update the cache for all the possible keys. For instance let's take a 
         schema with id=5 md5=ecf2345 url=test.1 if the current bcdb name is test, the provided key is
         data_1_url_test.1_18. We will update the object and the cache for the keys 
-        test_data_1_url_test.1_18, test_data_1_hash_ecf2345_18 and test_data_1_sid_5_18 
+        test_data_1_url_test.1_18, test_data_1_hash_ecf2345_18 and test_data_1_mid_5_18
         if there is no id at the end of the key we will create a new object
 
         Arguments:
