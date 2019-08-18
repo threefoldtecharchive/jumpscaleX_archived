@@ -48,7 +48,7 @@ class TFChainCapacity:
             if record.public_key.hash == keypair.public_key.hash:
                 return nacl.signing.SigningKey(keypair.private_key.to_seed())
 
-        raise KeyError(
+        raise j.exceptions.NotFound(
             "could not found the private used to create the threebot %s. Please generate more addresses" % threebot_id
         )
 
@@ -121,10 +121,10 @@ class TFChainCapacity:
         try:
             threebot_id, reservation = self._notary_data_get(transaction.data.value.decode())
             if reservation.get("type") not in ["vm", "reverse_proxy", "namespace", "s3"]:
-                raise ValueError("Invalid reservation transaction")
+                raise j.exceptions.Value("Invalid reservation transaction")
         except Exception as e:
             if "reservation not found" in str(e):
-                raise ValueError("Invalid reservation transaction")
+                raise j.exceptions.Value("Invalid reservation transaction")
             raise e
 
         templates = {
@@ -134,10 +134,10 @@ class TFChainCapacity:
             "reverse_proxy": "tfchain.reservation.reverse_proxy",
         }
         reservation["duration"] = duration
-        reservation = j.data.schema.get_from_url_latest(url=templates[reservation["type"]]).new(data=reservation)
+        reservation = j.data.schema.get_from_url(url=templates[reservation["type"]]).new(data=reservation)
 
         amount = reservation_amount(reservation)
-        extension = j.data.schema.get_from_url_latest(url="tfchain.reservation.extend").new(
+        extension = j.data.schema.get_from_url(url="tfchain.reservation.extend").new(
             data={"duration": duration, "transaction_id": transaction.id, "email": email}
         )
 
@@ -172,7 +172,7 @@ class TFChainCapacity:
         :rtype: tuple
         """
 
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.s3").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.s3").new(
             data={
                 "size": size,
                 "email": email,
@@ -185,7 +185,9 @@ class TFChainCapacity:
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, location, size=1, duration=1, organization="", source=None, refund=None):
+    def reserve_zos_vm(
+        self, email, threebot_id, location, size=1, duration=1, organization="", source=None, refund=None
+    ):
         """
         reserve an virtual 0-OS
 
@@ -213,8 +215,8 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
-            data={
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.zos_vm").new(
+            datadict={
                 "size": size,
                 "email": email,
                 "created": j.data.time.epoch,
@@ -266,7 +268,7 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zdb_namespace").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.zdb_namespace").new(
             data={
                 "type": "namespace",
                 "size": size,
@@ -308,7 +310,7 @@ class TFChainCapacity:
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.reverse_proxy").new(
+        reservation = j.data.schema.get_from_url(url="tfchain.reservation.reverse_proxy").new(
             data={
                 "type": "reverse_proxy",
                 "email": email,
@@ -330,7 +332,7 @@ class TFChainCapacity:
         bot = self._wallet.client.threebot.record_get(threebot_id)
         reservation_expiry = j.clients.tfchain.time.extend(time.time(), reservation.duration)
         if date.fromtimestamp(reservation_expiry) > date.fromtimestamp(bot.expiration):
-            raise ValueError("Capacity expiration time exceeds threebot's expiration")
+            raise j.exceptions.Value("Capacity expiration time exceeds threebot's expiration")
 
         signature = self._sign_reservation(threebot_id, reservation)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
@@ -359,54 +361,54 @@ class TFChainCapacity:
 def _validate_reservation_base(reservation):
     for field in ["email"]:
         if not getattr(reservation, field):
-            raise ValueError("field '%s' cannot be empty" % field)
+            raise j.exceptions.Value("field '%s' cannot be empty" % field)
 
     if reservation.duration < 1:
-        raise ValueError("reservation duration has to be 1 month or more")
+        raise j.exceptions.Value("reservation duration has to be 1 month or more")
 
 
 def _validate_reservation_s3(reservation):
     for field in ["size"]:
         if not getattr(reservation, field):
-            raise ValueError("field '%s' cannot be empty" % field)
+            raise j.exceptions.Value("field '%s' cannot be empty" % field)
 
     if reservation.size < 0 or reservation.size > 2:
-        raise ValueError("reservation size can only be 1 or 2")
+        raise j.exceptions.Value("reservation size can only be 1 or 2")
 
     if not _validate_location(reservation.location):
-        raise ValueError("location '%s' is not valid" % reservation.location)
+        raise j.exceptions.Value("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reservation_vm(reservation):
     for field in ["size"]:
         if not getattr(reservation, field):
-            raise ValueError("field '%s' cannot be empty" % field)
+            raise j.exceptions.Value("field '%s' cannot be empty" % field)
 
     if reservation.size < 0 or reservation.size > 2:
-        raise ValueError("reservation size can only be 1 or 2")
+        raise j.exceptions.Value("reservation size can only be 1 or 2")
 
     if not _validate_location(reservation.location):
-        raise ValueError("location '%s' is not valid" % reservation.location)
+        raise j.exceptions.Value("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reservation_namespace(reservation):
     for field in ["size"]:
         if not getattr(reservation, field):
-            raise ValueError("field '%s' cannot be empty" % field)
+            raise j.exceptions.Value("field '%s' cannot be empty" % field)
 
     if not reservation.mode or reservation.mode not in ["seq", "user", "direct"]:
-        raise ValueError("mode can only be 'seq', 'user' or 'direct'")
+        raise j.exceptions.Value("mode can only be 'seq', 'user' or 'direct'")
     if not reservation.disk_type or reservation.disk_type not in ["hdd", "ssd"]:
-        raise ValueError("disk_type can only be 'ssd' or 'hdd'")
+        raise j.exceptions.Value("disk_type can only be 'ssd' or 'hdd'")
 
     if not _validate_location(reservation.location):
-        raise ValueError("location '%s' is not valid" % reservation.location)
+        raise j.exceptions.Value("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reverse_proxy(reservation):
     for field in ["domain", "backend_urls"]:
         if not getattr(reservation, field):
-            raise ValueError("field '%s' cannot be empty" % field)
+            raise j.exceptions.Value("field '%s' cannot be empty" % field)
 
 
 def encode_reservation(reservation):
@@ -415,7 +417,7 @@ def encode_reservation(reservation):
 
 def _signing_key_to_private_key(sk):
     if not isinstance(sk, nacl.signing.SigningKey):
-        raise TypeError("sk must be of type nacl.signing.SigningKey")
+        raise j.exceptions.Value("sk must be of type nacl.signing.SigningKey")
     return sk.to_curve25519_private_key()
 
 
@@ -430,7 +432,7 @@ def reservation_amount(reservation):
     elif reservation.type == "reverse_proxy":
         price = proxy_price()
     else:
-        raise ValueError("unsupported reservation type")
+        raise j.exceptions.Value("unsupported reservation type")
 
     return price * reservation.duration
 
@@ -441,7 +443,7 @@ def s3_price(size):
     elif size == 2:
         return decimal.Decimal("83.3")
     else:
-        raise ValueError("size for s3 can only be 1 or 2")
+        raise j.exceptions.Value("size for s3 can only be 1 or 2")
 
 
 def vm_price(size):
@@ -450,7 +452,7 @@ def vm_price(size):
     elif size == 2:
         return decimal.Decimal("83.3")
     else:
-        raise ValueError("size for vm can only be 1 or 2")
+        raise j.exceptions.Value("size for vm can only be 1 or 2")
 
 
 def namespace_price(size):

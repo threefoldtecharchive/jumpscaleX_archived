@@ -160,7 +160,7 @@ class WindowsSystem(j.application.JSBaseClass):
         while driveletter.endswith(":") or driveletter.endswith("\\") or driveletter.endswith("/"):
             driveletter = driveletter[:-1]
         if not len(driveletter) == 1:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "Wrong parameter for WindowsSystem.isNTFSVolume: [%s] is not a valid drive letter." % driveletter
             )
         fTest = "%s:\\" % driveletter
@@ -537,7 +537,7 @@ class WindowsSystem(j.application.JSBaseClass):
         self._log_info("Adding system user %s" % userName)
 
         if self.isSystemUser(userName):
-            raise ValueError("User %s Already Exist" % userName)
+            raise j.exceptions.Value("User %s Already Exist" % userName)
 
         userDict = {}
         userDict["name"] = userName
@@ -639,7 +639,7 @@ class WindowsSystem(j.application.JSBaseClass):
         self._log_info("Creating Service %s" % serviceName)
 
         if not j.sal.fs.isFile(binPath):
-            raise ValueError("binPath %s is not a valid file" % binPath)
+            raise j.exceptions.Value("binPath %s is not a valid file" % binPath)
 
         executableString = binPath
 
@@ -999,7 +999,7 @@ class WindowsSystem(j.application.JSBaseClass):
                 self.grantAccessToFile(subDir, userName)
         else:
             self._log_info("%s is not a valid directory" % dirPath)
-            raise IOError("Directory %s does not exist" % dirPath)
+            raise j.exceptions.IO("Directory %s does not exist" % dirPath)
 
     def grantAccessToFile(self, filePath, userName="everyone"):
         """
@@ -1032,7 +1032,7 @@ class WindowsSystem(j.application.JSBaseClass):
         else:
             self._log_info("File/Directory %s is not valid" % filePath)
 
-            raise IOError("FilePath %s does not exist" % filePath)
+            raise j.exceptions.IO("FilePath %s does not exist" % filePath)
 
     def pm_removeDirTree(self, dirPath, force=False, errorHandler=None):
         """
@@ -1052,7 +1052,7 @@ class WindowsSystem(j.application.JSBaseClass):
                 else:
                     shutil.rmtree(dirPath)
             else:
-                raise ValueError("Specified path: %s is not a Directory in System.removeDirTree" % dirPath)
+                raise j.exceptions.Value("Specified path: %s is not a Directory in System.removeDirTree" % dirPath)
 
     def checkProgramExists(self, programName):
         """

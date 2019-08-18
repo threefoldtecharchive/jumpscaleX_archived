@@ -232,12 +232,12 @@ class SystemProcess(j.application.JSBaseClass):
             out = "\n".join([item.rstrip().decode("UTF-8") for item in resout])
             err = "\n".join([item.rstrip().decode("UTF-8") for item in reserr])
             if rc == 124:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute (TIMEOUT):'%s'\nreturncode (%s)"
                     % (out, err, command, rc)
                 )
             else:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute:'%s'\nreturncode (%s)" % (out, err, command, rc)
                 )
 
@@ -258,7 +258,7 @@ class SystemProcess(j.application.JSBaseClass):
     #     """execute python script from shell/Interactive Window"""
     #     self._log_debug('Excecuting script with name: %s' % scriptName)
     #     if scriptName is None:
-    #         raise ValueError(
+    #         raise j.exceptions.Value(
     #             'Error, Script name in empty in system.process.executeScript')
     #     try:
     #         script = j.sal.fs.readFile(scriptName)
@@ -320,7 +320,7 @@ class SystemProcess(j.application.JSBaseClass):
     def executeInteractive(self, command, die=True):
         exitcode = os.system(command)
         if exitcode != 0 and die:
-            raise RuntimeError("Could not execute %s" % command)
+            raise j.exceptions.Base("Could not execute %s" % command)
         return exitcode
 
     # def executeInSandbox(self, command, timeout=0):
@@ -353,7 +353,7 @@ class SystemProcess(j.application.JSBaseClass):
     #         params = j.data.params.get()
     #     codeLines = code.split("\n")
     #     if "def " not in codeLines[0]:
-    #         raise ValueError("code to execute needs to start with def")
+    #         raise j.exceptions.Value("code to execute needs to start with def")
     #     def_indent = codeLines[0].find("def ")
     #     if def_indent:
     #         # means we need to lower identation with 4
@@ -477,7 +477,7 @@ class SystemProcess(j.application.JSBaseClass):
             self._log_info("kill:%s (%s)" % (name, pid))
             self.kill(pid)
         if self.psfind(name):
-            raise RuntimeError("Could not kill:%s, is still, there check if its not autorestarting." % name)
+            raise j.exceptions.Base("Could not kill:%s, is still, there check if its not autorestarting." % name)
 
     def getPidsByFilterSortable(self, filterstr, sortkey=None):
         """
@@ -530,6 +530,8 @@ class SystemProcess(j.application.JSBaseClass):
                     cmdline = process.cmdline()
                 except psutil.NoSuchProcess:
                     cmdline = None
+                except psutil.AccessDenied:
+                    cmdline = None
                 if cmdline:
                     name = " ".join(cmdline)
                     for r in regex_list:
@@ -538,7 +540,7 @@ class SystemProcess(j.application.JSBaseClass):
                                 res.append(process.pid)
             return res
         else:
-            raise RuntimeError("filterstr or regexes")
+            raise j.exceptions.Base("filterstr or regexes")
 
     def checkstart(self, cmd, filterstr, nrtimes=1, retry=1):
         """
@@ -631,7 +633,7 @@ class SystemProcess(j.application.JSBaseClass):
             pids = [int(item) for item in pids]
             return pids
         else:
-            raise NotImplementedError("getProcessPid is only implemented for unix")
+            raise j.exceptions.NotImplemented("getProcessPid is only implemented for unix")
 
     def getMyProcessObject(self):
         return self.getProcessObject(os.getpid())
@@ -642,7 +644,7 @@ class SystemProcess(j.application.JSBaseClass):
             if process.pid == pid:
                 return process
         if die:
-            raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
+            raise j.exceptions.NotFound("Could not find process with pid:%s" % pid)
 
     def getProcessPidsFromUser(self, user):
 

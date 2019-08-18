@@ -9,7 +9,7 @@ class JSGroup:
         self.name = name.lstrip("j.")
         self.jsmodules = []
         if "." in self.name:
-            raise RuntimeError("cannot be . in name for jsgroup")
+            raise j.exceptions.Base("cannot be . in name for jsgroup")
 
     # @property
     # def jsmodules(self):

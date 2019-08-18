@@ -35,7 +35,7 @@ class NACLFactory(j.application.JSBaseClass):
 
         """
         n = self.get(name=name, load=False)
-        n.configure(privkey_words=privkey_words, sshagent_use=sshagent_use, generate=generate, interactive=False)
+        n.configure(privkey_words=privkey_words, sshagent_use=sshagent_use, generate=generate, interactive=interactive)
         return n
 
     def get(self, name="default", load=True):
@@ -56,7 +56,6 @@ class NACLFactory(j.application.JSBaseClass):
         """
         kosmos 'j.data.nacl.test()'
         """
-
         cl = self.default  # get's the default location & generate's keys
 
         data = b"something"
@@ -65,7 +64,7 @@ class NACLFactory(j.application.JSBaseClass):
         assert cl.verify(data, r)
         assert cl.verify(b"a", r) == False
 
-        pubsignkey32 = cl.signingkey_pub.encode()
+        pubsignkey32 = cl.verify_key.encode()
 
         assert cl.verify(data, r, pubsignkey32)
 
@@ -104,27 +103,45 @@ class NACLFactory(j.application.JSBaseClass):
         b = cl.decrypt(a, hex=True)
         assert b == b"something"
 
-        # LETS HOW TEST THAT WE CAN START FROM WORDS
+        # test asymetric encryptoin between 2 users
+        bob_sk = nacl.public.PrivateKey.generate()
+
+        # alice send a message to bob, encrypt the message with the public of bob
+        message = b"hello world"
+        encrypted = cl.encrypt(message, public_key=bob_sk.public_key)
+        # bob decrypt the message with its private key
+        decrypted = cl.decrypt(encrypted, private_key=bob_sk)
+        assert message == decrypted
+        # ensure no one else can read it
+        foo_sk = nacl.public.PrivateKey.generate()
+        try:
+            cl.decrypt(encrypted, foo_sk)
+            raise j.exceptions.Base("should have given error")
+        except:
+            pass
+
+        # LETS NOW TEST THAT WE CAN START FROM WORDS
 
         words = j.data.nacl.default.words
         j.sal.fs.copyDirTree("/sandbox/cfg/keys/default", "/sandbox/cfg/keys/default_backup")  # make backup
         j.sal.fs.remove("/sandbox/cfg/keys/default")
-
-        self.default.reset()
         try:
+            self.default.reset()
+            try:
+                self.default.load()
+                raise j.exceptions.Base("should have given error")
+            except:
+                pass
+
+            self.default._keys_generate(words=words)
             self.default.load()
-            raise RuntimeError("should have given error")
-        except:
-            pass
 
-        self.default._keys_generate(words=words)
-        self.default.load()
+            b = cl.decrypt(a, hex=True)
+            assert b == b"something"
 
-        b = cl.decrypt(a, hex=True)
-        assert b == b"something"
-
-        j.sal.fs.copyDirTree("/sandbox/cfg/keys/default_backup", "/sandbox/cfg/keys/default")
-        j.sal.fs.remove("/sandbox/cfg/keys/default_backup")
+        finally:
+            j.sal.fs.copyDirTree("/sandbox/cfg/keys/default_backup", "/sandbox/cfg/keys/default")
+            j.sal.fs.remove("/sandbox/cfg/keys/default_backup")
 
         self._log_info("TEST OK")
         print("TEST OK")
@@ -158,15 +175,5 @@ class NACLFactory(j.application.JSBaseClass):
         for i in range(nr):
             a = cl.encrypt(data2)
             b = cl.decrypt(a)
-            assert data2 == b
-        j.tools.timer.stop(i)
-
-        nr = 40000
-        secret = b"something111"
-        data2 = data * 20
-        j.tools.timer.start("encryption/decryption symmetric")
-        for i in range(nr):
-            a = cl.encryptSymmetric(data2, secret=secret)
-            b = cl.decryptSymmetric(a, secret=secret)
             assert data2 == b
         j.tools.timer.stop(i)

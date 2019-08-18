@@ -18,7 +18,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
     """
     # _CHILDCLASS = DigitalOceanVM
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client = None
         self.reset()
 
@@ -65,6 +65,10 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         return self._digitalocean_regions
 
     @property
+    def digitalocean_region_names(self):
+        return [i.slug for i in self.digitalocean_regions]
+
+    @property
     def sshkeys(self):
         if not self._sshkeys:
             self._sshkeys = self.client.get_all_sshkeys()
@@ -94,13 +98,15 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         for item in self.sshkeys:
             if name == item.name:
                 return item
-        raise RuntimeError("did not find key:%s" % name)
+        raise j.exceptions.Base("did not find key:%s" % name)
 
     def region_get(self, name):
         for item in self.digitalocean_regions:
+            if name == item.slug:
+                return item
             if name == item.name:
                 return item
-        raise RuntimeError("did not find region:%s" % name)
+        raise j.exceptions.Base("did not find region:%s" % name)
 
     @property
     def digitalocean_account_images(self):
@@ -114,7 +120,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 name_do = item.distribution + " " + item.name
             if name_do.lower().find(name) != -1:
                 return item
-        raise RuntimeError("did not find image:%s" % name)
+        raise j.exceptions.Base("did not find image:%s" % name)
 
     def image_names_get(self, name=""):
         res = []
@@ -157,11 +163,14 @@ class DigitalOcean(j.application.JSBaseConfigClass):
             if delete:
                 dr0.destroy()
             else:
-                sshcl = j.clients.ssh.get(name="do_%s" % name, addr=dr0.ip_address, client_type="pssh")
+                sshcl = j.clients.ssh.get(
+                    name="do_%s" % name, addr=dr0.ip_address, client_type="pssh", sshkey_name=sshkey
+                )
                 sshcl.save()
                 return dr0, sshcl
 
         sshkey = self.sshkey_get(sshkey)
+
         region = self.region_get(region)
 
         imagedo = self.image_get(image)
@@ -201,7 +210,10 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         actions_wait()
         droplet.load()
 
-        sshcl = j.clients.ssh.get(name="do_%s" % name, addr=droplet.ip_address, client_type="pssh")
+        sshcl = j.clients.ssh.get(
+            name="do_%s" % name, addr=droplet.ip_address, client_type="pssh", sshkey_name=sshkey.name
+        )
+        sshcl.state_reset()  # important otherwise the state does not correspond
         sshcl.save()
 
         return droplet, sshcl

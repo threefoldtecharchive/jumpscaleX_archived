@@ -197,7 +197,7 @@ class SystemFS(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError("Cannot use file notation here")
             self._log_debug("Copy directory tree from %s to %s" % (src, dst), _levelup=3)
             if (src is None) or (dst is None):
-                raise TypeError(
+                raise j.exceptions.Value(
                     "Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s "
                     % (src, dst)
                 )
@@ -222,7 +222,7 @@ class SystemFS(j.application.JSBaseClass):
 
                     if deletefirst and self.exists(dstname):
                         if self.isDir(dstname, False):
-                            self.removeDirTree(dstname)
+                            self.remove(dstname)
                         elif self.isLink(dstname):
                             self.unlink(dstname)
 
@@ -323,7 +323,7 @@ class SystemFS(j.application.JSBaseClass):
         args = [j.core.text.toStr(x) for x in args]
         self._log_debug("Join paths %s" % (str(args)), _levelup=3)
         if args is None:
-            raise TypeError("Not enough parameters %s" % (str(args)))
+            raise j.exceptions.Value("Not enough parameters %s" % (str(args)))
         if os.sys.platform.startswith("win"):
             args2 = []
             for item in args:
@@ -486,7 +486,7 @@ class SystemFS(j.application.JSBaseClass):
             # look for parent
             curdir = j.sal.fs.getParent(curdir)
         if die:
-            raise RuntimeError("Could not find %s dir as parent of:'%s'" % (dirname, path))
+            raise j.exceptions.Base("Could not find %s dir as parent of:'%s'" % (dirname, path))
         else:
             return None
 
@@ -529,7 +529,7 @@ class SystemFS(j.application.JSBaseClass):
         @param permissions e.g. 0o660 (USE OCTAL !!!)
         """
         if permissions > 511 or permissions < 0:
-            raise ValueError("can't perform chmod, %s is not a valid mode" % oct(permissions))
+            raise j.exceptions.Value("can't perform chmod, %s is not a valid mode" % oct(permissions))
 
         os.chmod(path, permissions)
         for root, dirs, files in os.walk(path):
@@ -630,7 +630,7 @@ class SystemFS(j.application.JSBaseClass):
         elif j.core.platformtype.myplatform.platform_is_windows:
             raise j.exceptions.RuntimeError("Cannot readLink on windows")
         else:
-            raise RuntimeError("cant read link, dont understand platform")
+            raise j.exceptions.Base("cant read link, dont understand platform")
 
         if res.startswith(".."):
             srcDir = self.getDirName(path)
@@ -862,9 +862,9 @@ class SystemFS(j.application.JSBaseClass):
         @param replace with e.g. "jumpscale"
         """
         if not toReplace:
-            raise ValueError("Can't change file names, toReplace can't be empty")
+            raise j.exceptions.Value("Can't change file names, toReplace can't be empty")
         if not replaceWith:
-            raise ValueError("Can't change file names, replaceWith can't be empty")
+            raise j.exceptions.Value("Can't change file names, replaceWith can't be empty")
         paths = self.listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
         for path in paths:
             dir_name = self.getDirName(path)
@@ -945,7 +945,7 @@ class SystemFS(j.application.JSBaseClass):
         (If the specified source is a Directory....Calls moveDir function)
         """
         if not self.exists(source):
-            raise IOError("%s does not exist" % source)
+            raise j.exceptions.IO("%s does not exist" % source)
         shutil.move(source, destin)
 
     @path_check(path={"required"})
@@ -955,7 +955,7 @@ class SystemFS(j.application.JSBaseClass):
         @rtype: boolean (True if path refers to an existing path)
         """
         if path is None:
-            raise TypeError("Path is not passed in system.fs.exists")
+            raise j.exceptions.Value("Path is not passed in system.fs.exists")
 
         found = False
         try:
@@ -989,7 +989,7 @@ class SystemFS(j.application.JSBaseClass):
             if self.isLink(target):
                 self.remove(target)
             elif self.isDir(target):
-                self.removeDirTree(target)
+                self.remove(target)
             else:
                 self.remove(target)
 
@@ -1045,7 +1045,7 @@ class SystemFS(j.application.JSBaseClass):
     @path_check(path={"required", "replace"})
     def checkDirParam(self, path):
         if path.strip() == "":
-            raise TypeError("path parameter cannot be empty.")
+            raise j.exceptions.Value("path parameter cannot be empty.")
         path = self.pathNormalize(path)
         if path[-1] != "/":
             path = path + "/"
@@ -1153,7 +1153,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         self._log_debug("Check if path %s is a mount point" % path, _levelup=3)
         if path is None:
-            raise TypeError("Path is passed null in system.fs.isMount")
+            raise j.exceptions.Value("Path is passed null in system.fs.isMount")
         return os.path.ismount(path)
 
     @path_check(path={"required", "replace", "exists"})
@@ -1174,7 +1174,7 @@ class SystemFS(j.application.JSBaseClass):
             return
         if overwrite and self.exists(newname):
             if self.isDir(newname):
-                self.removeDirTree(newname)
+                self.remove(newname)
             else:
                 self.remove(newname)
         os.rename(dirname, newname)
@@ -1273,7 +1273,7 @@ class SystemFS(j.application.JSBaseClass):
         @param contents: string (file contents to be written)
         """
         if contents is None:
-            raise TypeError("Passed None parameters in system.fs.writeFile")
+            raise j.exceptions.Value("Passed None parameters in system.fs.writeFile")
         filename = j.core.tools.text_replace(filename)
         if append is False:
             fp = open(filename, "wb")
@@ -1303,7 +1303,7 @@ class SystemFS(j.application.JSBaseClass):
         @param obj: object to pickle and write to a file
         """
         if not obj:
-            raise ValueError("You should provide a filelocation or a object as parameters")
+            raise j.exceptions.Value("You should provide a filelocation or a object as parameters")
         self._log_debug("Creating pickle and write it to file: %s" % filelocation, _levelup=3)
         try:
             pcl = pickle.dumps(obj)
@@ -1508,7 +1508,7 @@ class SystemFS(j.application.JSBaseClass):
         if platform.platform_is_unix:
             return check_unix(filename)
 
-        raise NotImplementedError("Filename validation on given platform not supported")
+        raise j.exceptions.NotImplemented("Filename validation on given platform not supported")
 
     @path_check(startDir={"required", "replace", "exists", "dir"})
     def find(self, startDir, fileregex):
@@ -1711,7 +1711,7 @@ class SystemFS(j.application.JSBaseClass):
         @param destinationpath: path of to destiniation dir, sourcefile will end up uncompressed in destination dir
         """
         if removeDestinationdir:
-            self.removeDirTree(destinationdir)
+            self.remove(destinationdir)
         if not self.exists(destinationdir):
             self.createDir(destinationdir)
         import tarfile

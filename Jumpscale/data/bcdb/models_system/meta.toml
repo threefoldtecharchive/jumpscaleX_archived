@@ -3,33 +3,37 @@
 @url = jumpscale.bcdb.user.2
 @acl = false
 name* = ""
-dm_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+threebot_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
 email* = ""                             #optional, not required
 pubkey = ""                             #public key of the 3bot
-ipaddr* = ""                            #how to reach the digitalme (3bot)
+ipaddr* = ""
 
 @url = jumpscale.bcdb.circle.2          #circle of users
-name* = ""
+name* = "circle_bcdb"
 description = ""
+threebot_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+email* = ""    
 user_members = (LI)
-circle_members = (LSET)                 #a set is (int,int) is link to (dmid,circleid)
+circle_members = (LI)                 #a set is (int,int) is link to (dmid,circleid)
 
 @url = jumpscale.bcdb.acl.2
 @acl = false
-name* = ""                                      #give a unique name to an acl, needs to be unique
+name* = "acl2"                                      #give a unique name to an acl, needs to be unique
 description = ""                                #can be set by an owner, is to make it easy to understand
 circles = (LO) !jumpscale.bcdb.acl.circle.2
 users = (LO) !jumpscale.bcdb.acl.user.2
-hash* = ""
+md5* = ""
 
 @url = jumpscale.bcdb.acl.circle.2
 @sub = true
-cid=  (SET)                                     #a set is (int,int) is link to (dmid,circleid)
+name*=""
+cid*= 1 (I)                                    
 rights = ""
 
 @url = jumpscale.bcdb.acl.user.2
 @sub = true
-uid= 0 (I)
+name*=""
+uid*= 0 (I)
 rights = ""
 
 
@@ -41,13 +45,14 @@ schemas = (LO) !jumpscale.bcdb.meta.schema.2
 namespaces = (LO) !jumpscale.bcdb.meta.namespace.2
 nid = 0  #namespace id
 name = "" (S)
+url_to_mid = {} (DICT)
 
 @url = jumpscale.bcdb.meta.schema.2
 @sub = true
 url = ""
-sid = 0  #schema id
 text = ""
 md5 = ""
+hasdata = False (B) #if True then we know there needs to be id's in the metadata for the iterator
 
 @url = jumpscale.bcdb.namespace.2
 name* = ""                              #chosen name needs to be unique

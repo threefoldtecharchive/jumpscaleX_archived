@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 import sys
 
 from .Schema import *
@@ -7,10 +27,10 @@ from .JSXObject import JSXObject
 JSBASE = j.application.JSBaseClass
 
 
-class SchemaFactory(j.application.JSBaseClass):
+class SchemaFactory(j.application.JSBaseFactoryClass):
     __jslocation__ = "j.data.schema"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.__code_generation_dir = None
         # self.db = j.clients.redis.core_get()
@@ -34,17 +54,16 @@ class SchemaFactory(j.application.JSBaseClass):
         return self.__code_generation_dir
 
     def reset(self):
-        self.url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
-        self.url_versionless_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
-        self.md5_to_schema = {}
+        self._url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
+        self._md5_to_schema = {}
 
     def exists(self, md5=None, url=None):
         if md5:
-            return md5 in self.md5_to_schema
+            return md5 in self._md5_to_schema
         elif url:
-            if not url in self.url_to_md5:
+            if not url in self._url_to_md5:
                 return False
-            return len(self.url_to_md5[url]) > 0
+            return len(self._url_to_md5[url]) > 0
         return False
 
     def get_from_md5(self, md5):
@@ -54,23 +73,33 @@ class SchemaFactory(j.application.JSBaseClass):
         """
         assert isinstance(md5, str)
         md5 = md5.lower()
-        if md5 in self.md5_to_schema:
-            return self.md5_to_schema[md5]
+        if md5 in self._md5_to_schema:
+            item = self._md5_to_schema[md5]
+            if isinstance(item, str):
+                return self.get_from_text(item)
+            return item
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
 
-    def get_from_url_latest(self, url):
+    def get_from_url(self, url, die=True):
         """
         :param url: url is e.g. jumpscale.bcdb.user.1
         :return: will return the most recent schema, there can be more than 1 schema with same url (changed over time)
         """
         assert isinstance(url, str)
         url = self._urlclean(url)
-        if url in self.url_to_md5:
-            if len(self.url_to_md5[url]) > 0:
-                md5 = self.url_to_md5[url][-1]
-                return self.md5_to_schema[md5]
-        raise j.exceptions.Input("Could not find schema with url:%s" % url)
+        if url in self._url_to_md5:
+            if len(self._url_to_md5[url]) > 0:
+                md5 = self._url_to_md5[url][-1]
+                if md5 in self._md5_to_schema:
+                    return self.get_from_md5(md5)
+                else:
+                    if die:
+                        raise j.exceptions.Input("Could not find schema with url:%s, schema not loaded yet" % url)
+                    else:
+                        return md5
+        if die:
+            raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
     def get_from_text(self, schema_text, url=None):
         """
@@ -80,13 +109,7 @@ class SchemaFactory(j.application.JSBaseClass):
             Schema
         """
         assert isinstance(schema_text, str)
-        if schema_text != "":
-            if j.data.types.string.check(schema_text):
-                schema = self.add_from_text(schema_text=schema_text, url=url)[0]
-            else:
-                raise j.exceptions.Input("Schema needs to be text ")
-
-        return schema
+        return self.add_from_text(schema_text=schema_text, url=url)[0]
 
     def _md5(self, text):
         """
@@ -98,6 +121,11 @@ class SchemaFactory(j.application.JSBaseClass):
         return j.data.hash.md5_string(original_text)
 
     def _urlclean(self, url):
+        """
+        url = j.data.schema._urlclean(url)
+        :param url:
+        :return:
+        """
         return url.strip().strip("'\"").strip()
 
     def _schema_blocks_get(self, schema_text):
@@ -146,26 +174,45 @@ class SchemaFactory(j.application.JSBaseClass):
 
     def _add_from_text_item(self, schema_text, url=None):
         md5 = self._md5(schema_text)
-        if md5 in self.md5_to_schema:
-            return self.md5_to_schema[md5]
+        if md5 in self._md5_to_schema:
+            r = self._md5_to_schema[md5]
+            if not isinstance(r, str):
+                # it can be there is already a string there, then we can ignore
+                return self._md5_to_schema[md5]
 
         s = Schema(text=schema_text, md5=md5, url=url)
 
+        assert s.url
+
+        isok = self._add_url_to_md5(s.url, s._md5)
+        if isok:
+            # means did not exist yet so all ok or is same as latest one already known
+            self._md5_to_schema[s._md5] = s
+            return self._md5_to_schema[s._md5]
+        else:
+            l = self._url_to_md5[s.url]
+            l.pop(l.index(s._md5))
+            l.append(s._md5)
+            self._url_to_md5[s.url] = l
+            # raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
+
+    def _add_url_to_md5(self, url, md5):
+        """
+
+        :param url:
+        :param md5:
+        :return: True if the url & md5 combination is new or latest in row which is ok, otherwise False
+        """
         # add md5 to the list if its not there yet
-        if not s.url in self.url_to_md5:
-            self.url_to_md5[s.url] = []
-        if not s._md5 in self.url_to_md5[s.url]:
-            self.url_to_md5[s.url].append(s._md5)
-
-        # add md5 to the list if its not there yet for versionless
-        if not s.url_noversion in self.url_versionless_to_md5:
-            self.url_versionless_to_md5[s.url_noversion] = []
-        if not s._md5 in self.url_versionless_to_md5[s.url_noversion]:
-            self.url_versionless_to_md5[s.url_noversion].append(s._md5)
-
-        self.md5_to_schema[s._md5] = s
-
-        return s
+        url = self._urlclean(url)
+        if not url in self._url_to_md5:
+            self._url_to_md5[url] = []
+        if not md5 in self._url_to_md5[url]:
+            self._url_to_md5[url].append(md5)
+            return True
+        if self._url_to_md5[url][-1] == md5:
+            return True
+        return False
 
     def add_from_path(self, path=None):
         """

@@ -17,14 +17,14 @@ from Jumpscale import j
 JSConfigs = j.application.JSBaseConfigsClass
 
 
-JSBASE = j.application.JSFactoryBaseClass
+JSBASE = j.application.JSFactoryConfigsBaseClass
 
 
 class ZerotierFactory(JSConfigs):
     __jslocation__ = "j.clients.zerotier"
     _CHILDCLASS = ZerotierClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "zerotier"
         self.connections = {}
         self.config_path = None
@@ -135,7 +135,7 @@ class ZerotierFactory(JSConfigs):
         for net in self.networks_list():
             if net["network_id"] == network_id:
                 return net["dev"]
-        raise KeyError("Network connection with id %s was not found!" % network_id)
+        raise j.exceptions.NotFound("Network connection with id %s was not found!" % network_id)
 
     def get_zerotier_machine_address(self):
         """
@@ -184,7 +184,7 @@ class ZerotierFactory(JSConfigs):
         for network in networks:
             if network["network_id"] == network_id:
                 return network["name"]
-        raise RuntimeError(
+        raise j.exceptions.Base(
             "no networks found with id {}, make sure that you properly joined this network".format(network_id)
         )
 

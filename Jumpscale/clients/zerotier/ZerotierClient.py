@@ -32,7 +32,7 @@ class NetworkMember(j.application.JSBaseClass):
                 time.sleep(2)
                 self._refresh()
             if not self.data["config"]["ipAssignments"]:
-                raise ValueError("Cannot get private ip address for zerotier member")
+                raise j.exceptions.Value("Cannot get private ip address for zerotier member")
             self._private_ip = self.data["config"]["ipAssignments"][0]
         return self._private_ip
 
@@ -140,7 +140,7 @@ class ZeroTierNetwork:
 
     def mynode_member_authorise(self):
         if self.mynode_member is None:
-            raise RuntimeError("could not find mynode")
+            raise j.exceptions.Base("could not find mynode")
         self.mynode_member.authorize()
         return self.mynode_member
 
@@ -154,7 +154,7 @@ class ZeroTierNetwork:
         if resp.status_code != 200:
             msg = "Failed to list network memebers. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         items = resp.json()
 
         return items if raw else self._create_netork_memebers_from_dict(items=items)
@@ -177,7 +177,7 @@ class ZeroTierNetwork:
         if not any(filters):
             msg = "At least one filter need to be specified"
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
 
         filters_map = dict(zip(["nodeId", "name", "physicalAddress", "private_ip"], filters))
         members = self.members_list(raw=True)
@@ -194,7 +194,7 @@ class ZeroTierNetwork:
         if result is None:
             msg = "Cannot find a member that match the provided filters"
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return result
 
     def _create_netork_memebers_from_dict(self, items):
@@ -214,7 +214,7 @@ class ZeroTierNetwork:
         if resp.status_code != 200:
             msg = "Failed to delete member. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
 
         return True
 
@@ -296,10 +296,10 @@ class ZerotierClient(JSConfigClient):
     nodeids = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         if not self.token_:
-            raise RuntimeError("Missing auth token in config instance {}".format(self.instance))
+            raise j.exceptions.Base("Missing auth token in config instance {}".format(self.instance))
         self.client = zerotier.client.Client()
         self.client.set_auth_header("Bearer " + self.token_)
         # self._client = ZerotierClientInteral(self.config.data['token_'])
@@ -319,7 +319,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to list networks. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return self._network_creates_from_dict(items=resp.json())
 
     def network_get(self, network_id=""):
@@ -337,7 +337,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to retrieve network. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return self._network_creates_from_dict(items=[resp.json()])[0]
 
     def _network_creates_from_dict(self, items):
@@ -382,7 +382,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to create network. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return self._network_creates_from_dict([resp.json()])[0]
 
     def network_delete(self, network_id):
@@ -395,12 +395,12 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to delete network. Error: {}".format(resp.text)
             self._log_error(msg)
-            raise RuntimeError(msg)
+            raise j.exceptions.Base(msg)
         return True
 
     def members_nonactive_delete(self):
         """
         walks over all members, the ones which are not active get deleted
         """
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")
         # TODO: *1 yves

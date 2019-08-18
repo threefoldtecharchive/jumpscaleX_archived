@@ -11,19 +11,19 @@ def main(self):
     """
 
     # create a tfchain client for devnet
-    c = j.clients.tfchain.new("mydevclient", network_type="DEV")
+    c = j.clients.tfchain.get("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
 
     # for standard net you could also immediate create a new wallet using
     # `c = j.tfchain.clients.mydevclient`, or the more explicit form
-    # `c = j.clients.tfchain.new("mydevclient", network_type="STD")`
+    # `c = j.clients.tfchain.get("mydevclient", network_type="STD")`
 
     # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
     explorer_client = TFChainExplorerGetClientStub()
     c._explorer_get = explorer_client.explorer_get
 
     # create a new devnet wallet
-    w = c.wallets.mywallet  # is the implicit form of `c.wallets.new("mywallet")`
+    w = c.wallets.get("mywallet")  # is the implicit form of `c.wallets.new("mywallet")`
 
     # a tfchain (JS) wallet uses the underlying tfchain client for all its
     # interaction with the tfchain network

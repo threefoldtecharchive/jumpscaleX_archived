@@ -163,7 +163,7 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         """
 
         if iyo_organization is None:
-            raise RuntimeError("need to specify name of organization.")
+            raise j.exceptions.Base("need to specify name of organization.")
 
         jwt_name = j.core.text.strip_to_ascii_dense("zos_%s" % iyo_organization)
 

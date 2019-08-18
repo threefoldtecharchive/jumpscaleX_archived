@@ -6,7 +6,7 @@ class BashFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.bash"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._home = None
         self._sandbox = None
 

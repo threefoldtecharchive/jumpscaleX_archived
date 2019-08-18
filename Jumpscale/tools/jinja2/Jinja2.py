@@ -9,7 +9,7 @@ class Jinja2(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.jinja2"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._codegendir = j.core.tools.text_replace("{DIR_VAR}/codegen")
 
         #
@@ -39,9 +39,9 @@ class Jinja2(j.application.JSBaseClass):
         """
 
         if path is not None and text is not None:
-            raise RuntimeError("can not specify path and text at same time")
+            raise j.exceptions.Base("can not specify path and text at same time")
         if path is None and text is None:
-            raise RuntimeError("need to specify path or text")
+            raise j.exceptions.Base("need to specify path or text")
 
         md5 = None
         if path is not None:
@@ -80,7 +80,7 @@ class Jinja2(j.application.JSBaseClass):
             txt = t.render(**args)
         except Exception as e:
             self._log_error("template error in:%s" % path)
-            raise RuntimeError(e)
+            raise j.exceptions.Base(e)
 
         if dest is None:
             return txt
@@ -104,7 +104,7 @@ class Jinja2(j.application.JSBaseClass):
         """
 
         if dest is not None and name is not None:
-            raise RuntimeError("cannot specify name & dest at same time")
+            raise j.exceptions.Base("cannot specify name & dest at same time")
 
         if "j" in args:
             args.pop("j")
@@ -123,13 +123,15 @@ class Jinja2(j.application.JSBaseClass):
         if md5 in self._hash_to_codeobj:
             return self._hash_to_codeobj[md5]
 
-        if dest is None and name is not None:
-            name = name.lower()
-            dest = "%s/%s.py" % (self._codegendir, name)
-            dest_md5 = "%s/%s.md5" % (self._codegendir, name)
-        else:
-            dest = "%s/_%s.py" % (self._codegendir, md5)
-            dest_md5 = None
+        dest_md5 = None
+        if dest is None:
+            if name is not None:
+                name = name.lower()
+                dest = "%s/%s.py" % (self._codegendir, name)
+                dest_md5 = "%s/%s.md5" % (self._codegendir, name)
+            else:
+                dest = "%s/_%s.py" % (self._codegendir, md5)
+                dest_md5 = None
 
         self._log_debug("python code render:%s" % (dest))
 
@@ -148,7 +150,7 @@ class Jinja2(j.application.JSBaseClass):
                 out = t.render(j=j, DIRS=j.dirs, BASENAME=BASENAME, **args)
             except Exception as e:  # THERE NEEDS TO BE A BETTER WAY, WHY DOES ERROR HANDLING NOT WORK HERE
                 self._log_error("template error in:%s" % path)
-                raise RuntimeError(e)
+                raise j.exceptions.Base(e)
 
             j.sal.fs.writeFile(dest, out)
             if dest_md5 is not None:
@@ -172,7 +174,7 @@ class Jinja2(j.application.JSBaseClass):
         """
         if j.sal.fs.getBaseName(path).startswith("_") or "__py" in path:
             if "__init__" not in path:
-                raise RuntimeError("cannot render path:%s" % path)
+                raise j.exceptions.Base("cannot render path:%s" % path)
         C = self.template_render(path=path, DIRS=j.dirs, **args)
         if C is not None and write:
             if dest:
@@ -268,7 +270,9 @@ class Jinja2(j.application.JSBaseClass):
         """
         kosmos 'j.tools.jinja2.test()'
         """
-        raise RuntimeError("need to go to jumpscaleX something, also tests are really not tests, need to be better")
+        raise j.exceptions.Base(
+            "need to go to jumpscaleX something, also tests are really not tests, need to be better"
+        )
 
         src = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example"

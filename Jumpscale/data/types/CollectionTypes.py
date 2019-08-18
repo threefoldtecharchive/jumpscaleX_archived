@@ -2,59 +2,12 @@
 
 from Jumpscale import j
 
-from Jumpscale.data.types.PrimitiveTypes import String, StringMultiLine
-from Jumpscale.data.types.TypeBaseClasses import TypeBaseClass
 
 import struct
 from .TypeBaseClasses import *
 
 
-class YAML(String):
-    """Generic dictionary type"""
-
-    NAME = "yaml"
-
-    def __init__(self, default=None):
-
-        self.BASETYPE = "string"
-        self.NOCHECK = True
-        if not default:
-            default = {}
-        self._default = default
-
-    def possible(self, value):
-        """Check whether provided value is a dict"""
-        if not isinstance(value, str):
-            return False
-        try:
-            j.data.serializers.yaml.loads(value)
-        except ValueError:
-            return False
-        return True
-
-    def clean(self, value):
-        if value is None:
-            value = self._default_get()
-        elif not self.check(value):
-            raise ValueError("Invalid value for yaml: %s" % value)
-        value = j.data.types.string.clean(value)
-        return value
-
-    def fromString(self, s):
-        """
-        return string from a dict
-        """
-        if j.data.types.yaml.check(s):
-            return s
-        else:
-            j.data.serializers.yaml.loads(s)
-            return s
-
-    def toString(self, v):
-        return j.data.serializers.yaml.dumps(v)
-
-
-class JSON(StringMultiLine):
+class JSON(TypeBaseClassUnserialized):
 
     NAME = "json"
 
@@ -77,24 +30,119 @@ class JSON(StringMultiLine):
             return False
         return True
 
+    def check(self, v):
+        return isinstance(v, str)
+
     def clean(self, v=""):
-        if value is None:
+        """
+        returns to a dict
+        :param v:
+        :return:
+        """
+        if v is None:
             return self._default_get()
-        if not self.check(v):
-            raise RuntimeError("Valid serialized json string is required")
+        if isinstance(v, dict):
+            pass
+        elif isinstance(v, str):
+            try:
+                v = j.data.serializers.json.loads(v)
+            except j.exceptions.Value:
+                pass
+        elif isinstance(v, set) or isinstance(v, list):
+            pass
+        elif isinstance(v, j.data.schema._JSXObjectClass):
+            v = v._ddict
+        else:
+            raise j.exceptions.Value("only support dict, JSXObject or string", data=v)
         return v
+
+    def python_code_get(self, val):
+        return str(self.clean(val))
+
+    def toData(self, v):
+        v = self.clean(v)
+        return j.data.serializers.json.dumps(v)
 
     def fromString(self, v):
         return self.clean(v)
 
     def toJSON(self, v):
-        return self.clean(v)
+        return self.toData(v)
 
     def toHR(self, v):
         return self.toString(v)
 
+    def toString(self, v):
+        return j.data.serializers.json.dumps(self.clean(v))
 
-class Dictionary(TypeBaseClass):
+
+class MSGPACK(JSON):
+    """Generic msgpack type which represents anything which can be represented by msgpack"""
+
+    NAME = "msgpack"
+
+    def possible(self, value):
+        """Check whether provided value is a dict"""
+        if not isinstance(value, str):
+            return False
+        try:
+            j.data.serializers.msgpack.loads(value)
+        except ValueError:
+            return False
+        return True
+
+    def toData(self, v):
+        v = self.clean(v)
+        return j.data.serializers.msgpack.dumps(v)
+
+    def fromString(self, s):
+        """
+        return string from a dict
+        """
+        if j.data.types.msgpack.check(s):
+            return s
+        else:
+            j.data.serializers.msgpack.loads(s)
+            return s
+
+    def toString(self, v):
+        return j.data.serializers.msgpack.dumps(v)
+
+
+class YAML(JSON):
+    """Generic dictionary type for yaml format"""
+
+    NAME = "yaml"
+
+    def possible(self, value):
+        """Check whether provided value is a dict"""
+        if not isinstance(value, str):
+            return False
+        try:
+            j.data.serializers.yaml.loads(value)
+        except ValueError:
+            return False
+        return True
+
+    def toData(self, v):
+        v = self.clean(v)
+        return j.data.serializers.yaml.dumps(v)
+
+    def fromString(self, s):
+        """
+        return string from a dict
+        """
+        if j.data.types.yaml.check(s):
+            return s
+        else:
+            j.data.serializers.yaml.loads(s)
+            return s
+
+    def toString(self, v):
+        return j.data.serializers.yaml.dumps(v)
+
+
+class Dictionary(TypeBaseClassUnserialized):
     """Generic dictionary type"""
 
     NAME = "dict"
@@ -121,6 +169,10 @@ class Dictionary(TypeBaseClass):
             j.data.serializers.json.loads(s)
             return s
 
+    def toData(self, v):
+        v = self.clean(v)
+        return j.data.serializers.msgpack.dumps(v)
+
     def clean(self, v=""):
         """
         supports binary, string & dict
@@ -135,11 +187,12 @@ class Dictionary(TypeBaseClass):
             if v == b"":
                 v = {}
             else:
+                # print(v)
                 v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
             v = j.data.serializers.json.loads(v)
         if not self.check(v):
-            raise RuntimeError("dict for clean needs to be bytes, string or dict")
+            raise j.exceptions.Value("dict for clean needs to be bytes, string or dict")
         return v
 
     def toString(self, v):
@@ -162,7 +215,7 @@ class Dictionary(TypeBaseClass):
         return "%s @%s :Data;" % (name, nr)
 
 
-class Set(TypeBaseClass):
+class Set(TypeBaseClassUnserialized):
 
     """
     hash is 2 value list, represented as 2 times 4 bytes
@@ -182,7 +235,7 @@ class Set(TypeBaseClass):
         return string from a string (is basically no more than a check)
         """
         if not isinstance(s, str):
-            raise ValueError("Should be string:%s" % s)
+            raise j.exceptions.Value("Should be string:%s" % s)
         s = self.clean(s)
         return s
 
@@ -208,7 +261,7 @@ class Set(TypeBaseClass):
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:
-                    raise RuntimeError("hash parts can only be 4 bytes")
+                    raise j.exceptions.Value("hash parts can only be 4 bytes")
                 return struct.unpack("I", val)
             else:
                 return int(val)
@@ -222,27 +275,27 @@ class Set(TypeBaseClass):
         elif j.data.types.list.check(value):  # or j.data.types.set.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
-                raise RuntimeError("hash can only be list/set of 2")
+                raise j.exceptions.Value("hash can only be list/set of 2")
             v0 = bytesToInt(value[0])
             v1 = bytesToInt(value[1])
             return (v0, v1)
 
         elif j.data.types.bytes.check(value):
             if len(value) is not 8:
-                raise RuntimeError("bytes should be len 8")
+                raise j.exceptions.Value("bytes should be len 8")
             r = struct.unpack("II", value)
             return r[1], r[0]
 
         elif j.data.types.string.check(value):
             if ":" not in value:
-                raise RuntimeError("when string, needs to have : inside %s" % value)
+                raise j.exceptions.Value("when string, needs to have : inside %s" % value)
             v0, v1 = value.split(":")
             v0 = int(v0)
             v1 = int(v1)
             return (v0, v1)
 
         else:
-            raise RuntimeError("unrecognized format for hash:%s" % value)
+            raise j.exceptions.Value("unrecognized format for hash:%s" % value)
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
@@ -306,7 +359,7 @@ class Set(TypeBaseClass):
 #
 #     def clean(self, value):
 #         if not self.check(value):
-#             raise ValueError("Valid set is required")
+#             raise j.exceptions.Value("Valid set is required")
 #         return value
 #
 #     def python_code_get(self, value, sort=False):

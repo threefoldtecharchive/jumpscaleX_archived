@@ -16,15 +16,15 @@ class EnumerationObj(TypeBaseObjClass):
             value_str = value.upper().strip()
             if value_str not in self._typebase.values:
                 self._data = 0
-                raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
+                raise j.exceptions.Value("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
             value_id = self._typebase.values.index(value_str) + 1
         elif isinstance(value, int):
             if value > len(self._typebase.values) + 1:
                 self._data = 0
-                raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
+                raise j.exceptions.Value("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
             value_id = value
         else:
-            raise RuntimeError("unsupported type for enum, is int or string")
+            raise j.exceptions.Value("unsupported type for enum, is int or string")
 
         self._data = value_id
 
@@ -94,7 +94,7 @@ class Enumeration(TypeBaseObjFactory):
 
         values = default  # here the default is used to create custom instance
         if not default:
-            raise RuntimeError("enumeration needs default arg to be given e.g. red,blue,... ")
+            raise j.exceptions.Value("enumeration needs default arg to be given e.g. red,blue,... ")
 
         self.BASETYPE = "int"
         self.NOCHECK = True
@@ -103,7 +103,7 @@ class Enumeration(TypeBaseObjFactory):
             values = values.split(",")
             values = [item.strip().strip("'").strip().strip('"').strip() for item in values]
         if not isinstance(values, list):
-            raise RuntimeError("input for enum is comma separated str or list")
+            raise j.exceptions.Value("input for enum is comma separated str or list")
         self.values = [item.upper().strip() for item in values]
 
         self._default = 1

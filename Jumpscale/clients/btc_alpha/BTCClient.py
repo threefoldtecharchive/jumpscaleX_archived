@@ -22,7 +22,7 @@ class BTCClient(JSConfigBase):
     secret_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         if not self.key_ or not self.secret_:
             raise j.exceptions.Input("Need to specify both key and secret to use the client")
 
@@ -171,7 +171,7 @@ class BTCClient(JSConfigBase):
         if 300 > response.status_code >= 200:
             return response.json()
         else:
-            raise ValueError("Http status {} - {}".format(response.status_code, response.content))
+            raise j.exceptions.Value("Http status {} - {}".format(response.status_code, response.content))
 
     def _get_headers(self, data):
         msg = self.key_ + urlencode(sorted(data.items(), key=lambda val: val[0]))

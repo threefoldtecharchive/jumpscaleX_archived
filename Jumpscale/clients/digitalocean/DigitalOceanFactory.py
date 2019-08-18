@@ -4,12 +4,12 @@ from .DigitalOcean import DigitalOcean
 JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
 
-class PacketNetFactory(JSConfigBaseFactory):
+class DigitalOceanFactory(JSConfigBaseFactory):
 
     __jslocation__ = "j.clients.digitalocean"
     _CHILDCLASS = DigitalOcean
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.connections = {}
 
     # def install(self):
@@ -26,7 +26,7 @@ class PacketNetFactory(JSConfigBaseFactory):
         """
         if not self.main.token_:
             token = j.tools.console.askString("digital ocean token")
-            self.main.token_ = token
+            self.main.token_ = tokengun
             self.main.save()
         c = self.get(name="main")
         if j.clients.ssh.exists("do_test"):
@@ -38,15 +38,29 @@ class PacketNetFactory(JSConfigBaseFactory):
             droplet, sshclient = c.droplet_create(delete=delete)
         return sshclient
 
-    def test(self):
+    def test(self, reset=False):
         """
         do:
         kosmos 'j.clients.digitalocean.test()'
         """
+        j.core.myenv.interactive = True
+
+        from pudb import set_trace
+
+        set_trace()
+        if not self.exists(name="main"):
+            self.new("main")
+        else:
+            if reset:
+                self.main.delete()
+                self.new("main")
+
         if not self.main.token_:
+            print("can get digital ocean token from: ")
             token = j.tools.console.askString("digital ocean token")
             self.main.token_ = token
             self.main.save()
+
         c = self.get(name="main")
 
         self._log_info(c.digitalocean_sizes)
@@ -55,13 +69,14 @@ class PacketNetFactory(JSConfigBaseFactory):
         # size="s-1vcpu-2gb"
 
         client = c.client
+
         droplet, sshclient = c.droplet_create(delete=True, size_slug=size)
 
         e = sshclient.executor
 
         e.execute("ls /")
 
-        # sshclient.apps.kosmos()
+        e.installer.jumpscale_container()
 
         self._log_info(c.droplets)
         self._log_info(c.digitalocean_images)

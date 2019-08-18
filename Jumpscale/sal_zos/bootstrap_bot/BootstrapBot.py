@@ -59,7 +59,7 @@ class BootstrapBot(Service):
                 break
 
         if fs is None:
-            raise RuntimeError("couldn't find a disk to use to mount in the container")
+            raise j.exceptions.Base("couldn't find a disk to use to mount in the container")
 
         return {
             "name": self._container_name,
@@ -87,7 +87,7 @@ class BootstrapBot(Service):
             return self.container.is_running()
 
         if not j.tools.timer.execute_until(test_started, 10, 1):
-            raise RuntimeError("failed to start container")
+            raise j.exceptions.Base("failed to start container")
 
     def destroy(self):
         super().destroy()

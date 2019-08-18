@@ -19,7 +19,7 @@ class CoreDnsClient(JSConfigBase):
     secrets_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._etcd_client = None
         self._etcd_instance = self.etcd_instance
         self._zones = []
@@ -142,7 +142,7 @@ def _get_type_and_rdata(record):
                 return rtype, rrdata
             except (AddressValueError, NetmaskValueError):
                 pass
-    raise KeyError("cannot identify record type %s" % repr(record))
+    raise j.exceptions.NotFound("cannot identify record type %s" % repr(record))
 
 
 def _sanitize_domain(domain):

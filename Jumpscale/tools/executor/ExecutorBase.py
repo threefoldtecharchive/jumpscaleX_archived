@@ -6,7 +6,7 @@ from .ExecutorInstallers import ExecutorInstallers
 JSBASE = j.application.JSBaseClass
 
 
-class ExecutorBase(j.application.JSBaseClass):
+class ExecutorBase(JSBASE):
     def __init__(self, debug=False, checkok=True):
         self.debug = debug
         self.checkok = checkok
@@ -21,33 +21,35 @@ class ExecutorBase(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        self.installer = ExecutorInstallers(executor=self)
+        self._installer = None
 
         self._env_on_system = None
 
         self._init3()
+
+    @property
+    def installer(self):
+        if not self._installer:
+            self._installer = ExecutorInstallers(executor=self)
+        return self._installer
 
     def reset(self):
         self.state_reset()
-        self.env_on_system_msgpack = ""
-        self.config_msgpack = ""
-        self.save()
         self._init3()
+        self.save()
 
     def _init3(self):
-
+        self._config = None
         self._env_on_system = None
 
-        if self.config_msgpack:
-            self.config = j.data.serializers.msgpack.loads(self.config_msgpack)
-        else:
-            self.config = {}
-
-        if not isinstance(self.config, dict):
-            j.shell()
-
-        if "state" not in self.config:
-            self.config["state"] = {}
+    @property
+    def config(self):
+        if not self._config:
+            if self.config_msgpack:
+                self._config = j.data.serializers.msgpack.loads(self.config_msgpack)
+            else:
+                self._config = {}
+        return self._config
 
     def save(self):
         """
@@ -90,14 +92,14 @@ class ExecutorBase(j.application.JSBaseClass):
 
     def dir_ensure(self, path):
         cmd = "mkdir -p %s" % path
-        self.execute(cmd)
+        self.execute(cmd, interactive=False)
 
     def path_isdir(self, path):
         """
         checks if the path is a directory
         :return:
         """
-        rc, out, err = self.execute('if [ -d "%s" ] ;then echo DIR ;fi' % path)
+        rc, out, err = self.execute('if [ -d "%s" ] ;then echo DIR ;fi' % path, interactive=False)
         return out.strip() == "DIR"
 
     def path_isfile(self, path):
@@ -105,7 +107,7 @@ class ExecutorBase(j.application.JSBaseClass):
         checks if the path is a directory
         :return:
         """
-        rc, out, err = self.execute('if [ -f "%s" ] ;then echo FILE ;fi' % path)
+        rc, out, err = self.execute('if [ -f "%s" ] ;then echo FILE ;fi' % path, interactive=False)
         return out.strip() == "FILE"
 
     @property
@@ -114,7 +116,7 @@ class ExecutorBase(j.application.JSBaseClass):
 
     def file_read(self, path):
         self._log_debug("file read:%s" % path)
-        rc, out, err = self.execute("cat %s" % path, showout=False)
+        rc, out, err = self.execute("cat %s" % path, showout=False, interactive=False)
         return out
 
     def file_write(self, path, content, mode=None, owner=None, group=None, append=False, sudo=False, showout=True):
@@ -157,14 +159,14 @@ class ExecutorBase(j.application.JSBaseClass):
             if group:
                 cmd += "chgrp %s %s\n" % (group, path)
 
-            res = self.execute(cmd, showout=False, script=False)
+            res = self.execute(cmd, showout=False, script=False, interactive=False)
 
         return None
 
     @property
     def uid(self):
         if self._id is None:
-            raise RuntimeError("self._id cannot be None")
+            raise j.exceptions.Base("self._id cannot be None")
         return self._id
 
     def _commands_transform(self, cmds, die=True, checkok=False, env={}, sudo=False, shell=False):
@@ -177,7 +179,7 @@ class ExecutorBase(j.application.JSBaseClass):
 
         if shell:
             if "\n" in cmds:
-                raise RuntimeError("cannot do shell for multiline scripts")
+                raise j.exceptions.Base("cannot do shell for multiline scripts")
             else:
                 cmds = "bash -c '%s'" % cmds
 
@@ -226,11 +228,11 @@ class ExecutorBase(j.application.JSBaseClass):
         raise NotImplemented()
 
     def find(self, path):
-        rc, out, err = self.execute("find %s" % path, die=False)
+        rc, out, err = self.execute("find %s" % path, die=False, interactive=False)
         if rc > 0:
             if err.lower().find("no such file") != -1:
                 return []
-            raise RuntimeError("could not find:%s \n%s" % (path, err))
+            raise j.exceptions.Base("could not find:%s \n%s" % (path, err))
         res = []
         for line in out.split("\n"):
             if line.strip() == path:
@@ -243,10 +245,10 @@ class ExecutorBase(j.application.JSBaseClass):
 
     # interface to implement by child classes
     def execute(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     # def executeRaw(self, cmd, die=True, showout=False):
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
 
     @property
     def isDebug(self):
@@ -262,7 +264,16 @@ class ExecutorBase(j.application.JSBaseClass):
         """
         means we don't work with ssh-agent ...
         """
-        return self.env_on_system["iscontainer"]
+
+        if not "IN_DOCKER" in self.config:
+            rc, out, _ = self.execute("cat /proc/1/cgroup", die=False, showout=False, interactive=False)
+            if rc == 0 and out.find("/docker/") != -1:
+                self.config["IN_DOCKER"] = True
+            else:
+                self.config["IN_DOCKER"] = False
+            self.save()
+
+        return j.data.types.bool.clean(self.config["IN_DOCKER"])
 
     @property
     def isSandbox(self):
@@ -305,7 +316,7 @@ class ExecutorBase(j.application.JSBaseClass):
     #         out = ""
     #         for key, val in self.dir_paths.items():
     #             out += "mkdir -p %s\n" % val
-    #         self.execute(out, sudo=True, showout=False)
+    #         self.execute(out, sudo=True, showout=False,interactive=False)
     #
     #     self._cache.reset()
     #
@@ -331,7 +342,7 @@ class ExecutorBase(j.application.JSBaseClass):
     # def sudo_cmd(self, command):
     #
     #     if "\n" in command:
-    #         raise RuntimeError("cannot do sudo when multiline script:%s" % command)
+    #         raise j.exceptions.Base("cannot do sudo when multiline script:%s" % command)
     #
     #     if hasattr(self, "sshclient"):
     #         login = self.sshclient.config.data["login"]
@@ -512,148 +523,6 @@ class ExecutorBase(j.application.JSBaseClass):
         self.env_on_system_msgpack = j.data.serializers.msgpack.dumps(res)
         self.save()
 
-    #
-    # def system_install(self,force=False,sandbox=False):
-    #
-    #     if force or notself.state_exists("myenv_init"):
-    #
-    #         if j.core.tools.platform()== "linux":
-    #             script="""
-    #             echo >> /etc/apt/sources.list
-    #             echo "# Jumpscale Setup" >> /etc/apt/sources.list
-    #             echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-    #             apt-get update
-    #
-    #             apt-get install -y curl rsync unzip
-    #             locale-gen --purge en_US.UTF-8
-    #
-    #             mkdir -p /tmp/jumpscale/scripts
-    #             mkdir -p /sandbox/var/log
-    #
-    #             """
-    #         else:
-    #             if not j.core.tools.cmd_installed("curl") or j.core.tools.cmd_installed("unzip") or j.core.tools.cmd_installed("rsync"):
-    #                 script="""
-    #                 brew install curl unzip rsync
-    #                 """
-    #             else:
-    #                 script = ""
-    #                 j.core.tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
-    #
-    #         j.core.tools.execute(script,interactive=True)
-    #
-    #
-    #         self.config_load()
-    #
-    #         if not "HOME" in self.config and "HOME" in os.environ:
-    #            self.config["DIR_HOME"] = copy.copy(os.environ["HOME"])
-    #            self.config_save()
-    #
-    #         if not os.path.exists(MyEnv.config["DIR_BASE"]):
-    #             script = """
-    #             cd /
-    #             sudo mkdir -p /sandbox/cfg
-    #             sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
-    #             """
-    #             args={}
-    #             args["USERNAME"] = getpass.getuser()
-    #             st = os.stat(MyEnv.config["DIR_HOME"])
-    #             gid = st.st_gid
-    #             args["GROUPNAME"] = grp.getgrgid(gid)[0]
-    #             j.core.tools.execute(script,interactive=True,args=args)
-    #
-    #
-    #         installed = j.core.tools.cmd_installed("git") and j.core.tools.cmd_installed("ssh-agent")
-    #        self.config["SSH_AGENT"]=installed
-    #        self.config_save()
-    #
-    #             # and
-    #         if not os.path.exists(ExecutorMyEnv.config["DIR_TEMP"]):
-    #             os.makedirs(ExecutorMyEnv.config["DIR_TEMP"], exist_ok=True)
-    #
-    #        self.state_set("myenv_init")
-    #
-    #     if os.path.exists(os.path.join(ExecutorMyEnv.config["DIR_BASE"], "bin", "python3.6")):
-    #        self.sandbox_python_active=True
-    #     else:
-    #        self.sandbox_python_active=False
-    #
-    #
-    #     #will get the sandbox installed
-    #     if force or notself.state_exists("myenv_install"):
-    #
-    #         ifself.config["INSYSTEM"]:
-    #
-    #             #DONT USE THE SANDBOX
-    #
-    #             UbuntuInstall.do_all()
-    #
-    #             j.core.tools.code_github_get(repo="sandbox_base", branch=["master"])
-    #
-    #             script="""
-    #             set -e
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-    #
-    #             #remove parts we don't use in in system deployment
-    #             rm -rf {DIR_BASE}/openresty
-    #             rm -rf {DIR_BASE}/lib/python
-    #             rm -rf {DIR_BASE}/lib/pythonbin
-    #             rm -rf {DIR_BASE}/var
-    #             rm -rf {DIR_BASE}/root
-    #
-    #             mkdir -p root
-    #             mkdir -p var
-    #
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #
-    #
-    #         else:
-    #
-    #             j.core.tools.code_github_get(repo="sandbox_base", branch=["master"])
-    #
-    #             script="""
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-    #             mkdir -p root
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #             if j.core.tools.platform() == "darwin":
-    #                 reponame = "sandbox_osx"
-    #             elif j.core.tools.platform() == "linux":
-    #                 reponame = "sandbox_ubuntu"
-    #             else:
-    #                 raise RuntimeError("cannot install, j.core.tools.platform() now found")
-    #
-    #             j.core.tools.code_github_get(repo=reponame, branch=["master"])
-    #
-    #             script="""
-    #             set -ex
-    #             cd {DIR_BASE}
-    #             rsync -ra code/github/threefoldtech/{REPONAME}/base/ .
-    #             mkdir -p root
-    #             mkdir -p var
-    #             """
-    #             args={}
-    #             args["REPONAME"]=reponame
-    #
-    #             j.core.tools.execute(script,interactive=True,args=args)
-    #
-    #             script="""
-    #             set -e
-    #             cd {DIR_BASE}
-    #             source env.sh
-    #             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
-    #             """
-    #             j.core.tools.execute(script,interactive=True)
-    #
-    #         j.core.tools.log("INSTALL FOR BASE OK")
-    #
-    #        self.state_set("myenv_install")
-
     def test(self):
 
         """
@@ -665,8 +534,8 @@ class ExecutorBase(j.application.JSBaseClass):
         ex.reset()
 
         assert ex.state == {}
-        assert ex.env_on_system_msgpack == ""
-        assert ex.config_msgpack == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         rc, out, err = ex.execute("ls /")
         assert rc == 0
@@ -734,8 +603,8 @@ class ExecutorBase(j.application.JSBaseClass):
 
         ex.reset()
         assert ex.state == {}
-        assert ex.env_on_system_msgpack == ""
-        assert ex.config_msgpack == ""
+        assert ex.env_on_system_msgpack == b""
+        assert ex.config_msgpack == b""
 
         # test that it does not do repeating thing & cache works
         for i in range(1000):

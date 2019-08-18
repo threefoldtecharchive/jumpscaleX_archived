@@ -111,7 +111,7 @@ class Minio(Service):
                 break
 
         if fs is None:
-            raise RuntimeError("couldn't find a disk to use to mount in the container")
+            raise j.exceptions.Base("couldn't find a disk to use to mount in the container")
 
         return {
             "name": self._container_name,
@@ -139,7 +139,7 @@ class Minio(Service):
             return self.container.is_running()
 
         if not j.tools.timer.execute_until(test_started, 10, 1):
-            raise RuntimeError("failed to start container")
+            raise j.exceptions.Base("failed to start container")
 
         self.create_config()
 
@@ -157,7 +157,7 @@ class Minio(Service):
         job = self.container.client.system(cmd, id=self._id, recurring_period=10)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             result = job.get()
-            raise RuntimeError("Failed to start minio server {}: {}".format(self.name, result.stderr))
+            raise j.exceptions.Base("Failed to start minio server {}: {}".format(self.name, result.stderr))
 
     def stream(self, callback):
         if not self.is_running:
@@ -178,7 +178,7 @@ class Minio(Service):
         dest = os.path.join("/mnt/containers", str(self.container.id), "minio_metadata", "logo.svg")
         resp = self.node.client.web.download(self.logo_url, dest).get()
         if resp.state != "SUCCESS":
-            raise RuntimeError("impossible to download the minio logo: %s" % resp.stderr)
+            raise j.exceptions.Base("impossible to download the minio logo: %s" % resp.stderr)
         return "/minio_metadata/logo.svg"
 
     def _config_as_text(self):
@@ -226,4 +226,4 @@ class Minio(Service):
 
         result = job.get()
         if result.state == "ERROR":
-            raise RuntimeError("Failed to do check and repair")
+            raise j.exceptions.Base("Failed to do check and repair")

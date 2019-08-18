@@ -1,7 +1,7 @@
 from .TfChain import TfChainClient, TfChainExplorer, TfChainBridged, TfChainDaemon
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSBaseFactoryClass
 
 
 class TfChainFactory(JSBASE):

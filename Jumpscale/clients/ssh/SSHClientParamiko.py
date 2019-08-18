@@ -18,8 +18,8 @@ class SSHClientParamiko(SSHClientBase):
     is an ssh client
     """
 
-    def _init(self):
-        SSHClientBase._init(self)
+    def _init(self, **kwargs):
+        SSHClientBase._init(self, **kwargs)
 
         if self.passwd:
             self._forward_agent = False
@@ -84,12 +84,12 @@ class SSHClientParamiko(SSHClientBase):
                 raise j.exceptions.RuntimeError("Could not connect to %s:%s" % (self.addr, self.port))
             self._transport_ = self._client.get_transport()
             if self._transport_ is None:
-                raise RuntimeError("transport cannot be None")
+                raise j.exceptions.Base("transport cannot be None")
         return self._transport_
 
     def _connect(self):
         if self.addr == "" or self.port == 0:
-            raise RuntimeError("addr or port cannot be empty.")
+            raise j.exceptions.Base("addr or port cannot be empty.")
 
         self._log_debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
 
@@ -98,7 +98,7 @@ class SSHClientParamiko(SSHClientBase):
                 "Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s"
                 % (self.addr, self.port, self.login, self.sshkey_name)
             )
-            raise RuntimeError("Could not connect to addr:'%s' port:'%s'" % (self.addr, self.port))
+            raise j.exceptions.Base("Could not connect to addr:'%s' port:'%s'" % (self.addr, self.port))
 
         # self.pkey = None
         # if self.key_filename is not None and self.key_filename != '':

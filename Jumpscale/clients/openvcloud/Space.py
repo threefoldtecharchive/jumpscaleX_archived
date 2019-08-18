@@ -79,7 +79,7 @@ class Space(Authorizables):
             self.refresh()
 
         if j.data.time.epoch > timeout:
-            raise RuntimeError("timeout on getting space info from %s" % self)
+            raise j.exceptions.Base("timeout on getting space info from %s" % self)
 
         return self._model
 
@@ -188,7 +188,7 @@ class Space(Authorizables):
                     authorize_ssh=authorize_ssh,
                 )
             else:
-                raise RuntimeError("Cannot find machine:%s" % name)
+                raise j.exceptions.Base("Cannot find machine:%s" % name)
 
         machine = self.machines[name]
 
@@ -261,9 +261,9 @@ class Space(Authorizables):
         """
         self._log_debug("Create machine:%s:%s:%s" % (name, image, sshkeyname))
         if " " in name:
-            raise RuntimeError("Name cannot contain spaces")
+            raise j.exceptions.Base("Name cannot contain spaces")
         if "_" in name:
-            raise RuntimeError("Name cannot contain underscores (_)")
+            raise j.exceptions.Base("Name cannot contain underscores (_)")
 
         imageId = self.image_find_id(image)
         if sizeId is None:
@@ -426,7 +426,7 @@ class Space(Authorizables):
         # if requests arrive one by one.
         # Ensure only one unauthorized member from required IP address
         if len(candidates) != 1:
-            raise RuntimeError("Found %s candidates, expected exactly one" % len(candidates))
+            raise j.exceptions.Base("Found %s candidates, expected exactly one" % len(candidates))
 
         candidate = candidates[0]
 

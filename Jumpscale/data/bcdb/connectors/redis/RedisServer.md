@@ -3,7 +3,7 @@
 
 ## HGET
 
-### schemas:sid $SID
+### schemas:mid $SID
 
 sid is the schema id
 

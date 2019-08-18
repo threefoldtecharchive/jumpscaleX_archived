@@ -98,7 +98,7 @@ class Namespace:
         :type value: mixed
         """
         if prop not in ["maxsize", "password", "public"]:
-            raise ValueError("Property must be maxsize, password, or public")
+            raise j.exceptions.Value("Property must be maxsize, password, or public")
 
         self.parent._redis.execute_command("NSSET", self.name, prop, value)
 
@@ -119,7 +119,7 @@ class Namespace:
                 result[info_split[0].strip()] = info_split[1].strip()
             return NamespaceInfo(**result)
         except ResponseError:
-            raise RuntimeError("Must deploy namespace before retrieving namespace info")
+            raise j.exceptions.Base("Must deploy namespace before retrieving namespace info")
 
     def deploy(self, namespaces=None):
         """

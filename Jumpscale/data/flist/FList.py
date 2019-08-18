@@ -152,7 +152,7 @@ class FList:
 
             else:
                 if ddir.location != dirRelPath:
-                    raise RuntimeError("Serious bug, location should always be same")
+                    raise j.exceptions.Base("Serious bug, location should always be same")
 
             # sec base properties of current dirobj
             statCurDir = os.stat(dirpathAbsolute, follow_symlinks=True)
@@ -446,7 +446,7 @@ class FList:
 
             if not recurse == False:
                 if key == "":
-                    raise RuntimeError("Key cannot be empty in a subdir of ddir: %s" % ddir)
+                    raise j.exceptions.Base("Key cannot be empty in a subdir of ddir: %s" % ddir)
 
                 self.walk(
                     dirFunction=dirFunction,
@@ -623,7 +623,7 @@ class FList:
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
-        raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
+        raise j.exceptions.Base("Upload is not supported anymore, please check 'populate' method")
 
     def _dummy(self, **kwargs):
         pass
@@ -741,7 +741,7 @@ class FList:
             hash = base64.b64decode(bhash).decode("utf-8")
 
             if not bykeys.get(hash):
-                raise RuntimeError("Key not indexed, this should not happend")
+                raise j.exceptions.Base("Key not indexed, this should not happend")
 
             filename = bykeys[hash]["file"]
             chunkindex = bykeys[hash]["index"]

@@ -13,6 +13,15 @@ class SonicFactory(JSConfigs):
     __jslocation__ = "j.clients.sonic"
     _CHILDCLASS = SonicClient
 
+    def get_client_bcdb(self):
+        """
+        j.clients.sonic.get_client_bcdb()
+        :return:
+        """
+        j.builders.apps.sonic.install()
+        j.servers.sonic.get("bcdb", port=1491).start()
+        return self.get("bcdb", host="127.0.0.1", port=1491, password="123456")
+
     def test(self):
         """
         kosmos 'j.clients.sonic.test()'

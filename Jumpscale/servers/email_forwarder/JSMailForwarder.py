@@ -34,7 +34,7 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
         self.forward_config.append(model)
         self._forwarder.add_forward_config(destination_domain, source_domains)
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._forward_config = {}
         relay_config = {
             "host": self.relay_host,
@@ -56,7 +56,7 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
         self._forwarder.run()
 
 
-class JSMailForwarderFactory(j.application.JSBaseConfigsClass):
+class JSMailForwarderFactory(j.application.JSFactoryConfigsBaseClass):
     """Factory class
     """
 

@@ -33,7 +33,7 @@ class GDriveClient(JSConfigClient):
     credfile = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._credentials = None
 
     @property

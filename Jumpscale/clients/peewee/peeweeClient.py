@@ -9,37 +9,49 @@ class PeeweeClient(JSConfigClient):
     @url = jumpscale.peewee.client
     name* = "" (S)
     ipaddr = "localhost" (S)
-    port = 0 (ipport)
+    port = 5432 (ipport)
     login = "postgres" (S)
     passwd_ = "" (S)
     dbname = "template" (S)
-    dbtype = "postgres" (S)
+    dbtype = "postgres" (E)
     peeweeschema = "" (S)
-    cache = true (B)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.passwd = self.passwd_
-        self._model = None
+        self._peewee_model = None
+        self._peewee = None
 
     @property
-    def model(self):
-        if self._model:
-            return self._model
-        key = "%s_%s_%s_%s_%s" % (self.ipaddr, self.port, self.login, self.dbname, self.dbtype)
+    def db(self):
+        if not self._peewee:
+            if self.dbtype == "postgres":
+                from peewee import PostgresqlDatabase
 
-        if j.core.db.get("peewee.code.%s" % key) is None:
-            cmd = 'pwiz.py -H %s  -p %s -u "%s" -P -i %s' % (self.ipaddr, self.port, self.login, self.dbname)
+                self._peewee = PostgresqlDatabase(
+                    self.dbname, user=self.login, password=self.passwd_, host=self.ipaddr, port=self.port
+                )
+            else:
+                raise j.exceptions.Base()
+        return self._peewee
+
+    def model_get(self):
+        if not self._peewee_model:
+            key = "%s_%s_%s_%s_%s" % (self.ipaddr, self.port, self.login, self.dbname, self.dbtype)
+
+            cmd = 'pwiz.py -e postgresql -H %s -p %s   -u "%s"  -i %s' % (
+                self.ipaddr,
+                self.port,
+                self.login,
+                self.dbname,
+            )
+            print(cmd)
             rc, out, err = j.sal.process.execute(cmd, useShell=True, die=True, showout=False)
-            j.core.db.set("peewee.code.%s" % key, out)
-        code = j.core.db.get("peewee.code.%s" % key).decode()
+            path = j.sal.fs.joinPaths(j.dirs.TMPDIR, "peewee", key + ".py")
+            j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.TMPDIR, "peewee"))
+            j.sal.fs.writeFile(path, out)
+            loader = importlib.machinery.SourceFileLoader(key, path)
+            module = loader.load_module(key)
+            self._peewee_model = module
 
-        path = j.sal.fs.joinPaths(j.dirs.TMPDIR, "peewee", key + ".py")
-        j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.TMPDIR, "peewee"))
-        j.sal.fs.writeFile(path, code)
-
-        loader = importlib.machinery.SourceFileLoader(key, path)
-        module = loader.load_module(key)
-
-        self._model = module
-        return module
+        return self._peewee_model

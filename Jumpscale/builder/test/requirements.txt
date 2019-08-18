@@ -1,4 +1,0 @@
-nose
-nose-progressive
-nose-testconfig
-requests>=2.11.1

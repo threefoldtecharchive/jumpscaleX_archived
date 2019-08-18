@@ -35,7 +35,7 @@ class ServiceBase(j.application.JSBaseClass):
                 j.shell()
 
         if self.__class__._MODEL is None:
-            self.__class__._MODEL = j.world.system._bcdb.model_get_from_schema(self.__class__._SCHEMA_TXT)
+            self.__class__._MODEL = j.world.system._bcdb.model_get(schema=self.__class__._SCHEMA_TXT)
 
         self._state = None
 

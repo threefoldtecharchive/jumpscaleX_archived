@@ -206,7 +206,7 @@ class MarkdownDocument(j.application.JSBaseClass):
             elif lang == "yaml":
                 self.data_add(yaml=block)
             else:
-                raise RuntimeError("could not add codeblock for %s" % block)
+                raise j.exceptions.Base("could not add codeblock for %s" % block)
         elif c.startswith("!!!") and lang == "":
             method = block.strip().split("\n")[0][3:].strip()  # remove !!!
             data = "\n".join(block.strip().split("\n")[1:]) + "\n"
@@ -263,12 +263,12 @@ class MarkdownDocument(j.application.JSBaseClass):
         res = self.parts_get(text_to_find=text_to_find, cat=cat)
         if len(res) == 0:
             if die:
-                raise RuntimeError("could not find part %s:%s" % (text_to_find, cat))
+                raise j.exceptions.Base("could not find part %s:%s" % (text_to_find, cat))
             else:
                 return None
         if nr > len(res):
             if die:
-                raise RuntimeError("could not find part %s:%s at position:%s" % (text_to_find, cat, nr))
+                raise j.exceptions.Base("could not find part %s:%s at position:%s" % (text_to_find, cat, nr))
             else:
                 return None
         return res[nr]

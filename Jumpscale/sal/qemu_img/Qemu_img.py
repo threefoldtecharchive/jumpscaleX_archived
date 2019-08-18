@@ -39,18 +39,18 @@ class QemuImg(j.application.JSBaseClass):
 
         if encryptTargetImage:
             if not diskImageFormat.upper() == "QCOW":
-                raise ValueError("encryptTargetImage property is only supported for qcow diskImageFormat")
+                raise j.exceptions.Value("encryptTargetImage property is only supported for qcow diskImageFormat")
 
             command = "%s -e" % command
 
         if useCompatibilityLevel6:
             if not diskImageFormat.upper() == "VMDK":
-                raise ValueError("useCompatibilityLevel6 property is only supported for vmdk diskImageFormat")
+                raise j.exceptions.Value("useCompatibilityLevel6 property is only supported for vmdk diskImageFormat")
             command = "%s -6" % command
 
         if isTargetImageTypeSCSI:
             if not diskImageFormat.upper() == "VMDK":
-                raise ValueError("isTargetImageTypeSCSI property is only supported for vmdk diskImageFormat")
+                raise j.exceptions.Value("isTargetImageTypeSCSI property is only supported for vmdk diskImageFormat")
 
             command = "%s -s" % command
 
@@ -67,7 +67,7 @@ class QemuImg(j.application.JSBaseClass):
             command = "%(command)s %(size)sK" % {"command": command, "size": size}
 
         if size is None and not baseImage:
-            raise ValueError("Size can only be None if baseImage is specified")
+            raise j.exceptions.Value("Size can only be None if baseImage is specified")
 
         exitCode, output = self._local.execute(command, die=False)
 
@@ -81,7 +81,7 @@ class QemuImg(j.application.JSBaseClass):
         @param diskImageFormat: disk image format
         """
         if not j.tools.path.get(fileName).exists():
-            raise IOError("Disk Image %s does not exist" % fileName)
+            raise j.exceptions.IO("Disk Image %s does not exist" % fileName)
 
         command = "%s commit -f %s %s" % (self._getBinary(), diskImageFormat, fileName)
         exitCode, output = self._local.execute(command, die=False)
@@ -119,29 +119,29 @@ class QemuImg(j.application.JSBaseClass):
         @type logger: function
         """
         if not j.tools.path.get(fileName).exists():
-            raise IOError("Disk Image %s does not exist" % fileName)
+            raise j.exceptions.IO("Disk Image %s does not exist" % fileName)
 
         command = self._getBinary()
         args = ["convert"]
 
         if compressTargetImage:
             if not diskImageFormat.upper() == "QCOW":
-                raise ValueError("compressTargetImage property is only supported for qcow diskImageFormat")
+                raise j.exceptions.Value("compressTargetImage property is only supported for qcow diskImageFormat")
             args.append("-c")
 
         if encryptTargetImage:
             if not diskImageFormat.upper() == "QCOW":
-                raise ValueError("encryptTargetImage property is only supported for qcow diskImageFormat")
+                raise j.exceptions.Value("encryptTargetImage property is only supported for qcow diskImageFormat")
             args.append("-e")
 
         if useCompatibilityLevel6:
             if not diskImageFormat.upper() == "VMDK":
-                raise ValueError("useCompatibilityLevel6 property is only supported for vmdk diskImageFormat")
+                raise j.exceptions.Value("useCompatibilityLevel6 property is only supported for vmdk diskImageFormat")
             args.append("-6")
 
         if isTargetImageTypeSCSI:
             if not diskImageFormat.upper() == "VMDK":
-                raise ValueError("isTargetImageTypeSCSI property is only supported for vmdk diskImageFormat")
+                raise j.exceptions.Value("isTargetImageTypeSCSI property is only supported for vmdk diskImageFormat")
             args.append("-s")
 
         args.extend(["-f", str(diskImageFormat)])
@@ -192,7 +192,7 @@ class QemuImg(j.application.JSBaseClass):
         """
 
         if not j.tools.path.get(fileName).exists():
-            raise IOError("Disk Image %s does not exist" % fileName)
+            raise j.exceptions.IO("Disk Image %s does not exist" % fileName)
 
         command = "%s info" % (self._getBinary())
 

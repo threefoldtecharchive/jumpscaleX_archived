@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 
 
@@ -19,12 +39,10 @@ def main(self):
     
     
     """
-    j.servers.zdb.start_test_instance()
-    bcdb = j.data.bcdb.get("test")
-    bcdb.reset()
-    m = bcdb.model_get_from_schema(SCHEMA)
+    zdb = j.servers.zdb.test_instance_start()
+    bcdb = j.data.bcdb.new("test", reset=True)
 
-    m.destroy()
+    m = bcdb.model_get(schema=SCHEMA, reset=True)
 
     o = m.new()
     assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -77,9 +95,9 @@ def main(self):
             data_ = j.clients.credis_core.hget(key, key2)
             data__ = j.data.serializers.msgpack.loads(data_)
             if o.id in data__:
-                raise RuntimeError("the id should not be in the redis index")
+                raise j.exceptions.Base("the id should not be in the redis index")
 
-    m2 = bcdb.model_get_from_schema(SCHEMA)
+    m2 = bcdb.model_get(schema=SCHEMA)
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
@@ -95,7 +113,7 @@ def main(self):
     date = (D)   
     
     """
-    m3 = bcdb.model_get_from_schema(SCHEMA3)
+    m3 = bcdb.model_get(schema=SCHEMA3)
     o = m3.new()
 
     # default
@@ -123,10 +141,10 @@ def main(self):
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
-    a = j.servers.zdb.client_admin_get()
+    a = zdb.client_admin_get()
     storclient2 = a.namespace_new("test2", secret="12345")
 
-    bcdb2 = j.data.bcdb.new("test2", storclient2)
+    bcdb2 = j.data.bcdb.get("test2", storclient=storclient2)
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()
@@ -134,7 +152,7 @@ def main(self):
 
     # now we know that the previous indexes where not touched
 
-    m4 = bcdb2.model_get_from_schema(SCHEMA3)
+    m4 = bcdb2.model_get(schema=SCHEMA3)
     o = m4.new()
     o.ipaddr = "192.168.1.1"
     o.email = "ename"
@@ -151,16 +169,7 @@ def main(self):
     assert o5.id == myid
 
     bcdb.reset()
-
-    assert m3.find(addr="test", email="ename", ipaddr="192.168.1.1") == []
-    assert len(m4.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 0
-
     bcdb2.reset()
-
-    # check 2 bcdb are empty (doesnt work yet): #TODO:*3
-    # assert len(j.sal.fs.listDirsInDir("/sandbox/var/bcdb/test"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
-    # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
 
     self._log_info("TEST DONE")
     return "OK"

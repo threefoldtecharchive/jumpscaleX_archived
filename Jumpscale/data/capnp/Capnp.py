@@ -40,7 +40,7 @@ class Capnp(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.capnp"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
         j.sal.fs.createDir(self._capnpVarDir)
@@ -130,7 +130,7 @@ class Capnp(j.application.JSBaseClass):
                 schema = parser.load(path)
             except Exception as e:
                 msg = str(e)
-                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s" % (schemaInText, msg))
+                raise j.exceptions.Base("%s\n\nERROR:Could not parse capnp schema:\n%s" % (schemaInText, msg))
             self._schema_cache[schemaId] = schema
         return self._schema_cache[schemaId]
 

@@ -48,7 +48,7 @@ class Collection:
         for item in self._items:
             if item.name == name:
                 return item
-        raise KeyError("Name {} does not exists".format(name))
+        raise j.exceptions.NotFound("Name {} does not exists".format(name))
 
     def __contains__(self, name):
         try:
@@ -59,7 +59,7 @@ class Collection:
 
     def add(self, name, *args, **kwargs):
         if name in self:
-            raise ValueError("Element with name {} already exists".format(name))
+            raise j.exceptions.Value("Element with name {} already exists".format(name))
 
     def remove(self, item):
         """
@@ -104,7 +104,7 @@ class Nic:
     @type.setter
     def type(self, value):
         if value not in ["vxlan", "vlan", "bridge", "default", "zerotier", "passthrough"]:
-            raise ValueError("Invalid nic type {}".format(value))
+            raise j.exceptions.Value("Invalid nic type {}".format(value))
         self._type = value
 
     def to_dict(self, forvm=False, forcontainer=False):
@@ -165,7 +165,7 @@ class ZTNic(Nic):
         for network in self._parent.container.client.zerotier.list():
             if network["nwid"] == self.networkid:
                 return network["portDeviceName"]
-        raise RuntimeError("Could not find devicename")
+        raise j.exceptions.Base("Could not find devicename")
 
     def to_dict(self, forvm=False, forcontainer=False):
         data = super().to_dict(forvm, forcontainer)
@@ -193,9 +193,9 @@ class Nics(Collection):
         """
         super().add(name)
         if len(name) > 15 or name == "default":
-            raise ValueError("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
+            raise j.exceptions.Value("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
         if networkid is None and type_ != "default":
-            raise ValueError("Missing required argument networkid for type {}".format(type_))
+            raise j.exceptions.Value("Missing required argument networkid for type {}".format(type_))
         if type_ == "zerotier":
             nic = ZTNic(name, networkid, hwaddr, self._parent)
         else:
@@ -222,7 +222,7 @@ class Nics(Collection):
         for nic in self:
             if nic.networkid == str(networkid) and nic.type == type_:
                 return nic
-        raise LookupError("No nic found with type id combination {}:{}".format(type_, networkid))
+        raise j.exceptions.NotFound("No nic found with type id combination {}:{}".format(type_, networkid))
 
 
 class DynamicCollection:
@@ -234,7 +234,7 @@ class DynamicCollection:
         for item in self.list():
             if item.name == name:
                 return item
-        raise KeyError("Name {} does not exists".format(name))
+        raise j.exceptions.NotFound("Name {} does not exists".format(name))
 
     def __contains__(self, name):
         try:

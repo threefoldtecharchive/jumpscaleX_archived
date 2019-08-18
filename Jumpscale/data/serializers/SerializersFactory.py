@@ -24,9 +24,9 @@ class SerializersFactory(j.application.JSBaseClass):
     @property
     def jsxdata(self):
         if self.__class__._jsxdata is None:
-            from .SerializerJSXDataObj import SerializerJSXDataObj
+            from .SerializerJSXObject import SerializerJSXObject
 
-            self.__class__._jsxdata = SerializerJSXDataObj()
+            self.__class__._jsxdata = SerializerJSXObject()
         return self.__class__._jsxdata
 
     @property

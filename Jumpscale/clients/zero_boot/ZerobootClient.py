@@ -44,7 +44,7 @@ class zero_bootClient(JSConfigClient):
     network_id = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.sshclient = j.clients.ssh.get(name=self.sshclient_instance)
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.zerotier_instance
@@ -135,7 +135,7 @@ class Network:
         self.leasetime = leasetime
 
     def add(self):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def configure(self, subnet):
         """
@@ -153,7 +153,7 @@ class Network:
         self.hosts = Hosts(self.sshclient, self.subnet, self.leasetime, networkname=self.networkname)
 
     def remove(self):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
 
 class Networks:
@@ -194,19 +194,19 @@ class Networks:
         start_key = "network."
 
         if not keyname.endswith(end_key):
-            raise ValueError(
+            raise j.exceptions.Value(
                 "keyname did not end with {search_key}, get {value}".format(search_key=end_key, value=keyname)
             )
 
         if not keyname.startswith(start_key):
-            raise ValueError(
+            raise j.exceptions.Value(
                 "keyname did not start with {search_key}, get {value}".format(search_key=start_key, value=keyname)
             )
 
         return keyname[len(start_key) : -len(end_key)]
 
     def add(self, subnet, list_of_dns):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def list(self):
         """list all subnets
@@ -231,10 +231,10 @@ class Networks:
             if netaddr.IPAddress(ip) in netaddr.IPNetwork(subnet):
                 return self._networks[subnet]
         else:
-            raise KeyError("Host with specified IP: %s doesn't exist" % ip)
+            raise j.exceptions.NotFound("Host with specified IP: %s doesn't exist" % ip)
 
     def remove(self, subnet):
-        raise NotImplementedError()
+        raise j.exceptions.NotImplemented()
 
     def __repr__(self):
         return str(self.list())
@@ -355,12 +355,14 @@ class Hosts:
         """
         self._populate()  # make sure dhcp list is up to date (e.g. manually/webinterface)
         if netaddr.IPAddress(address) not in netaddr.IPNetwork(self.subnet):
-            raise RuntimeError("specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet))
+            raise j.exceptions.Base(
+                "specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet)
+            )
         if hostname in self._hosts:
-            raise RuntimeError("Host with hostname: %s already registered to the network" % hostname)
+            raise j.exceptions.Base("Host with hostname: %s already registered to the network" % hostname)
         for host in self._hosts.values():
             if host.mac == mac or host.address == address:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Host with specified mac: {mac} and/or address: {addr} already registered".format(
                         mac=mac, addr=address
                     )
@@ -395,7 +397,7 @@ class Hosts:
         """
 
         if hostname not in self._hosts:
-            raise KeyError("Host: %s doesn't exist" % hostname)
+            raise j.exceptions.NotFound("Host: %s doesn't exist" % hostname)
         return self._hosts[hostname]
 
     def remove(self, hostname):

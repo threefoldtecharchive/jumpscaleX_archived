@@ -924,7 +924,7 @@ class Text(object):
             return []
 
         if not self._j.data.types.string.check(text):
-            raise RuntimeError("need to be string:%s" % text)
+            raise j.exceptions.Base("need to be string:%s" % text)
 
         text = text.strip(" [")
         text = text.strip(" ]")

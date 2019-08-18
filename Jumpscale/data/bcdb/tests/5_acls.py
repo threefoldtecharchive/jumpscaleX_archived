@@ -1,8 +1,27 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 
 
 def main(self):
-    return
     """
     to run:
 
@@ -11,6 +30,41 @@ def main(self):
     test around acls
 
     """
+
+    def truc():
+        bcdb = j.data.bcdb.get("test")
+
+        # create user
+        u = bcdb.user.new()
+        u.name = "kds_1"
+        u.email = "user1@me.com"
+        u.threebot_id = "user1.ibiza"
+        u.save()
+
+        # create circle
+        g = bcdb.circle.new()
+        g.name = "circle_1"
+        g.email = "circle1@me.com"
+        g.dm_id = "circle1.ibiza"
+        g.user_members = [1]  # you can add all users need
+        g.save()
+
+        # create new model and will add our acl to this model
+        schema = """
+            @url = despiegk.test5.acl
+            name = "" 
+            an_id = 0
+                """
+
+        model = bcdb.model_get(schema=schema)
+        a = model.new()
+
+        # that will add right to the circle and all users in the circle
+        a.acl.rights_set(userids=[], circleids=[1], rights="rw")
+
+        assert a.acl.rights_check(1, "r") is True
+        assert a.acl.rights_check(1, "rw") is True
+        assert a.acl.rights_check(1, "w") is True
 
     def test(name):
         if name == "RDB":
@@ -23,23 +77,22 @@ def main(self):
             sqlitestor = True
             rdbstor = False
         else:
-            raise RuntimeError("not supported type")
+            raise j.exceptions.Base("not supported type")
 
-        def load():
+        def load(schema):
 
             # don't forget the record 0 is always a systems record
 
-            schema = """
+            db, model = self._load_test_model(type=name, schema=schema)
+
+            return db, model
+
+        schema = """
             @url = despiegk.test5.acl
             name = "" 
             an_id = 0
             """
-
-            db, model = self._load_test_model(type=name, reset=True, schema=schema)
-
-            return db, model
-
-        bcdb, m = load()
+        bcdb, m = load(schema)
 
         self._log_info("POPULATE DATA")
 
@@ -55,16 +108,13 @@ def main(self):
             g.name = "gr_%s" % i
             g.email = "circle%s@me.com" % i
             g.dm_id = "circle%s.ibiza" % i
-            # g.circle_members = [(0, x) for x in range(i + 1)]
-            j.shell()
-            w
-            g.user_members = [x for x in range(i + 1)]
+            g.circle_members = [x for x in range(12, 14)]
+            g.user_members = [x for x in range(1, i + 1)]
             g.save()
 
         assert len(bcdb.user.find()) == 10
         assert len(bcdb.circle.find()) == 10
         assert len([i for i in bcdb.circle.index._id_iterator()]) == 10
-        assert bcdb.storclient.list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
         self._log_info("ALL DATA INSERTED (DONE)")
 
@@ -79,41 +129,45 @@ def main(self):
         a = m.new()
         a.name = "aname"
 
-        change = a.acl.rights_set(userids=[1], circleids=[(0, 2), (0, 3)], rights="rw")
+        change = a.acl.rights_set(userids=[1], circleids=[12, 13], rights="rw")
         assert change is True
 
-        # assert a.acl.readonly is False
         a.save()
-        assert a.acl.readonly is True
 
-        # means we have indeed the index for acl == 2
+        # means we have indeed the index for acl == 1
         assert len(bcdb.acl.find()) == 1
-
-        assert a.acl.hash == "4743dd07a7b22c2d80b884ebb7437ff8"
 
         self._log_debug("MODIFY RIGHTS")
         a.acl.rights_set(userids=[1], rights="r")
         a.save()
-        assert a.acl.readonly
 
-        assert len(bcdb.acl.find()) == 2  # there needs to be a new acl
-        assert a.acl.hash == "6c91e0d74f2ee7f42a7e0c0bf697d647"
+        assert len(bcdb.acl.find()) == 1  # there needs to be a new acl
 
         assert a.acl.rights_check(1, "r") is True
         assert a.acl.rights_check(1, "d") is False
 
         a.acl.rights_set([1], [], "rw")
+        # users rights_check
         assert a.acl.rights_check(1, "r") is True
         assert a.acl.rights_check(1, "w") is True
         assert a.acl.rights_check(1, "rw") is True
         assert a.acl.rights_check(1, "rwd") is False
         assert a.acl.rights_check(1, "d") is False
-        a.save()
+        assert a.acl.rights_check(2, "r") is False
+        assert a.acl.rights_check(5, "w") is False
 
+        # groups right_check
+        assert a.acl.rights_check(12, "rw") is True
+        assert a.acl.rights_check(13, "w") is True
+        assert a.acl.rights_check(18, "rw") is False
+        assert a.acl.rights_check(11, "rw") is False
+
+        a.save()
+        # CLEAN STATE
+        # j.data.schema.remove_from_text(schema)
         self._log_info("TEST ACL DONE: %s" % name)
 
-    # test("RDB")
-    # test("ZDB")
-    # test("SQLITE")
+    test("RDB")
+    test("SQLITE")
 
     self._log_info("ACL TESTS ALL DONE")

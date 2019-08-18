@@ -4,7 +4,7 @@ from .File import File
 from .Navigation import Navigation
 
 
-class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass):
+class DocSite(j.application.JSFactoryConfigsBaseClass, j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
         @url = jumpscale.docs.docsite.1
@@ -19,9 +19,9 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
         j.application.JSBaseConfigClass.__init__(
             self, factory=factory, dataobj=dataobj, childclass_name=childclass_name
         )
-        j.application.JSFactoryBaseClass.__init__(self)
+        j.application.JSFactoryConfigsBaseClass.__init__(self)
 
-    def _childclass_selector(self, childclass_name="doc"):
+    def _childclass_selector(self, childclass_name="doc", **kwargs):
         """
         childclass name is file or doc
         :return:
@@ -33,16 +33,16 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
         elif childclass_name == "navigation":
             return Navigation
         else:
-            raise RuntimeError("did not find childclass type:%s" % childclass_name)
+            raise j.exceptions.Base("did not find childclass type:%s" % childclass_name)
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._git = None
         self._loaded = False
 
     @property
     def _error_file_path(self):
         if self.path is None or self.path is "":
-            raise RuntimeError("path should not be empty")
+            raise j.exceptions.Base("path should not be empty")
         return self.path + "/errors.md"
 
     def get_doc(self, name=None, id=None, die=True, create_new=False, **kwargs):
@@ -80,7 +80,7 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
         if not self._loaded:
             if not self.data.path:
                 if not self.data.git_url:
-                    raise RuntimeError("url not specified for %s" % self.name)
+                    raise j.exceptions.Base("url not specified for %s" % self.name)
                 self.data.path = j.clients.git.getContentPathFromURLorPath(
                     self.data.git_url, pull=False
                 )  # just to make sure data there
@@ -162,7 +162,7 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html", "htm"]:
                 self._log_debug("found html:%s" % path)
-                # raise RuntimeError()
+                # raise j.exceptions.Base()
                 # l = len(ext)+1
                 # base = base[:-l]  # remove extension
                 # doc = HtmlPage(path, base, docsite=self)
@@ -225,7 +225,7 @@ class DocSite(j.application.JSFactoryBaseClass, j.application.JSBaseConfigClass)
                 doc.errors.append(errormsg)
         else:
             self._log_error("DEBUG NOW raise error")
-            raise RuntimeError("stop debug here")
+            raise j.exceptions.Base("stop debug here")
 
     @property
     def errors(self):

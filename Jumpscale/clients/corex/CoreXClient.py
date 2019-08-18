@@ -12,13 +12,13 @@ class CoreXClient(j.application.JSBaseConfigClass):
     @url = jumpscale.corex.client.1
     name* = "" (S)
     addr = "localhost" (S)
-    port = 7681 (I)
+    port = 1500 (I)
     login = "" (S)
     passwd_ = "" (S)
     
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._logger_enable()
 
     @property
@@ -45,7 +45,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
             # response = requests.request(**request_conf)
         except Exception as e:
             if str(e).find("Connection refused") != -1:
-                raise RuntimeError("cannot connect to corex %s (%s:%s)" % (self.name, self.addr, self.port))
+                raise j.exceptions.Base("cannot connect to corex %s (%s:%s)" % (self.name, self.addr, self.port))
             raise e
 
         self._log_debug(url, data=params)
@@ -55,7 +55,7 @@ class CoreXClient(j.application.JSBaseConfigClass):
                 try:
                     r = response.json()
                 except Exception as e:
-                    raise RuntimeError("json could not be decoded: %s (url:%s)" % (response.text, url))
+                    raise j.exceptions.Base("json could not be decoded: %s (url:%s)" % (response.text, url))
                 self._log_debug(r)
                 if "status" in r and r["status"] == "error":
                     if r["reason"] == "process already stopped" and base_url.endswith("kill"):
@@ -63,27 +63,27 @@ class CoreXClient(j.application.JSBaseConfigClass):
                     if not die:
                         return r
                     else:
-                        raise RuntimeError("could not query:%s\n%s" % (url, r))
+                        raise j.exceptions.Base("could not query:%s\n%s" % (url, r))
                 return r
 
             else:
                 return response.text
         else:
-            raise ValueError("Http state {} - {}".format(response.status_code, response.content))
+            raise j.exceptions.Value("Http state {} - {}".format(response.status_code, response.content))
 
     def process_log_get(self, corex_id):
-        r = self._corex_client._query("/process/logs", params={"id": corex_id}, json=False)
+        r = self._query("/process/logs", params={"id": corex_id}, json=False)
+        return r
 
     def process_info_get(self, corex_id=None, pid=None):
         res = self.process_list()
         if corex_id:
             for item in res:
-                if int(item["id"]) == corex_id:
+                if int(item["id"]) == int(corex_id):
                     return item
         if pid:
             for item in res:
-                if int(item["pid"]) == pid:
-                    self.id = ""  # because other one no longer valid
+                if int(item["pid"]) == int(pid):
                     return item
 
     def ui_link_print(self, corex_id):

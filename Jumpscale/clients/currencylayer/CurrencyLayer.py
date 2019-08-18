@@ -20,7 +20,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
@@ -59,11 +59,10 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
-                    c = j.clients.http.getConnection()
-                    r = c.get(url).readlines()
+                    c = j.clients.http.connection_get()
 
-                    data = r[0].decode()
-                    data = j.data.serializers.json.loads(data)["quotes"]
+                    r = c.get(url)
+                    data = j.data.serializers.json.loads(r)["quotes"]
 
                     def get_crypto_to_usd(name):
                         # Currency layer is not very reliable sometimes it timeout we can just skip this for now
@@ -82,7 +81,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
                     self._log_error("fetch currency from internet")
                     return data
                 elif not self.fallback:
-                    raise RuntimeError("api key for currency layer " "needs to be specified")
+                    raise j.exceptions.Base("api key for currency layer " "needs to be specified")
                 else:
                     self._log_warning("currencylayer api_key not set, " "use fake local data.")
                     return self._load_default()
@@ -90,7 +89,7 @@ class CurrencyLayerFactory(j.application.JSBaseConfigClass):
             if self.fake or self.fallback:
                 self._log_warning("cannot reach: currencylayer.com, " "use fake local data.")
                 return self._load_default()
-            raise RuntimeError("could not data from currencylayers")
+            raise j.exceptions.Base("could not data from currencylayers")
 
         data = self._cache.get("currency_data", get, expire=3600 * 24)
         for key, item in data.items():

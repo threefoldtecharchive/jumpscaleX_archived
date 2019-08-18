@@ -7,7 +7,7 @@ from Jumpscale import j
 from electrum.commands import Commands
 from .ElectrumClient import ElectrumClient
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSFactoryConfigsBaseClass
 
 
 class ElectrumClientFactory(JSConfigBaseFactory):
@@ -18,7 +18,7 @@ class ElectrumClientFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.btc_electrum"
     _CHILDCLASS = ElectrumClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "electrum"
 
     def generate_seed(self, nbits=132):
@@ -36,7 +36,7 @@ class ElectrumClientFactory(JSConfigBaseFactory):
         If a wallet with the same name exit, an excveption is raised
         """
         if name in self.list():
-            raise ValueError(
+            raise j.exceptions.Value(
                 "A wallet with name {} already exist. Please use open_wallet to open an existing wallet".format(name)
             )
         data = {
@@ -60,7 +60,7 @@ class ElectrumClientFactory(JSConfigBaseFactory):
         Will raise an exception if wallet doesnt exist
         """
         if name not in self.list():
-            raise ValueError(
+            raise j.exceptions.Value(
                 "A wallet with name {} doesn not exist. Please use create_wallet to create new wallet".format(name)
             )
         wallet = self.get(name, create=False, interactive=False).wallet

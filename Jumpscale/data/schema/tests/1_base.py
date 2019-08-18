@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 
 
@@ -5,10 +25,10 @@ def main(self):
     """
     to run:
 
-    kosmos 'j.data.schema.test(name="base")' --debug
+    kosmos 'j.data.schema.test(name="base")'
     """
 
-    schema = """
+    schema0 = """
         @url = despiegk.test
         llist = []
         llist2 = "" (LS) #L means = list, S=String
@@ -26,7 +46,7 @@ def main(self):
         nrdefault3 = 0 (I)
         """
 
-    schema_object = j.data.schema.get_from_text(schema_text=schema)
+    schema_object = j.data.schema.get_from_text(schema_text=schema0)
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)
@@ -47,7 +67,7 @@ def main(self):
         schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
     )
 
-    o = schema_object.get()
+    o = schema_object.new()
 
     assert o.nrdefault == 0
     assert o.nrdefault2 == 2147483647
@@ -78,7 +98,7 @@ def main(self):
     o2 = j.data.serializers.jsxdata.loads(data)
     assert o2 == o
 
-    schema = """
+    schema2 = """
         @url = despiegk.test2
         enum = "red,green,blue,zhisisaverylongoneneedittotestletsdosomemore" (E) #first one specified is the default one
         llist2 = "" (LS)
@@ -92,25 +112,25 @@ def main(self):
         description = ""
         """
 
-    j.data.schema.add_from_text(schema_text=schema)
+    j.data.schema.add_from_text(schema_text=schema2)
 
-    s = j.data.schema.get_from_url_latest(url="despiegk.test2")
+    s = j.data.schema.get_from_url(url="despiegk.test2")
     e = s.properties[0]  # is the enumerator
     assert e.js_typelocation != "j.data.types.enum"  # should not the default location
 
-    schema_object1 = j.data.schema.get_from_url_latest(url="despiegk.test2")
-    schema_object2 = j.data.schema.get_from_url_latest(url="despiegk.test3")
+    schema_object1 = j.data.schema.get_from_url(url="despiegk.test2")
+    schema_object2 = j.data.schema.get_from_url(url="despiegk.test3")
 
-    o1 = schema_object1.get()
-    o2 = schema_object2.get()
+    o1 = schema_object1.new()
+    o2 = schema_object2.new()
     o1.llist2.append("5")
     o1.llist2.append(6)
 
     assert "5" in o1.llist2
     assert "6" in o1.llist2
 
-    c = o1._cobj
-    c2 = o1._cobj
+    c = o1._capnp_obj
+    c2 = o1._capnp_obj
 
     assert c.llist2[0] == "5"
     assert c2.llist2[0] == "5"
@@ -124,11 +144,11 @@ def main(self):
     o2.llist.append("1")
 
     assert o1.enum == "RED"
-    assert o1._cobj.enum == 1
+    assert o1._capnp_obj.enum == 1
 
     o1.enum = 2
     assert o1.enum == "GREEN"
-    assert o1._cobj.enum == 2
+    assert o1._capnp_obj.enum == 2
     o1.enum = "  green"
     assert o1.enum == "GREEN"
     assert o1.enum == " GREEN"
@@ -136,19 +156,15 @@ def main(self):
 
     assert o1._ddict_hr["enum"] == "GREEN"
 
-    assert o1._cobj.nr == 4
-    assert o1._cobj.llist2[0] == "5"
+    assert o1._capnp_obj.nr == 4
+    assert o1._capnp_obj.llist2[0] == "5"
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
-    assert len(o1._data) <= 30 + 17
     x = len(o1._data) + 0
 
     o1.enum = 4
-    assert o1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
-    assert len(o1._data) <= 30 + 17
-    assert len(o1._data) == x
 
-    schema = """
+    schema3 = """
         @url = despiegk.test2
         #lets check the defaults
         bool1 = true (B)
@@ -162,7 +178,7 @@ def main(self):
         int1 =  10 (I)
     """
 
-    o = j.data.schema.get_from_text(schema).new()
+    o = j.data.schema.get_from_text(schema3).new()
 
     assert o.bool1 == True
     assert o.bool2 == True
@@ -174,26 +190,26 @@ def main(self):
     assert o.bool8 == False
     assert o.int1 == 10
 
-    self._log_info("TEST DONE BASE")
-
-    schema = """
+    schema4 = """
     @url = despiegk.doubletest
     name = ""
     llist = []    
     """
-    s0 = j.data.schema.get_from_text(schema)
-    schema = """
+    s0 = j.data.schema.get_from_text(schema4)
+    schema4prime = """
     @url = despiegk.doubletest
     name = ""
     llist = ""    
     """
 
-    s1 = j.data.schema.get_from_text(schema)
+    s1 = j.data.schema.get_from_text(schema4prime)
 
     assert s0._md5 != s1._md5
 
-    s2 = j.data.schema.get_from_url_latest(url="despiegk.doubletest")
+    s2 = j.data.schema.get_from_url(url="despiegk.doubletest")
     assert s2._md5 == s1._md5
     assert s2._md5 != s0._md5
+
+    self._log_info("TEST DONE BASE")
 
     return "OK"

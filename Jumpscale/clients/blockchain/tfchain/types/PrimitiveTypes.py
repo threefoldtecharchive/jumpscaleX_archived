@@ -13,7 +13,7 @@ class BinaryData(BaseDataTypeClass):
     def __init__(self, value=None, fixed_size=None, strencoding=None):
         # define string encoding
         if strencoding is not None and not isinstance(strencoding, str):
-            raise TypeError("strencoding should be None or a str, not be of type {}".format(strencoding))
+            raise j.exceptions.Value("strencoding should be None or a str, not be of type {}".format(strencoding))
         if strencoding is None or strencoding.lower().strip() == "hex":
             self._from_str = lambda s: bytearray.fromhex(s)
             self._to_str = lambda value: value.hex()
@@ -24,15 +24,15 @@ class BinaryData(BaseDataTypeClass):
             self._from_str = lambda s: bytearray.fromhex(s[2:] if (s.startswith("0x") or s.startswith("0X")) else s)
             self._to_str = lambda value: "0x" + value.hex()
         else:
-            raise TypeError("{} is not a valid string encoding".format(strencoding))
+            raise j.exceptions.Value("{} is not a valid string encoding".format(strencoding))
         self._strencoding = strencoding
 
         # define fixed size
         if fixed_size is not None:
             if not isinstance(fixed_size, int):
-                raise TypeError("fixed size should be None or int, not be of type {}".format(type(fixed_size)))
+                raise j.exceptions.Value("fixed size should be None or int, not be of type {}".format(type(fixed_size)))
             if fixed_size < 0:
-                raise TypeError("fixed size should be at least 0, {} is not allowed".format(fixed_size))
+                raise j.exceptions.Value("fixed size should be at least 0, {} is not allowed".format(fixed_size))
         if fixed_size != 0:
             self._fixed_size = fixed_size
         else:
@@ -49,7 +49,7 @@ class BinaryData(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj, fixed_size=None, strencoding=None):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
+            raise j.exceptions.Value("binary data is expected to be an encoded string when part of a JSON object")
         if obj == "":
             obj = None
         return cls(value=obj, fixed_size=fixed_size, strencoding=strencoding)
@@ -70,13 +70,13 @@ class BinaryData(BaseDataTypeClass):
         elif isinstance(value, bytes):
             value = bytearray(value)
         elif not isinstance(value, bytearray):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "binary data can only be set to a BinaryData, str, bytes or bytearray, not {}".format(type(value))
             )
         # if fixed size, check this now
         lvalue = len(value)
         if self._fixed_size is not None and lvalue != 0 and lvalue != self._fixed_size:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "binary data was expected to be of fixed size {}, length {} is not allowed".format(
                     self._fixed_size, len(value)
                 )
@@ -108,15 +108,15 @@ class BinaryData(BaseDataTypeClass):
         if isinstance(other, (str, bytes, bytearray)):
             other = BinaryData(value=other, fixed_size=self._fixed_size, strencoding=self._strencoding)
         elif not isinstance(other, BinaryData):
-            raise TypeError("Binary data of type {} is not supported".format(type(other)))
+            raise j.exceptions.Value("Binary data of type {} is not supported".format(type(other)))
         if self._fixed_size != other._fixed_size:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "Cannot compare binary data with different fixed size: self({}) != other({})".format(
                     self._fixed_size, other._fixed_size
                 )
             )
         if self._strencoding != other._strencoding:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "Cannot compare binary data with different strencoding: self({}) != other({})".format(
                     self._strencoding, other._strencoding
                 )
@@ -160,7 +160,7 @@ class Hash(BinaryData):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "hash is expected to be an encoded string when part of a JSON object, not {}".format(type(obj))
             )
         if obj == "":
@@ -190,7 +190,7 @@ class Currency(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "currency is expected to be a string when part of a JSON object, not type {}".format(type(obj))
             )
         if obj == "":
@@ -226,7 +226,7 @@ class Currency(BaseDataTypeClass):
                 raise j.clients.tfchain.errors.CurrencyNegativeValue(d)
             self._value = d
             return
-        raise TypeError("cannot set value of type {} as Currency (invalid type)".format(type(value)))
+        raise j.exceptions.Value("cannot set value of type {} as Currency (invalid type)".format(type(value)))
 
     # operator overloading to allow currencies to be summed
     def __add__(self, other):
@@ -299,7 +299,7 @@ class Currency(BaseDataTypeClass):
         elif isinstance(other, float):
             other = Currency(value=Decimal(str(other)))
         elif not isinstance(other, Currency):
-            raise TypeError("currency of type {} is not supported".format(type(other)))
+            raise j.exceptions.Value("currency of type {} is not supported".format(type(other)))
         return other
 
     # allow our currency to be turned into an int
@@ -367,7 +367,7 @@ class Blockstake(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "block stake is expected to be a string when part of a JSON object, not type {}".format(type(obj))
             )
         if obj == "":
@@ -391,11 +391,13 @@ class Blockstake(BaseDataTypeClass):
         elif not isinstance(value, int):
             # float values are not allowed as our precision is high enough that
             # rounding errors can occur
-            raise TypeError("block stake can only be set to a str or int value, not type {}".format(type(value)))
+            raise j.exceptions.Value(
+                "block stake can only be set to a str or int value, not type {}".format(type(value))
+            )
         else:
             value = int(value)
         if value < 0:
-            raise TypeError("block stake cannot have a negative value")
+            raise j.exceptions.Value("block stake cannot have a negative value")
         self._value = value
 
     # allow our block stake to be turned into an int

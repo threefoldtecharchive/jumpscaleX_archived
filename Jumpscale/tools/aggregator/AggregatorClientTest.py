@@ -145,10 +145,10 @@ class AggregatorClientTest(j.application.JSBaseClass):
     #     #some fast perf test
     #     #get logs in & out
     #     #check we cannot put more values in redis as possible (the defense mechanismes)
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
     #
     # def ecotest(self):
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
     #
 
 

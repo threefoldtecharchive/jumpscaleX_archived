@@ -97,13 +97,16 @@ class Pane(j.application.JSBaseClass):
         if len(cs) == 1:
             return cs[0]
         elif len(cs) > 1:
-            raise RuntimeError("only support 1 child")
+            raise j.exceptions.Base("only support 1 child")
         else:
             return None
 
     def _process_children_get(self, depth=None, curdepth=0, res=None, process_obj=None):
         if process_obj is None:
-            process_obj = self.process_obj
+            try:
+                process_obj = self.process_obj
+            except Exception as e:
+                j.shell()
         if res is None:
             res = []
         curdepth = curdepth + 1

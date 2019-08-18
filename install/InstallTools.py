@@ -2,8 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development", "development_installer"]
-
+DEFAULTBRANCH = "development_jumpscale"
 import socket
 import grp
 import os
@@ -53,27 +52,20 @@ else:
     pygments_pylexer = False
 
 
+# try:
+#     import colored_traceback
+#     colored_traceback.add_hook(always=True)
+# except ImportError:
+#     pass
+#
+
+
 class BaseInstallerror(Exception):
     pass
 
 
 class InputError(Exception):
     pass
-    # def __init__(self, expression, message):
-    #     self.expression = expression
-    #     self.message = message
-
-
-def my_excepthook(exception_type, exception_obj, tb):
-    try:
-        Tools.log(msg=exception_obj, tb=tb, level=40)
-    except:
-        print(exception_obj)
-    if MyEnv.debug and traceback and pudb:
-        # exception_type, exception_obj, tb = sys.exc_info()
-        pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
-    sys.exit(1)
 
 
 import inspect
@@ -82,7 +74,17 @@ try:
     import yaml
 
     def serializer(data):
-        return yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+        if isinstance(data, bytes):
+            return "BINARY"
+        if hasattr(data, "_ddict"):
+            data = data._ddict
+
+        try:
+            res = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+        except Exception as e:
+            # print("WARNING: COULD NOT YAML SERIALIZE")
+            return str(data)
+        return res
 
 
 except:
@@ -90,7 +92,11 @@ except:
         import json
 
         def serializer(data):
-            return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+            try:
+                return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+            except Exception as e:
+                data = str(data)
+                return data
 
     except:
 
@@ -128,13 +134,13 @@ class RedisTools:
                 except ImportError:
                     # dit not find fakeredis so can only return None
                     if die:
-                        raise RuntimeError(
+                        raise Tools.exceptions.Base(
                             "cannot connect to fakeredis, could not import the library, please install fakeredis"
                         )
                     return None
             else:
                 if die:
-                    raise RuntimeError("redis python lib not installed, do pip3 install redis")
+                    raise Tools.exceptions.Base("redis python lib not installed, do pip3 install redis")
                 return None
 
         try:
@@ -219,7 +225,7 @@ class RedisTools:
             if not RedisTools.core_running():
                 return True
             if nr > 200:
-                raise RuntimeError("could not stop redis")
+                raise Tools.exceptions.Base("could not stop redis")
             time.sleep(0.05)
 
     def core_running(unixsocket=True, tcp=True):
@@ -260,7 +266,7 @@ class RedisTools:
         :type reset: bool, optional
         :raises RuntimeError: redis server not found after install
         :raises RuntimeError: platform not supported for start redis
-        :raises j.exceptions.Timeout: Couldn't start redis server
+        :raises Tools.exceptions.Timeout: Couldn't start redis server
         :return: redis instance
         :rtype: Redis
         """
@@ -276,14 +282,14 @@ class RedisTools:
                     Tools.execute("brew install redis")
                     Tools.execute("brew link redis")
                     if not Tools.cmd_installed("redis-server"):
-                        raise RuntimeError("Cannot find redis-server even after install")
+                        raise Tools.exceptions.Base("Cannot find redis-server even after install")
                 Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
                 Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
                 Tools.execute("redis-cli shutdown", die=False, showout=False)
             elif MyEnv.platform_is_linux:
                 Tools.execute("apt install redis-server -y")
             else:
-                raise RuntimeError("platform not supported for start redis")
+                raise Tools.exceptions.Base("platform not supported for start redis")
 
         if not MyEnv.platform_is_osx:
             cmd = "sysctl vm.overcommit_memory=1"
@@ -308,7 +314,7 @@ class RedisTools:
             print(1)
             time.sleep(0.1)
         else:
-            raise RuntimeError("Couldn't start redis server")
+            raise Tools.exceptions.Base("Couldn't start redis server")
 
 
 try:
@@ -320,9 +326,8 @@ if redis:
 
     class RedisQueue:
         def __init__(self, redis, key):
-            self.__db = redis
+            self._db_ = redis
             self.key = key
-            self.empty = False
 
         def qsize(self):
             """Return the approximate size of the queue.
@@ -330,7 +335,7 @@ if redis:
             :return: approximate size of queue
             :rtype: int
             """
-            return self.__db.llen(self.key)
+            return self._db_.llen(self.key)
 
         @property
         def empty(self):
@@ -348,28 +353,28 @@ if redis:
 
         def put(self, item):
             """Put item into the queue."""
-            self.__db.rpush(self.key, item)
+            self._db_.rpush(self.key, item)
 
         def get(self, timeout=20):
             """Remove and return an item from the queue."""
             if timeout > 0:
-                item = self.__db.blpop(self.key, timeout=timeout)
+                item = self._db_.blpop(self.key, timeout=timeout)
                 if item:
                     item = item[1]
             else:
-                item = self.__db.lpop(self.key)
+                item = self._db_.lpop(self.key)
             return item
 
         def fetch(self, block=True, timeout=None):
             """Return an item from the queue without removing"""
             if block:
-                item = self.__db.brpoplpush(self.key, self.key, timeout)
+                item = self._db_.brpoplpush(self.key, self.key, timeout)
             else:
-                item = self.__db.lindex(self.key, 0)
+                item = self._db_.lindex(self.key, 0)
             return item
 
         def set_expire(self, time):
-            self.__db.expire(self.key, time)
+            self._db_.expire(self.key, time)
 
         def get_nowait(self):
             """Equivalent to get(False)."""
@@ -458,13 +463,17 @@ if redis:
                     self.__class__._redis_cli_path_ = "redis-cli"
             return self.__class__._redis_cli_path_
 
-        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=[], args=[]):
+        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=None, args=None):
             """
 
             :param command:
             :param args:
             :return:
             """
+            if not keys:
+                keys = []
+            if not args:
+                args = []
             rediscmd = self._redis_cli_path
             if debug:
                 rediscmd += " --ldb"
@@ -485,7 +494,7 @@ if redis:
             if name not in self._storedprocedures_to_sha:
                 data = self.hget("storedprocedures:data", name)
                 if not data:
-                    raise RuntimeError("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
+                    raise Tools.exceptions.Base("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
@@ -502,7 +511,7 @@ if redis:
             sha = data["sha"]  # .encode()
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
-            Tools.shell()
+            # Tools.shell()
             return self.evalsha(sha, data["nrkeys"], *args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
@@ -535,11 +544,220 @@ if redis:
             return out
 
 
+class BaseJSException(Exception):
+    """
+    ## log (exception) levels
+
+        - CRITICAL 	50
+        - ERROR 	40
+        - WARNING 	30
+        - INFO 	    20
+        - STDOUT 	15
+        - DEBUG 	10
+
+    exception is the exception which comes from e.g. a try except, its to log the original exception
+
+    e.g.
+
+    try:
+        dosomething_which_gives_error(data=data)
+    except Exception as e:
+        raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,exception=e)
+
+    :param: message a meaningful message
+    :level: see above
+    :cat: dot notation can be used, just to put your error in a good category
+    :context: e.g. methodname, location id, ... the context (area) where the error happened (exception)
+    :data: any data worth keeping
+
+
+    """
+
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, exception=None):
+
+        if level:
+            if isinstance(level, str):
+                level = int(level)
+            elif isinstance(level, int):
+                pass
+            else:
+                raise Tools.exceptions.JSBUG("level needs to be int or str", data=locals())
+            assert level > 9
+            assert level < 51
+
+        super().__init__(message)
+        self.message = message
+        self.message_pub = msgpub
+        self.level = level
+        self.context = context
+        self.cat = cat  # is a dot notation category, to make simple no more tags
+        self.data = data
+        self.exception = exception
+
+        self._init(message=message, level=level, cat=cat, msgpub=msgpub, context=context, exception=exception)
+
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        self._tb = exc_traceback
+        self._exc_traceback = exc_traceback
+        self._exc_value = exc_value
+        self._exc_type = exc_type
+
+    def _init(self, **kwargs):
+        pass
+
+    @property
+    def type(self):
+        return str(self.__class__).lower()
+
+    @property
+    def str_1_line(self):
+        """
+        1 line representation of exception
+
+        """
+        msg = ""
+        if self.level:
+            msg += "level:%s " % self.level
+        msg += "type:%s " % self.type
+        # if self._tags_add != "":
+        #     msg += " %s " % self._tags_add
+        return msg.strip()
+
+    def __str__(self):
+        # raise RuntimeError()
+        d = Tools.log(exception=self, stdout=False, replace=True)
+        return d["message"]
+        # if self.cat:
+        #     out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
+        # else:
+        #     out = "ERROR: %s\n" % (self.message)
+        # return out
+
+    __repr__ = __str__
+
+    # def trace_print(self):
+    #     j.core.errorhandler._trace_print(self._trace)
+
+
+class JSExceptions:
+    def __init__(self):
+        class Permission1(BaseJSException):
+            pass
+
+        class Halt1(BaseJSException):
+            pass
+
+        class RuntimeError1(BaseJSException):
+            pass
+
+        class Input1(BaseJSException):
+            pass
+
+        class Value1(BaseJSException):
+            pass
+
+        class NotImplemented1(BaseJSException):
+            pass
+
+        class BUG1(BaseJSException):
+            pass
+
+        class JSBUG1(BaseJSException):
+            pass
+
+        class Operations1(BaseJSException):
+            pass
+
+        class IO1(BaseJSException):
+            pass
+
+        class NotFound1(BaseJSException):
+            pass
+
+        class Timeout1(BaseJSException):
+            pass
+
+        class SSHError1(BaseJSException):
+            pass
+
+        class SSHTimeout1(BaseJSException):
+            pass
+
+        self.Permission = Permission1
+        self.SSHTimeout = SSHTimeout1
+        self.SSHError = SSHError1
+        self.Timeout = Timeout1
+        self.NotFound = NotFound1
+        self.IO = IO1
+        self.Operations = Operations1
+        self.JSBUG = JSBUG1
+        self.BUG = BUG1
+        self.NotImplemented = NotImplemented1
+        self.Input = Input1
+        self.Value = Value1
+        self.RuntimeError = RuntimeError1
+        self.Runtime = RuntimeError1
+        self.Halt = Halt1
+        self.Base = BaseJSException
+
+
 class Tools:
 
     _supported_editors = ["micro", "mcedit", "joe", "vim", "vi"]  # DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
+    custom_log_printer = None
+
+    pudb = pudb
+    traceback = traceback
+    pygments = pygments
+    pygments_formatter = pygments_formatter
+    pygments_pylexer = pygments_pylexer
+
+    exceptions = JSExceptions()
+
+    @staticmethod
+    def traceback_format(tb):
+        """
+
+        :param tb:
+        :return: [[filepath,name,linenr,line,locals],[]]
+
+        locals doesn't seem to be working yet, None for now
+
+        """
+        if tb is None:
+            tb = sys.last_traceback
+        res = []
+        ignore_items = ["click/", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+
+        def ignore(filename):
+            for ignorefind in ignore_items:
+                if filename.find(ignorefind) != -1:
+                    return True
+            return False
+
+        for item in traceback.extract_tb(tb):
+            if not ignore(item.filename):
+                if item.locals:
+                    Tools.shell()
+                else:
+                    llocals = None
+                tb_item = [item.filename, item.name, item.lineno, item.line, llocals]
+                res.append(tb_item)
+        return res
+
+        # if tb.tb_next is not None:
+        #     frame_ = tb.tb_next.tb_frame
+        # else:
+        #
+        #     frame_ = tb.tb_frame
+        #
+        #     Tools.shell()
+        #     Tools.traceback_text_get(tb, stdout=True)
+        #     tb_item = ()
+        #     logdict["tb"] = [tb_item, tb_item]  # just example for now #TODO:
+        #     print()
 
     @staticmethod
     def traceback_text_get(tb=None, stdout=False):
@@ -559,21 +777,114 @@ class Tools:
             if stdout:
                 line2 = "        {GRAY}%-60s :{RESET} %-4s: " % (fname, item.lineno)
                 Tools.pprint(line2, end="", log=False)
-                if pygments_formatter is not False:
-                    print(pygments.highlight(item.line, pygments_pylexer, pygments_formatter).rstrip())
+                if Tools.pygments_formatter is not False:
+                    print(
+                        Tools.pygments.highlight(item.line, Tools.pygments_pylexer, Tools.pygments_formatter).rstrip()
+                    )
                 else:
                     Tools.pprint(item.line, log=False)
 
             out += "%s\n" % line
         return out
 
+    def _traceback_filterLocals(k, v):
+        try:
+            k = "%s" % k
+            v = "%s" % v
+            if k in [
+                "re",
+                "q",
+                "jumpscale",
+                "pprint",
+                "qexec",
+                "jshell",
+                "Shell",
+                "__doc__",
+                "__file__",
+                "__name__",
+                "__package__",
+                "i",
+                "main",
+                "page",
+            ]:
+                return False
+            if v.find("<module") != -1:
+                return False
+            if v.find("IPython") != -1:
+                return False
+            if v.find("bpython") != -1:
+                return False
+            if v.find("click") != -1:
+                return False
+            if v.find("<built-in function") != -1:
+                return False
+            if v.find("jumpscale.Shell") != -1:
+                return False
+        except BaseException:
+            return False
+
+        return True
+
+    def _trace_get(self, ttype, err, tb):
+        """
+        #TODO: prob not used, needs to become 1 uniform way how to deal with traces
+        :param ttype:
+        :param err:
+        :param tb:
+        :return:
+        """
+        raise Tools.exceptions.Base()
+
+        tblist = traceback.format_exception(ttype, err, tb)
+
+        ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+
+        # if self._limit and len(tblist) > self._limit:
+        #     tblist = tblist[-self._limit:]
+        tb_text = ""
+        for item in tblist:
+            for ignoreitem in ignore:
+                if item.find(ignoreitem) != -1:
+                    item = ""
+            if item != "":
+                tb_text += "%s" % item
+        return tb_text
+
+    def _trace_print(self, tb_text):
+        if MyEnv.pygmentsObj:
+            MyEnv.pygmentsObj
+            # style=pygments.styles.get_style_by_name("vim")
+            formatter = pygments.formatters.Terminal256Formatter()
+            lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)  # pytb
+            tb_colored = pygments.highlight(tb_text, lexer, formatter)
+            sys.stderr.write(tb_colored)
+            # print(tb_colored)
+        else:
+            sys.stderr.write(tb_text)
+
     @staticmethod
     def log(
-        msg, cat="", level=10, data=None, context=None, _deeper=False, stdout=True, redis=True, tb=None, data_show=True
+        msg="",
+        cat=None,
+        level=10,
+        data=None,
+        context=None,
+        _levelup=0,
+        tb=None,
+        data_show=True,
+        exception=None,
+        replace=True,
+        stdout=True,
+        source=None,
+        frame_=None,
     ):
         """
 
-        :param msg:
+        :param msg: what you want to log
+        :param cat: any dot notation category
+        :param context: e.g. rack aaa in datacenter, method name in class, ...
+
+        can use {RED}, {RESET}, ... see color codes
         :param level:
             - CRITICAL 	50
             - ERROR 	40
@@ -582,71 +893,136 @@ class Tools:
             - STDOUT 	15
             - DEBUG 	10
 
+
+        :param _levelup 0, if e.g. 1 means will go 1 level more back in finding line nr where log comes from
+        :param source, if you don't want to show the source (line nr in log), somewhat faster
+        :param stdout: return as logdict or send to stdout
+        :param: replace to replace the color variables for stdout
+        :param: exception is jumpscale/python exception
+
         :return:
         """
+        logdict = {}
+
         if isinstance(msg, Exception):
-            Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
-            msg = "{RED}EXCEPTION: {RESET}%s" % str(msg)
+            raise Tools.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
+
+        if not frame_:
+            frame_ = inspect.currentframe().f_back
+            if _levelup > 0:
+                levelup = 0
+                while frame_ and levelup < _levelup:
+                    frame_ = frame_.f_back
+                    levelup += 1
+
+        # first deal with traceback
+        if exception and not tb:
+            # if isinstance(exception, BaseJSException):
+            if hasattr(exception, "exception"):
+                tb = exception._tb
+            else:
+                extype_, value_, tb = sys.exc_info()
+
+        if tb:
+            logdict["traceback"] = Tools.traceback_format(tb)
+            fname, defname, linenr, line_, locals_ = logdict["traceback"][-1]
+        else:
+            fname = frame_.f_code.co_filename.split("/")[-1]
+            defname = frame_.f_code.co_name
+            linenr = frame_.f_code.co_firstlineno
+            # linenr = frame_.f_lineno  #DON'T KNOW WHICH ONE IS BETTER?
+            logdict["traceback"] = []
+
+        if exception:
+            # make sure exceptions get the right priority
+            if hasattr(exception, "exception"):
+                msg_e = exception.message
+            else:
+                msg_e = exception.__repr__()
+            if msg:
+                msg = (
+                    "{RED}EXCEPTION: \n"
+                    + Tools.text_indent(msg, 4).rstrip()
+                    + "\n"
+                    + Tools.text_indent(msg_e, 4)
+                    + "{RESET}"
+                )
+            else:
+                msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg_e, 4).rstrip() + "{RESET}"
             level = 50
             if cat is "":
                 cat = "exception"
-        if tb:
-            if tb.tb_next is not None:
-                frame_ = tb.tb_next.tb_frame
-            else:
-                # extype, value, tb = sys.exc_info()
-                frame_ = tb.tb_frame
-            if data is None:
-                data = Tools.traceback_text_get(tb, stdout=True)
-                data_show = False
-            else:
-                msg += "\n%s" % Tools.traceback_text_get(tb, stdout=True)
-            print()
-        else:
-            if _deeper:
-                frame_ = inspect.currentframe().f_back
-            else:
-                frame_ = inspect.currentframe().f_back.f_back
 
-        fname = frame_.f_code.co_filename.split("/")[-1]
-        defname = frame_.f_code.co_name
-        linenr = frame_.f_code.co_firstlineno
+            if hasattr(exception, "exception"):
+                if not data:
+                    # copy data from the exception
+                    data = exception.data
+                if exception.exception:
+                    # if isinstance(exception.exception, BaseJSException):
+                    if hasattr(exception.exception, "exception"):
+                        exception = "      " + exception.exception.str_1_line
+                    else:
+                        exception = Tools.text_indent(exception.exception, 6)
+                    msg += "\n - original Exception: %s" % exception
 
-        logdict = {}
-        logdict["linenr"] = linenr
-        logdict["processid"] = MyEnv.appname
         logdict["message"] = msg
+
+        logdict["linenr"] = linenr
         logdict["filepath"] = fname
+        logdict["processid"] = MyEnv.appname
+        if source:
+            logdict["source"] = source
+
         logdict["level"] = level
         if context:
             logdict["context"] = context
         else:
             logdict["context"] = defname
+
         logdict["cat"] = cat
 
-        if data and isinstance(data, dict):
-            if "password" in data or "secret" in data or "passwd" in data:
-                data["password"] = "***"
+        if data:
+            if isinstance(data, dict):
+                if "password" in data or "secret" in data or "passwd" in data:
+                    data["password"] = "***"
+            if isinstance(data, str):
+                pass
+            elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
+                data = str(data)
+            else:
+                data = Tools._data_serializer_safe(data)
 
         logdict["data"] = data
 
         if stdout:
             Tools.log2stdout(logdict, data_show=data_show)
 
-    # @staticmethod
-    # def error_raise(msg, pythonerror=None):
-    #     print ("** ERROR **")
-    #     Tools.log(msg)
-    #     if MyEnv.debug and traceback and pudb:
-    #         extype, value, tb = sys.exc_info()
-    #         if tb is not None:
-    #             traceback.print_exc()
-    #             pudb.post_mortem(tb,e_value=pythonerror)
-    #         else:
-    #             from pudb import set_trace
-    #             set_trace()
-    #         sys.exit(1)
-    #     raise RuntimeError(msg)
+        iserror = tb or exception
+        return Tools.process_logdict_for_handlers(logdict, iserror)
+
+    @staticmethod
+    def process_logdict_for_handlers(logdict, iserror=True):
+        """
+
+        :param logdict:
+        :param iserror:   if error will use MyEnv.errorhandlers: allways MyEnv.loghandlers
+        :return:
+        """
+
+        if iserror:
+            for handler in MyEnv.errorhandlers:
+                try:
+                    handler(logdict)
+                except Exception as e:
+                    MyEnv.exception_handle(e)
+
+        for handler in MyEnv.loghandlers:
+            try:
+                handler(logdict)
+            except Exception as e:
+                MyEnv.exception_handle(e)
+
+        return logdict
 
     @staticmethod
     def _execute_interactive(cmd=None, args=None, die=True, original_command=None):
@@ -659,16 +1035,16 @@ class Tools:
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd = " ".join(args)
         if returncode == 127:
-            raise RuntimeError("{}: command not found\n".format(cmd))
+            raise Tools.exceptions.Base("{}: command not found\n".format(cmd))
         if returncode > 0 and returncode != 999:
             if die:
                 if original_command:
-                    raise RuntimeError(
+                    raise Tools.exceptions.Base(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"
                         % (original_command, returncode)
                     )
                 else:
-                    raise RuntimeError(
+                    raise Tools.exceptions.Base(
                         "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" % (cmd, returncode)
                     )
             return returncode, "", ""
@@ -695,7 +1071,9 @@ class Tools:
             if Tools.cmd_installed(editor):
                 Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        raise RuntimeError("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+        raise Tools.exceptions.Base(
+            "cannot edit the file: '{}', non of the supported editors is installed".format(path)
+        )
 
     @staticmethod
     def file_write(path, content, replace=False, args=None):
@@ -796,7 +1174,7 @@ class Tools:
         @rtype: boolean (True if path refers to an existing path)
         """
         if path is None:
-            raise TypeError("Path is not passed in system.fs.exists")
+            raise Tools.exceptions.Value("Path is not passed in system.fs.exists")
         found = False
         try:
             st = os.lstat(path)
@@ -821,7 +1199,9 @@ class Tools:
         if "darwin" in MyEnv.platform():
 
             script = """
-            pip3 install ipython>=6.5.0
+            pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
+            pip3 install pudb
+            pip3 install pygments
             """
             Tools.execute(script, interactive=True)
 
@@ -838,12 +1218,16 @@ class Tools:
                 sudo apt-get install -y locales
                 sudo apt-get install -y curl rsync
                 sudo apt-get install -y unzip
-                pip3 install ipython>=6.5.0
+                pip3 install ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9 --force-reinstall
                 pip3 install pudb
                 pip3 install pygments
                 locale-gen --purge en_US.UTF-8
             """
-            Tools.execute(script, interactive=True)
+            if DockerFactory.indocker():
+                sudoremove = True
+            else:
+                sudoremove = False
+            Tools.execute(script, interactive=True, sudo_remove=sudoremove)
 
     @staticmethod
     def clear():
@@ -897,7 +1281,9 @@ class Tools:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
 
     @staticmethod
-    def text_strip(content, ignorecomments=False, args={}, replace=False, executor=None, colors=True):
+    def text_strip(
+        content, ignorecomments=False, args={}, replace=False, executor=None, colors=True, check_no_args_left=False
+    ):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -935,7 +1321,9 @@ class Tools:
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content=content, args=args, executor=executor, text_strip=False)
+            content = Tools.text_replace(
+                content=content, args=args, executor=executor, text_strip=False, check_no_args_left=check_no_args_left
+            )
         else:
             if colors and "{" in content:
                 for key, val in MyEnv.MYCOLORS.items():
@@ -944,21 +1332,23 @@ class Tools:
         return content
 
     @staticmethod
-    def text_replace(content, args=None, executor=None, ignorecomments=False, text_strip=True, ignore_error=False):
+    def text_replace(
+        content,
+        args=None,
+        executor=None,
+        ignorecomments=False,
+        text_strip=True,
+        check_no_args_left=False,
+        ignorecolors=False,
+    ):
         """
 
         Tools.text_replace
 
-        args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
-        MyEnv.config will also be given to the format function
-
         content example:
 
         "{name!s:>10} {val} {n:<10.2f}"  #floating point rounded to 2 decimals
-
-        performance is +100k per sec
-
-        will call the strip if
+        format as in str.format_map() function from
 
         following colors will be replaced e.g. use {RED} to get red color.
 
@@ -974,56 +1364,108 @@ class Tools:
 
         """
 
-        class format_dict(dict):
-            def __missing__(self, key):
-                return "{%s}" % key
-
         if args is None:
             args = {}
+
+        if not "{" in content:
+            return content
+
+        if ignorecolors:
+            content = Tools.args_replace(content, MyEnv.MYCOLORS_IGNORE)
+
+        if executor and executor.config:
+            content2 = Tools.args_replace(content, args, executor.config, MyEnv.MYCOLORS)
         else:
-            args = copy.copy(args)  # make sure we don't change the original
+            content2 = Tools.args_replace(content, args, MyEnv.config, MyEnv.MYCOLORS)
 
-        if "{" in content:
-
-            if args is None:
-                args = {}
-
-            if executor:
-                args.update(executor.config)
-            else:
-                for key, val in MyEnv.config.items():
-                    if key not in args:
-                        args[key] = val
-
-            args.update(MyEnv.MYCOLORS)
-
-            replace_args = format_dict(args)
-            try:
-                content = content.format_map(replace_args)
-            except ValueError as e:
-                if ignore_error:
-                    pass  # e.g. if { is
-                else:
-                    sorted = [i for i in args.keys()]
-                    # raise RuntimeError("could not replace \n%s \nin \n%s" % (sorted, content))
-            if not ignore_error:
-                if "{" in content:
-                    try:
-                        content = content.format_map(replace_args)  # this to deal with nested {
-                    except ValueError as e:
-                        sorted = [i for i in args.keys()]
-                        raise RuntimeError(
-                            "could not replace \n%s \nin \n%s\n, remaining {, if you want to ignore the error use ignore_error=True"
-                            % (sorted, content)
-                        )
+        if check_no_args_left:
+            if "{" in content:
+                raise Tools.exceptions.Input("{ found in %s" % content2, data=args)
 
         if text_strip:
-            content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
+            content = Tools.text_strip(content2, ignorecomments=ignorecomments, replace=False)
 
-        return content
+        return content2
+
+    @staticmethod
+    def args_replace(content, *args_list):
+        """
+
+        :param content:
+        :param args_list: add all dicts you want to replace
+        :return:
+        """
+        assert isinstance(content, str)
+        if content == "":
+            return content
+        args_new = {}
+        for replace_args in args_list:
+            for key, val in replace_args.items():
+                if key not in args_new:
+                    args_new[key] = val
+
+        def process_line(line, args_new):
+            # IF YOU TOUCH THIS LET KRISTOF KNOW
+            line = line.replace("{}", ">>EMPTYDICT<<")
+            try:
+                line = line.format_map(args_new)
+            except KeyError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    assert arg
+                    line = line.replace("{%s}" % arg, val)
+            except ValueError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    assert arg
+                    line = line.replace("{%s}" % arg, val)
+            except Exception as e:
+                return line
+            line = line.replace(">>EMPTYDICT<<", "{}")
+
+            return line
+
+        for replace_args in args_list:
+            if not isinstance(replace_args, dict):
+                raise Tools.exceptions.Input("replace args need to be dict", data=replace_args)
+        out = ""
+        for line in content.split("\n"):
+            if "{" in line:
+                line = process_line(line, args_new)
+            out += "%s\n" % line
+
+        out = out[:-1]  # needs to remove the last one, is because of the split there is no last \n
+        return out
+
+    @staticmethod
+    def _data_serializer_safe(data):
+        if isinstance(data, dict):
+            data = data.copy()  # important to have a shallow copy of data so we don't change original
+            for key in ["passwd", "password", "secret"]:
+                if key in data:
+                    data[key] = "***"
+        elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
+            return str(data)
+
+        res = serializer(data)
+        res = Tools.text_replace(content=res, ignorecolors=True)
+        return res
 
     @staticmethod
     def log2stdout(logdict, data_show=True):
+        text = Tools.log2str(logdict, data_show=True, replace=True)
+        p = print
+        if MyEnv.config.get("LOGGER_PANEL_NRLINES"):
+            if Tools.custom_log_printer:
+                p = Tools.custom_log_printer
+        try:
+            p(text)
+        except UnicodeEncodeError as e:
+            text = text.encode("ascii", "ignore")
+            p(text)
+
+    @staticmethod
+    def log2str(logdict, data_show=True, replace=True):
         """
 
         :param logdict:
@@ -1037,55 +1479,68 @@ class Tools:
             logdict["cat"]
             logdict["data"]
             logdict["epoch"]
+            logdict["traceback"]
 
         :return:
         """
 
         if "epoch" in logdict:
-            timetuple = time.localtime(logdict["epoch"])
+            timetuple = time.localtime(logdict)
         else:
             timetuple = time.localtime(time.time())
         logdict["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
 
         if logdict["level"] < 11:
-            LOGCAT = "DEBUG"
+            LOGLEVEL = "DEBUG"
         elif logdict["level"] == 15:
-            LOGCAT = "STDOUT"
+            LOGLEVEL = "STDOUT"
         elif logdict["level"] < 21:
-            LOGCAT = "INFO"
+            LOGLEVEL = "INFO"
         elif logdict["level"] < 31:
-            LOGCAT = "WARNING"
+            LOGLEVEL = "WARNING"
         elif logdict["level"] < 41:
-            LOGCAT = "ERROR"
+            LOGLEVEL = "ERROR"
         else:
-            LOGCAT = "CRITICAL"
+            LOGLEVEL = "CRITICAL"
 
-        LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
+        LOGFORMAT = MyEnv.LOGFORMAT[LOGLEVEL]
 
-        logdict.update(MyEnv.MYCOLORS)
-
-        if len(logdict["filepath"]) > 16:
-            logdict["filename"] = logdict["filepath"][len(logdict["filepath"]) - 18 :]
+        if len(logdict["filepath"]) > 20:
+            logdict["filename"] = logdict["filepath"][-20:]
         else:
             logdict["filename"] = logdict["filepath"]
 
         if len(logdict["context"]) > 35:
             logdict["context"] = logdict["context"][len(logdict["context"]) - 34 :]
-        if logdict["context"].startswith("_"):
-            logdict["context"] = ""
-        elif logdict["context"].startswith(":"):
-            logdict["context"] = ""
+        # if logdict["context"].startswith("_"):
+        #     logdict["context"] = ""
+        # elif logdict["context"].startswith(":"):
+        #     logdict["context"] = ""
 
-        p = print
-        if MyEnv.config['DEBUG'] and MyEnv.config.get('log_printer'):
-            p = MyEnv.config['log_printer']
+        out = ""
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict, ignore_error=True)
-        msg = Tools.text_replace(msg, args=logdict, ignore_error=True)
-        p(msg)
+        # if "source" in logdict:
+        #     out += Tools.text_replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
+
+        if "traceback" in logdict and logdict["traceback"]:
+            out += Tools.text_replace("{RED}--TRACEBACK------------------{RESET}\n")
+            for tb_path, tb_name, tb_lnr, tb_line, tb_locals in logdict["traceback"]:
+                C = "{GREEN}{tb_path}{RESET} in {BLUE}{tb_name}{RESET}\n"
+                C += "    {GREEN}{tb_lnr}{RESET}    {tb_code}{RESET}"
+                if Tools.pygments_formatter:
+                    tb_code = Tools.pygments.highlight(
+                        tb_line, Tools.pygments_pylexer, Tools.pygments_formatter
+                    ).rstrip()
+                else:
+                    j.shell()
+                    tb_code = tb_line
+                tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
+                C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
+                out += C.rstrip() + "\n"
+            out += Tools.text_replace("{RED}-----------------------------\n{RESET}")
 
         if data_show:
-            if logdict["data"] not in ["", None, {}]:
+            if logdict["data"] != None:
                 if isinstance(logdict["data"], dict):
                     try:
                         data = serializer(logdict["data"])
@@ -1093,15 +1548,34 @@ class Tools:
                         data = logdict["data"]
                 else:
                     data = logdict["data"]
-                data = Tools.text_indent(data, 10, strip=True)
-                try:
-                    data = Tools.text_replace(data, ignore_error=True, text_strip=False)
-                except:
-                    pass
-                p(data.rstrip())
+                data = Tools.text_indent(data, 2, strip=True)
+                out += Tools.text_replace("{YELLOW}--DATA-----------------------\n")
+                out += data.rstrip() + "\n"
+                out += Tools.text_replace("-----------------------------\n{RESET}\n")
+
+        msg = Tools.text_replace(LOGFORMAT, args=logdict, check_no_args_left=False).rstrip()
+        out += msg
+
+        if logdict["level"] > 39:
+            # means is error
+            if "public" in logdict and logdict["public"]:
+                out += (
+                    "{YELLOW}" + Tools.text_indent(logdict["public"].rstrip(), nspaces=2, prefix="* ") + "{RESET}\n\n"
+                )
+
+        # restore the logdict
+        logdict.pop("TIME")
+        logdict.pop("filename")
+
+        if replace:
+            out = Tools.text_replace(out)
+            if out.find("{RESET}") != -1:
+                Tools.shell()
+
+        return out
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=False, indent=0, end="\n", log=True):
+    def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=True, indent=0, end="\n", log=True):
         """
 
         :param content: what to print
@@ -1122,11 +1596,14 @@ class Tools:
                 "REVERSE"
 
         """
-
+        if not isinstance(content, str):
+            content = str(content)
         if args or colors or text_strip:
             content = Tools.text_replace(
-                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, ignore_error=True
+                content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, check_no_args_left=False
             )
+            for key, val in MyEnv.MYCOLORS.items():
+                content = content.replace("{%s}" % key, val)
         elif content.find("{RESET}") != -1:
             for key, val in MyEnv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)
@@ -1135,7 +1612,12 @@ class Tools:
             content = Tools.text_indent(content)
         if log:
             Tools.log(content, level=15, stdout=False)
-        print(content, end=end)
+
+        try:
+            print(content, end=end)
+        except UnicodeEncodeError as e:
+            content = content.encode("ascii", "ignore")
+            print(content)
 
     @staticmethod
     def text_md5(txt):
@@ -1147,7 +1629,7 @@ class Tools:
         return impl.hexdigest()
 
     @staticmethod
-    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
+    def text_indent(content, nspaces=4, wrap=120, strip=True, indentchar=" ", prefix=None, args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -1165,7 +1647,11 @@ class Tools:
 
         """
         if content is None:
-            raise RuntimeError("content cannot be None")
+            raise Tools.exceptions.Base("content cannot be None")
+        if content == "":
+            return content
+        if not prefix:
+            prefix = ""
         content = str(content)
         if args is not None:
             content = Tools.text_replace(content, args=args)
@@ -1178,7 +1664,12 @@ class Tools:
         ind = indentchar * nspaces
         out = ""
         for line in content.split("\n"):
-            out += "%s%s\n" % (ind, line)
+            if line.strip() == "":
+                out += "\n"
+            else:
+                out += "%s%s%s\n" % (ind, prefix, line)
+        if content[-1] == "\n":
+            out = out[:-1]
         return out
 
     @staticmethod
@@ -1214,6 +1705,7 @@ class Tools:
         asfile=False,
         original_command=None,
         log=False,
+        sudo_remove=False,
     ):
 
         if env is None:
@@ -1221,6 +1713,9 @@ class Tools:
         if self is None:
             self = MyEnv
         command = Tools.text_strip(command, args=args, replace=replace)
+        if sudo_remove:
+            command = command.replace("sudo ", "")
+
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
             if MyEnv.debug or log:
@@ -1353,7 +1848,7 @@ class Tools:
                 out = readout(p.stdout)
                 err = readout(p.stderr)
                 if (out is None or err is None) and p.poll() is None:
-                    raise RuntimeError("prob bug, needs to think this through, seen the while loop")
+                    raise Tools.exceptions.Base("prob bug, needs to think this through, seen the while loop")
                 while p.poll() is None:
                     # means process is still running
 
@@ -1407,7 +1902,7 @@ class Tools:
                 if err.strip() != "":
                     msg += "stderr:\n"
                     msg += Tools.text_indent(err).rstrip() + "\n\n"
-                raise RuntimeError(msg)
+                raise Tools.exceptions.Base(msg)
 
             # close the files (otherwise resources get lost),
             # wait for the process to die, and del the Popen object
@@ -1435,6 +1930,13 @@ class Tools:
     #     else:
     #         return Tools._execute(cmd=script, args=None, die=die, interactive=interactive, showout=showout)
     #
+
+    @staticmethod
+    def system_cleanup():
+        print("- AM CLEANING UP THE CONTAINER, THIS TAKES A WHILE")
+        CMD = BaseInstaller.cleanup_script_get()
+        for line in CMD.split("\n"):
+            Tools.execute(line, replace=False)
 
     @staticmethod
     def process_pids_get_by_filter(filterstr, excludes=[]):
@@ -1500,7 +2002,7 @@ class Tools:
     @staticmethod
     def _check_interactive():
         if not MyEnv.interactive:
-            raise RuntimeError("Cannot use console in a non interactive mode.", "console.noninteractive")
+            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.", "console.noninteractive")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -1543,7 +2045,7 @@ class Tools:
             if failed:
                 print("Invalid password!")
                 retryCount = retryCount - 1
-        raise RuntimeError(
+        raise Tools.exceptions.Base(
             (
                 "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
                 % (retry, regex)
@@ -1612,6 +2114,7 @@ class Tools:
             dontpull means, we found .dontpull in the repodir, means code is being synced to the repo from remote, should not update
 
         """
+
         prefix = "code"
         if "DIR_CODE" in MyEnv.config:
             accountdir = os.path.join(MyEnv.config["DIR_CODE"], "github", account)
@@ -1663,7 +2166,7 @@ class Tools:
         :return:
         """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.config["SSH_AGENT"]:
+        if MyEnv.config["SSH_AGENT"] and MyEnv.interactive:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -1682,16 +2185,16 @@ class Tools:
         args["NAME"] = repo
 
         if branch is None:
-            branch = ["development", "master"]
+            branch = "development_jumpscale"
         elif isinstance(branch, str):
             if "," in branch:
                 branch = [branch.strip() for branch in branch.split(",")]
         elif isinstance(branch, (set, list)):
             branch = [branch.strip() for branch in branch]
         else:
-            raise RuntimeError("branch should be a string or list, now %s" % branch)
+            raise Tools.exceptions.Base("branch should be a string or list, now %s" % branch)
 
-        args["BRANCH"] = branch[0]
+        args["BRANCH"] = branch
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1778,16 +2281,23 @@ class Tools:
                     git checkout {BRANCH} -f
                     """
                     rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                    if rc > 0:
-                        return False
-                    assert getbranch(args=args) == branch
+                    if err:
+                        script = """
+                        set -ex
+                        cd {REPO_DIR}
+                        git checkout development_jumpscale -f
+                        """
+                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+
+                        if rc > 0:
+                            return False
+
                 return True
 
-            for branch_item in branch:
-                if checkoutbranch(args, branch_item):
-                    return
+            if checkoutbranch(args, branch):
+                return
 
-            raise RuntimeError("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
+            raise Tools.exceptions.Base("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -1833,7 +2343,7 @@ class Tools:
                         download = True
 
             if not exists and download == False:
-                raise RuntimeError("Could not download some code")
+                raise Tools.exceptions.Base("Could not download some code")
 
     @staticmethod
     def config_load(path="", if_not_exist_create=False, executor=None, content=""):
@@ -1918,55 +2428,138 @@ class Tools:
             Tools.file_write(path, out)
 
 
-LOGFORMATBASE = (
-    "{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
-)  # DO NOT CHANGE COLOR
+class MyEnv_:
+    def __init__(self):
+        """
 
+        :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
+        :return:
+        """
 
-class MyEnv:
+        self.readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
+        self.sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
+        self.sandbox_lua_active = False  # same for lua
+        self.config_changed = False
+        self._cmd_installed = {}
+        # should be the only location where we allow logs to be going elsewhere
+        self.loghandlers = []
+        self.errorhandlers = []
+        self.state = None
+        self.__init = False
+        self.debug = False
 
-    readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
-    sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
-    sandbox_lua_active = False  # same for lua
-    config_changed = False
-    _cmd_installed = {}
-    state = None
-    __init = False
-    debug = False
+        self.sshagent = None
+        self.interactive = False
 
-    sshagent = None
-    interactive = False
+        self.appname = "installer"
 
-    appname = "installer"
+        self.DEFAULTBRANCH = DEFAULTBRANCH
 
-    FORMAT_TIME = "%a %d %H:%M:%S"
+        self.FORMAT_TIME = "%a %d %H:%M:%S"
 
-    MYCOLORS = {
-        "RED": "\033[1;31m",
-        "BLUE": "\033[1;34m",
-        "CYAN": "\033[1;36m",
-        "GREEN": "\033[0;32m",
-        "GRAY": "\033[0;37m",
-        "YELLOW": "\033[0;33m",
-        "RESET": "\033[0;0m",
-        "BOLD": "\033[;1m",
-        "REVERSE": "\033[;7m",
-    }
+        self.MYCOLORS = {
+            "RED": "\033[1;31m",
+            "BLUE": "\033[1;34m",
+            "CYAN": "\033[1;36m",
+            "GREEN": "\033[0;32m",
+            "GRAY": "\033[0;37m",
+            "YELLOW": "\033[0;33m",
+            "RESET": "\033[0;0m",
+            "BOLD": "\033[;1m",
+            "REVERSE": "\033[;7m",
+        }
 
-    LOGFORMAT = {
-        "DEBUG": LOGFORMATBASE.replace("{COLOR}", "{CYAN}"),
-        "STDOUT": "{message}",
-        # 'INFO': '{BLUE}* {message}{RESET}',
-        "INFO": LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
-        "WARNING": LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
-        "ERROR": LOGFORMATBASE.replace("{COLOR}", "{RED}"),
-        "CRITICAL": "{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
-    }
+        self.MYCOLORS_IGNORE = {
+            "RED": "",
+            "BLUE": "",
+            "CYAN": "",
+            "GREEN": "",
+            "GRAY": "",
+            "YELLOW": "",
+            "RESET": "",
+            "BOLD": "",
+            "REVERSE": "",
+        }
 
-    db = RedisTools.client_core_get(die=False)
+        LOGFORMATBASE = (
+            "{COLOR}{TIME} {filename:<20}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
+        )  # DO NOT CHANGE COLOR
 
-    @staticmethod
-    def platform():
+        self.LOGFORMAT = {
+            "DEBUG": LOGFORMATBASE.replace("{COLOR}", "{CYAN}"),
+            "STDOUT": "{message}",
+            # 'INFO': '{BLUE}* {message}{RESET}',
+            "INFO": LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
+            "WARNING": LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
+            "ERROR": LOGFORMATBASE.replace("{COLOR}", "{RED}"),
+            "CRITICAL": "{RED}{TIME} {filename:<20} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}",
+        }
+
+        self.db = RedisTools.client_core_get(die=False)
+
+    def init(self, reset=False, configdir=None):
+
+        args = Tools.cmd_args_get()
+
+        if self.platform() == "linux":
+            self.platform_is_linux = True
+            self.platform_is_unix = True
+            self.platform_is_osx = False
+        elif "darwin" in self.platform():
+            self.platform_is_linux = False
+            self.platform_is_unix = True
+            self.platform_is_osx = True
+        else:
+            raise Tools.exceptions.Base("platform not supported, only linux or osx for now.")
+
+        if not configdir:
+            if "JSX_DIR_CFG" in os.environ:
+                configdir = os.environ["JSX_DIR_CFG"]
+            else:
+                if configdir is None and "configdir" in args:
+                    configdir = args["configdir"]
+                else:
+                    configdir = self._cfgdir_get()
+
+        self.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
+        if DockerFactory.indocker():
+            # this is important it means if we push a container we keep the state file
+            self.state_file_path = os.path.join(self._homedir_get(), ".jumpscale_done.toml")
+        else:
+            self.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
+
+        if Tools.exists(self.config_file_path):
+            self._config_load()
+            if not "DIR_BASE" in self.config:
+                return
+
+            self.log_includes = [i for i in self.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
+            self.log_excludes = [i for i in self.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
+            self.log_loglevel = self.config.get("LOGGER_LEVEL", 100)
+            self.log_console = self.config.get("LOGGER_CONSOLE", True)
+            self.log_redis = self.config.get("LOGGER_REDIS", False)
+            self.debug = self.config.get("DEBUG", False)
+            self.interactive = self.config.get("INTERACTIVE", True)
+
+            if os.path.exists(os.path.join(self.config["DIR_BASE"], "bin", "python3.6")):
+                self.sandbox_python_active = True
+            else:
+                self.sandbox_python_active = False
+
+            self._state_load()
+
+            if self.config["SSH_AGENT"]:
+                self.sshagent = SSHAgent()
+
+            sys.excepthook = self.excepthook
+
+            self.__init = True
+
+    def _init(self):
+        if not self.__init:
+            raise RuntimeError("init on MyEnv did not happen yet")
+
+    def platform(self):
         """
         will return one of following strings:
             linux, darwin
@@ -1974,25 +2567,23 @@ class MyEnv:
         """
         return sys.platform
 
-    # @staticmethod
-    # def platform_is_linux():
+    #
+    # def platform_is_linux(self):
     #     return "posix" in sys.builtin_module_names
 
-    @staticmethod
-    def check_platform():
+    def check_platform(self):
         """check if current platform is supported (linux or darwin)
         for linux, the version check is done by `UbuntuInstaller.ensure_version()`
 
         :raises RuntimeError: in case platform is not supported
         """
-        platform = MyEnv.platform()
+        platform = self.platform()
         if "linux" in platform:
             UbuntuInstaller.ensure_version()
         elif "darwin" not in platform:
-            raise RuntimeError("Your platform is not supported")
+            raise Tools.exceptions.Base("Your platform is not supported")
 
-    @staticmethod
-    def _homedir_get():
+    def _homedir_get(self):
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
         elif "HOME" in os.environ:
@@ -2001,34 +2592,37 @@ class MyEnv:
             dir_home = "/root"
         return dir_home
 
-    @staticmethod
-    def _basedir_get():
-        if MyEnv.readonly:
+    def _basedir_get(self):
+        if self.readonly:
             return "/tmp/jumpscale"
-        if Tools.exists("/sandbox"):
+        isroot = None
+        rc, out, err = Tools.execute("whoami", showout=False, die=False)
+        if rc == 0:
+            if out.strip() == "root":
+                isroot = 1
+        if Tools.exists("/sandbox") or isroot == 1:
+            Tools.dir_ensure("/sandbox")
             return "/sandbox"
-        p = "%s/sandbox" % MyEnv._homedir_get()
+        p = "%s/sandbox" % self._homedir_get()
         if not Tools.exists(p):
             Tools.dir_ensure(p)
         return p
 
-    @staticmethod
-    def _cfgdir_get():
-        if MyEnv.readonly:
+    def _cfgdir_get(self):
+        if self.readonly:
             return "/tmp/jumpscale/cfg"
-        return "%s/cfg" % MyEnv._basedir_get()
+        return "%s/cfg" % self._basedir_get()
 
-    @staticmethod
-    def config_default_get(config={}):
+    def config_default_get(self, config={}):
 
         if "DIR_BASE" not in config:
-            config["DIR_BASE"] = MyEnv._basedir_get()
+            config["DIR_BASE"] = self._basedir_get()
 
         if "DIR_HOME" not in config:
-            config["DIR_HOME"] = MyEnv._homedir_get()
+            config["DIR_HOME"] = self._homedir_get()
 
         if not "DIR_CFG" in config:
-            config["DIR_CFG"] = MyEnv._cfgdir_get()
+            config["DIR_CFG"] = self._cfgdir_get()
 
         if not "USEGIT" in config:
             config["USEGIT"] = True
@@ -2049,8 +2643,9 @@ class MyEnv:
         config["LOGGER_LEVEL"] = 15  # means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
+        config["LOGGER_PANEL_NRLINES"] = 15
 
-        if MyEnv.readonly:
+        if self.readonly:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"
             config["LOGGER_REDIS"] = False
             config["LOGGER_CONSOLE"] = True
@@ -2072,12 +2667,7 @@ class MyEnv:
 
         return config
 
-    @staticmethod
-    def _init():
-        if not MyEnv.__init:
-            raise RuntimeError("myenv should have been inited by system")
-
-    # def configure_help():
+    # def configure_help(self):
     #     C = """
     #     Configuration for JSX initialisation:
     #
@@ -2089,13 +2679,13 @@ class MyEnv:
     #     --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
     #
     #     --readonly                      default is false
-    #     --no_interactive                default is interactive, means will ask questions
+    #     --no-interactive                default is interactive, means will ask questions
     #     --debug_configure               default debug_configure is False, will configure in debug mode
     #     """
     #     return Tools.text_strip(C)
 
-    @staticmethod
     def configure(
+        self,
         configdir=None,
         basedir=None,
         codedir=None,
@@ -2116,10 +2706,10 @@ class MyEnv:
         --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --no_sshagent                  default is to use the sshagent, if you want to disable use this flag
+        --no-sshagent                  default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
-        --no_interactive                default is interactive, means will ask questions
+        --no-interactive                default is interactive, means will ask questions
         --debug_configure               default debug_configure is False, will configure in debug mode
 
         :param configdir: is the directory where all configuration & keys will be stored
@@ -2132,14 +2722,13 @@ class MyEnv:
         :return:
         """
 
-        if not os.path.exists(MyEnv.config_file_path):
-            MyEnv.config = MyEnv.config_default_get(config=config)
+        if not os.path.exists(self.config_file_path):
+            self.config = self.config_default_get(config=config)
         else:
-            MyEnv._config_load()
+            self._config_load()
 
         if interactive not in [True, False]:
-            raise RuntimeError("interactive is True or False")
-        MyEnv.interactive = interactive
+            raise Tools.exceptions.Base("interactive is True or False")
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -2154,8 +2743,6 @@ class MyEnv:
         if readonly is None and "readonly" in args:
             readonly = True
 
-        if interactive and "no_interactive" in args:
-            interactive = False
         if sshagent_use is None or ("no_sshagent" in args and sshagent_use is False):
             sshagent_use = False
         else:
@@ -2169,7 +2756,7 @@ class MyEnv:
             elif "JSX_DIR_CFG" in os.environ:
                 configdir = os.environ["JSX_DIR_CFG"]
             else:
-                configdir = MyEnv._cfgdir_get()
+                configdir = self._cfgdir_get()
         config["DIR_CFG"] = configdir
 
         # installpath = os.path.dirname(inspect.getfile(os.path))
@@ -2181,7 +2768,7 @@ class MyEnv:
             if "DIR_BASE" in config:
                 basedir = config["DIR_BASE"]
             else:
-                basedir = MyEnv._basedir_get()
+                basedir = self._basedir_get()
 
         config["DIR_BASE"] = basedir
 
@@ -2197,38 +2784,48 @@ class MyEnv:
             args = {}
             args["DIR_BASE"] = basedir
             args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
+            st = os.stat(self.config["DIR_HOME"])
             gid = st.st_gid
             args["GROUPNAME"] = grp.getgrgid(gid)[0]
             Tools.execute(script, interactive=True, args=args)
 
-        MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
+        self.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
 
-        if not "DIR_TEMP" in MyEnv.config:
-            config.update(MyEnv.config)
-            MyEnv.config = MyEnv.config_default_get(config=config)
+        if not os.path.exists(self.config_file_path):
+            self.config = self.config_default_get(config=config)
+        else:
+            self._config_load()
+
+        # merge interactive flags
+        if "INTERACTIVE" in self.config:
+            self.interactive = interactive and self.config["INTERACTIVE"]
+            # enforce interactive flag consistency after having read the config file,
+            # arguments overrides config file behaviour
+        self.config["INTERACTIVE"] = self.interactive
+
+        if not "DIR_TEMP" in self.config:
+            config.update(self.config)
+            self.config = self.config_default_get(config=config)
 
         if readonly:
-            MyEnv.config["READONLY"] = readonly
-        if interactive:
-            MyEnv.config["INTERACTIVE"] = interactive
+            self.config["READONLY"] = readonly
+
         if sshagent_use:
-            MyEnv.config["SSH_AGENT"] = sshagent_use
+            self.config["SSH_AGENT"] = sshagent_use
         if sshkey:
-            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+            self.config["SSH_KEY_DEFAULT"] = sshkey
         if debug_configure:
-            MyEnv.config["DEBUG"] = debug_configure
+            self.config["DEBUG"] = debug_configure
 
         for key, val in config.items():
-            MyEnv.config[key] = val
+            self.config[key] = val
 
-        if not sshagent_use and interactive:  # just a warning when interactive
+        if sshagent_use and self.interactive:  # just a warning when interactive
             T = """
-            Is it ok to continue without SSH-Agent, are you sure?
+            Is it ok to continue with SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
 
@@ -2236,42 +2833,40 @@ class MyEnv:
 
             """
             print(Tools.text_strip(T))
-            if interactive:
+            if self.interactive:
                 if not Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
 
         # defaults are now set, lets now configure the system
-        if False and sshagent_use:
+        if sshagent_use:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
-            MyEnv.sshagent = SSHAgent()
-            MyEnv.sshagent.key_default
+            self.sshagent = SSHAgent()
+            self.sshagent.key_default
+        if secret is None:
+            if "SECRET" not in self.config or not self.config["SECRET"]:
+                self.secret_set()  # will create a new one only when it doesn't exist
         else:
-            if secret is None:
-                if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
-                    if interactive:
-                        while not secret:  # keep asking till the secret is not empty
-                            secret = Tools.ask_password("provide secret to use for encrypting private key")
-                    else:
-                        print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
-                        sys.exit(1)
-                else:
-                    secret = MyEnv.config["SECRET"]
-            if secret:
-                MyEnv.secret_set(secret)
-                # is same as what is used to read from ssh-agent in SSHAgent client
+            self.secret_set(secret)
+
+        if DockerFactory.indocker():
+            self.config["IN_DOCKER"] = True
+        else:
+            self.config["IN_DOCKER"] = False
+
+        self.config_save()
+        self.init(configdir=configdir)
+
+    def secret_set(self, secret=None):
+        if self.interactive:
+            while not secret:  # keep asking till the secret is not empty
+                secret = Tools.ask_password("provide secret to use for encrypting private key")
+            secret = secret.encode()
+        else:
+            if not secret:
+                secret = str(random.randint(1, 100000000)).encode()
             else:
-                print("SECRET IS NEEDED")
-                sys.exit(1)  # we must have a secret here otherwise it will fails later on
-
-        MyEnv.config_save()
-        MyEnv.init(configdir=configdir)
-
-    @staticmethod
-    def secret_set(secret=None):
-        while not secret:  # keep asking till the secret is not empty
-            secret = Tools.ask_password("provide secret to use for encrypting private key")
-        secret = secret.encode()
+                secret = secret.encode()
 
         import hashlib
 
@@ -2280,115 +2875,106 @@ class MyEnv:
 
         secret2 = m.hexdigest()
 
-        if MyEnv.config["SECRET"] != secret2:
+        if "SECRET" not in self.config:
+            self.config["SECRET"] = ""
 
-            MyEnv.config["SECRET"] = secret2
+        if self.config["SECRET"] != secret2:
 
-            MyEnv.config_save()
+            self.config["SECRET"] = secret2
 
-    @staticmethod
-    def init(configdir=None, reset=False):
+            self.config_save()
+
+    def test(self):
+        if not MyEnv.loghandlers != []:
+            j.shell()
+
+    def excepthook(self, exception_type, exception_obj, tb, die=True, stdout=True, level=50):
         """
-
-        :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
-        :return:
+        :param exception_type:
+        :param exception_obj:
+        :param tb:
+        :param die:
+        :param stdout:
+        :param level:
+        :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
         """
-        if reset is False and MyEnv.__init:
-            return
+        try:
+            logdict = Tools.log(tb=tb, level=level, exception=exception_obj, stdout=stdout)
+        except Exception as e:
+            Tools.pprint("{RED}ERROR IN LOG HANDLER")
+            print(e)
+            ttype, msg, tb = sys.exc_info()
+            traceback.print_exception(etype=ttype, tb=tb, value=msg)
+            Tools.pprint("{RESET}")
+            sys.exit(1)
+            Tools.shell()
 
-        print("MYENV INIT")
-
-        args = Tools.cmd_args_get()
-
-        if MyEnv.platform() == "linux":
-            MyEnv.platform_is_linux = True
-            MyEnv.platform_is_unix = True
-            MyEnv.platform_is_osx = False
-        elif "darwin" in MyEnv.platform():
-            MyEnv.platform_is_linux = False
-            MyEnv.platform_is_unix = True
-            MyEnv.platform_is_osx = True
+        if self.debug and traceback and pudb:
+            # exception_type, exception_obj, tb = sys.exc_info()
+            pudb.post_mortem(tb)
+        # Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+        if die == False:
+            return logdict
         else:
-            raise RuntimeError("platform not supported, only linux or osx for now.")
+            sys.exit(1)
 
-        if not configdir:
-            if "JSX_DIR_CFG" in os.environ:
-                configdir = os.environ["JSX_DIR_CFG"]
-            else:
-                if configdir is None and "configdir" in args:
-                    configdir = args["configdir"]
-                else:
-                    configdir = MyEnv._cfgdir_get()
+    def exception_handle(self, exception_obj, die=True, stdout=True, level=50, stack_go_up=0):
+        """
+        e is the error as raised by e.g. try/except statement
+        :param exception_obj: the exception obj coming from the try/except
+        :param die: die if error
+        :param stdout: if True send the error log to stdout
+        :param level: 50 is error critical
+        :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
 
-        MyEnv.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
+        example
 
-        if Tools.exists(MyEnv.config_file_path):
-            MyEnv._config_load()
-            if not "DIR_BASE" in MyEnv.config:
-                return
 
-            MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
-            MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
-            MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
-            MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
-            MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
-            MyEnv.debug = MyEnv.config.get("DEBUG", False)
-            MyEnv.interactive = MyEnv.config.get("INTERACTIVE", True)
+        try:
+            something
+        except Exception as e:
+            logdict = j.core.myenv.exception_handle(e,die=False,stdout=True)
 
-            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
-                MyEnv.sandbox_python_active = True
-            else:
-                MyEnv.sandbox_python_active = False
 
-            MyEnv._state_load()
+        """
+        ttype, msg, tb = sys.exc_info()
+        return self.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
-            if MyEnv.config["SSH_AGENT"]:
-                MyEnv.sshagent = SSHAgent()
-
-            MyEnv.__init = True
-
-    @staticmethod
-    def config_edit():
+    def config_edit(self):
         """
         edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
-        Tools.file_edit(MyEnv.config_file_path)
+        Tools.file_edit(self.config_file_path)
 
-    @staticmethod
-    def _config_load():
+    def _config_load(self):
         """
         loads the configuration file which default is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
-        MyEnv.config = Tools.config_load(MyEnv.config_file_path)
+        self.config = Tools.config_load(self.config_file_path)
 
-    @staticmethod
-    def config_save():
-        Tools.config_save(MyEnv.config_file_path, MyEnv.config)
+    def config_save(self):
+        Tools.config_save(self.config_file_path, self.config)
 
-    @staticmethod
-    def _state_load():
+    def _state_load(self):
         """
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
-        if Tools.exists(MyEnv.state_file_path):
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=False)
-        elif not MyEnv.readonly:
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=True)
+        if Tools.exists(self.state_file_path):
+            self.state = Tools.config_load(self.state_file_path, if_not_exist_create=False)
+        elif not self.readonly:
+            self.state = Tools.config_load(self.state_file_path, if_not_exist_create=True)
         else:
-            MyEnv.state = {}
+            self.state = {}
 
-    @staticmethod
-    def state_save():
-        if MyEnv.readonly:
+    def state_save(self):
+        if self.readonly:
             return
-        Tools.config_save(MyEnv.state_file_path, MyEnv.state)
+        Tools.config_save(self.state_file_path, self.state)
 
-    @staticmethod
-    def _key_get(key):
+    def _key_get(self, key):
         key = key.split("=", 1)[0]
         key = key.split(">", 1)[0]
         key = key.split("<", 1)[0]
@@ -2396,37 +2982,47 @@ class MyEnv:
         key = key.upper()
         return key
 
-    @staticmethod
-    def state_get(key):
-        key = MyEnv._key_get(key)
-        if key in MyEnv.state:
+    def state_get(self, key):
+        key = self._key_get(key)
+        if key in self.state:
             return True
         return False
 
-    @staticmethod
-    def state_set(key):
-        if MyEnv.readonly:
+    def state_set(self, key):
+        if self.readonly:
             return
-        key = MyEnv._key_get(key)
-        MyEnv.state[key] = True
-        MyEnv.state_save()
+        key = self._key_get(key)
+        self.state[key] = True
+        self.state_save()
 
-    @staticmethod
-    def state_delete(key):
-        if MyEnv.readonly:
+    def state_delete(self, key):
+        if self.readonly:
             return
-        key = MyEnv._key_get(key)
-        if key in MyEnv.state:
-            MyEnv.state.pop(key)
-            MyEnv.state_save()
+        key = self._key_get(key)
+        if key in self.state:
+            self.state.pop(key)
+            self.state_save()
 
-    @staticmethod
-    def state_reset():
+    def states_delete(self, prefix):
+        if self.readonly:
+            return
+        prefix = prefix.upper()
+        keys = [i for i in self.state.keys()]
+        for key in keys:
+            if key.startswith(prefix):
+                self.state.pop(key)
+                # print("#####STATEPOP:%s" % key)
+                self.state_save()
+
+    def state_reset(self):
         """
         remove all state
         """
-        Tools.delete(MyEnv.state_file_path)
-        MyEnv._state_load()
+        Tools.delete(self.state_file_path)
+        self._state_load()
+
+
+MyEnv = MyEnv_()
 
 
 class BaseInstaller:
@@ -2446,77 +3042,79 @@ class BaseInstaller:
             if not sandboxed:
                 UbuntuInstaller.do_all()
             else:
-                raise RuntimeError("not ok yet")
+                raise Tools.exceptions.Base("not ok yet")
                 UbuntuInstaller.base()
         elif "darwin" in MyEnv.platform():
             if not sandboxed:
                 OSXInstaller.do_all()
             else:
-                raise RuntimeError("not ok yet")
+                raise Tools.exceptions.Base("not ok yet")
                 OSXInstaller.base()
         else:
-            raise RuntimeError("only OSX and Linux Ubuntu supported.")
+            raise Tools.exceptions.Base("only OSX and Linux Ubuntu supported.")
 
-        # BASHPROFILE
-        if sandboxed:
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
-            if Tools.exists(env_path):
-                bashprofile = Tools.file_text_read(env_path)
-                cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd) != -1:
-                    bashprofile = bashprofile.replace(cmd, "")
-                    Tools.file_write(env_path, bashprofile)
-        else:
-            # if not sandboxed need to remove old python's from bin dir
-            Tools.execute("rm -f {DIR_BASE}/bin/pyth*")
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
-            if not Tools.exists(env_path):
-                bashprofile = ""
+        for profile_name in [".bash_profile", ".profile"]:
+            # BASHPROFILE
+            if sandboxed:
+                env_path = "%s/%s" % (MyEnv.config["DIR_HOME"], profile_name)
+                if Tools.exists(env_path):
+                    bashprofile = Tools.file_text_read(env_path)
+                    cmd = "source /sandbox/env.sh"
+                    if bashprofile.find(cmd) != -1:
+                        bashprofile = bashprofile.replace(cmd, "")
+                        Tools.file_write(env_path, bashprofile)
             else:
-                bashprofile = Tools.file_text_read(env_path)
-            cmd = "source /sandbox/env.sh"
-            if bashprofile.find(cmd) == -1:
-                bashprofile += "\n%s\n" % cmd
-                Tools.file_write(env_path, bashprofile)
+                # if not sandboxed need to remove old python's from bin dir
+                Tools.execute("rm -f {DIR_BASE}/bin/pyth*")
+                env_path = "%s/%s" % (MyEnv.config["DIR_HOME"], profile_name)
+                if not Tools.exists(env_path):
+                    bashprofile = ""
+                else:
+                    bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd) == -1:
+                    bashprofile += "\n%s\n" % cmd
+                    Tools.file_write(env_path, bashprofile)
 
         print("- get sandbox base from git")
-        Tools.code_github_get(repo="sandbox_base", branch=["master"], pull=False)
-        print("- copy files to sandbox")
+        ji = JumpscaleInstaller()
+        ji.repos_get(pull=False)
+        print("- copy files to sandbox (non binaries)")
         # will get the sandbox installed
         if not sandboxed:
 
             script = """
             set -e
             cd {DIR_BASE}
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/cfg/ {DIR_BASE}/cfg/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/bin/ {DIR_BASE}/bin/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/openresty/ {DIR_BASE}/openresty/
-            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/env.sh {DIR_BASE}/env.sh
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/cfg/ {DIR_BASE}/cfg/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/bin/ {DIR_BASE}/bin/
+            #rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/openresty/ {DIR_BASE}/openresty/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/digitalmeX/sandbox/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var
 
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
         else:
 
             # install the sandbox
 
-            raise RuntimeError("not done yet")
+            raise Tools.exceptions.Base("not done yet")
 
             script = """
             cd {DIR_BASE}
             rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
             mkdir -p root
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             if MyEnv.platform() == "darwin":
                 reponame = "sandbox_osx"
             elif MyEnv.platform() == "linux":
                 reponame = "sandbox_ubuntu"
             else:
-                raise RuntimeError("cannot install, MyEnv.platform() now found")
+                raise Tools.exceptions.Base("cannot install, MyEnv.platform() now found")
 
             Tools.code_github_get(repo=reponame, branch=["master"])
 
@@ -2530,7 +3128,7 @@ class BaseInstaller:
             args = {}
             args["REPONAME"] = reponame
 
-            Tools.execute(script, interactive=True, args=args)
+            Tools.execute(script, interactive=MyEnv.interactive, args=args)
 
             script = """
             set -e
@@ -2538,7 +3136,7 @@ class BaseInstaller:
             source env.sh
             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script, interactive=MyEnv.interactive)
 
             Tools.log("INSTALL FOR BASE OK")
 
@@ -2578,6 +3176,9 @@ class BaseInstaller:
         1 in the middle (recommended)
         2 is all pips
         """
+
+        # ipython==7.5.0 ptpython==2.0.4 prompt-toolkit==2.0.9
+
         pips = {
             # level 0: most basic needed
             0: [
@@ -2591,6 +3192,7 @@ class BaseInstaller:
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
+                "psycopg2-binary",
                 "numpy",
                 "cryptocompare",
                 "cryptography>=2.2.0",
@@ -2606,7 +3208,7 @@ class BaseInstaller:
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython>=6.5",
+                "ipython>=7.5",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -2618,7 +3220,7 @@ class BaseInstaller:
                 "ssh2-python",
                 "paramiko>=2.2.3",
                 "path.py>=10.3.1",
-                # "peewee>=2.9.2",
+                "peewee",
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",
@@ -2638,11 +3240,13 @@ class BaseInstaller:
                 "toml>=0.9.2",
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
-                "bpython",
+                # "bpython",
                 "pbkdf2",
-                "ptpython",
+                "ptpython==2.0.4",
+                "prompt-toolkit>=2.0.9",
                 "pygments-markdown-lexer",
                 "wsgidav",
+                "bottle==0.12.17",  # why this version?
             ],
             # level 1: in the middle
             1: [
@@ -2663,8 +3267,6 @@ class BaseInstaller:
             ],
             # level 2: full install
             2: [
-                # "psycopg2-binary",
-                # "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
                 # "SQLAlchemy>=1.1.9",
@@ -2696,6 +3298,37 @@ class BaseInstaller:
                 C = "pip3 install '%s'" % pip  # --user
                 Tools.execute(C, die=True)
                 MyEnv.state_set("pip_%s" % pip)
+
+    @staticmethod
+    def cleanup_script_get():
+        CMD = """
+        cd /
+        rm -f /tmp/cleanedup
+        find . -name "*.pyc" -exec rm -rf {} \;
+        find . -type d -name "__pycache__" -delete
+        find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+        find . -name "*.bak" -exec rm -rf {} \;
+        rm -f /root/.jsx_history
+        rm -f /root/.ssh/*
+        rm -rf /root/.cache
+        mkdir -p /root/.cache
+        rm -rf /bd_build
+        rm -rf /var/log
+        mkdir -p /var/log
+        rm -rf /var/mail
+        mkdir -p /var/mail
+        rm -rf /tmp
+        mkdir -p /tmp
+        chmod -R 0777 /tmp
+        rm -rf /var/backups
+        find . -name "*.bak" -exec rm -rf {} \;
+        apt-get clean -y
+        apt-get autoremove --purge -y
+        rm -rf /sandbox/openresty/pod
+        rm -rf /sandbox/openresty/site
+        touch /tmp/cleanedup
+        """
+        return Tools.text_strip(CMD, replace=False)
 
 
 class OSXInstaller:
@@ -2756,13 +3389,14 @@ class UbuntuInstaller:
     def ensure_version():
         MyEnv._init()
         if not os.path.exists("/etc/lsb-release"):
-            raise RuntimeError("Your operating system is not supported")
+            raise Tools.exceptions.Base("Your operating system is not supported")
 
         return True
 
     @staticmethod
     def base():
         MyEnv._init()
+
         if MyEnv.state_get("base"):
             return
 
@@ -2804,7 +3438,7 @@ class UbuntuInstaller:
             return
         script = """
         apt update
-        apt upgrade -y
+        apt upgrade -y --force-yes
         apt install sudo python3-pip  -y
         pip3 install pudb
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -2824,18 +3458,34 @@ class UbuntuInstaller:
 
         script = """
         cd /tmp
-        apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
+        apt-get install -y mc wget python3 git tmux
+        set +ex
+        apt-get install python3-distutils -y
+        set -ex
+        apt-get install python3-psutil -y
         apt-get install -y build-essential
         #apt-get install -y python3.6-dev
         apt-get install -y redis-server
 
         """
-        Tools.execute(script, interactive=True)
+        rc, out, err = Tools.execute(script, interactive=True, timeout=300)
+        if rc > 0:
+            # lets try other time
+            rc, out, err = Tools.execute(script, interactive=True, timeout=300)
         MyEnv.state_set("python_redis_install")
 
     @staticmethod
     def apts_list():
-        return ["iproute2", "python-ufw", "ufw", "libpq-dev", "iputils-ping", "net-tools"]  # "graphviz"
+        return [
+            "iproute2",
+            "python-ufw",
+            "ufw",
+            "libpq-dev",
+            "iputils-ping",
+            "net-tools",
+            "libgeoip-dev",
+            "libcapnp-dev",
+        ]  # "graphviz"
 
     @staticmethod
     def apts_install():
@@ -2867,9 +3517,11 @@ class JumpscaleInstaller:
     def install(self, sandboxed=False, force=False, gitpull=False):
 
         MyEnv.check_platform()
-
-        if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+        # will check if there's already a key loaded (forwarded) will continue installation with it
+        rc, _, _ = Tools.execute("ssh-add -L")
+        if not rc:
+            if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
+                MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
@@ -2933,7 +3585,17 @@ class JumpscaleInstaller:
     def repos_get(self, pull=False):
 
         for sourceName, _ in self._jumpscale_repos:
-            Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            try:
+                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            except Exception:
+                activate_http = Tools.ask_yes_no(
+                    "\n### SSH cloning Failed, your key isn't on github or you're missing permission, Do you want to clone via http?\n"
+                )
+                if activate_http:
+                    MyEnv.interactive = False
+                    Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+                else:
+                    raise Tools.exceptions.Base("\n### Please authenticate your key and try again\n")
 
     def repos_link(self):
         """
@@ -2952,7 +3614,7 @@ class JumpscaleInstaller:
             """
             exists, _, _, _, loc = Tools._code_location_get(repo=item, account=self.account)
             if not exists:
-                raise RuntimeError("did not find:%s" % loc)
+                raise Tools.exceptions.Base("did not find:%s" % loc)
 
             # destpath = "/sandbox/lib/jumpscale/{ALIAS}"
             # if os.path.exists(destpath):
@@ -2971,6 +3633,9 @@ class JumpscaleInstaller:
                 Tools.link(src2, dest, chmod=770)
         Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
+
+    def web(self):
+        Tools.shell()
 
 
 class DockerFactory:
@@ -3001,6 +3666,7 @@ class DockerFactory:
 
             if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
                 UbuntuInstaller.docker_install()
+                MyEnv._cmd_installed["docker"] = shutil.which("docker")
 
             if not Tools.cmd_installed("docker"):
                 print("Could not find Docker installed")
@@ -3082,8 +3748,16 @@ class DockerConfig:
             self.startupcmd = "/sbin/my_init"
 
         self.path_vardir = Tools.text_replace("{DIR_BASE}/var/containers/{NAME}", args={"NAME": name})
-        self.path_config = "%s/config.toml" % (self.path_vardir)
+        self.path_config = "%s/docker_config.toml" % (self.path_vardir)
 
+        self.load()
+
+    def reset(self):
+        """
+        erase the past config
+        :return:
+        """
+        Tools.delete(self.path_vardir)
         self.load()
 
     def _find_sshport(self, startport):
@@ -3126,6 +3800,8 @@ class DockerContainer:
         DockerFactory._dockers[name] = self
 
         self.config = DockerConfig(name=name, portrange=portrange, image=image, sshport=sshport, startupcmd=startupcmd)
+        if delete:
+            Tools.delete(self._path)
 
         self.container_exists = name in DockerFactory.containers_names()
 
@@ -3135,12 +3811,16 @@ class DockerContainer:
             if self.container_exists:
                 self.delete()
             newport = self.config._find_sshport(self.config.sshport)
+            self.config.reset()
+
             if self.config.sshport != newport:
                 self.config.sshport = newport
                 self.config.save()
-
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
             MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+
+        if len(MyEnv.sshagent.keys_list()) == 0:
+            raise Tools.exceptions.Base("Please load your ssh-agent with a key!")
 
     @property
     def _path(self):
@@ -3162,6 +3842,15 @@ class DockerContainer:
         :return:
         """
         imagename = "temp/temp"
+
+        CLEANUPCMD = BaseInstaller.cleanup_script_get()
+
+        # NO NEED TO DO HERE, takes too long
+        # for line in CLEANUPCMD.split("\n"):
+        #     line = line.strip()
+        #     print(" - cleanup:%s" % line)
+        #     self.dexec(line)
+
         self.export(skip_if_exists=False)  # need to re-export to make sure
         tempcontainer = DockerContainer("temp", delete=True, portrange=2)
 
@@ -3169,32 +3858,8 @@ class DockerContainer:
             path=self.export_last_image_path, imagename=imagename, start=True, mount_dirs=False, portmap=False
         )
         # WILL CLEANUP
-        CMD = """
-        cd /
-        rm -f /tmp/cleanedup
-        find . -name "*.pyc" -exec rm -rf {} \;
-        find . -type d -name "__pycache__" -delete
-        find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-        find . -name "*.bak" -exec rm -rf {} \;
-        rm -f /root/.jsx_history
-        rm -f /root/.ssh/*
-        rm -rf /root/.cache
-        mkdir -p /root/.cache
-        rm -rf /bd_build
-        rm -rf /var/log
-        mkdir -p /var/log
-        rm -rf /var/mail
-        mkdir -p /var/mail
-        rm -rf /tmp
-        mkdir -p /tmp
-        chmod -R 0777 /tmp
-        rm -rf /var/backups
-        find . -name "*.bak" -exec rm -rf {} \;
-        apt-get clean
-        apt-get autoremove --purge
-        touch /tmp/cleanedup
-        """
-        for line in CMD.split("\n"):
+
+        for line in CLEANUPCMD.split("\n"):
             line = line.strip()
             print(" - cleanup:%s" % line)
             tempcontainer.dexec(line)
@@ -3203,7 +3868,7 @@ class DockerContainer:
         DockerFactory.image_remove(imagename)
         self.delete()
         assert self.name not in DockerFactory.containers_names()
-        self.import_()
+        self.import_()  # now should be clean
 
     def install(self, baseinstall=True, mount_dirs=True, portmap=True):
         """
@@ -3213,7 +3878,6 @@ class DockerContainer:
         :param mount_dirs if mounts will be done from host system
         :return:
         """
-
         # portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
 
         args = {}
@@ -3230,7 +3894,7 @@ class DockerContainer:
         # if ":" not in args["IMAGE"]:
         #     args["IMAGE"] += ":latest"
 
-        if not Tools.exists(self._path):
+        if not Tools.exists(self._path + "/cfg/jumpscale_config.toml"):
             Tools.dir_ensure(self._path + "/cfg")
             Tools.dir_ensure(self._path + "/var")
             CONFIG = {}
@@ -3246,8 +3910,8 @@ class DockerContainer:
             ]:
                 if i in MyEnv.config:
                     CONFIG[i] = MyEnv.config[i]
+
             Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
-            shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys", args=args), self._path + "/cfg/keys")
 
         if not self.container_exists:
 
@@ -3309,11 +3973,14 @@ class DockerContainer:
             if baseinstall:
                 print(" - Upgrade ubuntu")
                 self.dexec("apt update")
-                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade")
+                self.dexec("DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --force-yes")
                 print(" - Upgrade ubuntu ended")
                 self.dexec("apt install mc git -y")
 
-            Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+            Tools.execute("ssh-keyscan -H 3bot >> %s/.ssh/known_hosts" % MyEnv.config["DIR_HOME"])
+            Tools.execute(
+                'ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:%s"' % (MyEnv.config["DIR_HOME"], args["PORT"])
+            )
 
             self.dexec("touch /root/.BASEINSTALL_OK")
 
@@ -3386,7 +4053,7 @@ class DockerContainer:
         if not path:
             dpath = "%s/exports/" % self._path
             if not Tools.exists(dpath):
-                raise RuntimeError("no exports found in:%s" % dpath)
+                raise Tools.exceptions.Base("no exports found in:%s" % dpath)
             if not version:
                 items = os.listdir(dpath)
                 if items != []:
@@ -3394,7 +4061,7 @@ class DockerContainer:
                     last = items[-1]
                     version = int(last.replace(".tar", ""))
                 else:
-                    raise RuntimeError("no exports found in:%s" % dpath)
+                    raise Tools.exceptions.Base("no exports found in:%s" % dpath)
             path = "%s/exports/%s.tar" % (self._path, version)
 
         if not Tools.exists(path):
@@ -3452,7 +4119,7 @@ class DockerContainer:
             print("export docker:%s to %s, was already there (export skipped)" % (self.name, path))
         return version
 
-    def jumpscale_install(self, secret=None, privatekey=None, redo=False, wiki=False, pull=False, branch=None):
+    def jumpscale_install(self, secret=None, privatekey=None, redo=False, threebot=True, pull=False, branch=None):
 
         args_txt = ""
         if secret:
@@ -3461,15 +4128,22 @@ class DockerContainer:
             args_txt += " --privatekey='%s'" % privatekey
         if redo:
             args_txt += " -r"
-        if wiki:
-            args_txt += " -w"
+        if threebot:
+            args_txt += " --threebot"
         if pull:
             args_txt += " --pull"
         if branch:
             args_txt += " --branch %s" % branch
+        if not MyEnv.interactive:
+            args_txt += " --no-interactive"
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
+            cmd = (
+                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
+                % MyEnv.sshagent.key_default
+            )
+            Tools.execute(cmd)
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")
@@ -3481,19 +4155,21 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx install"
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % MyEnv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
         self.sshexec(cmd)
 
         cmd = """
+        echo 'autoclean'
         apt-get autoclean -y
         apt-get clean -y
         apt-get autoremove -y
         # rm -rf /tmp/*
         # rm -rf /var/log/*
-        find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+        # echo 'find and remove pyc files'
+        # find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
         """
         self.sshexec(cmd)
 
@@ -3583,13 +4259,12 @@ class SSHAgent:
             Tools.execute(cmd, timeout=10)
 
             Tools.log("load generated sshkey: %s" % path)
-        Tools.shell()
 
     @property
     def key_default(self):
         """
 
-        kosmos 'print(j.core.myenv.sshagent.key_default)'
+        kosmos 'print(MyEnv.sshagent.key_default)'
 
         checks if it can find the default key for ssh-agent, if not will ask
         :return:
@@ -3598,7 +4273,7 @@ class SSHAgent:
         def ask_key(key_names):
             if len(key_names) == 1:
                 if MyEnv.interactive:
-                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % self.key_names[0]):
+                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % key_names[0]):
                         return None
                 name = key_names[0]
             elif len(key_names) == 0:
@@ -3607,7 +4282,10 @@ class SSHAgent:
                 )
                 sys.exit(1)
             else:
-                name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                if MyEnv.interactive:
+                    name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                else:
+                    name = "id_rsa"
             return name
 
         self._keys  # will fetch the keys if not possible will show error
@@ -3621,6 +4299,7 @@ class SSHAgent:
             hdir = Tools.text_replace("{DIR_HOME}/.ssh")
             if not Tools.exists(hdir):
                 print("cannot find home dir:%s" % hdir)
+                print("\n### Please get a ssh key or generate one using ssh-keygen\n")
                 sys.exit(1)
             choices = []
             for item in os.listdir(hdir):
@@ -3637,6 +4316,8 @@ class SSHAgent:
             sshkey = ask_key(choices)
 
         if not sshkey in self.key_names:
+            if DockerFactory.indocker():
+                raise Tools.exceptions.Base("sshkey should be passed forward by means of SSHAgent")
             self.key_load(name=sshkey)
             assert sshkey in self.key_names
 
@@ -3672,7 +4353,7 @@ class SSHAgent:
             return
 
         if not Tools.exists(path):
-            raise RuntimeError("Cannot find path:%sfor sshkey (private key)" % path)
+            raise Tools.exceptions.Base("Cannot find path:%sfor sshkey (private key)" % path)
 
         Tools.log("load ssh key: %s" % path)
         os.chmod(path, 0o600)
@@ -3710,36 +4391,39 @@ class SSHAgent:
         """
         """
         if self.__keys is None:
+            self._read_keys()
+        return self.__keys
+
+    def _read_keys(self):
+        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+        if return_code:
+            if return_code == 1 and out.find("The agent has no identities") != -1:
+                self.__keys = []
+                return []
+            else:
+                # Remove old socket if can't connect
+                if Tools.exists(self.ssh_socket_path):
+                    Tools.delete(self.ssh_socket_path)
+                    # did not work first time, lets try again
+                    return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+
+        if return_code and self.autostart:
+            # ok still issue, lets try to start the ssh-agent if that could be done
+            self.start()
             return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
-            if return_code:
-                if return_code == 1 and out.find("The agent has no identities") != -1:
-                    self.__keys = []
-                    return []
-                else:
-                    # Remove old socket if can't connect
-                    if Tools.exists(self.ssh_socket_path):
-                        Tools.delete(self.ssh_socket_path)
-                        # did not work first time, lets try again
-                        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+            if return_code == 1 and out.find("The agent has no identities") != -1:
+                self.__keys = []
+                return []
 
-            if return_code and self.autostart:
-                # ok still issue, lets try to start the ssh-agent if that could be done
-                self.start()
-                return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
-                if return_code == 1 and out.find("The agent has no identities") != -1:
-                    self.__keys = []
-                    return []
+        if return_code:
+            return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
+            if out.find("Error connecting to agent: No such file or directory"):
+                raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
+            else:
+                raise SSHAgentKeyError("Unknown error in ssh-agent, cannot find")
 
-            if return_code:
-                return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
-                if out.find("Error connecting to agent: No such file or directory"):
-                    raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
-                else:
-                    raise SSHAgentKeyError("Unknown error in ssh-agent, cannot find")
-
-            keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
-            self.__keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
-
+        keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
+        self.__keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
         return self.__keys
 
     def reset(self):
@@ -3793,7 +4477,7 @@ class SSHAgent:
         if not Tools.exists(bashprofile_path):
             Tools.execute("touch %s" % bashprofile_path)
 
-        content = j.sal.fs.readFile(bashprofile_path)
+        content = Tools.readFile(bashprofile_path)
         out = ""
         for line in content.split("\n"):
             if line.find("#JSSSHAGENT") != -1:
@@ -3803,10 +4487,10 @@ class SSHAgent:
 
             out += "%s\n" % line
 
-        out += "export SSH_AUTH_SOCK=%s" % self.ssh_socket_path
+        out += '[ -z "SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK=%s' % self.ssh_socket_path
         out = out.replace("\n\n\n", "\n\n")
         out = out.replace("\n\n\n", "\n\n")
-        j.sal.fs.writeFile(bashprofile_path, out)
+        Tools.writeFile(bashprofile_path, out)
 
     def start(self):
         """
@@ -3826,13 +4510,14 @@ class SSHAgent:
 
         if not Tools.exists(socketpath):
             Tools.log("start ssh agent")
+            Tools.dir_ensure("{DIR_VAR}")
             rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise Tools.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not Tools.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
-                    raise RuntimeError(err_msg)
+                    raise Tools.exceptions.Base(err_msg)
 
                 # get pid from out of ssh-agent being started
                 piditems = [item for item in out.split("\n") if item.find("pid") != -1]
@@ -3840,7 +4525,7 @@ class SSHAgent:
                 # print(piditems)
                 if len(piditems) < 1:
                     Tools.log("results was: %s", out)
-                    raise RuntimeError("Cannot find items in ssh-add -l")
+                    raise Tools.exceptions.Base("Cannot find items in ssh-add -l")
 
                 # pid = int(piditems[-1].split(" ")[-1].strip("; "))
                 # socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
@@ -3920,7 +4605,7 @@ class WireGuard:
             cmd = "wg-quick up %s" % path
             Tools.execute(cmd)
         else:
-            raise RuntimeError("cannot start server only supported on linux ")
+            raise Tools.exceptions.Base("cannot start server only supported on linux ")
 
     def connect(self):
         config_container = Tools.config_load("/sandbox/var/containers/%s/cfg/wireguard.toml" % self.container.name)

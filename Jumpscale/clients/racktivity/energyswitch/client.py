@@ -172,7 +172,7 @@ class RackSal:
         elif moduleID[0] == "Q" and self.slave_power:
             paramInfo = self.slave_power.definePointerStructure()
         else:
-            raise ValueError("Requested moduleID not found")
+            raise j.exceptions.Value("Requested moduleID not found")
 
         chunk = calculatePointerSize(paramInfo)
 

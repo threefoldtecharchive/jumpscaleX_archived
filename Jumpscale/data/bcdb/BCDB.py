@@ -1,8 +1,29 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 # from importlib import import_module
 
 import gevent
 from Jumpscale.clients.stor_zdb.ZDBClientBase import ZDBClientBase
 from Jumpscale.clients.stor_rdb.RDBClient import RDBClient
+from Jumpscale.clients.stor_sqlite.DBSQLite import DBSQLite
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
@@ -11,55 +32,128 @@ from .connectors.redis.RedisServer import RedisServer
 from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
-from .DBSQLite import DBSQLite
+import time
 
 JSBASE = j.application.JSBaseClass
 
 
 class BCDB(j.application.JSBaseClass):
-    def __init__(self, name=None, storclient=None, reset=False):
+    def _init(self, name=None, storclient=None, reset=False):
         """
         :param name: name for the BCDB
         :param storclient: if storclient == None then will use sqlite db
         """
-        JSBASE.__init__(self)
+        # JSBASE.__init__(self)
 
         self._redis_index = j.clients.redis.core
-
         if name is None:
-            raise RuntimeError("name needs to be specified")
+            raise j.exceptions.Base("name needs to be specified")
 
-        if storclient is not None:
-            if not isinstance(storclient, ZDBClientBase) and not isinstance(storclient, RDBClient):
-                raise RuntimeError("storclient needs to be type: clients.zdb.ZDBClientBase or clients.rdb")
+        assert storclient
+        if (
+            not isinstance(storclient, ZDBClientBase)
+            and not isinstance(storclient, RDBClient)
+            and not isinstance(storclient, DBSQLite)
+        ):
+            raise j.exceptions.Base("storclient needs to be type: clients.zdb or clients.rdb or clients.sqlitedb")
 
         self.name = name
-        self._sqlclient = None
         self.dataprocessor_greenlet = None
 
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
         self.storclient = storclient
 
-        self.meta = BCDBMeta(self, reset=True)
+        self._sqlite_index_dbpath = "%s/sqlite_index.db" % self._data_dir
 
-        self._init_(reset=reset, stop=False)
+        self._init_props()
+        j.sal.fs.createDir(self._data_dir)
 
-        self._need_to_reset = reset
+        if reset:
+            self.meta = None
+            self.reset()
+            return
+        else:
+            self.meta = BCDBMeta(self)
+
+        self.dataprocessor_start()
+        self._init_system_objects()
+
+        # all the models are loaded at this point
+        self.check()
+
+        j.data.nacl.default
+
+        self._log_info("BCDB INIT DONE:%s" % self.name)
+
+    def _init_props(self):
+
+        self._sqlite_index_client = None
+
+        self._schema_url_to_model = {}
+
+        # needed for async processing
+        self.results = {}
+        self.results_id = 0
+
+        self.acl = None
+        self.user = None
+        self.circle = None
+
+        self._index_schema_class_cache = {}  # cache for the index classes
+
+    def _init_system_objects(self):
+
         assert self.name
         j.data.bcdb._bcdb_instances[self.name] = self
 
         if not j.data.types.string.check(self.name):
-            raise RuntimeError("name needs to be string")
+            raise j.exceptions.Base("name needs to be string")
 
-        j.data.nacl.default
+        # need to do this to make sure we load the classes from scratch
+        for item in ["ACL", "USER", "GROUP"]:
+            key = "Jumpscale.data.bcdb.models_system.%s" % item
+            if key in sys.modules:
+                sys.modules.pop(key)
+
+        from .models_system.ACL import ACL
+        from .models_system.USER import USER
+        from .models_system.CIRCLE import CIRCLE
+        from .models_system.NAMESPACE import NAMESPACE
+
+        self.acl = self.model_add(ACL(bcdb=self))
+        self.user = self.model_add(USER(bcdb=self))
+        self.circle = self.model_add(CIRCLE(bcdb=self))
+        self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
+
+    def check(self):
+        """
+        at this point we have for sure the metadata loaded now we should see if the last record found can be found in the index
+        :return:
+        """
+
+        def index_ok():
+            for m in self.models:
+                if m.schema.hasdata:
+                    # we need to check that the id iterator has at least 1 item, its not a perfect check but better than nothing
+                    if not m.index._ids_exists():
+                        # means there is a real issue with an iterator
+                        return False
+            return True
+
+        if not index_ok():
+            # the index rebuild needs to completely remove the index, show a warning sign
+            self._log_warning("we need to rebuild the full index because iterator was not complete")
+            # there is no other way we can do this because without iterator the rebuild index cannot be done
+            self.index_rebuild()
 
     def export(self, path=None, encrypt=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
 
         for o in list(self.meta._data.schemas):
-            m = self.model_get_from_schema(o.text)
-            dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
+            m = self.model_get(schema=o.text)
+            # to make schema export ID deterministic we add the mid at the beginning of the file name
+            dpath = "%s/%s__%s__%s" % (path, m.mid, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
@@ -79,7 +173,7 @@ class BCDB(j.application.JSBaseClass):
 
     def import_(self, path=None, reset=True):
         if not path:
-            raise RuntimeError("export no path")
+            raise j.exceptions.Base("export no path")
         if reset:
             self.reset()
             if self.storclient:
@@ -92,17 +186,17 @@ class BCDB(j.application.JSBaseClass):
         max = 0
         # first load all schemas
         for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
-            url, md5 = schema_id.split("__")
+            mid, url, md5 = schema_id.split("__")
             schema_path = "%s/%s" % (path, schema_id)
             schema_text = j.sal.fs.readFile("%s/meta.schema" % schema_path)
             schema = j.data.schema.add_from_text(schema_text)[0]
-            model = self.model_get_from_schema(schema)
+            model = self.model_get(schema=schema)
             models[md5] = model
         # now load the data
         for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
             schema_path = "%s/%s" % (path, schema_id)
-            url, md5 = schema_id.split("__")
-            print("MD5: %s" % md5)
+            mid, url, md5 = schema_id.split("__")
+            # print("MD5: %s" % md5)
             model = models[md5]
             assert model.schema._md5 == md5
             for item in j.sal.fs.listFilesInDir(schema_path, False):
@@ -121,7 +215,7 @@ class BCDB(j.application.JSBaseClass):
                 else:
                     obj_id = int(base.split(".")[0])
                 if obj_id in data:
-                    raise RuntimeError("id's need to be unique, cannot import")
+                    raise j.exceptions.Base("id's need to be unique, cannot import")
                 json = j.sal.fs.readFile(item, binary=encr)
                 if encr:
                     json = j.data.nacl.default.decryptSymmetric(json)
@@ -130,7 +224,6 @@ class BCDB(j.application.JSBaseClass):
                     max = obj_id
 
         if self.storclient:
-            assert self.storclient.nsinfo["mode"] == "sequential"
             assert self.storclient.nsinfo["entries"] == 1
             lastid = 1
 
@@ -151,7 +244,7 @@ class BCDB(j.application.JSBaseClass):
                         try:
                             obj = model.new(data=json)
                         except:
-                            raise RuntimeError("can't get a new model based on json data:%s" % json)
+                            raise j.exceptions.Base("can't get a new model based on json data:%s" % json)
                         if self.storclient:
                             obj.id = None
                     else:
@@ -165,70 +258,17 @@ class BCDB(j.application.JSBaseClass):
                 assert obj.id == i
 
     @property
-    def sqlclient(self):
-        if self._sqlclient is None:
-            self._sqlclient = DBSQLite(self)
-        return self._sqlclient
+    def sqlite_index_client(self):
+        if self._sqlite_index_client is None:
+            self._sqlite_index_client = j.clients.peewee.SqliteDatabase(self._sqlite_index_dbpath)
+        return self._sqlite_index_client
 
-    def _init_(self, stop=True, reset=False):
-
-        if stop:
-            self.stop()
-
-        self._sqlclient = None
-
-        self.dataprocessor_start()
-
-        self.acl = None
-        self.user = None
-        self.circle = None
-
-        self._index_schema_class_cache = {}  # cache for the index classes
-
-        if reset:
-            self._reset()
-
-        if reset:
-            j.clients.credis_core.delete(self.meta._redis_key_inited)  # because now we need to reload all
-
-        j.sal.fs.createDir(self._data_dir)
-
-        # needed for async processing
-        self.results = {}
-        self.results_id = 0
-
-        # need to do this to make sure we load the classes from scratch
-        for item in ["ACL", "USER", "GROUP"]:
-            key = "Jumpscale.data.bcdb.models_system.%s" % item
-            if key in sys.modules:
-                sys.modules.pop(key)
-
-        # check if we need to rebuild the BCDB indexes
-        try:
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except j.clients.credis_core._ConnectionError:
-            j.clients.credis_core._init()
-            res = j.clients.credis_core.get(self.meta._redis_key_inited)
-        except Exception as e:
-            raise e
-
-        if not res:
-            # means there is no index yet in the redis, need to rebuild all
-            self.index_rebuild()
-
-        from .models_system.ACL import ACL
-        from .models_system.USER import USER
-        from .models_system.CIRCLE import CIRCLE
-        from .models_system.NAMESPACE import NAMESPACE
-
-        self.acl = self.model_add(ACL(bcdb=self))
-        self.user = self.model_add(USER(bcdb=self))
-        self.circle = self.model_add(CIRCLE(bcdb=self))
-        self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
-
-        j.clients.credis_core.set(self.meta._redis_key_inited, b"1")
-
-        self._log_info("BCDB INIT DONE:%s" % self.name)
+    def sqlite_index_client_stop(self):
+        if self._sqlite_index_client is not None:
+            # todo: check that its open
+            if not self._sqlite_index_client.is_closed():
+                self._sqlite_index_client.close()
+            self._sqlite_index_client = None
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -249,7 +289,8 @@ class BCDB(j.application.JSBaseClass):
                     self.results[returnid] = res
                 event.set()
         self.dataprocessor_greenlet = None
-        event.set()
+        if event:
+            event.set()
         self._log_warning("DATAPROCESSOR STOPS")
 
     def dataprocessor_start(self):
@@ -266,15 +307,58 @@ class BCDB(j.application.JSBaseClass):
             self.dataprocessor_greenlet = gevent.spawn(self._data_process)
             self.dataprocessor_state = "RUNNING"
 
+    def dataprocessor_stop(self, force=False):
+
+        if self.dataprocessor_greenlet:
+            if self.dataprocessor_greenlet.started and not force:
+                # stop dataprocessor
+                self.queue.put((None, ["STOP"], {}, None, None))
+                while self.queue.qsize() > 0:
+                    self._log_debug("wait dataprocessor to stop")
+                    time.sleep(0.1)
+            self.dataprocessor_greenlet.kill()
+
+        self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
+        return True
+
     def reset(self):
         """
-        resets data & index
+        remove all data but the bcdb instance remains
         :return:
         """
-        self._init_(stop=True, reset=True)
+
+        self.stop()  # will stop sqlite client and the dataprocessor
+
+        assert self.storclient
+
+        if self.storclient.type != "SDB":
+            self.storclient.flush()  # not needed for sqlite because closed and dir will be deleted
+
+        self._redis_reset()
+
+        j.sal.fs.remove(self._data_dir)
+        j.sal.fs.createDir(self._data_dir)
+        # all data is now removed, can be done because sqlite client should be None
+
+        # since delete the data directory above, we have to re-init the storclient
+        # so it can do its things and re-connect properly
+        self.storclient._init(nsname=self.storclient.nsname)
+
+        self._init_props()
+        if not self.meta:
+            self.meta = BCDBMeta(self)
+
+        self.meta.reset()  # will make sure the record 0 is written with empty metadata
+        self._init_system_objects()
 
     def destroy(self):
+        """
+        removed all data and the bcbd instance
+        :return:
+        """
+
         self.reset()
+
         j.data.bcdb._config.pop(self.name)
         if self.name in j.data.bcdb._bcdb_instances:
             j.data.bcdb._bcdb_instances.pop(self.name)
@@ -282,55 +366,140 @@ class BCDB(j.application.JSBaseClass):
         for key in j.core.db.keys("bcdb:%s:*" % self.name):
             j.core.db.delete(key)
 
-    def _reset(self):
-
-        if self.storclient:
-            self.storclient.flush(meta=self.meta)  # new flush command
-
-        self._redis_reset()
-        self.meta.reset()
-
-        if self._sqlclient is not None:
-            self.sqlclient.close()
-            self._sqlclient = None
-
-        j.sal.fs.remove(self._data_dir)
-
     def _redis_reset(self):
+        # shouldnt this be part of the indexing class?
+        # better not because then we rely on the indexer to be there and in reset function we don't init it
         for key in self._redis_index.keys("bcdb:%s*" % self.name):
             self._redis_index.delete(key)
 
     def stop(self):
         self._log_info("STOP BCDB")
-        if self.dataprocessor_greenlet is not None:
-            self.dataprocessor_greenlet.kill()
-        self.dataprocessor_greenlet = None
+        self.dataprocessor_stop(force=True)
+        self.sqlite_index_client_stop()
+
+        if self.storclient.type == "SDB":
+            cl = self.storclient.sqlitedb
+            if not cl.is_closed():
+                cl.close()
+            self.storclient.sqlitedb = None
 
     def index_rebuild(self):
-        self._log_warning("REBUILD INDEX")
-        self.meta.reset()
-        for m in self.models:
-            m.index_rebuild()
+        self._log_warning("REBUILD INDEX FOR ALL OBJECTS")
+        # IF WE DO A FULL BLOWN REBUILD THEN WE NEED TO ITERATE OVER ALL OBJECTS AND CANNOT START FROM THE ITERATOR PER MODEL
+        # this always needs to work, independent of state of index
+        for model in self.models:
+            # make sure indexes are empty
+            model.index.destroy()
+        first = True
+        for id, data in self.storclient.iterate():
+            if first:
+                first = False
+                continue
+            jsxobj = self._unserialize(id, data)
+            model = self.model_get(schema=jsxobj._schema)
+            model.set(jsxobj, store=False, index=True)
 
     @property
     def models(self):
-        for key, model in self.meta._sid_to_model.items():
+        for key, model in self._schema_url_to_model.items():
             yield model
 
-    def model_get_from_sid(self, sid, namespaceid=1):
-        if sid in self.meta._sid_to_model:
-            return self.meta._sid_to_model[sid]
-        else:
-            raise RuntimeError("did not find model with sid:'%s' in mem." % sid)
-
-    def model_get_from_url(self, url, namespaceid=1):
+    def model_get(self, schema=None, md5=None, url=None, namespaceid=1, reset=False):
         """
-        will return the latest model found based on url
+        will return the latest model found based on url, md5 or schema
         :param url:
         :return:
         """
-        s = j.data.schema.get_from_url_latest(url=url)
-        return self.model_get_from_schema(s)
+        if schema:
+            if j.data.types.string.check(schema):
+                schema_text = schema
+                schema = j.data.schema.get_from_text(schema_text)
+                self._log_debug("model get from schema:%s, original was text." % schema.url)
+            else:
+                self._log_debug("model get from schema:%s" % schema.url)
+                if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
+                    raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+        else:
+            schema = self.schema_get(md5=md5, url=url, die=True)
+
+        self.meta._url_mid_set(schema)
+
+        return self._model_get_from_schema(schema=schema, reset=reset)
+
+    def schema_get(self, md5=None, url=None, die=True):
+        """
+
+        once a bcdb is known we should ONLY get a schema from the bcdb
+
+
+        :param md5:
+        :param url:
+        :param die:
+        :return:
+        """
+
+        schema_mem = None
+
+        if url:
+            assert md5 == None
+
+            if not j.data.schema.exists(url=url):
+                # means we don't know it and it is not in BCDB either because the load has already happened
+                raise j.exceptions.Input("we could not find model from:%s, was not in bcdb or j.data.schema" % url)
+
+            schema_mem = j.data.schema.get_from_url(url=url, die=False)
+            if not schema_mem:
+                # means we don't have the schema in memory yet in j.data.schema
+                # we need to find
+                md5_newest = j.data.schema.get_from_url(url)  # the latest known one
+                for s in self.meta._data:
+                    if s.md5 == md5_newest:
+                        schema_mem = j.data.schema._add_from_text_item(s.text)
+                        schema_mem.hasdata = (
+                            s.hasdata
+                        )  # we need to know if there was data in the DB per specific Schema
+
+            if not schema_mem and die:
+                raise j.exceptions.Input("we could not find model from:%s, was not in bcdb meta" % url)
+
+        elif md5:
+            if j.data.schema.exists(md5=md5):
+                schema_mem = j.data.schema.get_from_md5(md5=md5)
+            else:
+                for s in self.meta._data.schemas:
+                    if s.md5 == md5:
+                        schema_mem = j.data.schema._add_from_text_item(s.text)
+                        # we need to know if there was data in the DB per specific Schema
+                        schema_mem.hasdata = s.hasdata
+
+            if not schema_mem and die:
+                raise j.exceptions.Input("we could not find model from:%s, was not in bcdb meta" % md5)
+
+        else:
+            raise j.exceptions.Input("need to specify md5 or url")
+
+        return schema_mem
+
+    def _model_get_from_schema(self, schema, reset=False):
+        """
+        :param schema: is schema as text or as schema obj
+        :param schema_set: default needs to be on True,
+                only not needed if we have already set the schema before e.g. on load function of meta
+        :return:
+        """
+
+        if schema.url in self._schema_url_to_model:
+            model = self._schema_url_to_model[schema.url]
+            model.schema_change(schema)
+            return model
+
+        # model not known yet need to create
+        self._log_info("load model:%s" % schema.url)
+        model = BCDBModel(bcdb=self, schema=schema, reset=reset)
+
+        self.model_add(model)
+
+        return model
 
     def model_add(self, model):
         """
@@ -339,21 +508,12 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
         if not isinstance(model, j.data.bcdb._BCDBModelClass):
-            raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
-        assert model.sid
-        self._schema_property_add_if_needed(model.schema)
-        self._schema_add(model.schema)  # do not forget to add the schema
-        self.meta._sid_to_model[model.sid] = model
+            raise j.exceptions.Base("model needs to be of type:%s" % self._BCDBModelClass)
 
-        s = model.schema
-        assert self.meta._schema_md5_to_sid[s._md5]
-        assert self.meta._schema_md5_to_sid[s._md5] == model.sid
-
-        return model
-
-    def _schema_add(self, schema):
-        sid = self.meta._schema_set(schema)  # make sure we remember schema
-        return sid
+        if model.schema.url not in self._schema_url_to_model:
+            self.meta._schema_set(model.schema)
+            self._schema_property_add_if_needed(model.schema)
+            self._schema_url_to_model[model.schema.url] = model
 
     def _schema_property_add_if_needed(self, schema):
         """
@@ -364,51 +524,17 @@ class BCDB(j.application.JSBaseClass):
         """
 
         for prop in schema.properties:
-            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsxobject):
                 # now we know that there is a subtype, we need to store it in the bcdb as well
                 s = prop.jumpscaletype.SUBTYPE._schema
-                self._schema_add(s)
+                self.meta._schema_set(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
-            elif prop.jumpscaletype.NAME == "jsobject":
+            elif prop.jumpscaletype.NAME == "jsxobject":
                 s = prop.jumpscaletype._schema
-                self._schema_add(s)
+                self.meta._schema_set(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
-
-    def model_get_from_schema(self, schema, sid=None):
-        """
-        :param schema: is schema as text or as schema obj
-        :param reload: will reload template
-        :param overwrite: will overwrite the resulting file even if it already exists
-        :param namespaceid is the namespace id
-        :return:
-        """
-        if j.data.types.string.check(schema):
-            schema_text = schema
-            schema = j.data.schema.get_from_text(schema_text)
-            self._log_debug("model get from schema:%s, original was text." % schema.url)
-        else:
-            self._log_debug("model get from schema:%s" % schema.url)
-            if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-                raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
-            schema_text = schema.text
-
-        if not sid:
-            if schema._md5 in self.meta._schema_md5_to_sid:
-                sid = self.meta._schema_md5_to_sid[schema._md5]
-                # means we already know the schema
-            else:
-                sid = self._schema_add(schema)  # this will make sure the schema is registered on the metadata level
-                self.meta._schema_md5_to_sid[schema._md5] = sid
-
-        if sid in self.meta._sid_to_model:
-            return self.meta._sid_to_model[sid]
-
-        # model not known yet need to create
-        self._log_info("load model:%s" % schema.url)
-        model = BCDBModel(bcdb=self, schema=schema, sid=sid)
-        return self.model_add(model)
 
     def _BCDBModelIndexClass_generate(self, schema):
         """
@@ -423,7 +549,7 @@ class BCDB(j.application.JSBaseClass):
             schema = j.data.schema.get_from_text(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         if schema.key not in self._index_schema_class_cache:
 
@@ -431,8 +557,9 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
+            name = "bcdbindex_%s" % self.name
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
+                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass
@@ -448,20 +575,26 @@ class BCDB(j.application.JSBaseClass):
         self._log_debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
-        model = cl()
+        model = cl(self)
         return self.model_add(model)
 
-    def models_add(self, path, overwrite=True):
+    def models_add_threebot(self):
+        self.models_add(self._dirpath + "/models_threebot")
+
+    def models_add(self, path):
         """
         will walk over directory and each class needs to be a model
         when overwrite used it will overwrite the generated models (careful)
+
+        support for *.py and *.toml files
+
         :param path:
         :return: None
         """
         self._log_debug("models_add:%s" % path)
 
         if not j.sal.fs.isDir(path):
-            raise RuntimeError("path: %s needs to be dir, to load models from" % path)
+            raise j.exceptions.Base("path: %s needs to be dir, to load models from" % path)
 
         pyfiles_base = []
         for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
@@ -483,20 +616,22 @@ class BCDB(j.application.JSBaseClass):
             dest = "%s/%s.py" % (path, bname)
             schema_text = j.sal.fs.readFile(schemapath)
             try:
-                schema = j.data.schema.get_from_text(schema_text)
-                self._schema_add(schema)
-                model = self.model_get_from_schema(schema=schema)
-                toml_path = "%s.toml" % (schema.key)
-                if j.sal.fs.getBaseName(schemapath) != toml_path:
-                    toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
-                    j.sal.fs.renameFile(schemapath, toml_path)
-                    schemapath = toml_path
-            except:
-                error_count = errored.get(schemapath, 0)
-                if error_count > 3:
+                model = self.model_get(schema=schema_text)
+            except Exception as e:
+                if schemapath not in errored:
+                    errored[schemapath] = 0
+                errored[schemapath] += 1
+                if errored[schemapath] > 4:
                     raise e
                 tocheck.insert(0, schemapath)
                 continue
+
+            schema = model.schema
+            toml_path = "%s.toml" % (schema.key)
+            if j.sal.fs.getBaseName(schemapath) != toml_path:
+                toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
+                j.sal.fs.renameFile(schemapath, toml_path)
+                schemapath = toml_path
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):
@@ -504,7 +639,7 @@ class BCDB(j.application.JSBaseClass):
             path2 = "%s/%s.py" % (path, pyfile_base)
             self.model_get_from_file(path2)
 
-    def _unserialize(self, id, data, return_as_capnp=False, model=None):
+    def _unserialize(self, id, data, return_as_capnp=False):
         """
         unserialzes data coming from database
         :param id:
@@ -516,30 +651,21 @@ class BCDB(j.application.JSBaseClass):
         res = j.data.serializers.msgpack.loads(data)
 
         if len(res) == 3:
-            raise RuntimeError()
-        elif len(res) == 4:
-            nid, schema_id, acl_id, bdata_encrypted = res
-            model = self.model_get_from_sid(schema_id)
+            nid, acl_id, bdata_encrypted = res
         else:
-            raise RuntimeError("not supported format")
+            raise j.exceptions.Base("not supported format")
 
         bdata = j.data.nacl.default.decryptSymmetric(bdata_encrypted)
 
         if return_as_capnp:
             return bdata
         else:
-            try:
-                obj = model.schema.get(serializeddata=bdata, model=model)
-            except Exception as e:
-                msg = "can't get a model from data:%s\n%s" % (bdata, e)
-                print(msg)
-                raise RuntimeError(msg)
+            obj = j.data.serializers.jsxdata.loads(bdata, bcdb=self)
             obj.nid = nid
-            obj.id = id
-            obj.acl_id = acl_id
-            obj._model = model
-            if model.readonly:
-                obj.readonly = True  # means we fetched from DB, we need to make sure it cannot be changed
+            if not obj.id and id:
+                obj.id = id
+            if acl_id:
+                obj.acl_id = acl_id
             return obj
 
     def obj_get(self, id):
@@ -566,7 +692,7 @@ class BCDB(j.application.JSBaseClass):
         if self.storclient:
             db = self.storclient
             for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
-                if self.storclient.type.lower() == "zdb" and key == 0:  # skip first metadata entry
+                if key == 0:  # skip first metadata entry
                     continue
                 if keyonly:
                     yield key

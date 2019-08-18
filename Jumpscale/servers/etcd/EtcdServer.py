@@ -12,10 +12,12 @@ class EtcdServer(j.application.JSBaseClass):
         :return: tmux pane
         :rtype: tmux.Pane
         """
+        if not j.core.tools.cmd_installed("etcd"):
+            raise RuntimeError("install etcd: 'j.builders.db.etcd.install()'")
         cmd = j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd")
         if config_file:
             cmd += " --config-file %s" % config_file
-        return j.tools.tmux.execute(cmd, window="etcd", pane="etcd", reset=True)
+        return j.servers.tmux.execute(cmd, window="etcd", pane="etcd", reset=True)
 
     def stop(self, pid=None, sig=None):
         """Stops etcd process
@@ -25,6 +27,8 @@ class EtcdServer(j.application.JSBaseClass):
         :param sig: signal, if not given, SIGKILL will be used
         :type sig: int, defaults to None
         """
+        if not j.core.tools.cmd_installed("etcd"):
+            raise RuntimeError("install etcd: 'j.builders.db.etcd.install()'")
         if pid:
             j.sal.process.kill(pid, sig)
         else:

@@ -49,4 +49,4 @@ class RealitProcess(j.application.JSBaseClass):
         :param port:
         :return:
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

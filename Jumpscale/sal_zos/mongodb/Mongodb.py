@@ -23,7 +23,9 @@ class Mongod:
         self.ip = self.container.default_ip().ip.format()
         self.port = port
         if db_type not in ["shard", "config"]:
-            raise ValueError('"{}" is not a valid role, only roles "config" and "shard" are allowed'.format(db_type))
+            raise j.exceptions.Value(
+                '"{}" is not a valid role, only roles "config" and "shard" are allowed'.format(db_type)
+            )
         self.db_type = db_type
         self._cmd = self._CMD[db_type]
 
@@ -55,7 +57,7 @@ class Mongod:
             if self.is_running():
                 break
         else:
-            raise RuntimeError("Failed to start mongodb server")
+            raise j.exceptions.Base("Failed to start mongodb server")
 
     def init_replica_set(self, hosts):
         """ Init replica set
@@ -65,7 +67,7 @@ class Mongod:
 
         # check if server is running
         if not self.is_running():
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 'Cannot initialize replica set, "{}" mongodb instance is not running'.format(self.replica_set)
             )
 
@@ -127,7 +129,7 @@ class Mongod:
                 if not self.is_running():
                     break
             else:
-                raise RuntimeError("failed to stop mongod instance")
+                raise j.exceptions.Base("failed to stop mongod instance")
 
 
 class Mongodb:
@@ -202,7 +204,7 @@ class Mongodb:
         for mount in [self.shard_mount, self.config_mount]:
             for key in ["storagepool", "fs", "dir"]:
                 if not mount.get(key):
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         """Mount point config should be set to None or given correctly.
                                         Current config: {}, expected: {}""".format(
                             mount,
@@ -242,9 +244,9 @@ class Mongodb:
             if route["gw"]:
                 candidates.append(route)
         if not candidates:
-            raise RuntimeError("Could not find interface for macvlan parent")
+            raise j.exceptions.Base("Could not find interface for macvlan parent")
         elif len(candidates) > 1:
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "Found multiple eligible interfaces for macvlan parent: %s" % ", ".join(c["dev"] for c in candidates)
             )
         parent_if = candidates[0]["dev"]
@@ -275,7 +277,7 @@ class Mongodb:
     def ip(self):
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
-            raise RuntimeError('container "{}" is not running'.format(self._container_name))
+            raise j.exceptions.Base('container "{}" is not running'.format(self._container_name))
 
         # return self.container.default_ip().ip.format()
 
@@ -288,7 +290,7 @@ class Mongodb:
             except LookupError:
                 time.sleep(1)
         else:
-            raise RuntimeError('cannot fetch container "{}" IP'.format(self._container_name))
+            raise j.exceptions.Base('cannot fetch container "{}" IP'.format(self._container_name))
 
         return ip
 
@@ -365,7 +367,7 @@ class Mongos:
     def ip(self):
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
-            raise RuntimeError('container "{}" is not running'.format(self.container.name))
+            raise j.exceptions.Base('container "{}" is not running'.format(self.container.name))
 
         # wait for interface to start
         start, timeout = time.time(), 30
@@ -376,7 +378,7 @@ class Mongos:
             except LookupError:
                 time.sleep(1)
         else:
-            raise RuntimeError('cannot fetch container "{}" IP'.format(self.container.name))
+            raise j.exceptions.Base('cannot fetch container "{}" IP'.format(self.container.name))
 
         return ip
 
@@ -410,7 +412,9 @@ class Mongos:
             if self.is_running():
                 break
         else:
-            raise RuntimeError("Failed to start mongodb routing service in contaner {}".format(self.container.name))
+            raise j.exceptions.Base(
+                "Failed to start mongodb routing service in contaner {}".format(self.container.name)
+            )
 
     def add_shards(self, shard_replica_set, shard_hosts):
         """ Add members of shards replica set """
@@ -453,7 +457,7 @@ class Mongos:
                 if not self.is_running():
                     break
             else:
-                raise RuntimeError("failed to stop mongos instance")
+                raise j.exceptions.Base("failed to stop mongos instance")
 
     def destroy(self):
         """ Stop container where mongodb is running """
@@ -466,4 +470,4 @@ def error_check(result, message=""):
 
     if result.state != "SUCCESS":
         err = "{}: {} \n {}".format(message, result.stderr, result.data)
-        raise RuntimeError(err)
+        raise j.exceptions.Base(err)

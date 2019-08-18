@@ -39,7 +39,7 @@ class IssueCollection(ModelBaseCollection):
 
         return Issue
 
-    def _init(self):
+    def _init(self, **kwargs):
         # init the index
         db = j.tools.issuemanager.indexDB
         Issue = self._getModel()
@@ -115,7 +115,7 @@ class IssueCollection(ModelBaseCollection):
             clauses = []
             for key, val in kwargs.items():
                 if not hasattr(self.index, key):
-                    raise RuntimeError('%s model has no field "%s"' % (self.index._meta.name, key))
+                    raise j.exceptions.Base('%s model has no field "%s"' % (self.index._meta.name, key))
                 field = getattr(self.index, key)
                 if isinstance(val, list):  # get range in list
                     clauses.append(field.between(val[0], val[1]))

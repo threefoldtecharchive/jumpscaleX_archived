@@ -27,7 +27,7 @@ class Disk:
 class ZDBDisk(Disk):
     def __init__(self, zdb, name, mountpoint=None, filesystem="ext4", size=10, label=None):
         if zdb.mode == "direct":
-            raise RuntimeError("ZDB mode direct not support for disks")
+            raise j.exceptions.Base("ZDB mode direct not support for disks")
         super().__init__(name, None, mountpoint, filesystem, label)
         self.zdb = zdb
         self.size = size
@@ -36,7 +36,7 @@ class ZDBDisk(Disk):
     @property
     def url(self):
         if self.node is None:
-            raise RuntimeError("Can not get url when node is not set")
+            raise j.exceptions.Base("Can not get url when node is not set")
         else:
             if self.node == self.zdb.node:
                 return self.private_url
@@ -56,7 +56,7 @@ class ZDBDisk(Disk):
         if self.name in self.zdb.namespaces:
             namespace = self.zdb.namespaces[self.name]
             if namespace.size != self.size:
-                raise ValueError("namespace with name {} already exists".format(self.name))
+                raise j.exceptions.Value("namespace with name {} already exists".format(self.name))
         else:
             namespace = self.zdb.namespaces.add(self.name, self.size)
 
@@ -68,10 +68,10 @@ class ZDBDisk(Disk):
             try:
                 res = self.zdb.node.client.system("truncate -s {}G {}".format(self.size, tmpfile)).get()
                 if res.state != "SUCCESS":
-                    raise RuntimeError("Failed to create tmpfile")
+                    raise j.exceptions.Base("Failed to create tmpfile")
                 res = self.zdb.node.client.system("mkfs.{} -L {} {}".format(self.filesystem, self.label, tmpfile)).get()
                 if res.state != "SUCCESS":
-                    raise RuntimeError("Failed to create fs")
+                    raise j.exceptions.Base("Failed to create fs")
                 self.zdb.node.client.kvm.convert_image(tmpfile, self.private_url, "raw")
             finally:
                 self.zdb.node.client.filesystem.remove(tmpfile)
@@ -102,7 +102,7 @@ class Disks(Collection):
         """
         if isinstance(name_or_disk, str):
             if url is None:
-                raise ValueError("Url is mandatory when disk name is given")
+                raise j.exceptions.Value("Url is mandatory when disk name is given")
             super().add(name_or_disk)
             disk = Disk(name_or_disk, url, mountpoint, filesystem, label)
         elif isinstance(name_or_disk, ZDBDisk):
@@ -110,7 +110,7 @@ class Disks(Collection):
             disk = name_or_disk
             disk.node = self._parent.node
         else:
-            raise ValueError("Unsupported type {}".format(name_or_disk))
+            raise j.exceptions.Value("Unsupported type {}".format(name_or_disk))
 
         self._items.append(disk)
         return disk
@@ -119,7 +119,7 @@ class Disks(Collection):
         for disk in self:
             if disk.url == url:
                 return disk
-        raise LookupError("No disk found with url {}".format(url))
+        raise j.exceptions.NotFound("No disk found with url {}".format(url))
 
 
 class Port:
@@ -153,7 +153,7 @@ class Ports(Collection):
             if nic.type == "default":
                 break
         else:
-            raise ValueError("Can not add ports when no default nic is added")
+            raise j.exceptions.Value("Can not add ports when no default nic is added")
         port = Port(name, source, target)
         self._items.append(port)
         return port
@@ -188,7 +188,7 @@ class Mounts(Collection):
         """
         super().add(name)
         if name == "root" or " " in name:
-            raise ValueError("Name can not be 'root' and can not contain spaces")
+            raise j.exceptions.Value("Name can not be 'root' and can not contain spaces")
         mount = MountBind(name, sourcepath, targetpath)
         self._items.append(mount)
         return mount
@@ -221,7 +221,7 @@ class Configs(Collection):
         """
         super().add(name)
         if not self._parent.flist:
-            raise ValueError("Config is only supported when booting from flist")
+            raise j.exceptions.Value("Config is only supported when booting from flist")
         config = Config(name, path, content)
         self._items.append(config)
         return config
@@ -273,7 +273,7 @@ class VMNics(Nics):
         :param hwaddr: str
         """
         if not self._parent.loading and self._parent.is_running() and type_ == "zerotier":
-            raise RuntimeError("Zerotier can not be added when the VM is running")
+            raise j.exceptions.Base("Zerotier can not be added when the VM is running")
         return super().add(name, type_, networkid, hwaddr)
 
     def add_zerotier(self, network, name=None):
@@ -286,7 +286,7 @@ class VMNics(Nics):
         :type name: str
         """
         if not self._parent.loading and self._parent.is_running():
-            raise RuntimeError("Zerotier can not be added when the VM is running")
+            raise j.exceptions.Base("Zerotier can not be added when the VM is running")
         return super().add_zerotier(network, name)
 
 
@@ -446,7 +446,7 @@ Type=simple
     def load_from_reality(self):
         info = self.info
         if not info:
-            raise RuntimeError("Can not load halted vm")
+            raise j.exceptions.Base("Can not load halted vm")
         self.loading = False
         self.disks = Disks(self)
         self.nics = VMNics(self)
@@ -599,7 +599,7 @@ Type=simple
     @vcpus.setter
     def vcpus(self, value):
         if self.is_running():
-            raise RuntimeError("Can not change cpu of running vm")
+            raise j.exceptions.Base("Can not change cpu of running vm")
         self._vcpus = value
 
     @property
@@ -609,7 +609,7 @@ Type=simple
     @memory.setter
     def memory(self, value):
         if self.is_running():
-            raise RuntimeError("Can not change memory of running vm")
+            raise j.exceptions.Base("Can not change memory of running vm")
         self._memory = value
 
     @property
@@ -619,9 +619,9 @@ Type=simple
     @kvm.setter
     def kvm(self, boolean):
         if not isinstance(boolean, bool):
-            raise RuntimeError("Provided value need to be of type boolean")
+            raise j.exceptions.Base("Provided value need to be of type boolean")
         if self.is_running():
-            raise RuntimeError("Can not change kvm flag of running vm")
+            raise j.exceptions.Base("Can not change kvm flag of running vm")
         self._kvm = boolean
 
     @property
@@ -631,7 +631,7 @@ Type=simple
     @flist.setter
     def flist(self, value):
         if self.is_running():
-            raise RuntimeError("Can not change flist of running vm")
+            raise j.exceptions.Base("Can not change flist of running vm")
         self._flist = value
 
     @property
@@ -641,7 +641,7 @@ Type=simple
     @name.setter
     def name(self, value):
         if self.is_running():
-            raise RuntimeError("Can not change name of running vm")
+            raise j.exceptions.Base("Can not change name of running vm")
         self._name = value
 
     def enable_vnc(self):

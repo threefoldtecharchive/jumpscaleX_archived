@@ -66,16 +66,16 @@ class Tmux(j.application.JSBaseClass):
                     rc, out, err = j.core.tools.execute("tmux ls", die=False)
 
             if rc > 0:
-                raise RuntimeError("could not execute tmux ls\n%s" % err)
+                raise j.exceptions.Base("could not execute tmux ls\n%s" % err)
 
             if out.strip().count("\n") > 0:
                 j.shell()
-                raise RuntimeError("found too many tmux sessions, there should only be 1")
+                raise j.exceptions.Base("found too many tmux sessions, there should only be 1")
 
             rc, out, err = j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main", die=False)
             if rc > 0:
                 j.shell()
-                raise RuntimeError("did not find tmux session -t main")
+                raise j.exceptions.Base("did not find tmux session -t main")
 
             self._server = tmuxp.Server()
             time.sleep(1)
@@ -86,7 +86,7 @@ class Tmux(j.application.JSBaseClass):
 
     def kill(self):
         """
-        kosmos 'j.tools.tmux.kill()'
+        kosmos 'j.servers.tmux.kill()'
         """
         if (
             len(j.sal.process.getPidsByFilter("tmux")) == 1
@@ -104,6 +104,11 @@ class Tmux(j.application.JSBaseClass):
     def window_get(self, window="main", reset=False):
         s = self.session
         return s.window_get(window, reset=reset)
+
+    def window_kill(self, window="main"):
+        s = self.session
+        w = s.window_get(window)
+        w.kill()
 
     def execute(self, cmd, window="main", pane="main", reset=True):
         """
@@ -131,7 +136,7 @@ class Tmux(j.application.JSBaseClass):
         ```
         env={}
         env["color"]="blue"
-        cmd = j.tools.tmux.cmd_get(name="test",pane="p21",cmd="ls /", env=env,stopcmd="killall...",process_strings=[])
+        cmd = j.servers.tmux.cmd_get(name="test",pane="p21",cmd_start="ls /", env=env,stopcmd="killall...",process_strings=[])
         cmd.stop()
         cmd.start()
         ```
@@ -159,7 +164,7 @@ class Tmux(j.application.JSBaseClass):
 
         startup_cmd = j.servers.startupcmd.get(
             name=name,
-            cmd=cmd,
+            cmd_start=cmd,
             path=path,
             timeout=timeout,
             env=env,
@@ -218,7 +223,7 @@ class Tmux(j.application.JSBaseClass):
     def window_multi_get(self, window_name="multi", reset=False):
         """
 
-        kosmos 'j.tools.tmux.window_multi_get()'
+        kosmos 'j.servers.tmux.window_multi_get()'
 
         :param window_name:
         :param reset:
@@ -249,7 +254,7 @@ class Tmux(j.application.JSBaseClass):
 
     def test(self):
         """
-        kosmos 'j.tools.tmux.test()'
+        kosmos 'j.servers.tmux.test()'
 
         :return:
         """
@@ -296,11 +301,11 @@ class Tmux(j.application.JSBaseClass):
 
     def test_multi(self):
         """
-        kosmos 'j.tools.tmux.test_multi()'
+        kosmos 'j.servers.tmux.test_multi()'
 
         :return:
         """
-        j.tools.tmux.panes_multi_get()
+        j.servers.tmux.panes_multi_get()
 
         cmd = self.cmd_get(name="htop", window="multi", pane="p11", cmd="htop")
         cmd.start()

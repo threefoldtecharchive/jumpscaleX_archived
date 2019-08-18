@@ -29,7 +29,7 @@ class Doc(j.application.JSBaseClass):
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
         if self.name == "":
-            raise RuntimeError("name cannot be empty")
+            raise j.exceptions.Base("name cannot be empty")
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
@@ -252,7 +252,7 @@ class Doc(j.application.JSBaseClass):
 
     @property
     def markdown_clean_summary(self):
-        c = self.markdown_clean
+        c = self.markdown_source
         lines = c.split("\n")
         counter = 0
         out = ""
@@ -280,12 +280,12 @@ class Doc(j.application.JSBaseClass):
         res = self.links_get(filename=filename, cat=cat)
         if len(res) == 0:
             if die:
-                raise RuntimeError("could not find link %s:%s" % (filename, cat))
+                raise j.exceptions.Base("could not find link %s:%s" % (filename, cat))
             else:
                 return None
         if nr > len(res):
             if die:
-                raise RuntimeError("could not find link %s:%s at position:%s" % (filename, cat, nr))
+                raise j.exceptions.Base("could not find link %s:%s at position:%s" % (filename, cat, nr))
             else:
                 return None
         return res[nr]
@@ -409,7 +409,7 @@ class Doc(j.application.JSBaseClass):
                 dest_file = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, link.filename)
 
                 if link.filepath:
-                    j.sal.fs.copyFile(link.filepath, dest_file)
+                    j.sal.bcdbfs.file_copy(link.filepath, dest_file)
                 else:
                     if link.source.startswith("!"):
                         link.download(dest=dest_file)
@@ -420,7 +420,7 @@ class Doc(j.application.JSBaseClass):
                 md = link.replace_in_txt(md)
 
         dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name) + ".md"
-        j.sal.fs.writeFile(dest, md)
+        j.sal.bcdbfs.file_write(dest, md, append=False)
 
     def _link_exists(self, link):
         for l in self._links:

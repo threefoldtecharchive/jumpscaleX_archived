@@ -76,20 +76,20 @@ class HealthCheck:
         try:
             healthcheckfile = os.path.join(self.healtcheckfolder, name + ".py")
             if not os.path.exists(healthcheckfile):
-                raise RuntimeError("Healtcheck with name {} not found".format(name))
+                raise j.exceptions.Base("Healtcheck with name {} not found".format(name))
             container.client.filesystem.upload_file("/tmp/{}.py".format(name), healthcheckfile)
             try:
                 job = container.client.bash("python3 /tmp/{}.py".format(name))
                 response = job.get(timeout)
             except TimeoutError:
                 container.client.job.kill(job.id, 9)
-                raise RuntimeError("Failed to execute {} on time".format(name))
+                raise j.exceptions.Base("Failed to execute {} on time".format(name))
             if response.state == "ERROR":
-                raise RuntimeError("Failed to execute {} {}".format(name, response.stdout))
+                raise j.exceptions.Base("Failed to execute {} {}".format(name, response.stdout))
             try:
                 return json.loads(response.stdout)
             except Exception:
-                raise RuntimeError("Failed to parse response of {}".format(name))
+                raise j.exceptions.Base("Failed to parse response of {}".format(name))
         except Exception as e:
             healtcheck = {"id": name, "status": "ERROR", "message": str(e)}
             return healtcheck

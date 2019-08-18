@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class Test(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self.r = j.clients.redis.core
         self._ns = "tutorial"
         self.scripts = {}
@@ -12,7 +12,7 @@ class Test(j.application.JSBaseClass):
         lua_path = "%s/%s.lua" % (self._dirpath, name)
 
         if not j.sal.fs.exists(lua_path):
-            raise RuntimeError("cannot find:%s" % lua_path)
+            raise j.exceptions.Base("cannot find:%s" % lua_path)
 
         name2 = "%s_%s" % (self._ns, name)
 

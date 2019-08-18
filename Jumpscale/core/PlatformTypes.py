@@ -146,7 +146,7 @@ class PlatformType(object):
         else:
             uname = self.executor.env_on_system["UNAME"]
             if uname.find("warning: setlocale") != -1:
-                raise RuntimeError("run kosmos 'j.tools.bash.get().profile.locale_check()'")
+                raise j.exceptions.Base("run kosmos 'j.tools.bash.get().profile.locale_check()'")
             uname = uname.split("\n")[0]
             uname = uname.split(" ")
             _tmp, self._hostname, _osversion, self._cpu, self._platform = uname
@@ -181,7 +181,7 @@ class PlatformType(object):
     def osversion(self):
         self.uname
         if self._osversion is None:
-            raise RuntimeError("need to fix, osversion should not be none")
+            raise j.exceptions.Base("need to fix, osversion should not be none")
             # print("####OSVERSION")
             # TELL KRISTOF YOU GOT HERE
             rc, lsbcontent, err = self.executor.execute(

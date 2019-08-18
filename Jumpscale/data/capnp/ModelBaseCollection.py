@@ -79,7 +79,7 @@ class ModelBaseCollection(j.application.JSBaseClass):
         self._init()
         JSBASE.__init__(self)
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @property

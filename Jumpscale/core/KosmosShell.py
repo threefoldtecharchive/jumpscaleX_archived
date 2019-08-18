@@ -25,6 +25,65 @@ class KosmosShellConfig:
     pass
 
 
+# def get_object(tbc, locals_=None, globals_=None, walkback=False):
+#     """
+#     tries starting from the string e.g. j.clients.ssh to get to an object out of the stack
+#     :param tbc: the line on the console = text before cursor
+#     :param locals_:
+#     :param globals_:
+#     :param walkback:
+#     :return:
+#     """
+#     j = KosmosShellConfig.j
+#
+#     try:
+#         obj = eval(tbc)
+#         return obj
+#     except Exception as e:
+#         # print(e)
+#         pass
+#
+#     tbc2 = tbc.split(".")[0]  # e.g. ssh.a becomes ssh, because I need to find the ssh object in the stack
+#
+#     obj = None
+#     frame_ = inspect.currentframe()
+#     if locals_ is None:
+#         locals_ = frame_.f_locals
+#         locals_ = j._locals_get(locals_)
+#
+#     if tbc2 in locals_:
+#         obj = locals_[tbc2]
+#
+#     if not obj:
+#
+#         if not globals_:
+#             globals_ = frame_.f_back.f_globals
+#
+#         if tbc2 in globals_:
+#             obj = globals_[tbc2]
+#
+#     if not obj:
+#
+#         if walkback:
+#             # now walk up to the frames
+#             while obj is None and frame_:
+#                 locals_ = frame_.f_locals
+#
+#                 if tbc2 in locals_:
+#                     obj = locals_[tbc2]
+#                 else:
+#                     frame_ = frame_.f_back
+#
+#     if "." in tbc:
+#         tbc3 = ".".join(tbc.split(".")[1:])
+#         try:
+#             obj2 = eval("obj.%s" % tbc3)
+#             return obj2
+#         except Exception as e:
+#             return
+#     return obj
+
+
 def eval_code(stmts, locals_=None, globals_=None):
     """
     a helper function to ignore incomplete syntax erros when evaluating code
@@ -41,7 +100,7 @@ def eval_code(stmts, locals_=None, globals_=None):
     return eval(code, globals_, locals_)
 
 
-def sort_members_key(name):
+def sort_children_key(name):
     """Sort members of an object
 
     :param name: name
@@ -59,7 +118,7 @@ def sort_members_key(name):
         return 0
 
 
-def filter_completions_on_prefix(completions, prefix=""):
+def filter_completions_on_prefix(completions, prefix=None):
     for completion in completions:
         text = completion.text
         if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
@@ -88,6 +147,7 @@ def get_completions(self, document, complete_event):
 
     :rtype: `Completion` generator
     """
+    j = KosmosShellConfig.j
 
     def colored_completions(names, color):
         for name in names:
@@ -106,23 +166,26 @@ def get_completions(self, document, complete_event):
 
     obj = eval_code(parent, self.get_locals(), self.get_globals())
     if obj:
-        if hasattr(obj.__class__, "_methods_"):
-            yield from colored_completions(obj._properties_children(), "ansigreen")
-            yield from colored_completions(obj._properties_model(), "ansiyellow")
-            yield from colored_completions(obj._methods(prefix=prefix), "ansiblue")
-            yield from colored_completions(obj._properties(prefix=prefix), "ansigray")
-            if hasattr(obj.__class__, "_instance_names"):
-                yield from colored_completions(obj._instance_names(prefix=prefix), "ansired")
+        if isinstance(obj, j.application.JSBaseClass):
+            if not prefix.endswith("*"):
+                prefix += "*"  # to make it a real prefix
+
+            dataprops = obj._dataprops_names_get(filter=prefix)
+            props = obj._properties_names_get(filter=prefix)
+            yield from colored_completions(dataprops, "ansigray")
+            yield from colored_completions(obj._children_names_get(filter=prefix), "ansiyellow")
+            yield from colored_completions(props, "ansigreen")
+            yield from colored_completions(obj._methods_names_get(filter=prefix), "ansired")
         else:
             # try dir()
-            members = sorted(dir(obj), key=sort_members_key)
+            members = sorted(dir(obj), key=sort_children_key)
             yield from colored_completions(members, "ansigray")
 
 
 def get_doc_string(tbc, locals_, globals_):
     obj = eval_code(tbc, locals_=locals_, globals_=globals_)
     if not obj:
-        raise ValueError("cannot get docstring of %s, not an object" % tbc)
+        raise j.exceptions.Value("cannot get docstring of %s, not an object" % tbc)
 
     signature = ""
     try:
@@ -160,8 +223,9 @@ class FormatANSIText(Processor):
 class HasLogs(PythonInputFilter):
     def __call__(self):
         j = KosmosShellConfig.j
-        debug = j.core.myenv.config.get("DEBUG", False)
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug
+        panel_enabled = bool(j.core.myenv.config.get("LOGGER_PANEL_NRLINES"))
+        in_autocomplete = j.application._in_autocomplete
+        return LogPane.Show and panel_enabled and not in_autocomplete
 
 
 class IsInsideString(PythonInputFilter):
@@ -198,12 +262,15 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
     LogPane.Buffer.insert_text(data=msg, fire_event=False)
     LogPane.Buffer.newline()
+    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
 
 
 def setup_logging_containers(repl):
+    j = KosmosShellConfig.j
+
+    panel_line_count = j.core.myenv.config.get("LOGGER_PANEL_NRLINES", 12)
     parent_container = get_ptpython_parent_container(repl)
     parent_container.children.extend(
         [
@@ -220,7 +287,7 @@ def setup_logging_containers(repl):
                         preview_search=True,
                     ),
                     wrap_lines=True,
-                    height=Dimension(max=12),
+                    height=Dimension.exact(panel_line_count),
                 ),
                 filter=HasLogs(repl) & ~is_done,
             ),
@@ -340,10 +407,10 @@ def ptconfig(repl):
             d = get_doc_string(tbc, repl.get_locals(), repl.get_globals())
         except Exception as exc:
             j.tools.logger._log_error(exc)
+            repl.docstring_buffer.reset()
             return
 
         repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
-        repl.docstring_buffer.reset()
 
     sidebar_visible = Condition(lambda: repl.show_sidebar)
 
@@ -371,6 +438,8 @@ def ptconfig(repl):
     old_get_completions = repl._completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
+        j.application._in_autocomplete = True
+
         try:
             _, _, prefix = get_current_line(document)
         except ValueError:
@@ -384,11 +453,13 @@ def ptconfig(repl):
 
         if not completions:
             completions = old_get_completions(self, document, complete_event)
+
+        j.application._in_autocomplete = False
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions
 
-    j.core.myenv.config["log_printer"] = add_logs_to_pane
+    j.core.tools.custom_log_printer = add_logs_to_pane
 
     parent_container = get_ptpython_parent_container(repl)
     # remove ptpython docstring containers, we have ours now

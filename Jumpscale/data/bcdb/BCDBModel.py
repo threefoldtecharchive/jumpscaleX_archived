@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from pyblake2 import blake2b
 from Jumpscale import j
 
@@ -12,7 +32,7 @@ from .BCDBModelIndex import BCDBModelIndex
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, sid=None, schema=None, reset=False):
+    def __init__(self, bcdb, schema=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -31,19 +51,19 @@ class BCDBModel(j.application.JSBaseClass):
 
         if not schema:
             if hasattr(self, "_SCHEMA"):
-                j.data.schema.get_from_text(self._SCHEMA)
+                schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
                 schema = self._schema_get()
                 assert schema
 
-            bcdb.meta._schema_set(schema)
-
         self.schema = schema
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
-        self.sid = bcdb.meta._schema_md5_to_sid[schema._md5]
+
         self.bcdb = bcdb
+
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
+        self.nosave = False
 
         if self.storclient and self.storclient.type == "ZDB":
             # is unique id for a bcdbmodel (unique per storclient !)
@@ -58,14 +78,34 @@ class BCDBModel(j.application.JSBaseClass):
         self._kosmosinstance = None
 
         indexklass = bcdb._BCDBModelIndexClass_generate(schema)
-        self.index = indexklass(self, reset=reset)
+        self.index = indexklass(bcdbmodel=self, reset=reset)
 
+        self._sonic_client = None
         # self.cache_expiration = 3600
 
         self._triggers = []
 
         if reset:
-            self.reset()
+            self.destroy()
+
+    @property
+    def mid(self):
+        if not self.schema.url in self.bcdb.meta._data.url_to_mid:
+            raise j.exceptions.BUG("cannot find url:%s in the metadata of bcdb" % self.schema.url)
+        return self.bcdb.meta._data.url_to_mid[self.schema.url]
+
+    def schema_change(self, schema):
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        # make sure model has the latest schema
+        if self.schema._md5 != schema._md5:
+            self.schema = schema
+            self._triggers_call(None, "schema_change", None)
+
+    @property
+    def sonic_client(self):
+        if not self._sonic_client:
+            self._sonic_client = j.clients.sonic.get_client_bcdb()
+        return self._sonic_client
 
     def _schema_get(self):
         return None
@@ -88,7 +128,7 @@ class BCDBModel(j.application.JSBaseClass):
         if method not in self._triggers:
             self._triggers.append(method)
 
-    def triggers_call(self, obj, action=None, propertyname=None):
+    def _triggers_call(self, obj, action=None, propertyname=None):
         """
         will go over all triggers and call them with arguments given
         see docs/baseclasses/data_mgmt_on_obj.md
@@ -97,13 +137,13 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            obj2 = method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
+            obj2 = method(model=model, obj=obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
             if isinstance(obj2, j.data.schema._JSXObjectClass):
                 # only replace if right one returned, otherwise ignore
                 obj = obj2
             else:
                 if obj2 is not None:
-                    raise RuntimeError("obj return from action needs to be a JSX data obj or None")
+                    raise j.exceptions.Base("obj return from action needs to be a JSXObject or None")
         return obj
 
     # def cache_reset(self):
@@ -116,29 +156,6 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         return True
-
-    def stop(self):
-        """
-        stops the data processor
-        """
-        if self.bcdb.dataprocessor_greenlet is None:
-            # is already stopped
-            return True
-        event = Event()
-        self.bcdb.queue.put((None, ["STOP"], {}, event, None))
-
-        event.wait(1000.0)  # will wait for processing
-        if self.bcdb._sqlclient is not None:
-            self.bcdb.sqlclient.close()
-            self.bcdb._sqlclient = None
-
-        self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
-        return True
-
-    # def start(self):
-    #     if self.dataprocessor_greenlet is None:
-    #         self.bcdb.dataprocessor_start()
-    #     self.index_ready() #will only return when dataprocessor working
 
     @queue_method
     def index_rebuild(self, nid=1):
@@ -154,10 +171,10 @@ class BCDBModel(j.application.JSBaseClass):
             if isinstance(obj, int):
                 obj = self.get(obj)
             else:
-                raise RuntimeError("specify id or obj")
+                raise j.exceptions.Base("specify id or obj")
         assert obj.nid
         if obj.id is not None:
-            self.triggers_call(obj=obj, action="delete")
+            self._triggers_call(obj=obj, action="delete")
             # if obj.id in self.obj_cache:
             #     self.obj_cache.pop(obj.id)
             if not self.storclient:
@@ -168,7 +185,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def check(self, obj):
         if not isinstance(obj, j.data.schema._JSXObjectClass):
-            raise RuntimeError("argument needs to be a jsx data obj")
+            raise j.exceptions.Base("argument needs to be a jsx data obj")
         assert obj.nid
 
     @queue_method
@@ -188,18 +205,18 @@ class BCDBModel(j.application.JSBaseClass):
                 if "nid" in data:
                     nid = data["nid"]
                 else:
-                    raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data, model=self)
+                    raise j.exceptions.Base("need to specify nid")
+            obj = self.schema.new(datadict=data, bcdb=self.bcdb)
             obj.nid = nid
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(serializeddata=data, model=self)
+            obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             if obj_id is None:
-                raise RuntimeError("objid cannot be None")
+                raise j.exceptions.Base("objid cannot be None")
             if not obj.nid:
                 if nid:
                     obj.nid = nid
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
         elif isinstance(data, j.data.schema._JSXObjectClass):
             obj = data
             if obj_id is None and obj.id is not None:
@@ -208,7 +225,7 @@ class BCDBModel(j.application.JSBaseClass):
                 if nid:
                     obj.nid = nid
                 else:
-                    raise RuntimeError("need to specify nid")
+                    raise j.exceptions.Base("need to specify nid")
         elif j.data.types.dict.check(data):
             if obj_id == None and "id" in data:
                 obj_id = data["id"]
@@ -216,11 +233,11 @@ class BCDBModel(j.application.JSBaseClass):
                 if nid:
                     data["nid"] = nid
                 else:
-                    raise RuntimeError("need to specify nid")
-            obj = self.schema.get(datadict=data)
+                    raise j.exceptions.Base("need to specify nid")
+            obj = self.schema.new(datadict=data)
             obj.nid = nid
         else:
-            raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
+            raise j.exceptions.Base("Cannot find data type, str,bin,obj or ddict is only supported")
         if not obj.id:
             obj.id = obj_id  # do not forget
         return self.set(obj)
@@ -228,6 +245,16 @@ class BCDBModel(j.application.JSBaseClass):
     def get_by_name(self, name, nid=1):
         args = {"name": name}
         return self.find(nid=nid, **args)
+
+    def search(self, text, property_name=None):
+        # FIXME: get the real nids
+        objs = self.sonic_client.query(self.bcdb.name, "1:{}".format(self.mid), text)
+        res = []
+        for obj in objs:
+            parts = obj.split(":")
+            if (property_name and parts[1] == property_name) or (not property_name):
+                res.append(self.get(parts[0]))
+        return res
 
     def find(self, nid=1, **args):
         """
@@ -242,7 +269,7 @@ class BCDBModel(j.application.JSBaseClass):
             res = []
             for obj in self.iterate(nid=nid):
                 if obj is None:
-                    raise RuntimeError("iterate should not return None, ever")
+                    raise j.exceptions.Base("iterate should not return None, ever")
                 res.append(obj)
             return res
 
@@ -257,7 +284,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         res = []
         for id_ in ids:
-            res2 = self.get(id_, die=None)
+            res2 = self.get(id_, die=True)
             if res2 is None:
                 if delete_if_not_found:
                     for key, val in args.items():
@@ -271,7 +298,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         return res
 
-    @queue_method_results
+    # @queue_method_results
     def set(self, obj, index=True, store=True):
         """
         :param obj
@@ -295,11 +322,9 @@ class BCDBModel(j.application.JSBaseClass):
                         # means is not in db
                         obj.acl.save()
                     else:
-                        if obj.acl.hash != acl2.hash:
+                        if obj.acl.md5 != acl2.md5:
                             obj.acl.id = None
                             obj.acl.save()  # means there is acl but not same as in DB, need to save
-                            if obj.acl.readonly:
-                                obj.acl.readonly = True
                             self._obj_cache_reset()
                 obj.acl_id = obj.acl.id
 
@@ -308,42 +333,34 @@ class BCDBModel(j.application.JSBaseClass):
             except Exception as e:
                 if str(e).find("has no such member") != -1:
                     msg = str(e).split("no such member", 1)[1].split("stack:")
-                    raise RuntimeError("Could not serialize capnnp message:%s" % msg)
+                    raise j.exceptions.Base("Could not serialize capnnp message:%s" % msg)
                 else:
                     raise e
 
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
             assert obj.nid > 0
-            l = [obj.nid, obj._model.sid, obj.acl_id, bdata_encrypted]
+            l = [obj.nid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
-            obj = self.triggers_call(obj, action="set_pre")
+            obj = self._triggers_call(obj, action="set_pre")
 
             # PUT DATA IN DB
             if obj.id is None:
                 # means a new one
-                if not self.storclient:
-                    obj.id = self.bcdb.sqlclient.set(key=None, val=data)
-                else:
-                    obj.id = self.storclient.set(data)
-                if self.readonly:
-                    obj.readonly = True
-                self._log_debug("NEW:\n%s" % obj)
+                obj.id = self.storclient.set(data)
+                # self._log_debug("NEW:\n%s" % obj)
             else:
-                if not self.storclient:
-                    self.bcdb.sqlclient.set(key=obj.id, val=data)
-                else:
-                    try:
-                        self.storclient.set(data, key=obj.id)
-                    except Exception as e:
-                        if str(e).find("only update authorized") != -1:
-                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
-                        raise
+                try:
+                    self.storclient.set(data, key=obj.id)
+                except Exception as e:
+                    if str(e).find("only update authorized") != -1:
+                        raise j.exceptions.Base("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
+                    raise
 
         if index:
             self.index.set(obj)
 
-        obj = self.triggers_call(obj=obj, action="set_post")
+        obj = self._triggers_call(obj=obj, action="set_post")
 
         return obj
 
@@ -368,16 +385,19 @@ class BCDBModel(j.application.JSBaseClass):
             data = self._dict_process_in(data)
         elif j.data.types.json.check(str(data)):
             data = j.data.serializers.json.loads(data)
+
         if data:
             if isinstance(data, dict):
-                obj = self.schema.get(datadict=data, model=self)
+                obj = self.schema.new(datadict=data, bcdb=self.bcdb)
+            elif isinstance(data, bytes):
+                obj = self.schema.new(serializeddata=data, bcdb=self.bcdb)
             else:
-                raise RuntimeError("need dict")
+                raise j.exceptions.Base("need dict")
         else:
-            obj = self.schema.new(model=self)
+            obj = self.schema.new(bcdb=self.bcdb)
         obj = self._methods_add(obj)
         obj.nid = nid
-        obj = self.triggers_call(obj=obj, action="new")
+        obj = self._triggers_call(obj=obj, action="new")
         return obj
 
     def _methods_add(self, obj):
@@ -393,7 +413,7 @@ class BCDBModel(j.application.JSBaseClass):
         """
 
         if obj_id in [None, 0, "0", b"0"]:
-            raise RuntimeError("id cannot be None or 0")
+            raise j.exceptions.Base("id cannot be None or 0")
 
         # if self.obj_cache is not None and usecache:
         #     # print("use cache")
@@ -406,30 +426,29 @@ class BCDBModel(j.application.JSBaseClass):
         #             # print("cache hit")
         #             return obj
 
-        if not self.storclient:
-            data = self.bcdb.sqlclient.get(key=obj_id)
-        else:
-            data = self.storclient.get(obj_id)
+        data = self.storclient.get(obj_id)
 
         if not data:
             if die:
-                raise RuntimeError("could not find obj with id:%s" % obj_id)
+                raise j.exceptions.Base("could not find obj with id:%s" % obj_id)
             else:
                 return None
 
-        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
+        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp)
+
+        if obj._schema.url == self.schema.url:
+            obj = self._triggers_call(obj=obj, action="get")
+        else:
+            raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
+
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
-
-        obj = self.triggers_call(obj=obj, action="get")
-
         return obj
 
     def destroy(self, nid=1):
         self._log_warning("destroy: %s nid:%s" % (self, nid))
-        for obj in self.find(nid=nid):
-            obj.delete()
+        for obj_id in self.index._id_iterator(nid=nid):
+            self.storclient.delete(obj_id)
         self.index.destroy()
-        self.stop()
         j.sal.fs.remove(self._data_dir)
 
     def iterate(self, nid=1):
@@ -437,12 +456,17 @@ class BCDBModel(j.application.JSBaseClass):
         walk over objects which are of type of this model
         """
         for obj_id in self.index._id_iterator(nid=nid):
-            self._log_debug("iterate:%s" % obj_id)
+            # self._log_debug("iterate:%s" % obj_id)
             assert obj_id > 0
             o = self.get(obj_id, die=False)
             if not o:
                 continue
             yield o
+
+    def _text_index_content_pre_(self, property_name, val, obj_id, nid=1):
+        """ A hook to be called before setting to the full text index
+        """
+        return property_name, val, obj_id, nid
 
     def __str__(self):
         out = "model:%s\n" % self.schema.url

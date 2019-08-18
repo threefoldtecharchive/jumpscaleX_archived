@@ -48,27 +48,17 @@ def profileStop(pr):
 
 spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py" % os.path.dirname(__file__))
 
-from .core.InstallTools import MyEnv
-
-MyEnv.init()
 
 from .core.InstallTools import BaseInstaller
 from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
 from .core.InstallTools import RedisTools
 
-import pudb
+from .core.InstallTools import MyEnv
 
 
-def my_excepthook(exception_type, exception_obj, tb):
-    Tools.log(msg=exception_obj, tb=tb, level=40)
-    if MyEnv.debug:
-        pudb.post_mortem(tb)
-    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
-    sys.exit(1)
-
-
-sys.excepthook = my_excepthook
+MyEnv.init()
+# TODO: there is something not right we get different version of this class, this should be like a singleton !!!
 
 
 class Core:
@@ -76,15 +66,12 @@ class Core:
         self._dir_home = None
         self._dir_jumpscaleX = None
         self._isSandbox = None
+        self.db = MyEnv.db
 
-    @property
-    def db(self):
-        return MyEnv.db
-
-    def db_reset(self):
+    def db_reset(self, j):
         if hasattr(j.data, "cache"):
             j.data.cache._cache = {}
-        self.db = None
+        self.db = j.clients.redis.core_get(fromcache=False)
 
     @property
     def dir_jumpscaleX(self):
@@ -117,14 +104,14 @@ class Jumpscale:
                 locals_[name] = obj
             return locals_
 
-        try:
-            locals_ = add(locals_, "ssh", j.clients.ssh)
-        except:
-            pass
-        try:
-            locals_ = add(locals_, "iyo", j.clients.itsyouonline)
-        except:
-            pass
+        # try:
+        #     locals_ = add(locals_, "ssh", j.clients.ssh)
+        # except:
+        #     pass
+        # try:
+        #     locals_ = add(locals_, "iyo", j.clients.itsyouonline)
+        # except:
+        #     pass
 
         # locals_ = add(locals_,"zos",j.kosmos.zos)
 

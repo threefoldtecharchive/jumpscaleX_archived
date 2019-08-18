@@ -33,11 +33,11 @@ class Machine(j.application.JSBaseClass):
     @property
     def sshkeyname(self):
         if self.model["description"] is None:
-            raise RuntimeError("Could not find sshkeyname, description is empty")
+            raise j.exceptions.Base("Could not find sshkeyname, description is empty")
         for line in self.model["description"].split("\n"):
             if line.strip().startswith("sshkeyname:"):
                 return line.split(":")[-1].strip()
-        raise RuntimeError("Could not find sshkeyname")
+        raise j.exceptions.Base("Could not find sshkeyname")
 
     @property
     def model(self):
@@ -270,7 +270,7 @@ class Machine(j.application.JSBaseClass):
         """
 
         if self.deleted:
-            raise RuntimeError("machine deleted cannot create portforward")
+            raise j.exceptions.Base("machine deleted cannot create portforward")
 
         self.space.model  # will make sure space is deployed
         self.model  # will make sure machine is deployed
@@ -347,7 +347,7 @@ class Machine(j.application.JSBaseClass):
     @property
     def sshclient(self):
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
 
         if self._sshclient is None:
             addr, port = self._ssh_info()
@@ -368,7 +368,7 @@ class Machine(j.application.JSBaseClass):
     @property
     def sshclient_private(self):
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
 
         if self._sshclient_private is None:
             addr, port = self.ipaddr_priv, 22
@@ -398,7 +398,7 @@ class Machine(j.application.JSBaseClass):
 
         # error if port 22 is not found
         if not addr or not port:
-            raise RuntimeError("VM '%s' doesn't have ssh port 22 exposed" % self.name)
+            raise j.exceptions.Base("VM '%s' doesn't have ssh port 22 exposed" % self.name)
 
         return addr, port
 
@@ -489,7 +489,9 @@ class Machine(j.application.JSBaseClass):
                     self.portforward_create(None, 22)
                     self._ssh_enabled = True
                 else:
-                    raise RuntimeError("Cannot find sshport at public side to access this machine, even after creation")
+                    raise j.exceptions.Base(
+                        "Cannot find sshport at public side to access this machine, even after creation"
+                    )
 
             return (pubip, sshport)
 
@@ -505,7 +507,7 @@ class Machine(j.application.JSBaseClass):
         """
 
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
         return j.tools.executor.ssh_get(self.sshclient)
 
     @property
@@ -517,7 +519,7 @@ class Machine(j.application.JSBaseClass):
         :rtype: object
         """
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
         return j.tools.executor.ssh_get(self.sshclient_private)
 
     @property
@@ -532,7 +534,7 @@ class Machine(j.application.JSBaseClass):
 
         """
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
 
         if self._prefab is None:
             self._prefab = j.tools.prefab.get(self.executor, usecache=False)
@@ -550,7 +552,7 @@ class Machine(j.application.JSBaseClass):
 
         """
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
 
         if self._prefab_private is None:
             self._prefab_private = j.tools.prefab.get(self.executor_private, usecache=False)
@@ -559,14 +561,14 @@ class Machine(j.application.JSBaseClass):
     @property
     def node(self):
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
         node = j.tools.nodemgr.get(self.name, create=False)
         return node
 
     @property
     def node_private(self):
         if self.deleted:
-            raise RuntimeError("machine deleted")
+            raise j.exceptions.Base("machine deleted")
         node = j.tools.nodemgr.get(self.name + "_private", create=False)
         return node
 

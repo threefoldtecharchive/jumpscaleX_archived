@@ -15,6 +15,7 @@ class ExecutorSSH(ExecutorBase):
         self.execute = self.sshclient.execute
         self.upload = self.sshclient.upload
         self.download = self.sshclient.download
+        self.execute_jumpscale = self.sshclient.execute_jumpscale
 
         ExecutorBase.__init__(self)
 
@@ -50,6 +51,10 @@ class ExecutorSSH(ExecutorBase):
             self.sshclient.env_on_system_msgpack = value
             self._log_info("save system msgpack for:%s" % self)
             self.sshclient.save()
+
+    def state_reset(self):
+        self.config["state"] = {}
+        self.sshclient.state_reset()
 
     def save(self):
         """

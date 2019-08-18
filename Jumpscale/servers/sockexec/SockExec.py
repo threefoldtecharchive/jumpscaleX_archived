@@ -15,7 +15,7 @@ class SockExec(j.application.JSBaseDataObjClass):
            socketpath = "/sandbox/var/exec.sock"
            """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._startupcmd = None
 
     def start(self):
@@ -34,7 +34,7 @@ class SockExec(j.application.JSBaseDataObjClass):
     def startupcmd(self):
         if not self._startupcmd:
             if not j.core.tools.cmd_installed("sockexec"):
-                raise RuntimeError("cannot find command sockexec, please install")
+                raise j.exceptions.Base("cannot find command sockexec, please install")
             cmd = "rm -f /sandbox/var/exec.sock;sockexec %s" % self.data.socketpath
             self._startupcmd = j.servers.startupcmd.get("sockexec", cmd_start=cmd)
             self._startupcmd.executor = "background"
@@ -50,7 +50,7 @@ class SockExec(j.application.JSBaseDataObjClass):
         # https://github.com/jprjr/sockexec
         args = cmd.split(" ")
         if not os.path.exists(self.socketpath):
-            raise RuntimeError("cannot find exec socket path:%s" % path)
+            raise j.exceptions.Base("cannot find exec socket path:%s" % path)
         self.client = socket.socket(socket.AF_UNIX)
         self.client.connect(self.socketpath)
         s = netstr.encode(str(len(args)).encode())
@@ -71,13 +71,6 @@ class SockExec(j.application.JSBaseDataObjClass):
             if len(res) > 2 and b"exitcode" == res[-2]:
                 return res
             time.sleep(0.01)
-
-    def _socket_check(self):
-        if os.path.exists(self.socketpath):
-            client = socket.socket(socket.AF_UNIX)
-            client.connect(self.socketpath)
-            return True
-        return False
 
     def test(self, reset=False):
         """

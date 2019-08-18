@@ -48,6 +48,7 @@ class Profile(j.application.JSBaseClass):
         return [match.group(2) for match in self._include_pattern.finditer(content)]
 
     def _quote(self, value):
+        value = value.strip('"').strip().strip('"')
         return '"%s"' % value
 
     def load(self):
@@ -80,6 +81,7 @@ class Profile(j.application.JSBaseClass):
         path = path.replace("//", "/")
         path = path.replace("//", "/")
         path = path.rstrip("/")
+        path = path.replace(";", ":")
         return path
 
     def path_add(self, path, end=False, check_exists=True, save=True):
@@ -108,48 +110,52 @@ class Profile(j.application.JSBaseClass):
             self._includes.append(path)
             self._save()
 
-    def env_set(self, key, value, save=True):
+    def env_set(self, key, value, save=True, quote=False):
+        if quote:
+            value = self._quote(value)
+
         self._env[key] = value
         if save:
             self._save()
 
-    def env_set_part(self, key, value, end=False, quote=False, save=True):
+    def env_set_part(self, key, value, end=False, quote=False, save=True, separator=":"):
         """
         will check that there are no double entries in the environment variable
         env parts are separated by : or ;
         :param key:
         :param value:
         :param quote: means will put '' around env parts if space in the item
+        :param end, put at end of line or start
         :return:
         """
         value = j.data.types.string.clean(value).strip().strip("'").strip('"').strip()
-        sep = ":"
+
         if key in self._env:
             line = self._env[key].strip().strip("'").strip('"').strip()
-            if sep is ";" and ":" in line:
+            if separator is ";" and ":" in line:
                 raise j.exceptions.Input(
-                    "cannot have 2 separators, should be : or ;, %s in %s" % (line, self.profile_path)
+                    "cannot have 2 separators, should be %s, %s in %s" % (separator, line, self.profile_path)
                 )
-            elif sep is ":" and ";" in line:
+            elif separator is ":" and ";" in line:
                 raise j.exceptions.Input(
-                    "cannot have 2 separators, should be : or ;, %s in %s" % (line, self.profile_path)
+                    "cannot have 2 separators, should be %s, %s in %s" % (separator, line, self.profile_path)
                 )
-            items0 = [i.strip().strip("'").strip('"').strip() for i in line.split(sep)]
+            items0 = [i.strip().strip("'").strip('"').strip() for i in line.split(separator)]
             items = []
             for i in items0:
                 if i not in items:
                     items.append(i)
 
-            if end and value in items:
+            if value in items:
                 items.pop(items.index(value))
-            if value not in items:
-                if quote and " " in value:
-                    value = self._quote(value)
-                if end:
-                    items.append(value.strip())
-                else:
-                    items.insert(0, value.strip())
-            self.env_set(key, sep.join(items).strip(sep), save=save)
+
+            if quote and " " in value:
+                value = self._quote(value)
+            if end:
+                items.append(value.strip())
+            else:
+                items.insert(0, value.strip())
+            self.env_set(key, separator.join(items).strip(separator), save=save)
         else:
             self.env_set(key, value, save=save)
 
@@ -231,6 +237,9 @@ class Profile(j.application.JSBaseClass):
             self.path_add("/usr/sbin", end=True, check_exists=True, save=False)
             self.path_add("/usr/local/bin", end=True, check_exists=True, save=False)
             self.path_add("/usr/local/sbin", end=True, check_exists=True, save=False)
+
+        if j.core.tools.text_replace(self.profile_path).lower() == "/sandbox/env.sh":
+            raise j.exceptions.JSBUG("should never overwrite /sandbox/env.sh")
 
         self.executor.file_write(self.profile_path, str(self))
 

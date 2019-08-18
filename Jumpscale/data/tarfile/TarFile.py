@@ -35,14 +35,14 @@ class TarFile(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
         if not j.data.types.path.check(path):
-            raise ValueError('Provided string "%s" is not a valid path' % path)
+            raise j.exceptions.Value('Provided string "%s" is not a valid path' % path)
 
         if mode is TarFileFactory.READ:
             if not j.sal.fs.isFile(path):
-                raise ValueError('Provided path "%s" is not an existing file' % path)
+                raise j.exceptions.Value('Provided path "%s" is not an existing file' % path)
 
             if not tarfile.is_tarfile(path):
-                raise ValueError('Provided path "%s" is not a valid tar archive' % path)
+                raise j.exceptions.Value('Provided path "%s" is not a valid tar archive' % path)
 
             self._tar = tarfile.open(path, "r")
 
@@ -50,7 +50,7 @@ class TarFile(j.application.JSBaseClass):
             self._tar = tarfile.open(path, "w")
 
         else:
-            raise ValueError("Invalid mode")
+            raise j.exceptions.Value("Invalid mode")
 
         self.path = path
         self.mode = mode
@@ -93,10 +93,10 @@ class TarFile(j.application.JSBaseClass):
             raise j.exceptions.RuntimeError("Can only extract archives opened for reading")
 
         if not j.data.types.path.check(destination_path):
-            raise ValueError("Not a valid folder name provided")
+            raise j.exceptions.Value("Not a valid folder name provided")
 
         if not j.sal.fs.exists(destination_path):
-            raise ValueError('Destination folder "%s" does not exist' % destination_path)
+            raise j.exceptions.Value('Destination folder "%s" does not exist' % destination_path)
 
         members = list()
         if files:

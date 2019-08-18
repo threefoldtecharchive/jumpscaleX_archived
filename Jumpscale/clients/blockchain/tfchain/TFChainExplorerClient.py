@@ -23,7 +23,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
         @param endpoint: the endpoint to get the data from
         """
         if not isinstance(addresses, list) or len(addresses) == 0:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "addresses expected to be a non-empty list of string-formatted explorer addresses, not {}".format(
                     type(addresses)
                 )
@@ -34,11 +34,11 @@ class TFChainExplorerClient(j.application.JSBaseClass):
             try:
                 address = addresses[idx]
                 if not isinstance(address, str):
-                    raise TypeError("explorer address expected to be a string, not {}".format(type(address)))
+                    raise j.exceptions.Value("explorer address expected to be a string, not {}".format(type(address)))
                 # this is required in order to be able to talk directly a daemon
                 headers = {"User-Agent": "Rivine-Agent"}
                 # do the request and check the response
-                resp = j.clients.http.get(url=address + endpoint, headers=headers)
+                resp = j.clients.http.get_response(url=address + endpoint, headers=headers)
                 if resp.getcode() == 200:
                     return resp.readline()
                 if resp.getcode() == 204:
@@ -73,7 +73,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
         @param endpoint: the endpoint to geyot the data from
         """
         if not isinstance(addresses, list) or len(addresses) == 0:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "addresses expected to be a non-empty list of string-formatted explorer addresses, not {}".format(
                     type(addresses)
                 )
@@ -84,7 +84,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
             try:
                 address = addresses[idx]
                 if not isinstance(address, str):
-                    raise TypeError("explorer address expected to be a string, not {}".format(type(address)))
+                    raise j.exceptions.Value("explorer address expected to be a string, not {}".format(type(address)))
                 # this is required in order to be able to talk directly a daemon,
                 # and to specify the data format correctly
                 headers = {"User-Agent": "Rivine-Agent", "content-type": "application/json"}
@@ -94,7 +94,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 if isinstance(data, str):
                     data = data.encode("utf-8")
                 if not isinstance(data, bytes):
-                    raise TypeError("expected post data to be bytes, not {}".format(type(data)))
+                    raise j.exceptions.Value("expected post data to be bytes, not {}".format(type(data)))
                 # do the request and check the response
                 resp = j.clients.http.post(url=address + endpoint, data=data, headers=headers)
                 if resp.getcode() == 200:

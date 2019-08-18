@@ -22,7 +22,7 @@ class GraphiteClient(JSConfigClient):
         graphite_port = 8081 (ipport)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._SERVER = self.server
         self._CARBON_PORT = self.carbon_port
         self._GRAPHITE_PORT = self.graphite_port

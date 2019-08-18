@@ -71,7 +71,7 @@ class IPPool:
         """
         _ip = _as_ip4(ipaddr)
         if _ip not in self._network:
-            raise ValueError("{} not in network {}".format(ipaddr, self._network))
+            raise j.exceptions.Value("{} not in network {}".format(ipaddr, self._network))
 
         return _ip
 
@@ -89,7 +89,7 @@ class IPPool:
         """
         _ip = self._validate_ip(ipaddr)
         if _ip.is_loopback or _ip == self._network.network_address or _ip == self._network.broadcast_address:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "{} can't be loopback or network_address {} or broadcast_address {}".format(
                     _ip, self._network.network_address, self._network.broadcast_address
                 )
@@ -188,7 +188,7 @@ class IPPool:
         """
         _ip = _as_ip4(ipaddr)
         if _ip not in self._network:
-            raise ValueError("{} not in network {}".format(ipaddr, self._network))
+            raise j.exceptions.Value("{} not in network {}".format(ipaddr, self._network))
         return _ip not in self._reserved
 
     def __contains__(self, ipaddr):
@@ -291,7 +291,7 @@ class IPPoolsManager:
         """
         pool = self._pools_dict.get(pool_id, None)
         if pool is None:
-            raise ValueError("No pool registered with id: {}".format(pool_id))
+            raise j.exceptions.Value("No pool registered with id: {}".format(pool_id))
         _ip = _as_ip4(ipaddr)
         pool.release_ip(ipaddr)
 

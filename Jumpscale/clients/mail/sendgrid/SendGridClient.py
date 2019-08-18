@@ -34,7 +34,7 @@ class SendGridClient(j.application.JSBaseClass):
             attachments = []
 
         if api_key is None:
-            raise RuntimeError("Make sure to export SENDGRID_API_KEY or pass your api key")
+            raise j.exceptions.Base("Make sure to export SENDGRID_API_KEY or pass your api key")
         sg = sendgrid.SendGridAPIClient(apikey=api_key)
         from_email = Email(sender)
         to_email = Email(recipients[0])

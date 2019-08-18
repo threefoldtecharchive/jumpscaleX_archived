@@ -11,11 +11,11 @@ from .List import *
 import copy
 
 
-class Types(j.application.JSBaseClass):
+class Types(j.application.JSBaseFactoryClass):
 
     __jslocation__ = "j.data.types"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._types_list = [
             List,
             Dictionary,
@@ -31,6 +31,7 @@ class Types(j.application.JSBaseClass):
             IPPort,
             Tel,
             YAML,
+            MSGPACK,
             JSON,
             Email,
             Date,
@@ -47,6 +48,7 @@ class Types(j.application.JSBaseClass):
         ]
 
         self._TypeBaseObjClass = TypeBaseObjClass
+        self._TypeBaseClassUnserialized = TypeBaseClassUnserialized
 
         self._type_check_list = []
         self._aliases = {}
@@ -63,7 +65,7 @@ class Types(j.application.JSBaseClass):
 
             o = self.__attach(name, typeclass)
             if name in self._type_check_list:
-                raise RuntimeError("there is duplicate type:%s" % name)
+                raise j.exceptions.Value("there is duplicate type:%s" % name)
             if not hasattr(o, "NOCHECK") or o.NOCHECK is False:
                 if not hasattr(typeclass, "CUSTOM") or typeclass.CUSTOM is False:
                     self._type_check_list.append(name)
@@ -96,7 +98,7 @@ class Types(j.application.JSBaseClass):
             ttype = self.__dict__[key]
             if ttype.check(val):
                 return ttype
-        raise RuntimeError("did not detect val for :%s" % val)
+        raise j.exceptions.Value("did not detect val for :%s" % val)
 
     def get(self, ttype, default=None, cache=True):
         """
@@ -116,7 +118,7 @@ class Types(j.application.JSBaseClass):
         - n, numeric
         - h, set       #set of 2 int
         - p, percent
-        - o, jsobject
+        - o, jsxobject
         - ipaddr, ipaddress
         - ipport, tcpport
         - iprange
@@ -131,6 +133,9 @@ class Types(j.application.JSBaseClass):
         - a, acl
         - u, user
         - g, group
+        - json
+        - yaml
+        - msgpack
 
         !!!TYPES!!!
 
@@ -151,7 +156,7 @@ class Types(j.application.JSBaseClass):
 
         klasstype = "_%s" % ttype
         if klasstype not in self.__dict__:
-            raise RuntimeError("did not find type class:%s" % klasstype)
+            raise j.exceptions.Value("did not find type class:%s" % klasstype)
         tt_class = self.__dict__[klasstype]  # is the class
 
         if default:

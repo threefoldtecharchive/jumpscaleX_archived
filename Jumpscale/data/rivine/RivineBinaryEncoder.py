@@ -48,7 +48,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
     https://github.com/threefoldtech/rivine/blob/7c87733e250d0e195c87119208fe7ba15e762e4b/doc/encoding/RivineEncoding.md
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._data = bytearray()
 
     @property
@@ -94,11 +94,11 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
                 return
             except TypeError:
                 pass
-            raise ValueError("cannot rivbin-encode value with unsupported type {}".format(type(value)))
+            raise j.exceptions.Value("cannot rivbin-encode value with unsupported type {}".format(type(value)))
 
     def _check_int_type(self, value, limit):
         if not isinstance(value, int):
-            raise TypeError("value is not an integer")
+            raise j.exceptions.Value("value is not an integer")
         if value < 0:
             raise IntegerOutOfRange("integer {} is out of lower range of 0".format(value))
         if value > limit:
@@ -170,7 +170,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
                 for element in value:
                     self.add(element)
             except TypeError:
-                raise TypeError("value cannot be encoded as an array")
+                raise j.exceptions.Value("value cannot be encoded as an array")
 
     def add_slice(self, value):
         """
@@ -219,9 +219,11 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             if isinstance(value, str):
                 value = value.encode("utf-8")
             elif not isinstance(value, (bytes, bytearray)):
-                raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
+                raise j.exceptions.Value("value of type {} cannot be added as a single byte".format(type(value)))
             if len(value) != 1:
-                raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
+                raise j.exceptions.Value(
+                    "a single byte has to be accepted, amount of bytes given: {}".format(len(value))
+                )
             self._data += value
 
     def add_all(self, *values):

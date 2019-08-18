@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 
 
@@ -9,49 +29,11 @@ def main(self):
 
     """
 
-    def test(name, sqlite=True):
-        def load():
+    def test(name, schema, sqlite=True):
+        def load(schema_url):
 
             # don't forget the record 0 is always a systems record
-
-            if sqlite:
-                schema = """
-                @url = despiegk.test
-                llist2 = "" (LS)
-                name** = ""
-                email** = ""
-                nr** = 0
-                date_start** = 0 (D)
-                description = ""
-                token_price** = "10 USD" (N)
-                hw_cost = 0.0 #this is a comment
-                llist = []
-                llist3 = "1,2,3" (LF)
-                llist4 = "1,2,3" (L)
-                llist5 = "1,2,3" (LI)
-                U = 0.0
-                pool_type = "managed,unmanaged" (E)
-                """
-            else:
-                schema = """
-                @url = despiegk.test
-                llist2 = "" (LS)
-                name* = ""
-                email* = ""
-                nr* = 0
-                date_start* = 0 (D)
-                description = ""
-                token_price* = "10 USD" (N)
-                hw_cost = 0.0 #this is a comment
-                llist = []
-                llist3 = "1,2,3" (LF)
-                llist4 = "1,2,3" (L)
-                llist5 = "1,2,3" (LI)
-                U = 0.0
-                pool_type = "managed,unmanaged" (E)
-                """
-
-            db, model = self._load_test_model(type=name, reset=True, schema=schema)
+            db, model = self._load_test_model(type=name, schema=schema)
 
             for i in range(10):
                 model_obj = model.new()
@@ -79,8 +61,12 @@ def main(self):
 
             return db
 
-        db = load()
-        db_model = db.model_get_from_url(url="despiegk.test")
+        if sqlite:
+            schema_url = "despiegk.test.sqlite"
+        else:
+            schema_url = "despiegk.test"
+        db = load(schema_url)
+        db_model = db.model_get(url=schema_url)
 
         if sqlite:
             query = db_model.index.sql.select()
@@ -123,10 +109,7 @@ def main(self):
         model_obj.name = n2
 
         # because data did not change, was already that data
-
-        assert model_obj._changed_items == {}
         model_obj.name = "name3"
-        assert model_obj._changed_items == {"name": "name3"}  # now it really changed
 
         assert model_obj._ddict["name"] == "name3"
 
@@ -169,8 +152,48 @@ def main(self):
 
         self._log_info("TEST DONE: %s" % name)
 
-    test("RDB", sqlite=False)
-    test("ZDB")
-    test("SQLITE")
+    schema_sqlite = """
+    @url = despiegk.test.sqlite
+    llist2 = "" (LS)
+    name** = ""
+    email** = ""
+    nr** = 0
+    date_start** = 0 (D)
+    description = ""
+    token_price** = "10 USD" (N)
+    hw_cost = 0.0 #this is a comment
+    llist = []
+    llist3 = "1,2,3" (LF)
+    llist4 = "1,2,3" (L)
+    llist5 = "1,2,3" (LI)
+    U = 0.0
+    pool_type = "managed,unmanaged" (E)
+    """
+    schema = """
+    @url = despiegk.test
+    llist2 = "" (LS)
+    name* = ""
+    email* = ""
+    nr* = 0
+    date_start* = 0 (D)
+    description = ""
+    token_price* = "10 USD" (N)
+    hw_cost = 0.0 #this is a comment
+    llist = []
+    llist3 = "1,2,3" (LF)
+    llist4 = "1,2,3" (L)
+    llist5 = "1,2,3" (LI)
+    U = 0.0
+    pool_type = "managed,unmanaged" (E)
+    """
 
+    test("RDB", schema, sqlite=False)
+
+    test("ZDB", schema_sqlite)
+
+    test("SQLITE", schema_sqlite)
+    # CLEAN STATE
+    # j.data.schema.remove_from_text(schema_sqlite)
+    # j.data.schema.remove_from_text(schema)
+    self._log_info("TEST BASE DONE")
     return "OK"

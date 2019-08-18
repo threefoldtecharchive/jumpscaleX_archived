@@ -14,14 +14,14 @@ class AlphaVantageClient(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client = None
 
     @property
     def client(self):
         if not self._client:
             if not self.api_key_:
-                raise RuntimeError("specify api_key please")
+                raise j.exceptions.Base("specify api_key please")
             try:
                 from alpha_vantage.timeseries import TimeSeries
             except Exception as e:

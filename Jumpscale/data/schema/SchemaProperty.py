@@ -1,17 +1,34 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
 
 class SchemaProperty(j.application.JSBaseClass):
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self, **kwargs):
+
         self.name = ""
         self.jumpscaletype = None
-        # self.isList = False
-        # self.enumeration = []
         self.comment = ""
-        # self.pointer_type = None  #if the property links to another object
         self.nr = 0
         self._default = None
         self.index = False  # as used in sqlite
@@ -19,7 +36,7 @@ class SchemaProperty(j.application.JSBaseClass):
         self.index_text = False  # is for full text index
         self.unique = False  # to check if type is unique or not
         if self.name in ["schema"]:
-            raise RuntimeError("cannot have property name:%s" % self.name)
+            raise j.exceptions.Base("cannot have property name:%s" % self.name)
 
     @property
     def capnp_schema(self):
@@ -33,9 +50,23 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def has_jsxobject(self):
-        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "jsobject":
+        return self.is_list_jsxobject or self.is_jsxobject
+
+    @property
+    def is_list_jsxobject(self):
+        if self.jumpscaletype.NAME == "list" and self.jumpscaletype.SUBTYPE.NAME == "JSXOBJ":
             return True
-        if self.jumpscaletype.NAME == "jsobject":
+        return False
+
+    @property
+    def is_jsxobject(self):
+        if self.jumpscaletype.BASETYPE == "JSXOBJ":
+            return True
+        return False
+
+    @property
+    def is_list(self):
+        if self.jumpscaletype.NAME == "list":
             return True
         return False
 
@@ -44,9 +75,7 @@ class SchemaProperty(j.application.JSBaseClass):
         try:
             c = self.jumpscaletype.python_code_get(self.default)
         except Exception as e:
-            print("ERROR")
-            print(e)
-            raise (e)
+            raise j.exceptions.JSBUG("cannot get pythoncode from default", exception=e)
         return c
 
     @property
@@ -58,6 +87,10 @@ class SchemaProperty(j.application.JSBaseClass):
             else:
                 out += item.capitalize()
         return out
+
+    @property
+    def name_str(self):
+        return "%-20s" % self.name
 
     @property
     def js_typelocation(self):

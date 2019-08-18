@@ -1,3 +1,25 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
+# NOT USE YET, IGNORE FOR NOW
+
 from Jumpscale import j
 from .JSBaseConfig import JSBaseConfig
 
@@ -44,7 +66,7 @@ class JSBaseService(j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
         if self.__class__._MODEL is None:
-            self.__class__._MODEL = j.world.system._bcdb.model_get_from_schema(self.__class__._SCHEMA_TXT)
+            self.__class__._MODEL = j.world.system._bcdb.model_get(schema=self.__class__._SCHEMA_TXT)
 
         self.actions = {}
         self._state = None
@@ -57,7 +79,7 @@ class JSBaseService(j.application.JSBaseClass):
 
         if topclass:
             self._init()
-            self._init2(**kwargs)
+            self._init_pre(**kwargs)
 
         if id is None and (key is not None or servicepool is not None):
             if servicepool is not None and key is None:
@@ -71,7 +93,7 @@ class JSBaseService(j.application.JSBaseClass):
 
             self._key = key
 
-        self.data  # will fetch the key
+        self._data  # will fetch the key
 
         self._redis_key_state = self.key.encode() + b":state"
         self._redis_key_actions_now = b"actions:last"
@@ -103,8 +125,8 @@ class JSBaseService(j.application.JSBaseClass):
         hkey, key = self._action_key(action_id)
         r = j.clients.credis_core.hget(hkey, key)
         if r is None:
-            raise RuntimeError("cannot find action with id:%s" % action_id)
-        res = j.world.system._schema_service_action.schema.get(data=r)
+            raise j.exceptions.Base("cannot find action with id:%s" % action_id)
+        res = j.world.system._schema_service_action.schema.new(data=r)
         return res
 
     @property
@@ -112,7 +134,7 @@ class JSBaseService(j.application.JSBaseClass):
         if self._key is None:
             if self._id is None:
                 return None
-            self.data
+            self._data
         return self._key
 
     @property
@@ -134,7 +156,7 @@ class JSBaseService(j.application.JSBaseClass):
                 self._data = self._MODEL.new()
                 self._data.key = self._key
             else:
-                self._data = self._MODEL.get(id=self.id)
+                self._data = self._MODEL.get(obj_id=self.id)
                 self._key = self._data.key
 
             if self._data is None:
@@ -156,7 +178,7 @@ class JSBaseService(j.application.JSBaseClass):
         return self._state
 
     def data_save(self):
-        self.data.save()
+        self._data.save()
 
     def service_unmanage(self):
 
@@ -205,10 +227,10 @@ class JSBaseService(j.application.JSBaseClass):
             event.set()
 
     def _stateobj_get(self, key):
-        for item in self.data.stateobj.actions:
+        for item in self._data.stateobj.actions:
             if item.key == key:
                 return item
-        a = self.data.stateobj.actions.new()
+        a = self._data.stateobj.actions.new()
         a.key = key
 
     def _coordinator_action_ask(self, key):
@@ -220,7 +242,7 @@ class JSBaseService(j.application.JSBaseClass):
 
     @property
     def _instance(self):
-        return self.data.instance
+        return self._data.instance
 
     #
     #
@@ -246,7 +268,7 @@ class JSBaseService(j.application.JSBaseClass):
     #
     def __str__(self):
         out = "service:%s (%s)\n\n" % (self.key, self.id)
-        out += str(self.data)
+        out += str(self._data)
         out += "\n"
         return out
 

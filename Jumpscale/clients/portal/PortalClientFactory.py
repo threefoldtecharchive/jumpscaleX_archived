@@ -8,5 +8,5 @@ class PortalClientFactory(JSConfigs):
     __jslocation__ = "j.clients.portal"
     _CHILDCLASS = PortalClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._portalClients = {}

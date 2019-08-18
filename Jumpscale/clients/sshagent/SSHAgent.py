@@ -12,7 +12,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.sshagent"
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         if MyEnv.sshagent:
 
@@ -27,9 +27,10 @@ class SSHAgent(j.application.JSBaseClass):
             self.profile_js_configure = MyEnv.sshagent.profile_js_configure
             self.kill = MyEnv.sshagent.kill
             self.start = MyEnv.sshagent.start
+            self.key_load = MyEnv.sshagent.key_load
 
         else:
-            raise RuntimeError("cannot use sshagent, maybe not initted?")
+            raise j.exceptions.Base("cannot use sshagent, maybe not initted?")
 
     @property
     def key_default(self):
@@ -84,7 +85,9 @@ class SSHAgent(j.application.JSBaseClass):
             if item.endswith(keyname):
                 return item
         if die:
-            raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
+            raise j.exceptions.Base(
+                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname
+            )
 
     def keys_pub_get(self):
         """
@@ -121,7 +124,7 @@ class SSHAgent(j.application.JSBaseClass):
                 if line.endswith(keyname):
                     return line
 
-        raise RuntimeError("did not find public key")
+        raise j.exceptions.Base("did not find public key")
 
     #
     # def _paramiko_keys_get(self):
@@ -139,7 +142,7 @@ class SSHAgent(j.application.JSBaseClass):
     #             # maybe we can get this to work using comparing of the public keys?
     #             return key
     #
-    #     raise RuntimeError("could not find key:%s" % keyname)
+    #     raise j.exceptions.Base("could not find key:%s" % keyname)
 
     def sign(self, data, keyname=None, hash=True):
         """
@@ -188,11 +191,11 @@ class SSHAgent(j.application.JSBaseClass):
             self._log_info("start ssh agent")
             rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise j.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not Tools.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
-                    raise RuntimeError(err_msg)
+                    raise j.exceptions.Base(err_msg)
 
                 # get pid from out of ssh-agent being started
                 piditems = [item for item in out.split("\n") if item.find("pid") != -1]
@@ -200,7 +203,7 @@ class SSHAgent(j.application.JSBaseClass):
                 # print(piditems)
                 if len(piditems) < 1:
                     self._log_debug("results was: %s", out)
-                    raise RuntimeError("Cannot find items in ssh-add -l")
+                    raise j.exceptions.Base("Cannot find items in ssh-add -l")
 
                 self._init()
 
@@ -221,50 +224,37 @@ class SSHAgent(j.application.JSBaseClass):
 
         """
 
-        self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
-        if self.available():
+        self._log_info("sshkeys:%s" % j.clients.sshkey._children_names_get())
+        if self.available:
             self._log_info("sshkeys:%s" % self.key_paths)
 
-        j.clients.sshagent.kill()  # goal is to kill & make sure it get's loaded automatically
-        j.clients.sshagent.start()
+        # BETTER NOT TO DO BECAUSE THEN STD KEYS GONE
+        # j.clients.sshagent.kill()  # goal is to kill & make sure it get's loaded automatically
+        # j.clients.sshagent.start()
+
+        j.sal.fs.createDir("/tmp/.ssh")
 
         # lets generate an sshkey with a passphrase
         passphrase = "12345"
-        path = "/root/.ssh/test_key"
+        path = "/tmp/.ssh/test_key"
         skey = j.clients.sshkey.get(name="test", path=path, passphrase=passphrase)
         skey.save()
 
         # this will reload the key from the db
         skey_loaded = j.clients.sshkey.get(name="test")
 
-        assert skey_loaded.data._ddict == skey.data._ddict
+        assert skey_loaded._data._ddict == skey._data._ddict
 
         skey.generate(reset=True)
         skey.load()
 
         assert skey.is_loaded()
 
-        if not j.core.platformtype.myplatform.platform_is_osx:
-            # on mac does not seem to work
-            skey.unload()
-            assert skey.is_loaded() is False
+        # on mac does not seem to work
+        skey.unload()
+        assert skey.is_loaded() is False
 
-        path = "/root/.ssh/test_key_2"
-        skey2 = j.clients.sshkey.get(name="test2", path=path)
-        skey2.generate(reset=True)
-        skey2.load()
-        assert skey2.is_loaded()
-        skey2.unload()
-        assert skey2.is_loaded() is False
-
-        assert self.available()
-        self.kill()
-        self.start()
-        assert self.available()
-
-        # Clean up after test
-        self.kill()
-        skey.delete_from_sshdir()
-        skey2.delete_from_sshdir()
-        skey.delete()
-        skey2.delete()
+    # def __str__(self):
+    #     return "j.clients.sshagent"
+    #
+    # __repr__ = __str__

@@ -63,7 +63,7 @@ class Grafana:
             is_running = self.is_running()
 
         if is_running:
-            raise RuntimeError("Failed to stop grafana.")
+            raise j.exceptions.Base("Failed to stop grafana.")
 
         if self.container.node.client.nft.rule_exists(self.port):
             self.container.node.client.nft.drop_port(self.port)
@@ -91,7 +91,7 @@ class Grafana:
         if not is_running:
             if self.container.node.client.nft.rule_exists(self.port):
                 self.container.node.client.nft.drop_port(self.port)
-            raise RuntimeError("Failed to start grafana.")
+            raise j.exceptions.Base("Failed to start grafana.")
 
     def add_data_source(self, database, name, ip, port, count):
         data = {

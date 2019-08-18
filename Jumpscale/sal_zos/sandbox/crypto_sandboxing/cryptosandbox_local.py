@@ -49,7 +49,7 @@ def merge(client, target, sources):
         uri=url, data=json.dumps(sources), headers=None, params=None, content_type="application/json"
     )
     if resp.status_code != 200:
-        raise RuntimeError("Failed to merge flists {}".format(sources))
+        raise j.exceptions.Base("Failed to merge flists {}".format(sources))
     return "{}/{}".format(username, target)
 
 

@@ -19,25 +19,38 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         #port_priv = 22
         login = "root"
         passwd = ""
-        use_mosh = False 
         sshkey_name = ""
         proxy = ""
         stdout = True (B)
         forward_agent = True (B)
         allow_agent = True (B)
         client_type = "paramiko,pssh" (E)
-        timeout = 30
+        timeout = 60
         config_msgpack = "" (bytes)     
         env_on_system_msgpack = "" (bytes)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._client_ = None
         self._env_on_system = None
         self._uid = None
         self.executor = j.tools.executor.ssh_get(self)
 
         self._init3()
+
+    def state_reset(self):
+        """
+        set the following:
+
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
+
+        so it can get reloaded from remote
+
+        :return:
+        """
+        self.config_msgpack = b""
+        self.env_on_system_msgpack = b""
 
     def reset(self):
 
@@ -75,7 +88,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             if self._id in [0, None, ""]:
                 self.save()
             if self._id in [0, None, ""]:
-                raise RuntimeError("id cannot be empty")
+                raise j.exceptions.Base("id cannot be empty")
             self._uid = "%s-%s-%s" % (self.addr, self.port, self._id)
         return self._uid
 
@@ -100,16 +113,16 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         local_file = self._replace(local_file, paths_executor=False)
         remote_file = self._replace(remote_file)
         if os.path.isdir(local_file):
-            raise ValueError("Local file cannot be a dir")
+            raise j.exceptions.Value("Local file cannot be a dir")
         destination = j.sal.fs.getDirName(remote_file)
         self.executor.dir_ensure(destination)
         self._client.scp_send(local_file, remote_file, recurse=False, sftp=None)
-        self._log_debug("Copied local file %s to remote destination %s", local_file, remote_file)
+        self._log_debug("Copied local file %s to remote destination %s for %s" % (local_file, remote_file, self))
 
     def _replace(self, txt, paths_executor=True):
         if "{" in txt:
             res = {}
-            for key, item in self.data._ddict.items():
+            for key, item in self._data._ddict.items():
                 res[key.upper()] = item
             txt = j.core.tools.text_replace(txt, args=res)
         return txt
@@ -122,6 +135,17 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     #         else:
     #             self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
     #     return self._private
+    def execute_jumpscale(self, script, **kwargs):
+        script = "from Jumpscale import j\n{}".format(script)
+
+        script = j.core.tools.text_replace(script, **kwargs)
+
+        scriptname = j.data.hash.md5_string(script)
+        filename = "{}/{}".format(j.dirs.TMPDIR, scriptname)
+
+        j.sal.fs.writeFile(filename, contents=script)
+        self.file_copy(filename, filename)  # local -> remote
+        self.execute("source /sandbox/env.sh && python3 {}".format(filename))
 
     @property
     def addr_variable(self):
@@ -145,7 +169,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         return right sshkey
         """
         if self.sshkey_name in [None, ""]:
-            raise RuntimeError("sshkeyname needs to be specified")
+            raise j.exceptions.Base("sshkeyname needs to be specified")
         return j.clients.sshkey.get(name=self.sshkey_name)
 
     @property
@@ -157,7 +181,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             self._ftpclient = None
         return self._connected
 
-    def ssh_authorize(self, user, pubkey=None):
+    def ssh_authorize(self, pubkeys=None, homedir="/root"):
         """add key to authorized users, if key is specified will get public key from sshkey client,
         or can directly specify the public key. If both are specified key name instance will override public key.
 
@@ -166,21 +190,31 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :param pubkey: public key to authorize, defaults to None
         :type pubkey: str, optional
         """
-        if not pubkey:
-            pubkey = self.sshkey_obj.pubkey
-        if not pubkey:
-            raise RuntimeError("pubkey not given")
-        j.builders.system.ssh.authorize(user=user, key=pubkey)
+        if not pubkeys:
+            pubkeys = [self.sshkey_obj.pubkey]
+        if isinstance(pubkeys, str):
+            pubkeys = [pubkeys]
+        for sshkey in pubkeys:
+            # TODO: need to make sure its only 1 time
+            self.execute('echo "{sshkey}" >> {homedir}/.ssh/authorized_keys'.format(**locals()))
 
     def shell(self, cmd=None):
         if cmd:
             j.shell()
-        if self.use_mosh:
-            cmd = "mosh {login}@{addr} -p {port}"
-        else:
-            cmd = "ssh {login}@{addr} -p {port}"
+        cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
+
+    def mosh(self, ssh_private_key_push=False):
+        self.executor.installer.mosh()
+        if ssh_private_key_push:
+            j.shell()
+        cmd = "mosh -ssh='ssh -oStrictHostKeyChecking=no -t -p {PORT}' {LOGIN}@{ADDR}"
+        # cmd = "mosh -p {PORT} {LOGIN}@{ADDR} -A"
+        cmd = self._replace(cmd)
+        j.sal.process.executeWithoutPipe(cmd)
+
+        return self.shell()
 
     def kosmos(self, cmd=None):
         j.shell()
@@ -192,7 +226,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         if self._syncer is None:
-            self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
+            self._syncer = j.tools.syncer.get(name=self.name, sshclient_names=[self.name])
         return self._syncer
 
     def portforward_to_local(self, remoteport, localport):
@@ -209,7 +243,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
         print("Test tcp port to:%s" % localport)
         if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
-            raise RuntimeError("Cannot open ssh forward:%s_%s_%s" % (self, remoteport, localport))
+            raise j.exceptions.Base("Cannot open ssh forward:%s_%s_%s" % (self, remoteport, localport))
         print("Connection ok")
 
     def portforward_kill(self, localport):
@@ -253,7 +287,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             if j.sal.fs.isFile(source):
                 return self.file_copy(source, dest)
             else:
-                raise RuntimeError("only support dir or file for upload")
+                raise j.exceptions.Base("only support dir or file for upload")
         dest = self._replace(dest)
         # self._check_base()
         # if dest_prefix != "":
@@ -302,8 +336,8 @@ class SSHClientBase(j.application.JSBaseConfigClass):
                 return self._client.scp_recv(source, dest, recurse=False, sftp=None, encoding="utf-8")
             else:
                 if not self.exists(source):
-                    raise RuntimeError("%s does not exists, cannot download" % source)
-                raise RuntimeError("src:%s needs to be dir or file" % source)
+                    raise j.exceptions.Base("%s does not exists, cannot download" % source)
+                raise j.exceptions.Base("src:%s needs to be dir or file" % source)
         # self._check_base()
         # if source_prefix != "":
         #     source = j.sal.fs.joinPaths(source_prefix, source)
@@ -329,7 +363,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             recursive=recursive,
         )
 
-    def execute(self, cmd, interactive=False, showout=True, replace=True, die=True, timeout=None, script=None):
+    def execute(self, cmd, interactive=True, showout=True, replace=True, die=True, timeout=None, script=None):
         """
 
         :param cmd: cmd to execute, can be multiline or even a script
@@ -343,7 +377,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         if not isinstance(cmd, str):
-            raise RuntimeError("cmd needs to be string")
+            raise j.exceptions.Base("cmd needs to be string")
         if replace:
             cmd = self._replace(cmd)
         if ("\n" in cmd and script in [None, True]) or len(cmd) > 100000:
@@ -363,7 +397,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
     def _execute_interactive(self, cmd, showout=False, replace=True, die=True):
         if "\n" in cmd:
-            raise RuntimeError("cannot have \\n in cmd: %s" % cmd)
+            raise j.exceptions.Base("cannot have \\n in cmd: %s" % cmd)
         if "'" in cmd:
             cmd = cmd.replace("'", '"')
         cmd2 = "ssh -oStrictHostKeyChecking=no -t {LOGIN}@{ADDR} -A -p {PORT} '%s'" % (cmd)
@@ -379,7 +413,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         """
 
         if "sudo -H -SE" in content:
-            raise RuntimeError(content)
+            raise j.exceptions.Base(content)
 
         if showout:
             self._log_info("EXECUTESCRIPT {}:{}:\n'''\n{}\n'''\n".format(self.addr, self.port, content))

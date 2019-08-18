@@ -24,11 +24,11 @@ class HTTPServer:
             return True
         if not job.running:
             result = job.get()
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "Failed to start caddy server: {} {} {}".format(result.stderr, result.stdout, result.data)
             )
         self.container.client.job.kill(job.id)
-        raise RuntimeError("Failed to start caddy server: didnt start listening")
+        raise j.exceptions.Base("Failed to start caddy server: didnt start listening")
 
     def is_running(self):
         try:

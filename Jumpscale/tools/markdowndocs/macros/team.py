@@ -1,5 +1,5 @@
 from Jumpscale import j
-from Jumpscale.tools.markdowndocs.Link import CustomLink
+from Jumpscale.tools.markdowndocs.Link import MarkdownLinkParser
 
 
 def filter_on(data, attr, values):
@@ -53,7 +53,7 @@ def team(doc, link, order="random", projects=None, contribution_types=None, **kw
     :rtype: str
     """
 
-    repo = doc.docsite.get_real_source(CustomLink(link))
+    repo = doc.docsite.get_real_source(MarkdownLinkParser(link))
     path = j.clients.git.getContentPathFromURLorPath(repo, pull=True)
 
     # options passed to team plugin (docsify)
@@ -71,7 +71,7 @@ def team(doc, link, order="random", projects=None, contribution_types=None, **kw
             elif extname in ("png", "jpg", "jpeg"):
                 person_data["avatar"] = j.sal.fs.joinPaths(doc.path_dir_rel, basename)
                 dest = j.sal.fs.joinPaths(doc.docsite.outpath, doc.path_dir_rel, basename)
-                j.sal.fs.copyFile(filepath, dest, createDirIfNeeded=True)
+                j.sal.bcdbfs.file_copy(filepath, dest)
 
         if person_data:
             data.append(person_data)

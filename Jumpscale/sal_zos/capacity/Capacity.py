@@ -82,7 +82,7 @@ class Capacity:
         if "private" in self._node.kernel_args:
             data["robot_address"] = "private"
         elif not data["robot_address"]:
-            raise RuntimeError("Can not register a node without robot_address")
+            raise j.exceptions.Base("Can not register a node without robot_address")
 
         client = self.directory()
 

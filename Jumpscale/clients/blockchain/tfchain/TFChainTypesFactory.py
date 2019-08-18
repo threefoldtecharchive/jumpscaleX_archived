@@ -15,7 +15,7 @@ class TFChainTypesFactory(j.application.JSBaseClass):
     TFChain Types Factory class
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._transaction_factory = TransactionFactory()
         self._fulfillment_factory = FulfillmentFactory()
         self._condition_factory = ConditionFactory()

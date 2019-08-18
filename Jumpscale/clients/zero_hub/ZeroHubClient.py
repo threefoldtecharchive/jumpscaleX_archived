@@ -17,7 +17,7 @@ class ZeroHubClient(JSConfigClient):
     url = "https://hub.grid.tf/api" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.username = self.username
         self.client = ZHubClient(self.url)
         self.api = self.client.api

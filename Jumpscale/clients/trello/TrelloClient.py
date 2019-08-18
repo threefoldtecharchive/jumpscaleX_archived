@@ -14,7 +14,7 @@ class TrelloClient(JSConfigClient):
     token_secret_= "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         from trello import TrelloClient
 
         if not self.token_secret_:

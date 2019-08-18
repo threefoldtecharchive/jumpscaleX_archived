@@ -71,7 +71,7 @@ class UserCollection(ModelBaseCollection):
     def get(self, key):
         resp = self.client.call("model_user_get", key)
         if len(resp.data) <= 1 and len(resp.data[0]) > 2:
-            raise KeyError("value for %s not found" % key)
+            raise j.exceptions.NotFound("value for %s not found" % key)
         value = resp.data[0][1]
         return UserModel(key=key, collection=self, new=False, data=value)
 
@@ -82,11 +82,11 @@ class UserCollection(ModelBaseCollection):
         return [item.decode() for item in resp[0]]
 
     # def list(self, actor="", service="", action="", state="", serviceKey="", fromEpoch=0, toEpoch=9999999999999,tags=[]):
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
     #     return res
 
     # def find(self, actor="", service="", action="", state="", serviceKey="", fromEpoch=0, toEpoch=9999999999999, tags=[]):
-    #     raise NotImplementedError()
+    #     raise j.exceptions.NotImplemented()
     #     res = []
     #     for key in self.list(actor, service, action, state, serviceKey, fromEpoch, toEpoch, tags):
     #         if self.get(key):

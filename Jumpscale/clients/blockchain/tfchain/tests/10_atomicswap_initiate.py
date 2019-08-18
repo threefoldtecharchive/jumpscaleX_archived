@@ -15,7 +15,7 @@ def main(self):
     """
 
     # create a tfchain client for devnet
-    c = j.clients.tfchain.new("mytestclient", network_type="TEST")
+    c = j.clients.tfchain.get("mytestclient", network_type="TEST")
     # or simply `c = j.tfchain.clients.mytestclient`, should the client already exist
 
     # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
@@ -36,7 +36,7 @@ def main(self):
     c._explorer_post = explorer_client.explorer_post
 
     # a wallet is required to initiate an atomic swap contract
-    w = c.wallets.new(
+    w = c.wallets.get(
         "mytestwallet",
         seed="survey exile lab cook license sock rose squirrel noodle point they lounge oval kit tape virus loop scare water gorilla baby educate program wish",
     )

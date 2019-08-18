@@ -9,14 +9,14 @@ from core.InstallTools import Redis
 from core.InstallTools import RedisTools
 
 
-class RedisFactory(j.application.JSBaseClass):
+class RedisFactory(j.application.JSBaseFactoryClass):
 
     """
     """
 
     __jslocation__ = "j.clients.redis"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cache_clear()
         self._unix_socket_core = "/sandbox/var/redis.sock"
         self._core = None
@@ -54,6 +54,8 @@ class RedisFactory(j.application.JSBaseClass):
         ssl=False,
         ssl_certfile=None,
         ssl_keyfile=None,
+        ssl_ca_certs=None,
+        ssl_cert_reqs="required",
         timeout=10,
         ping=True,
         die=True,
@@ -108,6 +110,8 @@ class RedisFactory(j.application.JSBaseClass):
                     ssl_certfile=ssl_certfile,
                     ssl_keyfile=ssl_keyfile,
                     unix_socket_path=unixsocket,
+                    ssl_cert_reqs=ssl_cert_reqs,
+                    ssl_ca_certs=ssl_ca_certs,
                     # socket_timeout=timeout,
                     **args,
                 )
@@ -117,9 +121,6 @@ class RedisFactory(j.application.JSBaseClass):
                     unix_socket_path=unixsocket,
                     # socket_timeout=timeout,
                     password=password,
-                    ssl=ssl,
-                    ssl_certfile=ssl_certfile,
-                    ssl_keyfile=ssl_keyfile,
                     **args,
                 )
 
@@ -137,7 +138,7 @@ class RedisFactory(j.application.JSBaseClass):
                     if die == False:
                         return None
                     else:
-                        raise RuntimeError("Redis on %s:%s did not answer" % (ipaddr, port))
+                        raise j.exceptions.Base("Redis on %s:%s did not answer" % (ipaddr, port))
                 else:
                     raise e
 
@@ -164,15 +165,16 @@ class RedisFactory(j.application.JSBaseClass):
 
         # if not fromcache:
         #     return RedisQueue(self.get(ipaddr, port, fromcache=False), name, namespace=namespace)
-        key = "%s_%s_%s" % (ipaddr, port, key)
-        if fromcache == False or key not in self._redisq:
-            self._redisq[key] = redisclient.queue_get(key)
-        return self._redisq[key]
+        key2 = "%s_%s_%s" % (ipaddr, port, key)
+        if fromcache == False or key2 not in self._redisq:
+            self._redisq[key2] = redisclient.queue_get(key)
+        return self._redisq[key2]
 
-    def core_get(self, reset=False, tcp=True):
+    def core_get(self, reset=False, tcp=True, fromcache=True):
         """
 
         kosmos 'j.clients.redis.core_get(reset=False)'
+        j.clients.redis.core_get(fromcache=False)
 
         will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
         if that doesn't work then will look for std redis port
@@ -188,7 +190,11 @@ class RedisFactory(j.application.JSBaseClass):
         :return: redis instance
         :rtype: Redis
         """
-        j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
+        if fromcache:
+            j.core.myenv.db = RedisTools.core_get(reset=reset, tcp=tcp)
+        else:
+            # means we need to get a client, no need to check if core was already started
+            j.core.myenv.db = RedisTools.client_core_get(fake_ok=False)
         return j.core.myenv.db
 
     def core_stop(self):

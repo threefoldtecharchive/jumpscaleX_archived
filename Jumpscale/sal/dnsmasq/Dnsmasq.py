@@ -33,7 +33,7 @@ class DNSMasq(JSBASE):
 
         self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
         if start:
-            j.tools.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
+            j.servers.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
 
     def restart(self):
         """
@@ -41,7 +41,7 @@ class DNSMasq(JSBASE):
         """
         cmd = j.tools.bash.get().cmd_path_get("dnsmasq")
         j.sal.process.killProcessByName(cmd)
-        j.tools.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
+        j.servers.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
 
     def _file_check(self, filename):
         """Check if a file exists, and create it if it doesn't exist

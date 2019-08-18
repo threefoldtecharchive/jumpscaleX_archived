@@ -31,7 +31,7 @@ _EXPLORER_NODES = {
 _CHAIN_NETWORK_TYPES = sorted(["STD", "TEST", "DEV"])
 
 
-class TFChainClient(j.application.JSBaseConfigParentClass):
+class TFChainClient(j.application.JSBaseConfigsConfigFactoryClass):
     """
     Tfchain client object
     """
@@ -45,7 +45,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
     _CHILDCLASSES = [TFChainWalletFactory]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._threebot = TFChainThreeBotClient(self)
         self._minter = TFChainMinterClient(self)
         self._erc20 = TFChainERC20Client(self)
@@ -315,7 +315,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param expected_hash_type: one of ('coinoutputid', 'blockstakeoutputid')
         """
         if expected_hash_type not in ("coinoutputid", "blockstakeoutputid"):
-            raise ValueError(
+            raise j.exceptions.Value(
                 "expected hash type should be one of ('coinoutputid', 'blockstakeoutputid'), not {}".format(
                     expected_hash_type
                 )
@@ -513,7 +513,7 @@ class ExplorerUnlockhashResult:
         self._multisig_addresses = multisig_addresses
         # client is optionally used to get additional info in a lazy manner should it be needed
         if client is not None and not isinstance(client, TFChainClient):
-            raise TypeError("client cannot be set to a value of type {}".format(type(client)))
+            raise j.exceptions.Value("client cannot be set to a value of type {}".format(type(client)))
         self._client = client
         self._erc20_info = erc20_info
 
@@ -582,7 +582,7 @@ class ExplorerUnlockhashResult:
                 if str(ci.parent_output.condition.unlockhash) == address:
                     oc = ci.parent_output.condition.unwrap()
                     if not isinstance(oc, ConditionMultiSignature):
-                        raise TypeError(
+                        raise j.exceptions.Value(
                             "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
                                 type(oc)
                             )
@@ -594,7 +594,7 @@ class ExplorerUnlockhashResult:
                 if str(co.condition.unlockhash) == address:
                     oc = co.condition.unwrap()
                     if not isinstance(oc, ConditionMultiSignature):
-                        raise TypeError(
+                        raise j.exceptions.Value(
                             "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
                                 type(oc)
                             )
@@ -731,7 +731,7 @@ class TFChainMinterClient:
 
     def __init__(self, client):
         if not isinstance(client, TFChainClient):
-            raise TypeError("client is expected to be a TFChainClient")
+            raise j.exceptions.Value("client is expected to be a TFChainClient")
         self._client = client
 
     def condition_get(self, height=None):
@@ -744,7 +744,7 @@ class TFChainMinterClient:
         endpoint = "/explorer/mintcondition"
         if height is not None:
             if not isinstance(height, (int, str)):
-                raise TypeError("invalid block height given")
+                raise j.exceptions.Value("invalid block height given")
             height = int(height)
             endpoint += "/%d" % (height)
 
@@ -767,7 +767,7 @@ class TFChainThreeBotClient:
 
     def __init__(self, client):
         if not isinstance(client, TFChainClient):
-            raise TypeError("client is expected to be a TFChainClient")
+            raise j.exceptions.Value("client is expected to be a TFChainClient")
         self._client = client
 
     def record_get(self, identifier):
@@ -790,13 +790,13 @@ class TFChainThreeBotClient:
                 try:
                     PublicKey.from_json(identifier)
                 except ValueError as exc:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "a 3Bot identifier in string format has to be either a valid BotName or PublicKey, '{}' is neither".format(
                             identifier
                         )
                     ) from exc
         else:
-            raise TypeError("identifier of type {} is invalid".format(type(identifier)))
+            raise j.exceptions.Value("identifier of type {} is invalid".format(type(identifier)))
         # identifier is a str at this point
         # and endpoint is configured
 
@@ -829,7 +829,7 @@ class TFChainERC20Client:
 
     def __init__(self, client):
         if not isinstance(client, TFChainClient):
-            raise TypeError("client is expected to be a TFChainClient")
+            raise j.exceptions.Value("client is expected to be a TFChainClient")
         self._client = client
 
     def address_get(self, unlockhash):
@@ -845,9 +845,11 @@ class TFChainERC20Client:
         if isinstance(unlockhash, str):
             unlockhash = UnlockHash.from_json(unlockhash)
         elif not isinstance(unlockhash, UnlockHash):
-            raise TypeError("{} is not a valid type and cannot be used as unlock hash".format(type(unlockhash)))
+            raise j.exceptions.Value(
+                "{} is not a valid type and cannot be used as unlock hash".format(type(unlockhash))
+            )
         if unlockhash.type != UnlockHashType.PUBLIC_KEY:
-            raise TypeError(
+            raise j.exceptions.Value(
                 "{} only person wallet addresses cannot be registered as withdrawel addresses: {} is an invalid unlock hash type".format(
                     unlockhash.type
                 )

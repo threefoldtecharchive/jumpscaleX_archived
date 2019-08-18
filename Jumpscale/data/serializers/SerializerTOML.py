@@ -99,22 +99,27 @@ class SerializerTOML(SerializerBase):
             out += "%s\n" % (ttype.toml_string_get(val, key=key))
 
             # else:
-            #     raise RuntimeError("error in fancydumps for %s in %s"%(key,obj))
+            #     raise j.exceptions.Base("error in fancydumps for %s in %s"%(key,obj))
 
         out = out.replace("\n\n\n", "\n\n")
 
         return j.core.text.strip(out)
 
     def dumps(self, obj):
-        return pytoml.dumps(obj, sort_keys=True)
+        try:
+            return pytoml.dumps(obj, sort_keys=True)
+        except Exception as e:
+            raise j.exceptions.Value("Toml serialization failed", data=obj, exception=e)
 
     def loads(self, s, secure=False):
         if isinstance(s, bytes):
             s = s.decode("utf-8")
+        if not isinstance(s, str):
+            raise j.exceptions.Value("Toml deserialization failed, input needs to be str or bytes", data=s)
         try:
             val = pytoml.loads(s)
         except Exception as e:
-            raise RuntimeError("Toml deserialization failed for:\n%s.\nMsg:%s" % (j.core.text.indent(s), str(e)))
+            raise j.exceptions.Value("Toml deserialization failed", data=s, exception=e)
         if secure and j.data.types.dict.check(val):
             res = {}
             for key, item in val.items():
@@ -151,14 +156,14 @@ class SerializerTOML(SerializerBase):
             try:
                 dictsource = self.loads(tomlsource)
             except Exception:
-                raise RuntimeError("toml file source is not properly formatted.")
+                raise j.exceptions.Value("toml file source is not properly formatted.", data=tomlsource)
         else:
             dictsource = tomlsource
         if j.data.types.string.check(tomlupdate):
             try:
                 dictupdate = self.loads(tomlupdate)
             except Exception:
-                raise RuntimeError("toml file source is not properly formatted.")
+                raise j.exceptions.Value("toml file source is not properly formatted.", data=tomlupdate)
         else:
             dictupdate = tomlupdate
 

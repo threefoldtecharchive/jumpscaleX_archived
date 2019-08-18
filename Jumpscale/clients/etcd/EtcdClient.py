@@ -25,7 +25,7 @@ class EtcdClient(JSConfigClient):
     password_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._log_debug(self.user)
         self._api = None
 
@@ -52,7 +52,7 @@ class EtcdClient(JSConfigClient):
     def get(self, key):
         result = self.api.get(key)[0]
         if not result:
-            raise ValueError("Key {} does not exist in etcd".format(key))
+            raise j.exceptions.Value("Key {} does not exist in etcd".format(key))
         return result.decode("utf-8")
 
     def delete(self, key):

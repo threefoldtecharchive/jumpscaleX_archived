@@ -74,7 +74,7 @@ class Manipulator:
         get a Path object on location
         """
         if not os.path.isabs(location):
-            raise ValueError("location must be an absolute path")
+            raise j.exceptions.Value("location must be an absolute path")
         if location:
             dir = self.root
             for dir in location.split(os.path.sep)[1:]:
@@ -103,7 +103,7 @@ class Manipulator:
 
         for path in self.root._flist._added_files:
             if not os.path.exists(path):
-                raise RuntimeError("file not found %s" % path)
+                raise j.exceptions.Base("file not found %s" % path)
 
             self._log_debug("hash %s", path)
             hashs = g8storclient.encrypt(path)

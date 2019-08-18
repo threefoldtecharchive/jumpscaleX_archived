@@ -31,7 +31,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         self.name = name
         self.zosclient = zos.zosclient
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self._container = None
         self._node_connected = False
@@ -118,7 +118,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         keys = getAgentPublicKeys()
 
         if keys == "":
-            raise RuntimeError("couldn't find sshkeys in agent or in default paths [generate one with ssh-keygen]")
+            raise j.exceptions.Base("couldn't find sshkeys in agent or in default paths [generate one with ssh-keygen]")
 
         # zos client here is node client WHICH doesn't support config parameter.
         try:

@@ -8,5 +8,5 @@ class MongoEngineFactory(JSConfigs):
     __jslocation__ = "j.clients.mongoengine"
     _CHILDCLASS = MongoEngineClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "mongoengine"

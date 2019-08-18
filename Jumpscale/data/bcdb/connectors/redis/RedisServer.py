@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 import json
 from gevent.pool import Pool
@@ -22,7 +42,7 @@ class RedisServer(j.application.JSBaseClass):
         # j.clients.redis.core_check()  #need to make sure we have a core redis
 
         if self.bcdb.models is None:
-            raise RuntimeError("models are not filled in")
+            raise j.exceptions.Base("models are not filled in")
 
         self.init()
 
@@ -44,8 +64,7 @@ class RedisServer(j.application.JSBaseClass):
         self.vfs = j.data.bcdb._get_vfs()
 
     def start(self):
-        print("RUNNING")
-        print(self)
+        self._log_info("RUNNING")
         self.redis_server.serve_forever()
 
     def stop(self):
@@ -114,8 +133,8 @@ class RedisServer(j.application.JSBaseClass):
             elif redis_cmd in ["hscan"]:
                 kwargs = parser.request_to_dict(request[3:])
                 if not hasattr(self, redis_cmd):
-                    raise RuntimeError("COULD NOT FIND COMMAND:%s" % redis_cmd)
                     response.error("COULD NOT FIND COMMAND:%s" % redis_cmd)
+                    raise j.exceptions.Base("COULD NOT FIND COMMAND:%s" % redis_cmd)
                 else:
                     method = getattr(self, redis_cmd)
                     start_obj = int(request[2].decode())
@@ -162,7 +181,7 @@ class RedisServer(j.application.JSBaseClass):
         url = ""
         cat = ""
         if key.strip() == "":
-            raise RuntimeError("key cannot be empty")
+            raise j.exceptions.Base("key cannot be empty")
         splitted = key.split(":")
         len_splitted = len(splitted)
         m = ""
@@ -185,11 +204,11 @@ class RedisServer(j.application.JSBaseClass):
             for i in list(self.bcdb.meta._data.schemas):
 
                 if url == i.url:
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
                 elif url == i.md5:
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
                 elif url == str(i.sid):
-                    m = self.bcdb.model_get_from_url(i.url)
+                    m = self.bcdb.model_get(url=i.url)
 
         return (cat, url, key, m)
 
@@ -260,19 +279,24 @@ class RedisServer(j.application.JSBaseClass):
         """
         # in first version will only do 1 page, so ignore scan
         res = []
+
         for i in self.vfs._bcdb_names:
-            bcdb_instance = j.data.bcdb.get(i)
+            """ bcdb_instance = j.data.bcdb.get(i) """
+            sch_sids = self.vfs.get("%s/schemas/sid" % i)
+            if len(sch_sids.items) > 0:
+                for sid in sch_sids.items:
+                    res.append("{}:schemas:sid:{}".format(i, sid))
+                    res.append("{}:data:1:sid:{}".format(i, sid))
 
-            if len([bcdb_instance.meta._data.schemas]) > 0:
-                for url in list(bcdb_instance.meta._data.schemas):
-                    res.append("{}:schemas:url:{}".format(i, url.url))
-                    res.append("{}:schemas:sid:{}".format(i, url.sid))
-                    res.append("{}:schemas:hash:{}".format(i, url.md5))
+                sch_urls = self.vfs.get("%s/schemas/url" % i)
+                for url in sch_urls.items:
+                    res.append("{}:schemas:url:{}".format(i, url))
+                    res.append("{}:data:1:url:{}".format(i, url))
 
-                    res.append("{}:data:1:url:{}".format(i, url.url))
-                    res.append("{}:data:1:sid:{}".format(i, url.sid))
-                    res.append("{}:data:1:hash:{}".format(i, url.md5))
-
+                sch_hashes = self.vfs.get("%s/schemas/hash" % i)
+                for h in sch_hashes.items:
+                    res.append("{}:schemas:hash:{}".format(i, h))
+                    res.append("{}:data:1:hash:{}".format(i, h))
             else:
                 res.append("%s:schemas:url" % i)
                 res.append("%s:data:url" % i)
@@ -283,7 +307,7 @@ class RedisServer(j.application.JSBaseClass):
         response._array(["0", res])
 
     def hset(self, response, key, id, val):
-        raise RuntimeError("not implemented")
+        return self.set(response, key, val)
 
     def hget(self, response, key, id):
         parse_key = key.replace(":", "/")
@@ -299,7 +323,7 @@ class RedisServer(j.application.JSBaseClass):
             response.error("cannot get, key:'%s' not found" % key)
 
     def hdel(self, response, key, id):
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Base("not implemented")
 
     def hlen(self, response, key):
         parse_key = key.replace(":", "/")
@@ -331,7 +355,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hscan(self, response, key, startid, count=10000):
 
-        cat, url, _, model = self._split(key)
+        _, _, _, model = self._split(key)
         # objs = model.get_all()
         res = []
         if "schemas" in key:
@@ -474,3 +498,9 @@ class RedisServer(j.application.JSBaseClass):
         """
         C = j.core.text.strip(C)
         response.encode(C)
+
+    def __str__(self):
+        out = "redisserver:bcdb:%s\n" % self.bcdb.name
+        return out
+
+    __repr__ = __str__

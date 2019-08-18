@@ -14,7 +14,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.itsyouonline"
     _CHILDCLASS = IYOClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.raml_spec = (
             "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
         )
@@ -39,7 +39,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
 
         if not claims["refresh_token"]:
             if die:
-                raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
+                raise j.exceptions.Base("jwt token can't be refreshed, no refresh token claim found")
             else:
                 return
 

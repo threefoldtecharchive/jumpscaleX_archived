@@ -18,7 +18,7 @@ class HubDirectClient(JSConfigClient):
     jwt_ = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._api = None
 
     @property

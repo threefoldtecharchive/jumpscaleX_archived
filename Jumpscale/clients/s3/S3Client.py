@@ -28,7 +28,7 @@ class S3Client(JSConfigBase):
     bucket_ok = false (B)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # s3 = boto3.resource('s3',
         #                     endpoint_url='http://%s:%s' % (c["address"], c["port"]),
         #                     config=boto3.session.Config(signature_version='s3v4'),
@@ -84,7 +84,7 @@ class S3Client(JSConfigBase):
         :rtype: Object etag computed by the minio server.
         """
         if not j.sal.fs.exists(file_path):
-            raise ValueError("file: %s not found" % file_path)
+            raise j.exceptions.Value("file: %s not found" % file_path)
         return self.client.fput_object(bucket_name, object_name, file_path, content_type, meta_data)
 
     def download(self, bucket_name, object_name, file_path):

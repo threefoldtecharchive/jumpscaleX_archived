@@ -17,9 +17,9 @@ class NotaryClientStub:
         threebot_id = record.identifier
 
         if not isinstance(threebot_id, int):
-            raise TypeError("threebot_id must be an int. The unique identifier of the theebot, not its same")
+            raise j.exceptions.Value("threebot_id must be an int. The unique identifier of the theebot, not its same")
         if threebot_id <= 0:
-            raise TypeError("threebot_id cannot be negative")
+            raise j.exceptions.Value("threebot_id cannot be negative")
 
         buff = BytesIO()
         bi = threebot_id.to_bytes(64, byteorder="big")

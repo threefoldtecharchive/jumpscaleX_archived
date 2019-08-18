@@ -83,7 +83,7 @@ class Downloader:
         self.service = service
         self.thumbnailsize = thumbnailsize.upper()  # "LARGE."
         if thumbnailsize not in ["MEDIUM", "LARGE"]:
-            raise ValueError("invalid thumbnailsize should be large or medium")
+            raise j.exceptions.Value("invalid thumbnailsize should be large or medium")
 
     def _get_slides_download_info(self):
         presentation = self.service.presentations().get(presentationId=self.presentation_id).execute()
@@ -140,7 +140,7 @@ class Downloader:
         presentation_id, background_slide_id = link_info(slidelink)
 
         if not background_slide_id:
-            raise ValueError("invalid slide link")
+            raise j.exceptions.Value("invalid slide link")
         presentation = self.service.presentations().get(presentationId=presentation_id).execute()
         presentation_title = presentation["title"]
         slides = presentation.get("slides")

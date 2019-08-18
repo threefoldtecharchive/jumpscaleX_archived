@@ -1,25 +1,80 @@
 import os
-
-# import sys
 import atexit
-import struct
-from collections import namedtuple
 import psutil
 import traceback
+
+### the base ones
 from .BASECLASSES.JSBase import JSBase
-from .BASECLASSES.JSFactoryBase import JSFactoryBase
-from .BASECLASSES.JSBaseConfig import JSBaseConfig
-from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
-from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
-from .BASECLASSES.JSBaseDataObj import JSBaseDataObj
+from .BASECLASSES.JSFactoryTools import JSFactoryTools
+
+####
+
+from .BASECLASSES.JSConfig import JSConfig
+from .BASECLASSES.JSConfigs import JSConfigs
+from .BASECLASSES.JSConfigsFactory import JSConfigsFactory
+from .BASECLASSES.ThreeBotPackageBase import ThreeBotPackageBase
+from .BASECLASSES.ThreeBotActorBase import ThreeBotActorBase
+
+
 import gc
 import sys
-import types
-import time
 
 
 class JSGroup:
     pass
+
+
+class JSFactoryConfigsBaseClass(JSFactoryTools, JSConfigs):
+    """
+    as used for j.... factory classes will has constructor for 1 type of Config children
+
+    class myclass(j.application.JSFactoryConfigsBaseClass):
+        def _init(self,**kwargs):
+            ...
+
+    """
+
+    pass
+
+
+class JSBaseConfigsClass(JSConfigs):
+    """
+    is not for a factory (doesn't have the test or __location__ inside
+    has support for 1 type of children
+    """
+
+    pass
+
+
+class JSBaseConfigClass(JSConfig):
+    """
+    no children, only 1 data object
+    """
+
+    pass
+
+
+class JSBaseConfigsFactoryClass(JSFactoryTools, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
+
+    pass
+
+
+class JSBaseFactoryClass(JSBase, JSFactoryTools):
+    pass
+
+
+class JSBaseConfigsConfigFactoryClass(JSConfig, JSFactoryTools, JSConfigsFactory):
+    """
+    no children, only 1 data object
+    """
+
+    pass
+    # def __init__(self, **kwargs):
+    #     JSConfigsFactory.__init__(**kwargs)
+    #     JSConfig.__init__(**kwargs)
 
 
 class Application(object):
@@ -38,18 +93,33 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = self._j.core.myenv.interactive
-
         self.schemas = None
 
         self.errors_init = []
-        self._bcdb_system = None
 
         self._JSGroup = JSGroup
 
         self.appname = "unknown"
 
-        self.JSBaseDataObjClass = JSBaseDataObj
+        self._in_autocomplete = False
+
+        # self.JSConfigClass = JSConfig
+        self.JSFactoryConfigsBaseClass = JSFactoryConfigsBaseClass  # for e.g. clients, factory for 1 type of children
+        self.JSBaseClass = JSBase  # the most low level one
+        self.JSBaseConfigClass = JSBaseConfigClass  # 1 config obj, childre from configs
+        self.JSBaseConfigsClass = JSBaseConfigsClass  # multiple config children
+        self.JSConfigsFactory = JSConfigsFactory
+        self.JSFactoryTools = JSFactoryTools
+        # factory on j... level for multipl JSConfigs children
+        self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
+        self.JSBaseFactoryClass = JSBaseFactoryClass
+        self.JSConfigClass = JSConfig
+        self.JSConfigsClass = JSConfigs
+        self.ThreeBotPackageBase = ThreeBotPackageBase
+        self.ThreeBotActorBase = ThreeBotActorBase
+        self.JSBaseConfigsConfigFactoryClass = JSBaseConfigsConfigFactoryClass
+        self.exception_handle = self._j.core.myenv.exception_handle
+        self._log2fs_session_name = None
 
     @property
     def appname(self):
@@ -60,36 +130,126 @@ class Application(object):
         self._j.core.myenv.appname = val
 
     @property
-    def bcdb_system(self):
-        if self._bcdb_system is None:
-            bcdb = self._j.data.bcdb.new("system")
-            self._bcdb_system = bcdb
-        return self._bcdb_system
+    def interactive(self):
+        return self._j.core.myenv.interactive
 
-    def bcdb_system_configure(self, addr, port, namespace, secret):
+    @interactive.setter
+    def interactive(self, val):
+        self._j.core.myenv.interactive = val
+
+    @property
+    def loghandlers(self):
+        return self._j.core.myenv.loghandlers
+
+    # @loghandlers.setterkds
+    # def loghandlers(self, val):
+    #     self._j.core.myenv.loghandlers = val
+
+    @property
+    def errorhandlers(self):
+        return self._j.core.myenv.errorhandlers
+
+    # @errorhandlers.setter
+    # def errorhandlers(self, val):
+    #     self._j.core.myenv.errorhandlers = val
+
+    @property
+    def bcdb_system(self):
+        return self._j.data.bcdb.get_system(reset=False)
+
+    def bcdb_system_destroy(self):
+        s = self._j.data.bcdb.get_system()
+        s.destroy()
+        self._bcdb_system = None
+
+    def subprocess_prepare(self):
+        self._bcdb_system = None
+        self._debug = None
+        self._systempid = None
+        self._j.core.db_reset(self._j)
+        for obj in self.obj_interator:
+            obj._children = {}
+            obj._obj_cache_reset()
+            obj._obj_reset()
+
+    def log2fs_register(self, session_name):
         """
-        will remember that this becdb is being used
-        will remember in redis (encrypted)
+        will write logs with ansi codes to /sandbox/var/log/session_name/$hrtime4session/$hrtime4step_context.ansi
+
+        use less -r to see the logs with color output
+
+        :param session_name: name of the session
         :return:
         """
-        self._j.shell()
+        self._log2fs_session_name = session_name
+        tt = self._j.data.time.getLocalTimeHRForFilesystem()
+        self._log2fs_path_prefix = "/sandbox/var/log/%s/%s" % (self._log2fs_session_name, tt)
+        self.log2fs_context_change("init")
 
-    def _trace_get(self, ttype, err, tb=None):
+        os.makedirs(self._log2fs_path_prefix)
+        assert self._log2fs_path
+        self._j.core.myenv.loghandlers.append(self._log2fs)
 
-        tblist = traceback.format_exception(ttype, err, tb)
+    def log2fs_context_change(self, context):
+        """
 
-        ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+        :param context:
+        :return:
+        """
+        tt = self._j.data.time.getLocalTimeHRForFilesystem()
+        self._log2fs_context = context
+        self._log2fs_path = "%s/%s_%s.ansi" % (self._log2fs_path_prefix, tt, self._log2fs_context)
 
-        # if self._limit and len(tblist) > self._limit:
-        #     tblist = tblist[-self._limit:]
-        tb_text = ""
-        for item in tblist:
-            for ignoreitem in ignore:
-                if item.find(ignoreitem) != -1:
-                    item = ""
-            if item != "":
-                tb_text += "%s" % item
-        return tb_text
+    def _log2fs(self, logdict):
+        """
+        is a log hander for j.core.myenv.loghandlers
+
+        how to use
+
+        if j.core.myenv.loghandlers==[]:
+
+
+        :param logdict:
+        :return:
+        """
+        if self._log2fs_session_name:
+            out = self._j.core.tools.log2str(logdict)
+            out = out.rstrip() + "\n"
+            try:
+                fp = open(self._log2fs_path, "ab")
+            except:
+                self._j.shell()
+                w
+            # if self._j.data.types.string.check(contents):
+            fp.write(bytes(out, "UTF-8"))
+            # else:
+            # fp.write(out)
+            fp.close()
+
+    # def bcdb_system_configure(self, addr, port, namespace, secret):
+    #     """
+    #     will remember that this bcdb is being used
+    #     will remember in redis (encrypted)
+    #     :return:
+    #     """
+    #     self._j.shell()
+
+    # def _trace_get(self, ttype, err, tb=None):
+    #
+    #     tblist = traceback.format_exception(ttype, err, tb)
+    #
+    #     ignore = ["click/core.py", "ipython", "bpython", "loghandler", "errorhandler", "importlib._bootstrap"]
+    #
+    #     # if self._limit and len(tblist) > self._limit:
+    #     #     tblist = tblist[-self._limit:]
+    #     tb_text = ""
+    #     for item in tblist:
+    #         for ignoreitem in ignore:
+    #             if item.find(ignoreitem) != -1:
+    #                 item = ""
+    #         if item != "":
+    #             tb_text += "%s" % item
+    #     return tb_text
 
     def _check_debug(self):
         if not "JSGENERATE_DEBUG" in os.environ:
@@ -98,72 +258,17 @@ class Application(object):
             return True
         return False
 
-    def error_init(self, cat, obj, error, die=True):
-
-        print("ERROR: %s:%s" % (cat, obj))
-        print(error)
-        trace = self._trace_get(ttype=None, err=error)
-        self.errors_init.append((cat, obj, error, trace))
-        if not self._check_debug():
-            msg = "%s:%s:%s" % (cat, obj, error)
-            # self.report_errors()
-            raise RuntimeError(msg)
-        return "%s:%s:%s" % (cat, obj, error)
-
-    @property
-    def JSBaseClass(self):
-        """
-        JSBASE = j.application.JSBaseClass
-        class myclass(j.application.JSBaseClass):
-            def __init__(self):
-                JSBASE.__init__(self)
-
-        """
-        return JSBase
-
-    @property
-    def JSFactoryBaseClass(self):
-        """
-        JSFactoryBase = j.application.JSFactoryBaseClass
-        class myclass(JSFactoryBase):
-            def __init__(self):
-                JSFactoryBase.__init__(self)
-
-        """
-        return JSFactoryBase
-
-    @property
-    def JSBaseConfigClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfig
-
-    @property
-    def JSBaseConfigParentClass(self):
-        """
-        JSBase = j.application.JSBaseConfigParentClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigParent
-
-    @property
-    def JSBaseConfigsClass(self):
-        """
-        JSBase = j.application.JSBaseConfigClass
-        class myclass(JSBase):
-            def __init__(self):
-                JSBase.__init__(self)
-
-        """
-        return JSBaseConfigs
+    # def error_init(self, cat, obj, error, die=True):
+    #
+    #     print("ERROR: %s:%s" % (cat, obj))
+    #     print(error)
+    #     trace = self._trace_get(ttype=None, err=error)
+    #     self.errors_init.append((cat, obj, error, trace))
+    #     if not self._check_debug():
+    #         msg = "%s:%s:%s" % (cat, obj, error)
+    #         # self.report_errors()
+    #         raise j.exceptions.Base(msg)
+    #     return "%s:%s:%s" % (cat, obj, error)
 
     def reset(self):
         """
@@ -183,7 +288,7 @@ class Application(object):
 
     @debug.setter
     def debug(self, value):
-        self._debug = value
+        self._j.core.myenv.debug = value
 
     def break_into_jshell(self, msg="DEBUG NOW"):
         if self.debug is True:
@@ -343,6 +448,21 @@ class Application(object):
     #         # exec("del %s"%key)
     #         # sys.modules.pop(key)
 
+    @property
+    def obj_interator(self):
+        """
+        iterates over all loaded objects in kosmos space (which inherits of JSBase class)
+        e.g.
+        objnames = [i._name for i in j.application.obj_interator]
+
+        :return:
+        """
+        for item in self._iterate_rootobj():
+            if isinstance(item, self.JSBaseClass):
+                yield item
+                for item in item._children_recursive_get():
+                    yield item
+
     def _iterate_rootobj(self, obj=None):
         if obj is None:
             for key, item in self._j.__dict__.items():
@@ -382,7 +502,7 @@ class Application(object):
 
     def _setWriteExitcodeOnExit(self, value):
         if not self._j.data.types.bool.check(value):
-            raise TypeError
+            raise j.exceptions.Value
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):
@@ -424,20 +544,35 @@ class Application(object):
     #     self._j.shell()
     #
 
-    def check(self, generate=True):
+    def check(self, generate=False):
+        """
+        jsx check
+        :param generate:
+        :return:
+        """
         j = self._j
 
         if generate:
             self.generate()
 
+        try:
+            j.data.nacl.default
+        except Exception as e:
+            if str(e).find("could not find the path of the private key") != -1:
+                print("WARNING:cannot find the private key")
+                j.data.nacl.configure()
+            raise e
+
         def decrypt():
             try:
-                j.data.nacl.default.signingkey
-                j.data.nacl.default.privkey.public_key.encode()
+                j.data.nacl.default.signing_key
+                j.data.nacl.default.private_key.public_key.encode()
                 return True
             except Exception as e:
                 if str(e).find("jsx check") != -1:
                     print("COULD NOT DECRYPT THE PRIVATE KEY, COULD BE SECRET KEY IS WRONG, PLEASE PROVIDE NEW ONE.")
+                    if j.tools.console.askYesNo("Ok to change the stored private key?"):
+                        j.core.myenv.config["SECRET"] = ""
                     j.core.myenv.secret_set()
                     return False
                 raise e
@@ -457,7 +592,8 @@ class Application(object):
                 if j.tools.console.askYesNo("Ok to delete this metadata, will prob be rebuild"):
                     j.sal.fs.remove(j.core.tools.text_replace("{DIR_CFG}/bcdb_config"))
                     j.application.bcdb_system
-        j.data.bcdb.index_rebuild()
+
+        j.data.bcdb.check()
 
     def generate(self, path=None):
         j = self._j

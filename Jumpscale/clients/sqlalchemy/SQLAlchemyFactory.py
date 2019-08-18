@@ -8,7 +8,7 @@ class SQLAlchemyFactory(JSConfigs):
     __jslocation__ = "j.clients.sqlalchemy"
     _CHILDCLASS = SQLAlchemy
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.__imports__ = "sqlalchemy"
 
     def getBaseClass(self):

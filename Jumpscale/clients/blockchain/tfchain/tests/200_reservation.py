@@ -19,7 +19,7 @@ def main(self):
     """
 
     # create a tfchain client for devnet
-    c = j.clients.tfchain.new("mydevclient", network_type="DEV")
+    c = j.clients.tfchain.get("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
 
     # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
@@ -89,7 +89,6 @@ def main(self):
     user_priv = user_signing.to_curve25519_private_key()
     box = nacl.public.Box(user_priv, broker_public)
 
-
     # try to reserve a 0-os VM
     result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot", "ac1f6b47a04c")
     assert result.submitted
@@ -98,7 +97,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm")
+    schema = j.data.schema.get_from_url(url="tfchain.reservation.zos_vm")
     o = schema.new(data=reservation)
     assert o.type == "vm"
     assert o.size == 1
@@ -114,7 +113,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm")
+    schema = j.data.schema.get_from_url(url="tfchain.reservation.zos_vm")
     o = schema.new(data=reservation)
     assert o.type == "s3"
     assert o.size == 2
@@ -141,7 +140,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get_from_url_latest(url="tfchain.reservation.zdb_namespace")
+    schema = j.data.schema.get_from_url(url="tfchain.reservation.zdb_namespace")
     o = schema.new(data=reservation)
     assert o.type == "namespace"
     assert o.size == 2
@@ -151,7 +150,6 @@ def main(self):
     assert o.disk_type == "ssd"
     assert o.mode == "seq"
     assert o.password == ""
-
 
     # try to reserve a 0-os VM with an expiration date past the bot's expiration
     with pytest.raises(ValueError):

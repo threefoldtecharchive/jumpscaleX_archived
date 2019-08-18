@@ -6,9 +6,9 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SonicClient(JSConfigClient):
     """
     Sonic server client
-    
+
     usage example:-
-    
+
     data = { 
          'post:1': "this is some test text hello", 
          'post:2': 'this is a hello world post', 
@@ -38,7 +38,7 @@ class SonicClient(JSConfigClient):
         password = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cached_client_search = None
         self._cached_client_ingest = None
         self._bufsize = None

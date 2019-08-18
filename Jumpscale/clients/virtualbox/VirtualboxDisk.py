@@ -30,7 +30,7 @@ class VirtualboxDisk(j.application.JSBaseClass):
             cap = c.split(" ", 1)[0]
             return int(cap)
         else:
-            raise RuntimeError("not implemented")
+            raise j.exceptions.Base("not implemented")
 
     @property
     def state(self):
@@ -75,7 +75,7 @@ class VirtualboxDisk(j.application.JSBaseClass):
         if self.vm is None:
             self._cmd("closemedium disk %s --delete" % self.uid)
         else:
-            raise RuntimeError("cannot delete disk because still attached to vm:%s" % self)
+            raise j.exceptions.Base("cannot delete disk because still attached to vm:%s" % self)
 
     def __repr__(self):
         return "vdisk:%s" % self.path

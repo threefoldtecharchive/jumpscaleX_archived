@@ -28,11 +28,11 @@ class GiteaBot:
         """
         data = {}
         if not token:
-            raise ValueError("Token was not provided and is mandatory")
+            raise j.exceptions.Value("Token was not provided and is mandatory")
         data["gitea_token_"] = token
 
         if api_url == "":
-            raise ValueError("api url was not provided and is mandatory")
+            raise j.exceptions.Value("api url was not provided and is mandatory")
         data["url"] = api_url
 
         self.client = j.clients.gitea.get(data=data, interactive=False)

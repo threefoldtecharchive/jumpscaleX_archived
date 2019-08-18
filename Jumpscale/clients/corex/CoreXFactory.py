@@ -7,7 +7,7 @@ class CoreXClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.corex"
     _CHILDCLASS = CoreXClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def test(self):

@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 import os
 from copy import copy
 from .SchemaProperty import SchemaProperty
@@ -19,8 +39,7 @@ class SystemProps:
 
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text, md5=None, url=None):
-        j.application.JSBaseClass.__init__(self)
+    def _init(self, text, md5=None, url=None):
         self.properties = []
         self._systemprops = {}
         self._obj_class = None
@@ -31,6 +50,8 @@ class Schema(j.application.JSBaseClass):
 
         self.url = url
 
+        self.hasdata = False  # only used in BCDB, this tells us if the ID iterator should be there
+
         if md5:
             self._md5 = md5
             assert j.data.schema._md5(text) == self._md5
@@ -38,26 +59,38 @@ class Schema(j.application.JSBaseClass):
             self._md5 = j.data.schema._md5(text)
 
         self._schema_from_text(text)
-        self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
+        if self.url:
+            self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
+        else:
+            raise j.exceptions.Input("url not defined in schema", data=text)
 
-        urls = self.url.split(".")
-        if len(urls) > 0:
-            try:
-                # try if last one is version nr, if so pop it
-                j.data.types.int.clean(urls[-1])
-                self.version = urls.pop(len(urls) - 1)
-                # will remove the version from the url
-                self.url_noversion = ".".join(self.url.split(".")[:-1])
-                if self.url_noversion in j.data.schema.schemas_versionless:
-                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
-                        # version itself can be replaced as well, there could be an update
-                        j.data.schema.schemas_versionless[self.url_noversion] = self
-                else:
-                    j.data.schema.schemas_versionless[self.url_noversion] = self
-            except:
-                self.version = None
-                self.url_noversion = None
-            urls = ".".join(urls)
+        # urls = self.url.split(".")
+        # if len(urls) > 0:
+        #     try:
+        #         v = int(urls[-1])
+        #     except:
+        #         v = None
+        #         self.version = 1
+        #         self.url = self.url
+        #     if v is not None:
+        #         self.version = urls.pop(len(urls) - 1)
+        #         self.url = ".".join(urls)
+        #     # if self.url in j.data.schema.schemas_versionless:
+        #     #     if j.data.schema.schemas_versionless[self.url].version < self.version + 1:
+        #     #         # version itself can be replaced as well, there could be an update
+        #     #         j.data.schema.schemas_versionless[self.url] = self
+        #     # else:
+        #     #     j.data.schema.schemas_versionless[self.url] = self
+
+    @property
+    def url_str(self):
+        u = self.url + ""
+        # self._log_debug(u)
+        if "schema" in u:
+            u = u.split("schema", 1)[1]
+        if "jumpscale" in u:
+            u = u.split("jumpscale", 1)[1]
+        return u
 
     @property
     def _path(self):
@@ -74,7 +107,7 @@ class Schema(j.application.JSBaseClass):
         if e is not None:
             out += "\nERROR:\n"
             out += j.core.text.prefix("        ", str(e))
-        raise RuntimeError(out)
+        raise j.exceptions.Base(out)
 
     def _proptype_get(self, txt):
         """
@@ -102,7 +135,7 @@ class Schema(j.application.JSBaseClass):
         if j.data.types.int.checkString(txt):  # means is digit
             return j.data.types.get("i", default=txt)
         else:
-            raise RuntimeError("cannot find type for:%s" % txt)
+            raise j.exceptions.Base("cannot find type for:%s" % txt)
 
     def _schema_from_text(self, text):
         """
@@ -231,7 +264,7 @@ class Schema(j.application.JSBaseClass):
             p = process(line)
 
             if p.jumpscaletype.NAME is "list":
-                raise RuntimeError("no longer used")
+                raise j.exceptions.Base("no longer used")
                 # j.shell()
                 # print(p.capnp_schema)
                 # self.lists.append(p)
@@ -256,7 +289,7 @@ class Schema(j.application.JSBaseClass):
     @property
     def _capnp_id(self):
         if self._md5 == "":
-            raise RuntimeError("hash cannot be empty")
+            raise j.exceptions.Base("hash cannot be empty")
         return "f" + self._md5[1:16]  # first bit needs to be 1
 
     @property
@@ -277,12 +310,12 @@ class Schema(j.application.JSBaseClass):
         if self._obj_class is None:
 
             if self._md5 in [None, ""]:
-                raise RuntimeError("md5 cannot be None")
+                raise j.exceptions.Base("md5 cannot be None")
 
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
-            tpath = "%s/templates/template_obj.py" % self._path
+            tpath = "%s/templates/JSXObject2.py" % self._path
 
             # lets do some tests to see if it will render well, jinja doesn't show errors propertly
             for prop in self.properties:
@@ -291,14 +324,35 @@ class Schema(j.application.JSBaseClass):
                 prop.js_typelocation
 
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
+                name="schema_%s" % self.key, obj_key="JSXObject2", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class
 
-    def get(self, capnpdata=None, serializeddata=None, datadict=None, model=None):
+    def index_needed(self):
         """
-        get schema_object using data and capnpbin
+        :return:  (index_key, index_sql, index_text)
+        each of them is True when there is an index like this on the schema
+        otherwise False
+
+        tells if we have to index that type
+
+        """
+        index_key = False
+        index_sql = False
+        index_text = False
+        for p in self.properties:
+            if p.index_text:
+                index_text = True
+            if p.index:
+                index_sql = True
+            if p.index_key:
+                index_key = True
+        return (index_key, index_sql, index_text)
+
+    def new(self, capnpdata=None, serializeddata=None, datadict=None, bcdb=None):
+        """
+        new schema_object using data and capnpbin
 
         :param serializeddata is data as serialized by j.serializers.jsxdata (has prio)
         :param capnpdata is data in capnpdata
@@ -307,32 +361,31 @@ class Schema(j.application.JSBaseClass):
         :param model: will make sure we save in the model
         :return:
         """
-        if isinstance(serializeddata, bytes):
-            return j.data.serializers.jsxdata.loads(serializeddata, model=model)
-        elif isinstance(capnpdata, bytes):
-            obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
-            return obj
-        elif datadict:
-            obj = self.objclass(schema=self, datadict=datadict, model=model)
-            return obj
-        elif capnpdata is None and serializeddata is None and datadict == None:
-            return self.objclass(schema=self, model=model)
-        else:
-            raise RuntimeError("only support binary data or dict as kwargs")
 
-    def new(self, model=None, data=None):
-        """
-        data is dict or None
-        """
-        if isinstance(data, bytes):
-            raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
-        if data and isinstance(data, dict):
-            r = self.get(model=model, datadict=data)
+        # self._log_debug("LOADS:%s:%s" % (versionnr, obj_id))
+
+        if bcdb:
+            model = bcdb.model_get(url=self.url)
         else:
-            r = self.get(model=model)
+            model = None
+
+        if serializeddata:
+            assert isinstance(serializeddata, bytes)
+            obj = j.data.serializers.jsxdata.loads(serializeddata, bcdb=bcdb)
+        else:
+            if capnpdata and isinstance(capnpdata, bytes):
+                obj = self.objclass(schema=self, capnpdata=capnpdata, model=model)
+            elif datadict and datadict != {}:
+                obj = self.objclass(schema=self, datadict=datadict, model=model)
+            elif capnpdata is None and serializeddata is None and datadict == None:
+                obj = self.objclass(schema=self, model=model)
+            else:
+                raise j.exceptions.Base("wrong arguments to new on schema")
+
         if model is not None:
-            model.triggers_call(r, "new")
-        return r
+            model._triggers_call(obj=obj, action="new")
+
+        return obj
 
     # @property
     # def propertynames_index_sql(self):
@@ -367,6 +420,18 @@ class Schema(j.application.JSBaseClass):
         res = []
         for prop in self.properties:
             if prop.index_key:
+                res.append(prop)
+        return res
+
+    @property
+    def properties_index_text(self):
+        """
+        list of the properties which are used for indexing with keys
+        :return:
+        """
+        res = []
+        for prop in self.properties:
+            if prop.index_text:
                 res.append(prop)
         return res
 

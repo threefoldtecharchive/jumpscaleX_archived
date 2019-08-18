@@ -9,7 +9,7 @@ class ExecutorLocal(ExecutorBase):
 
     __jslocation__ = "j.tools.executorLocal"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._cache_expiration = 3600
         self.type = "local"
         self._id = "localhost"
@@ -80,7 +80,7 @@ class ExecutorLocal(ExecutorBase):
             cmd = self._replace(cmd, args=env)
 
         if sudo:
-            raise RuntimeError("sudo not supported")
+            raise j.exceptions.Base("sudo not supported")
 
         self._log_debug(cmd)
 
@@ -108,7 +108,7 @@ class ExecutorLocal(ExecutorBase):
         :return:
         """
         if source == dest:
-            raise RuntimeError()
+            raise j.exceptions.Base()
         if dest_prefix != "":
             dest = j.sal.fs.joinPaths(dest_prefix, dest)
         if j.sal.fs.isDir(source):

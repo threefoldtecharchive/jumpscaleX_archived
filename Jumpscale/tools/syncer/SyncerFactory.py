@@ -7,7 +7,7 @@ class SyncerFactory(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = Syncer
 
-    def sync(self):
+    def sync(self, monitor=False):
         """
         execute to sync all syncers
         will push default code directories to remove ssh host
@@ -15,13 +15,23 @@ class SyncerFactory(j.application.JSBaseConfigsClass):
         for name in self._children:
             self.syncers[name].sync()
 
+        if monitor:
+            self.monitor()
+
     def test(self):
         """
         kosmos 'j.tools.syncer.test()'
         :return:
         """
-        cl = j.clients.ssh.get(name="builder", addr="10.102.133.88", port=1053)
-        r = cl.execute("ls / ")
 
-        s = self.get(name="builder", sshclient_name=cl.name, paths=None)
-        s.sync()
+        cl = j.clients.ssh.get(name="test1", addr="167.71.65.114", port=22)
+        cl.save()
+
+        cl2 = j.clients.ssh.get(name="test2", addr="167.71.65.114", port=22)
+        cl2.save()
+
+        s = j.tools.syncer.get()
+
+        s.sshclients_add([cl, cl2])
+
+        s.sync(monitor=True)

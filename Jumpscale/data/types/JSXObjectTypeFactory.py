@@ -7,11 +7,12 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     jumpscale data object as result of using j.data.schema.
     """
 
-    NAME = "jsobject,o,obj"
+    BASETYPE = "JSXOBJ"
+    NAME = "jsxobject,o"
     CUSTOM = True
 
     def __init__(self, default=None):
-        self.BASETYPE = "OBJ"
+        self.BASETYPE = "JSXOBJ"
         self.SUBTYPE = None
         if not default:
             raise j.exceptions.Input("Cannot init JSDataObjectFactory without md5 or url")
@@ -28,17 +29,16 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
             if self._default.startswith("md5:"):
                 self._schema_md5 = self._default[4:]  # md5 is directly given
             elif self._default.startswith("sid:"):
-                j.shell()  # need to find schema based on sid
-                self._schema_md5 = self._default[4:]  # md5 is directly given
+                raise j.exceptions.JSBUG("sid no longer used")
             else:
-                s = j.data.schema.get_from_url_latest(url=self._default)
+                s = j.data.schema.get_from_url(url=self._default)
             self._schema_md5 = s._md5
 
             self._schema_ = j.data.schema.get_from_md5(md5=self._schema_md5)
         return self._schema_
 
     def python_code_get(self, value):
-        return self.toJSON(value)
+        return None
 
     def fromString(self, val):
         """
@@ -47,8 +47,8 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         return self.clean(val)
 
     def toData(self, val, model=None):
-        val = self.clean(val)
-        return j.data.serializers.jsxdata.dumps(val, model=model)
+        val2 = self.clean(val, model=model)
+        return j.data.serializers.jsxdata.dumps(val2)
 
     def toString(self, val):
         """
@@ -62,8 +62,12 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
     def check(self, value):
         return isinstance(value, j.data.schema._JSXObjectClass)
 
-    def default_get(self):
-        return self._schema.new()
+    def default_get(self, model=None):
+        if model:
+            bcdb = model._bcdb
+        else:
+            bcdb = None
+        return self._schema.new(bcdb=bcdb)
 
     def clean(self, value, model=None):
         """
@@ -72,16 +76,22 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         :param model: when model specified (BCDB model) can be stored in BCDB
         :return:
         """
+        if model:
+            bcdb = model._bcdb
+        else:
+            bcdb = None
         if isinstance(value, j.data.schema._JSXObjectClass):
             return value
-        if isinstance(value, bytes):
-            obj = j.data.serializers.jsxdata.loads(value, model=model)
+        elif not value:
+            return self._schema.new(bcdb=bcdb)
+        elif isinstance(value, bytes):
+            obj = j.data.serializers.jsxdata.loads(value, bcdb=bcdb)
             # when bytes the version of the jsxobj & the schema is embedded in the bin data
             return obj
         elif isinstance(value, dict):
-            return self._schema.get(datadict=value, model=model)
-        elif value is None:
-            return self._schema.new(model=model)
+            return self._schema.new(datadict=value, bcdb=bcdb)
+        elif isinstance(value, j.application.JSConfigClass):
+            return value._data
         else:
             raise j.exceptions.Input("can only accept dataobj, bytes (capnp) or dict as input for jsxobj")
 
@@ -93,7 +103,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key):
-        raise RuntimeError("not implemented")
+        raise j.exceptions.Value("not implemented")
 
 
 # class JSConfigObjectFactory(TypeBaseObjFactory):

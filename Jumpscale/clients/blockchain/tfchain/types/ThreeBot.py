@@ -71,10 +71,10 @@ class ThreeBotTypesFactory(j.application.JSBaseClass):
         ]:
             output = str(self.bot_name_new(value=name))
             if output != name:
-                raise ValueError("str: {} != {}".format(output, name))
+                raise j.exceptions.Value("str: {} != {}".format(output, name))
             json_output = self.bot_name_from_json(name).json()
             if json_output != name:
-                raise ValueError("json: {} != {}".format(json_output, name))
+                raise j.exceptions.Value("json: {} != {}".format(json_output, name))
 
         # > invalid bot names:
         for name in ["", "a", "a.b", "aaaaa.b", "a.bbbbb", "aaaaa:bbbbb"]:
@@ -107,14 +107,18 @@ class NetworkAddress(BaseDataTypeClass):
         # if network type is defined, validate it now
         if network_type is not None:
             if not isinstance(network_type, NetworkAddress.Type):
-                raise TypeError("network type is to be of type NetworkAddress.Type, not {}".format(type(network_type)))
+                raise j.exceptions.Value(
+                    "network type is to be of type NetworkAddress.Type, not {}".format(type(network_type))
+                )
             if self._type != network_type:
-                raise ValueError("network type is expected to equal {}, not {}".format(network_type, self._type))
+                raise j.exceptions.Value(
+                    "network type is expected to equal {}, not {}".format(network_type, self._type)
+                )
 
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "network address is expected to be an encoded string when part of a JSON object, not {}".format(
                     type(obj)
                 )
@@ -144,7 +148,7 @@ class NetworkAddress(BaseDataTypeClass):
         elif isinstance(value, str) and NetworkAddress.HOSTNAME_REGEXP.match(value):
             addr = bytearray()
             if len(value) > NetworkAddress.HOSTNAME_LENGTH_MAX:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "the length of a hostname can maximum be {} bytes long".format(NetworkAddress.HOSTNAME_LENGTH_MAX)
                 )
             addr.extend(value.encode("utf-8"))
@@ -165,12 +169,12 @@ class NetworkAddress(BaseDataTypeClass):
                     self._address = na.packed
             else:
                 # anything else is considered an invalid network address
-                raise ValueError("invalid network address '{}' (type: {})".format(value, type(value)))
+                raise j.exceptions.Value("invalid network address '{}' (type: {})".format(value, type(value)))
         elif isinstance(value, NetworkAddress):
             self._address = value._address.copy()
             self._type = value._type
         else:
-            raise TypeError("network address cannot be assigned a value of type {}".format(type(value)))
+            raise j.exceptions.Value("network address cannot be assigned a value of type {}".format(type(value)))
 
     def __str__(self):
         return self.value
@@ -217,7 +221,7 @@ class BotName(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("bot name is expected to be an encoded string when part of a JSON object")
+            raise j.exceptions.Value("bot name is expected to be an encoded string when part of a JSON object")
         if obj == "":
             obj = None
         return cls(value=obj)
@@ -240,14 +244,16 @@ class BotName(BaseDataTypeClass):
             self._value = None
         elif isinstance(value, str):
             if len(value) > BotName.LENGTH_MAX:
-                raise ValueError("the length of a botname can maximum be {} characters long".format(BotName.LENGTH_MAX))
+                raise j.exceptions.Value(
+                    "the length of a botname can maximum be {} characters long".format(BotName.LENGTH_MAX)
+                )
             if BotName.REGEXP.match(value) is None:
-                raise ValueError("bot name '{}' is not valid".format(value))
+                raise j.exceptions.Value("bot name '{}' is not valid".format(value))
             self._value = value
         elif isinstance(value, BotName):
             self._value = value._value.copy()
         else:
-            raise TypeError("bot name cannot be assigned a value of type {}".format(type(value)))
+            raise j.exceptions.Value("bot name cannot be assigned a value of type {}".format(type(value)))
 
     def __str__(self):
         return self.value

@@ -1,6 +1,7 @@
 import toml
 import re
 import copy
+import io
 
 from urllib.parse import urlparse
 from Jumpscale import j
@@ -25,8 +26,10 @@ SKIPPED_LINKS = [
 ]
 
 
-class CustomLink:
+class MarkdownLinkParser:
     """A link with custom format of `account:repo(branch):path`
+    
+    THIS IS A PARSER FOR THE MARKDOWN LINKS
 
     account, repo and branch are optional, examples:
 
@@ -129,24 +132,38 @@ class CustomLink:
 
     @classmethod
     def test(cls):
-        l = CustomLink("threefoldtech:jumpscaleX(dev):#124")
+        l = MarkdownLinkParser("threefoldtech:jumpscaleX(dev):#124")
         assert l.account == "threefoldtech"
         assert l.repo == "jumpscaleX"
         assert l.branch == "dev"
         assert l.path == "#124"
 
-        l = CustomLink("jumpscaleX(dev):docs/test.md")
+        l = MarkdownLinkParser("jumpscaleX(dev):docs/test.md")
         assert l.repo == "jumpscaleX"
         assert l.branch == "dev"
         assert l.path == "docs/test.md"
 
-        l = CustomLink("docs/test.md")
+        l = MarkdownLinkParser("docs/test.md")
         assert not l.account
         assert not l.repo
         assert l.path == "docs/test.md"
 
+    def __str__(self):
+
+        if not self.repo:
+            out = "custom link: %s" % self.path
+        else:
+            out = "custom link: %s(%s):%s" % (self.repo, self.branch, self.path)
+        return out
+
+    __repr__ = __str__
+
 
 class Linker:
+    """
+
+    """
+
     HOST = None
     ISSUE = None
     PULL_REQUEST = None
@@ -163,16 +180,16 @@ class Linker:
         return j.sal.fs.joinPaths(*args)
 
     def issue(self, _id):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def pull_request(self, _id):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def tree(self, path, branch="master"):
         pass
 
     def to_custom_link(self):
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
 
 class GithubLinker(Linker):
@@ -222,7 +239,7 @@ class GithubLinker(Linker):
     def to_custom_link(cls, url):
         match = cls.GITHUB_LINK_RE.match(url)
         if not match:
-            raise ValueError("not a valid github url")
+            raise j.exceptions.Value("not a valid github url")
 
         account, repo, branch, path = match.groups()
         link = "%s:%s" % (account, repo)
@@ -231,7 +248,12 @@ class GithubLinker(Linker):
         if not path:
             path = ""
         link += ":%s" % path
-        return CustomLink(link)
+        return MarkdownLinkParser(link)
+
+    @classmethod
+    def replace_branch(cls, url, to_branch):
+        tmp = cls.to_custom_link(url)
+        return cls(tmp.account, tmp.repo).tree(tmp.path, to_branch)
 
 
 class Link(j.application.JSBaseClass):
@@ -293,7 +315,7 @@ class Link(j.application.JSBaseClass):
         if match:
             match = match.groups()
             return map(self.remove_quotes, match)
-        raise ValueError("not a link markdown")
+        raise j.exceptions.Value("not a link markdown")
 
     def get_docsite(self, external_link, name):
         url = urlparse(external_link)
@@ -322,7 +344,7 @@ class Link(j.application.JSBaseClass):
             self.link_source_original = self.link_descr.split("@")[1].strip()  # was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
 
-        custom_link = CustomLink(self.link_source)
+        custom_link = MarkdownLinkParser(self.link_source)
         self.link_source = self.docsite.get_real_source(custom_link)
 
         if "?" in self.link_source:
@@ -398,7 +420,7 @@ class Link(j.application.JSBaseClass):
                 elif self.extension in ["md", "", None]:
                     self.cat = "doc"  # link to a markdown document
                     try:
-                        self.link_to_doc = self.docsite.doc_get(self.link_source, die=True)
+                        self.link_to_doc = self.docsite.doc_get(self.link_source, die=False)
                     except Exception as e:
                         if "Cannot find doc" in str(e):
                             return self.error(str(e))
@@ -429,9 +451,10 @@ class Link(j.application.JSBaseClass):
         self._log_info("download:%s\n%s" % (self.link_source_original, dest))
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
-            # cannot use primitive something wrong sometimes with ssl verification
-            cmd = "cd %s;rm -f %s;curl '%s' -o '%s'" % (ddir, dest, self.link_source_original, dest)
-            j.sal.process.execute(cmd, die=False)
+            import requests
+
+            response = requests.get(self.link_source_original, stream=True)
+            j.sal.bcdbfs.file_write(dest, response, append=False)
 
     def should_skip(self):
         return any(link in self.link_source for link in SKIPPED_LINKS)
@@ -454,7 +477,7 @@ class Link(j.application.JSBaseClass):
     def replace_in_txt(self, txt):
         if len(self.source) < 4:
             j.shell()
-            raise RuntimeError("something wrong with original source")
+            raise j.exceptions.Base("something wrong with original source")
         txt = txt.replace(self.source, self.markdown)
         # self.source = self.markdown #there is a new source now
         return txt

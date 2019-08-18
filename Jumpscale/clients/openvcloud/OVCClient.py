@@ -35,7 +35,7 @@ class OVCClient(JSConfigBase):
     space = "" (S)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._api = None
         self._config_check()
 
@@ -53,10 +53,10 @@ class OVCClient(JSConfigBase):
             if "refresh_token" not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(
                 expires
             ):
-                raise RuntimeError("JWT expired and can't be refreshed, please choose another token.")
+                raise j.exceptions.Base("JWT expired and can't be refreshed, please choose another token.")
         else:
             if j.tools.configmanager.sandbox_check():
-                raise RuntimeError("When in a sandbox, jwt is required")
+                raise j.exceptions.Base("When in a sandbox, jwt is required")
             jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
         return jwt
 
@@ -89,15 +89,15 @@ class OVCClient(JSConfigBase):
         self.address = urlClean(self.address)
 
         if self.address.strip() == "":
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com"
             )
 
         if not self.jwt_.strip() and j.tools.configmanager.sandbox_check():
-            raise RuntimeError("When in a sandbox, jwt is required")
+            raise j.exceptions.Base("When in a sandbox, jwt is required")
 
         # if not self.config.data.get("login"):
-        #     raise RuntimeError("login cannot be empty")
+        #     raise j.exceptions.Base("login cannot be empty")
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
@@ -181,13 +181,13 @@ class OVCClient(JSConfigBase):
         if name == "":
             name = self.account
         if not name:
-            raise RuntimeError("name needs to be specified in account in config or on method.")
+            raise j.exceptions.Base("name needs to be specified in account in config or on method.")
         for account in self.accounts:
             if account.model["name"] == name:
                 return account
         else:
             if create is False:
-                raise KeyError('No account with name "%s" found' % name)
+                raise j.exceptions.NotFound('No account with name "%s" found' % name)
             self.api.cloudbroker.account.create(
                 username=self.login,
                 name=name,
@@ -255,7 +255,7 @@ class OVCClient(JSConfigBase):
             spaceName = self.space
 
         if not spaceName:
-            raise RuntimeError("name needs to be specified in account in config or on method.")
+            raise j.exceptions.Base("name needs to be specified in account in config or on method.")
 
         account = self.account_get(name=accountName, create=False)
         if account:

@@ -25,7 +25,7 @@ class OauthClient(JSConfigClient):
         client_instance = "github" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.addr = self.addr
         self.accesstokenaddr = self.accesstokenaddr
         self.client_id = self.client_id
@@ -72,7 +72,7 @@ class OauthClient(JSConfigClient):
 
 
 class AuthError(Exception):
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
 
@@ -88,7 +88,7 @@ class OauthInstance:
         self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance
     ):
         if not addr:
-            raise RuntimeError("Failed to get oauth instance, no address provided")
+            raise j.exceptions.Base("Failed to get oauth instance, no address provided")
         else:
             self.addr = addr
             self.client_id = client_id

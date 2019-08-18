@@ -6,7 +6,7 @@ def main(self):
     """
     to run:
     
-    kosmos 'j.clients.rdb.test()'
+    kosmos 'j.clients.sqlitedb.test()'
 
     """
 
@@ -92,7 +92,7 @@ def main(self):
 
     res = j.tools.timer.stop(nritems)
 
-    assert res > 3000
+    assert res > 60
 
     self._log_info("PERF TEST SEQ OK")
 

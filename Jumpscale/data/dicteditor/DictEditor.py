@@ -10,7 +10,7 @@ class DictEditor(j.application.JSBaseClass):
         if name.startswith("_"):
             return self.__dict__[name]
         if name not in self._dict:
-            raise RuntimeError("cannot find name '%s' in " % name)
+            raise j.exceptions.Base("cannot find name '%s' in " % name)
         return self._dict[name]
 
     def __dir__(self):
@@ -46,7 +46,7 @@ class DictEditor(j.application.JSBaseClass):
     __repr__ = __str__
 
 
-class DictEditorFactory(j.application.JSFactoryBaseClass):
+class DictEditorFactory(j.application.JSFactoryConfigsBaseClass):
 
     __jslocation__ = "j.data.dict_editor"
 

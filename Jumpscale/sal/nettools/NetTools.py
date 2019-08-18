@@ -14,7 +14,7 @@ class NetTools(JSBASE):
 
     __jslocation__ = "j.sal.nettools"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._windowsNetworkInfo = None
 
     def tcpPortConnectionTest(self, ipaddr, port, timeout=None):
@@ -30,6 +30,29 @@ class NetTools(JSBASE):
         finally:
             if conn:
                 conn.close()
+        return True
+
+    def udpPortConnectionTest(self, ipaddr, port, timeout=1, message=b"PING"):
+
+        conn = socket.socket(type=socket.SOCK_DGRAM)
+        if timeout:
+            conn.settimeout(timeout)
+        try:
+            conn.connect((ipaddr, port))
+        except BaseException:
+            conn.close()
+            return False
+
+        self._log_debug("Sending %s bytes to %s:%s" % (len(message), ipaddr, port))
+        conn.send(message)
+
+        try:
+            data, address = conn.recvfrom(8192)
+        except Exception as e:
+            if "refused" in str(e):
+                return False
+            return False
+            # raise j.exceptions.Base("unexpected result")
         return True
 
     def ip_to_num(self, ip="127.0.0.1"):
@@ -101,7 +124,7 @@ class NetTools(JSBASE):
         @return status: 0 if running 1 if not running
         """
         if port > 65535 or port < 0:
-            raise ValueError("Port cannot be bigger then 65535 or lower then 0")
+            raise j.exceptions.Value("Port cannot be bigger then 65535 or lower then 0")
 
         self._log_debug("Checking whether a service is running on port %d" % port)
 
@@ -194,8 +217,8 @@ class NetTools(JSBASE):
         @returns: Nameserver IP
         @rtype: string
 
-        @raise NotImplementedError: Non-Unix systems
-        @raise RuntimeError: No nameserver could be found in /etc/resolv.conf
+        @raise j.exceptions.NotImplemented: Non-Unix systems
+        @raise j.exceptions.Base: No nameserver could be found in /etc/resolv.conf
         """
         if j.core.platformtype.myplatform.platform_is_osx or j.core.platformtype.myplatform.platform_is_linux:
             nameserverlines = j.data.regex.findAll(
@@ -216,7 +239,7 @@ class NetTools(JSBASE):
                 if nicCfg.DNSServerSearchOrder:
                     return str(nicCfg.DNSServerSearchOrder[0])
         else:
-            raise NotImplementedError("This function is only supported on Mac/unix/Windows systems")
+            raise j.exceptions.NotImplemented("This function is only supported on Mac/unix/Windows systems")
 
     def getIpAddresses(self, up=False):
         if j.core.platformtype.myplatform.platform_is_linux or j.core.platformtype.myplatform.platform_is_osx:
@@ -281,7 +304,7 @@ class NetTools(JSBASE):
     def getNicType(self, interface):
         """ Get Nic Type on a certain interface
         @param interface: Interface to determine Nic type on
-        @raise RuntimeError: On linux if ethtool is not present on the system
+        @raise j.exceptions.Base: On linux if ethtool is not present on the system
         """
         if j.core.platformtype.myplatform.platform_is_linux:
             output = ""
@@ -323,7 +346,7 @@ class NetTools(JSBASE):
                 interface = interfacepieces[0]
                 match = re.search("^\w+?(?P<interfaceid>\d+)$", interface, re.MULTILINE)
                 if not match:
-                    raise ValueError("Invalid interface %s" % (interface))
+                    raise j.exceptions.Value("Invalid interface %s" % (interface))
                 if len(match.group("interfaceid")) >= 4:
                     return "VLAN"
                 else:
@@ -388,15 +411,15 @@ class NetTools(JSBASE):
                 if match:
                     return match.group("vlantag")
                 else:
-                    raise ValueError("Could not find vlantag for interface %s" % (interface))
+                    raise j.exceptions.Value("Could not find vlantag for interface %s" % (interface))
             else:
-                raise ValueError("This is not a vlaninterface %s" % (interface))
+                raise j.exceptions.Value("This is not a vlaninterface %s" % (interface))
         elif j.core.platformtype.myplatform.platform_is_osx:
             # work with interfaces which are subnetted on vlans eq e1000g5000:1
             interface = interface.split(":")[0]
             match = re.search("^\w+?(?P<interfaceid>\d+)$", interface, re.MULTILINE)
             if not match:
-                raise ValueError("This is not a vlaninterface %s" % (interface))
+                raise j.exceptions.Value("This is not a vlaninterface %s" % (interface))
             return int(match.group("interfaceid")) / 1000
         elif j.core.platformtype.myplatform.platform_is_windows:
             import wmi
@@ -566,7 +589,7 @@ class NetTools(JSBASE):
         if j.core.platformtype.myplatform.platform_is_linux:
             return self._linux_networkinfo_get(device)
         else:
-            raise RuntimeError("not implemented")
+            raise j.exceptions.Base("not implemented")
 
     def getIpAddress(self, interface):
         """Return a list of ip addresses and netmasks assigned to this interface"""
@@ -602,7 +625,7 @@ class NetTools(JSBASE):
     def getMacAddress(self, interface):
         """Return the MAC address of this interface"""
         if interface not in self.getNics():
-            raise LookupError("Interface %s not found on the system" % interface)
+            raise j.exceptions.NotFound("Interface %s not found on the system" % interface)
         if j.core.platformtype.myplatform.platform_is_linux or j.core.platformtype.myplatform.platform_is_osx:
             output = list()
             output = j.builders.system.net.getInfo()
@@ -780,7 +803,7 @@ class NetTools(JSBASE):
         """
         if not allowhostname:
             if not j.sal.nettools.validateIpAddress(ip):
-                raise ValueError("ERROR: invalid ip address passed:[%s]" % ip)
+                raise j.exceptions.Value("ERROR: invalid ip address passed:[%s]" % ip)
 
         self._log_debug("pingMachine %s, timeout=%d, recheck=%s" % (ip, pingtimeout, str(recheck)))
 
@@ -854,9 +877,9 @@ class NetTools(JSBASE):
         @type passwd: string
         """
         if not url:
-            raise ValueError("URL can not be None or empty string")
+            raise j.exceptions.Value("URL can not be None or empty string")
         if not localpath:
-            raise ValueError("Local path to download the url to can not be None or empty string")
+            raise j.exceptions.Value("Local path to download the url to can not be None or empty string")
         filename = ""
         if localpath == "-":
             filename = "-"
@@ -866,7 +889,7 @@ class NetTools(JSBASE):
             if j.sal.fs.isDir(j.sal.fs.getDirName(localpath)):
                 filename = localpath
             else:
-                raise ValueError("Local path is an invalid path")
+                raise j.exceptions.Value("Local path is an invalid path")
         self._log_debug("Downloading url %s to local path %s" % (url, filename))
         from urllib.request import FancyURLopener
         from urllib.parse import splittype
@@ -927,7 +950,7 @@ class NetTools(JSBASE):
         _, domainName, _ = j.sal.process.execute(cmd, showout=False)
 
         if not domainName:
-            raise ValueError("There's no Domain Name")
+            raise j.exceptions.Value("There's no Domain Name")
 
         domainName = domainName.splitlines()[0]
 
@@ -941,10 +964,10 @@ class NetTools(JSBASE):
             raise j.exceptions.RuntimeError("Invalid NIC")
 
         if inet not in ["static", "dhcp"]:
-            raise ValueError("Invalid inet .. use either dhcp or static")
+            raise j.exceptions.Value("Invalid inet .. use either dhcp or static")
 
         if inet == "static" and (not ip or not netmask):
-            raise ValueError("ip, and netmask, are required in static inet.")
+            raise j.exceptions.Value("ip, and netmask, are required in static inet.")
 
         if j.core.platformtype.myplatform.platform_is_linux:
             file = j.tools.path.get("/etc/network/interfaces.d/%s" % device)

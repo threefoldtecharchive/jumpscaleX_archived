@@ -1,4 +1,6 @@
-# Jumpscale Installation Prerequisites
+# Jumpscale Installation Prerequisites If You Install in System !
+
+When not installing in system (docker) there are a lot less requirements.
 
 Prior to installing Jumpscale you need the following elements:
 
@@ -10,11 +12,12 @@ Prior to installing Jumpscale you need the following elements:
   * to list your public ssh keys `ssh-add -L`
 * Curl
 * Docker
-  * installation [guide](https://docs.docker.com/v17.12/install/#server)
-    * verify installation with `$docker --version`
+  * [see docker-for-mac dmg install](https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-mac)
+  * for servers/linux: installation [guide](https://docs.docker.com/v17.12/install/#server)
+  * verify installation with `$docker --version`
 * Python3
   * installation [guide](https://www.python.org/downloads/)
-    * verify installation with `$python3 --version`
+  * verify installation with `$python3 --version`
 * pip3  
   * `$sudo apt install python3-pip`
 * click python package  
@@ -31,9 +34,6 @@ On OSX you probably want to install [homebrew](https://brew.sh), the package man
 # install requirements
 brew install curl python3 git rsync
 ```
-
-### Install docker for mac osx
-[see docker-for-mac dmg install](https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-mac)
 
 ## Next
 

@@ -81,7 +81,7 @@ class GoogleCompute(JSBASE):
         for item in self.images_ubuntu:
             if item.lower().find("ubuntu-1604") is not -1:
                 return item
-        raise RuntimeError("did not find image: %s" % name)
+        raise j.exceptions.Base("did not find image: %s" % name)
 
     def instance_create(
         self,

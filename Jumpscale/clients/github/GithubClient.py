@@ -19,14 +19,14 @@ class GitHubClient(JSConfigClient):
         password = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
 
         self.users = {}
         self.repos = {}
         self.milestones = {}
 
         if not (self.token or (self.login and self.password)):
-            raise RuntimeError("Missing Github token or login/password")
+            raise j.exceptions.Base("Missing Github token or login/password")
 
         login_or_token = self.token or self.login
         password = self.password if self.password != "" else None
@@ -85,7 +85,7 @@ class GitHubClient(JSConfigClient):
             for org in orgs:
                 if org.id == organization_id:
                     return org.get_repos()
-            raise RuntimeError("Cannot find Organization with id :%s" % organization_id)
+            raise j.exceptions.Base("Cannot find Organization with id :%s" % organization_id)
 
     def repo_get(self, repo_name):
         """gets a specific repo by name

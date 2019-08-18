@@ -92,14 +92,14 @@ class TransactionV208(TransactionBaseClass):
             elif lvalue == 1:
                 value = value[0]
             else:
-                raise ValueError("ThreeBot only can have one coin output, a refund coin output")
+                raise j.exceptions.Value("ThreeBot only can have one coin output, a refund coin output")
         if value is None:
             self._refund_coin_output = None
         elif isinstance(value, CoinOutput):
             self._refund_coin_output = CoinOutput(value=value.value, condition=value.condition)
             self._refund_coin_output.id = value.id
         else:
-            raise TypeError("cannot assign a value of type {} to coin outputs".format(type(value)))
+            raise j.exceptions.Value("cannot assign a value of type {} to coin outputs".format(type(value)))
 
     def coin_input_add(self, parentid, fulfillment, parent_output=None):
         ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
@@ -420,7 +420,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
             self._public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError(
+            raise j.exceptions.Value(
                 "cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(
                     type(value)
                 )
@@ -480,14 +480,14 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
             elif lvalue == 1:
                 value = value[0]
             else:
-                raise ValueError("ThreeBot only can have one coin output, a refund coin output")
+                raise j.exceptions.Value("ThreeBot only can have one coin output, a refund coin output")
         if value is None:
             self._refund_coin_output = None
         elif isinstance(value, CoinOutput):
             self._refund_coin_output = CoinOutput(value=value.value, condition=value.condition)
             self._refund_coin_output.id = value.id
         else:
-            raise TypeError("cannot assign a value of type {} to coin outputs".format(type(value)))
+            raise j.exceptions.Value("cannot assign a value of type {} to coin outputs".format(type(value)))
 
     def coin_input_add(self, parentid, fulfillment, parent_output=None):
         ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
@@ -508,7 +508,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         if txfee is not None:
             fee = Currency(value=txfee)
             if fee != self._registration_fee:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "registration fee is hardcoded at {}, cannot be set to {}".format(
                         fee.str(with_unit=True), self._registration_fee.str(with_unit=True)
                     )
@@ -538,7 +538,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         Implements SignatureCallbackBase.
         """
         if self._public_key.unlockhash != public_key.unlockhash:
-            raise ValueError(
+            raise j.exceptions.Value(
                 "given public key ({}) does not equal public key ({})".format(
                     str(self._public_key.unlockhash), str(public_key.unlockhash)
                 )

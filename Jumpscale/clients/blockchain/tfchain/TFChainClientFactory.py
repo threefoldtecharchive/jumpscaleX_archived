@@ -11,8 +11,10 @@ from .types.Errors import ErrorTypes
 from .TFChainTypesFactory import TFChainTypesFactory
 from .TFChainTime import TFChainTime
 
+JSConfigBaseFactory = j.application.JSFactoryConfigsBaseClass
 
-class TFChainClientFactory(j.application.JSBaseConfigsClass):
+
+class TFChainClientFactory(JSConfigBaseFactory):
     """
     Factory class to get a tfchain client object
     """
@@ -20,7 +22,7 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.tfchain"
     _CHILDCLASS = TFChainClient
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._explorer_client = TFChainExplorerClient()
         self._types_factory = TFChainTypesFactory()
         self._error_types = ErrorTypes()

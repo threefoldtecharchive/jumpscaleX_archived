@@ -1,3 +1,23 @@
+# Copyright (C) July 2018:  TF TECH NV in Belgium see https://www.threefold.tech/
+# In case TF TECH NV ceases to exist (e.g. because of bankruptcy)
+#   then Incubaid NV also in Belgium will get the Copyright & Authorship for all changes made since July 2018
+#   and the license will automatically become Apache v2 for all code related to Jumpscale & DigitalMe
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+# LICENSE END
+
+
 from Jumpscale import j
 from unittest import TestCase
 
@@ -21,11 +41,11 @@ def main(self):
     # md5 = "cbf134f55d0c7149ef188cf8a52db0eb"
     # sid = "7"
 
-    bcdb = j.data.bcdb.get("test")
-    bcdb.reset()
+    bcdb = j.data.bcdb.get("test", reset=True)
+
     vfs = j.data.bcdb._get_vfs()
 
-    m_wallet_test = bcdb.model_get_from_schema(SCHEMA)
+    m_wallet_test = bcdb.model_get(schema=SCHEMA)
     test_case = TestCase()
     for i in range(10):
         o = m_wallet_test.new()
@@ -52,8 +72,6 @@ def main(self):
 
     r = vfs.get("/test/data")
     namespaces = [i for i in r.list()]
-    print("TODO@@@@@@@@@@@@@@@@@@@namespaces")
-    # assert 1 in namespaces
 
     assert "system" in bcdb_names
     r = vfs.get("/system/data")
@@ -158,21 +176,20 @@ def main(self):
     r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
     obj = r.get()
     r.delete()
-
     schema_wallet_obj = j.data.serializers.json.loads(schema)
     schema_wallet_md5 = schema_wallet_obj["md5"]
     schema_wallet_sid = schema_wallet_obj["sid"]
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_deleted = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
+        vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_should_also_be_deleted = vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
+        vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
 
     with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        r_should_be_deleted_too = vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
+        vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
     ex = cm.exception
     assert "not find obj with id:%s" % obj_id in str(ex.args[0])
 
