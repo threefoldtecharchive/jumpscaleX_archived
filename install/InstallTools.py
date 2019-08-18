@@ -624,14 +624,8 @@ class BaseJSException(Exception):
         return msg.strip()
 
     def __str__(self):
-        # raise RuntimeError()
         d = Tools.log(exception=self, stdout=False, replace=True)
         return d["message"]
-        # if self.cat:
-        #     out = "ERROR: %s ((%s)\n" % (self.message, self.cat)
-        # else:
-        #     out = "ERROR: %s\n" % (self.message)
-        # return out
 
     __repr__ = __str__
 

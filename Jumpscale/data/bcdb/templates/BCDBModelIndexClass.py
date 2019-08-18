@@ -83,7 +83,7 @@ class {{BASENAME}}(BCDBModelIndex):
     def _sql_index_delete(self,obj):
         return
 
-    def _sql_index_destroy(self, nid=None):
+    def _sql_index_destroy(self, nid=1):
         return
 
     {% endif %}

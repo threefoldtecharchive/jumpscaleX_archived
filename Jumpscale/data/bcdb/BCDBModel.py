@@ -189,7 +189,7 @@ class BCDBModel(j.application.JSBaseClass):
         assert obj.nid
 
     @queue_method
-    def set_dynamic(self, data, obj_id=None, nid=None):
+    def set_dynamic(self, data, obj_id=None, nid=1):
         """
         if string -> will consider to be json
         if binary -> will consider data for capnp
@@ -446,6 +446,8 @@ class BCDBModel(j.application.JSBaseClass):
 
     def destroy(self, nid=1):
         self._log_warning("destroy: %s nid:%s" % (self, nid))
+        assert isinstance(nid, int)
+        assert nid > 0
         for obj_id in self.index._id_iterator(nid=nid):
             self.storclient.delete(obj_id)
         self.index.destroy()
