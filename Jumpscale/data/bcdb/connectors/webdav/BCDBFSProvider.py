@@ -184,11 +184,11 @@ class BCDBFSProvider(DAVProvider):
     def get_by_name(self, name):
         res = self._dir_model.find(name=name)
         if len(res) == 1:
-            print("> found one object with path: {}".format(name))
+            self._log_debug("> found one object with path: {}".format(name))
             return res[0]
         elif len(res) > 1:
-            print("> found more the one object with path: {}".format(name))
+            self._log_debug("> found more the one object with path: {}".format(name))
             return res
         else:
-            print("> can't find objects for {}".format(name))
+            self._log_debug("> can't find objects for {}".format(name))
             return None

@@ -64,8 +64,7 @@ class RedisServer(j.application.JSBaseClass):
         self.vfs = j.data.bcdb._get_vfs()
 
     def start(self):
-        print("RUNNING")
-        print(self)
+        self._log_info("RUNNING")
         self.redis_server.serve_forever()
 
     def stop(self):

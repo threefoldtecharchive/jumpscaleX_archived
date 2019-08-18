@@ -63,6 +63,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.readonly = False
         self.autosave = False  # if set it will make sure data is automatically set from object
+        self.nosave = False
 
         if self.storclient and self.storclient.type == "ZDB":
             # is unique id for a bcdbmodel (unique per storclient !)
@@ -136,7 +137,7 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            obj2 = method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
+            obj2 = method(model=model, obj=obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
             if isinstance(obj2, j.data.schema._JSXObjectClass):
                 # only replace if right one returned, otherwise ignore
                 obj = obj2
@@ -324,8 +325,6 @@ class BCDBModel(j.application.JSBaseClass):
                         if obj.acl.md5 != acl2.md5:
                             obj.acl.id = None
                             obj.acl.save()  # means there is acl but not same as in DB, need to save
-                            if obj.acl.readonly:
-                                obj.acl.readonly = True
                             self._obj_cache_reset()
                 obj.acl_id = obj.acl.id
 
@@ -349,8 +348,6 @@ class BCDBModel(j.application.JSBaseClass):
             if obj.id is None:
                 # means a new one
                 obj.id = self.storclient.set(data)
-                if self.readonly:
-                    obj.readonly = True
                 # self._log_debug("NEW:\n%s" % obj)
             else:
                 try:
@@ -449,8 +446,8 @@ class BCDBModel(j.application.JSBaseClass):
 
     def destroy(self, nid=1):
         self._log_warning("destroy: %s nid:%s" % (self, nid))
-        for obj in self.find(nid=nid):
-            obj.delete()
+        for obj_id in self.index._id_iterator(nid=nid):
+            self.storclient.delete(obj_id)
         self.index.destroy()
         j.sal.fs.remove(self._data_dir)
 

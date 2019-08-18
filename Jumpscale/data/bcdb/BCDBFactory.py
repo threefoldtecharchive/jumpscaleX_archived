@@ -405,7 +405,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         self._log_debug("bcdb already exists")
 
         if type.lower() in ["zdb"]:
-            print(model.storclient.nsinfo["entries"])
+            # print(model.storclient.nsinfo["entries"])
             assert model.storclient.nsinfo["entries"] == 1
         else:
             assert len(model.find()) == 0

@@ -383,7 +383,7 @@ class Schema(j.application.JSBaseClass):
                 raise j.exceptions.Base("wrong arguments to new on schema")
 
         if model is not None:
-            model._triggers_call(obj, "new")
+            model._triggers_call(obj=obj, action="new")
 
         return obj
 

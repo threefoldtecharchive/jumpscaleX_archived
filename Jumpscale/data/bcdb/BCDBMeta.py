@@ -132,12 +132,12 @@ class BCDBMeta(j.application.JSBaseClass):
     def hasdata_set(self, schema):
         assert schema.hasdata  # needs to be True because thats what we need to set
         for s in self._data.schemas:
-            # self._log_debug("check hasdata for meta:%s" % s.url)
+            # self._log_debug("check hasdata for meta:%s (%s:%s)" % (s.url, s.md5, schema._md5))
             if s.md5 == schema._md5:
                 if not s.hasdata:
                     s.hasdata = True
                     self._save()
-                    return
+                return
         raise j.exceptions.Value("did not find schema:%s in metadata" % schema._md5)
 
     def __repr__(self):

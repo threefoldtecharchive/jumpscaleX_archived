@@ -57,6 +57,12 @@ class JSXObject(j.application.JSBaseClass):
         return False
 
     @property
+    def _nosave(self):
+        if self._model:
+            return self._model.nosave
+        return False
+
+    @property
     def _capnp_schema(self):
         return self._schema._capnp_schema
 
@@ -81,9 +87,6 @@ class JSXObject(j.application.JSBaseClass):
         :param data: can be binary (capnp), str=json, or dict
         :return:
         """
-
-        if self._model is not None and self._model.readonly:
-            raise j.exceptions.Base("cannot load from data, model stor for obj is readonly.\n%s" % self)
 
         if isinstance(capnpdata, bytes):
             self._capnp_obj_ = self._capnp_schema.from_bytes_packed(capnpdata)
@@ -132,7 +135,6 @@ class JSXObject(j.application.JSBaseClass):
             if serialize:
                 self._deserialized_items = {}  # need to go back to smallest form
         if self._model:
-            # print (self._model.__class__.__name__)
             if not self._model.__class__._name == "acl" and self._acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
@@ -162,19 +164,24 @@ class JSXObject(j.application.JSBaseClass):
                                 assert self._model.sid == r[0]._model.sid
                                 return self  # means data was not changed
 
-                if not self._model.readonly:
+                if not self._nosave:
                     o = self._model.set(self)
-                self._model._triggers_call(obj=self, action="save", propertyname=None)
-                self.id = o.id
-                return o
+                    self.id = o.id
+
+                obj = self._model._triggers_call(obj=self, action="save", propertyname=None)
+
+                return obj
             return self
 
         raise j.exceptions.Base("cannot save, model not known")
 
     def delete(self):
         if self._model:
-            if self._model.readonly:
-                raise j.exceptions.Base("object readonly, cannot be saved.\n%s" % self)
+            self._model._triggers_call(obj=self, action="delete", propertyname=None)
+            if self._nosave:
+                return
+            if self._readonly:
+                raise j.exceptions.Base("object _readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)
             return self

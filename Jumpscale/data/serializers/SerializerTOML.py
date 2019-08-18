@@ -109,7 +109,7 @@ class SerializerTOML(SerializerBase):
         try:
             return pytoml.dumps(obj, sort_keys=True)
         except Exception as e:
-            raise j.exceptions.Value("Toml serialization failed", data=obj, parent_exception=e)
+            raise j.exceptions.Value("Toml serialization failed", data=obj, exception=e)
 
     def loads(self, s, secure=False):
         if isinstance(s, bytes):
@@ -119,7 +119,7 @@ class SerializerTOML(SerializerBase):
         try:
             val = pytoml.loads(s)
         except Exception as e:
-            raise j.exceptions.Value("Toml deserialization failed", data=s, parent_exception=e)
+            raise j.exceptions.Value("Toml deserialization failed", data=s, exception=e)
         if secure and j.data.types.dict.check(val):
             res = {}
             for key, item in val.items():
