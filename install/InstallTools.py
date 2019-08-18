@@ -2932,8 +2932,6 @@ class MyEnv_:
 
         """
         ttype, msg, tb = sys.exc_info()
-        if stack_go_up:
-            j.shell()
         return self.excepthook(ttype, exception_obj, tb, die=die, stdout=stdout, level=level)
 
     def config_edit(self):
