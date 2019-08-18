@@ -714,7 +714,6 @@ class JSBase:
     ###################
 
     def __str__(self):
-        raise RuntimeError()
 
         out = "## {GRAY}{RED}%s{BLUE} %s{RESET}\n\n" % (
             # self._objcat_name,
