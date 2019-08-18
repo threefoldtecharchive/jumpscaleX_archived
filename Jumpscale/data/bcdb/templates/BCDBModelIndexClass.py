@@ -36,7 +36,7 @@ class {{BASENAME}}(BCDBModelIndex):
 
         class BaseModel(p.Model):
             class Meta:
-                print("*%s"%db)
+                # print("*%s"%db)
                 database = db
 
         class Index_{{schema.key}}(BaseModel):

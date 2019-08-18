@@ -56,8 +56,6 @@ class BCDBModelIndex(j.application.JSBaseClass):
         self.storclient = self.bcdb.storclient
         self._sonic = None
 
-        self.readonly = self.bcdbmodel.readonly
-
         self.index_key_needed, self.index_sql_needed, self.index_text_needed = self.schema.index_needed()
 
         # lets make sure indexing can happen

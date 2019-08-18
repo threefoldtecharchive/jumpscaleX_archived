@@ -109,6 +109,7 @@ class Application(object):
         self.JSBaseConfigClass = JSBaseConfigClass  # 1 config obj, childre from configs
         self.JSBaseConfigsClass = JSBaseConfigsClass  # multiple config children
         self.JSConfigsFactory = JSConfigsFactory
+        self.JSFactoryTools = JSFactoryTools
         # factory on j... level for multipl JSConfigs children
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
         self.JSBaseFactoryClass = JSBaseFactoryClass
@@ -457,7 +458,6 @@ class Application(object):
         :return:
         """
         for item in self._iterate_rootobj():
-            print(item)
             if isinstance(item, self.JSBaseClass):
                 yield item
                 for item in item._children_recursive_get():

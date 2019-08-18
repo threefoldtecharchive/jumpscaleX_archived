@@ -74,7 +74,17 @@ try:
     import yaml
 
     def serializer(data):
-        return yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+        if isinstance(data, bytes):
+            return "BINARY"
+        if hasattr(data, "_ddict"):
+            data = data._ddict
+
+        try:
+            res = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+        except Exception as e:
+            # print("WARNING: COULD NOT YAML SERIALIZE")
+            return str(data)
+        return res
 
 
 except:
@@ -545,14 +555,14 @@ class BaseJSException(Exception):
         - STDOUT 	15
         - DEBUG 	10
 
-    parent_exception is the exception which comes from e.g. a try except, its to log the original exception
+    exception is the exception which comes from e.g. a try except, its to log the original exception
 
     e.g.
 
     try:
         dosomething_which_gives_error(data=data)
     except Exception as e:
-        raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,parent_exception=e)
+        raise j.exceptions.Value("incredible error",cat="firebrigade.ghent",data=data,exception=e)
 
     :param: message a meaningful message
     :level: see above
@@ -563,7 +573,7 @@ class BaseJSException(Exception):
 
     """
 
-    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, parent_exception=None):
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, exception=None):
 
         if level:
             if isinstance(level, str):
@@ -582,11 +592,9 @@ class BaseJSException(Exception):
         self.context = context
         self.cat = cat  # is a dot notation category, to make simple no more tags
         self.data = data
-        self.parent_exception = parent_exception
+        self.exception = exception
 
-        self._init(
-            message=message, level=level, cat=cat, msgpub=msgpub, context=context, parent_exception=parent_exception
-        )
+        self._init(message=message, level=level, cat=cat, msgpub=msgpub, context=context, exception=exception)
 
         exc_type, exc_value, exc_traceback = sys.exc_info()
         self._tb = exc_traceback
@@ -910,7 +918,7 @@ class Tools:
         # first deal with traceback
         if exception and not tb:
             # if isinstance(exception, BaseJSException):
-            if hasattr(exception, "parent_exception"):
+            if hasattr(exception, "exception"):
                 tb = exception._tb
             else:
                 extype_, value_, tb = sys.exc_info()
@@ -927,27 +935,35 @@ class Tools:
 
         if exception:
             # make sure exceptions get the right priority
-            if not msg:
-                if hasattr(exception, "parent_exception"):
-                    msg = exception.message
-                else:
-                    msg = exception.__repr__()
-            msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg, 4) + "{RESET}"
+            if hasattr(exception, "exception"):
+                msg_e = exception.message
+            else:
+                msg_e = exception.__repr__()
+            if msg:
+                msg = (
+                    "{RED}EXCEPTION: \n"
+                    + Tools.text_indent(msg, 4).rstrip()
+                    + "\n"
+                    + Tools.text_indent(msg_e, 4)
+                    + "{RESET}"
+                )
+            else:
+                msg = "{RED}EXCEPTION: \n" + Tools.text_indent(msg_e, 4).rstrip() + "{RESET}"
             level = 50
             if cat is "":
                 cat = "exception"
 
-            if hasattr(exception, "parent_exception"):
+            if hasattr(exception, "exception"):
                 if not data:
                     # copy data from the exception
                     data = exception.data
-                if exception.parent_exception:
-                    # if isinstance(exception.parent_exception, BaseJSException):
-                    if hasattr(exception.parent_exception, "parent_exception"):
-                        parent_exception = "      " + exception.parent_exception.str_1_line
+                if exception.exception:
+                    # if isinstance(exception.exception, BaseJSException):
+                    if hasattr(exception.exception, "exception"):
+                        exception = "      " + exception.exception.str_1_line
                     else:
-                        parent_exception = Tools.text_indent(exception.parent_exception, 6)
-                    msg += "\n - original Exception: %s" % parent_exception
+                        exception = Tools.text_indent(exception.exception, 6)
+                    msg += "\n - original Exception: %s" % exception
 
         logdict["message"] = msg
 
@@ -1317,7 +1333,13 @@ class Tools:
 
     @staticmethod
     def text_replace(
-        content, args=None, executor=None, ignorecomments=False, text_strip=True, check_no_args_left=False
+        content,
+        args=None,
+        executor=None,
+        ignorecomments=False,
+        text_strip=True,
+        check_no_args_left=False,
+        ignorecolors=False,
     ):
         """
 
@@ -1347,6 +1369,9 @@ class Tools:
 
         if not "{" in content:
             return content
+
+        if ignorecolors:
+            content = Tools.args_replace(content, MyEnv.MYCOLORS_IGNORE)
 
         if executor and executor.config:
             content2 = Tools.args_replace(content, args, executor.config, MyEnv.MYCOLORS)
@@ -1380,19 +1405,22 @@ class Tools:
                     args_new[key] = val
 
         def process_line(line, args_new):
+            # IF YOU TOUCH THIS LET KRISTOF KNOW
             line = line.replace("{}", ">>EMPTYDICT<<")
-            if line.count("{") == line.count("}"):
-                try:
-                    line = line.format_map(args_new)
-                except KeyError as e:
-                    # means the format map did not work,lets fall back on something more failsafe
-                    for arg, val in replace_args.items():
-                        assert arg
-                        line = line.replace("{%s}" % arg, val)
-                except Exception as e:
-                    raise RuntimeError(
-                        "failed process_line line >{}< and args_new {}".format(line, args_new), data=args_new
-                    )
+            try:
+                line = line.format_map(args_new)
+            except KeyError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    assert arg
+                    line = line.replace("{%s}" % arg, val)
+            except ValueError as e:
+                # means the format map did not work,lets fall back on something more failsafe
+                for arg, val in replace_args.items():
+                    assert arg
+                    line = line.replace("{%s}" % arg, val)
+            except Exception as e:
+                return line
             line = line.replace(">>EMPTYDICT<<", "{}")
 
             return line
@@ -1419,7 +1447,9 @@ class Tools:
         elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
             return str(data)
 
-        return serializer(data)
+        res = serializer(data)
+        res = Tools.text_replace(content=res, ignorecolors=True)
+        return res
 
     @staticmethod
     def log2stdout(logdict, data_show=True):
@@ -1599,7 +1629,7 @@ class Tools:
         return impl.hexdigest()
 
     @staticmethod
-    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", prefix=None, args=None):
+    def text_indent(content, nspaces=4, wrap=120, strip=True, indentchar=" ", prefix=None, args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -2439,6 +2469,18 @@ class MyEnv_:
             "REVERSE": "\033[;7m",
         }
 
+        self.MYCOLORS_IGNORE = {
+            "RED": "",
+            "BLUE": "",
+            "CYAN": "",
+            "GREEN": "",
+            "GRAY": "",
+            "YELLOW": "",
+            "RESET": "",
+            "BOLD": "",
+            "REVERSE": "",
+        }
+
         LOGFORMATBASE = (
             "{COLOR}{TIME} {filename:<20}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}"
         )  # DO NOT CHANGE COLOR
@@ -2856,7 +2898,6 @@ class MyEnv_:
         :param level:
         :return: logdict see github/threefoldtech/jumpscaleX/docs/Internals/logging_errorhandling/logdict.md
         """
-
         try:
             logdict = Tools.log(tb=tb, level=level, exception=exception_obj, stdout=stdout)
         except Exception as e:

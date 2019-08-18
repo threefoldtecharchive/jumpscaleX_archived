@@ -190,7 +190,11 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
             self._md5_to_schema[s._md5] = s
             return self._md5_to_schema[s._md5]
         else:
-            raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
+            l = self._url_to_md5[s.url]
+            l.pop(l.index(s._md5))
+            l.append(s._md5)
+            self._url_to_md5[s.url] = l
+            # raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
 
     def _add_url_to_md5(self, url, md5):
         """

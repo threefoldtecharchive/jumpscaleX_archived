@@ -29,7 +29,7 @@ Triggers are defined on model level.
 
 will call the method as follows before doing a set in DB
 
-- method(model,obj,kosmosinstance=None, action=None, propertyname=None)
+- method(model=model,obj=obj,kosmosinstance=None, action=None, propertyname=None)
 - kosmosinstance only if _model used in an jumpscale configuration enabled class
 - action is in "new, change, get,set_pre,set_post,delete"  done on DB layer
 - propertyname only relevant for changes, is when object property gets changed e.g. ipaddr...
@@ -37,7 +37,7 @@ will call the method as follows before doing a set in DB
 to add a custom Trigger on kosmos obj do
 
 ```
-def mymethod(model,obj,kosmosinstance=None, action=None, propertyname=None):
+def mymethod(self,model,obj,kosmosinstance=None, action=None, propertyname=None):
     #do something e.g. manipulate the data model before storing in DB
 
 kosmosobj._model.trigger_add(mymethod)

@@ -196,7 +196,7 @@ class BCDB(j.application.JSBaseClass):
         for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
             schema_path = "%s/%s" % (path, schema_id)
             mid, url, md5 = schema_id.split("__")
-            print("MD5: %s" % md5)
+            # print("MD5: %s" % md5)
             model = models[md5]
             assert model.schema._md5 == md5
             for item in j.sal.fs.listFilesInDir(schema_path, False):
@@ -666,8 +666,6 @@ class BCDB(j.application.JSBaseClass):
                 obj.id = id
             if acl_id:
                 obj.acl_id = acl_id
-            if obj._model.readonly:
-                obj.readonly = True  # means we fetched from DB, we need to make sure it cannot be changed
             return obj
 
     def obj_get(self, id):

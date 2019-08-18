@@ -378,20 +378,20 @@ class JSBase:
     def _print(self, msg, cat=""):
         self._log(msg, cat=cat, level=15)
 
-    def _log_debug(self, msg, cat="", data=None, context=None, _levelup=1):
-        self._log(msg, cat=cat, level=10, data=data, context=context, _levelup=_levelup)
+    def _log_debug(self, msg, cat="", data=None, context=None, _levelup=1, exception=None):
+        self._log(msg, cat=cat, level=10, data=data, context=context, _levelup=_levelup, exception=exception)
 
-    def _log_info(self, msg, cat="", data=None, context=None, _levelup=1):
-        self._log(msg, cat=cat, level=20, data=data, context=context, _levelup=_levelup)
+    def _log_info(self, msg, cat="", data=None, context=None, _levelup=1, exception=None):
+        self._log(msg, cat=cat, level=20, data=data, context=context, _levelup=_levelup, exception=exception)
 
-    def _log_warning(self, msg, cat="", data=None, context=None, _levelup=1):
-        self._log(msg, cat=cat, level=30, data=data, context=context, _levelup=_levelup)
+    def _log_warning(self, msg, cat="", data=None, context=None, _levelup=1, exception=None):
+        self._log(msg, cat=cat, level=30, data=data, context=context, _levelup=_levelup, exception=exception)
 
-    def _log_error(self, msg, cat="", data=None, context=None, _levelup=1):
-        self._log(msg, cat=cat, level=40, data=data, context=context, _levelup=_levelup)
+    def _log_error(self, msg, cat="", data=None, context=None, _levelup=1, exception=None):
+        self._log(msg, cat=cat, level=40, data=data, context=context, _levelup=_levelup, exception=exception)
 
-    def _log_critical(self, msg, cat="", data=None, context=None, _levelup=1):
-        self._log(msg, cat=cat, level=50, data=data, context=context, _levelup=_levelup)
+    def _log_critical(self, msg, cat="", data=None, context=None, _levelup=1, exception=None):
+        self._log(msg, cat=cat, level=50, data=data, context=context, _levelup=_levelup, exception=exception)
 
     def _log(
         self,
@@ -540,6 +540,9 @@ class JSBase:
             if filter:
                 if not filter.startswith("_") and name.startswith("_"):
                     continue
+                if filter.startswith("_") and not filter.startswith("__") and name.startswith("__"):
+                    # remove __ if we only ask for _
+                    continue
                 if filter.endswith("*"):
                     filter2 = filter[:-1]
                     if not name.startswith(filter2):
@@ -592,8 +595,11 @@ class JSBase:
 
         :return:
         """
-        children = self._children.values()
-        return self._filter(filter=filter, llist=children, nameonly=False)
+        if hasattr(self, "_children"):
+            children = self._children.values()
+            return self._filter(filter=filter, llist=children, nameonly=False)
+        else:
+            return []
 
     def _child_get(self, name=None, id=None):
         """
@@ -651,9 +657,10 @@ class JSBase:
 
         """
         others = self._children_names_get(filter=filter)
-        pname = self._parent_name_get()
-        if pname not in others:
-            others.append(pname)
+        if hasattr(self, "_parent"):
+            pname = self._parent_name_get()  # why do we need the parent name?
+            if pname not in others:
+                others.append(pname)
         res = [i for i in self._filter(filter=filter, llist=self._properties) if i not in others]
         return res
 
@@ -707,6 +714,7 @@ class JSBase:
     ###################
 
     def __str__(self):
+        raise RuntimeError()
 
         out = "## {GRAY}{RED}%s{BLUE} %s{RESET}\n\n" % (
             # self._objcat_name,
@@ -715,18 +723,25 @@ class JSBase:
         )
 
         def add(name, color, items, out):
-            self._log_debug(items)
+            # self._log_debug(items)
             if len(items) > 0:
                 out += "{%s}### %s:\n" % (color, name)
                 if len(items) < 20:
                     for item in items:
                         self._log_debug(item)
-
+                        item = item.rstrip()
                         if name in ["data", "properties"]:
                             try:
-                                out += " - %-20s : %s\n" % (item, getattr(self, item))
-                            except:
-                                out += " - %-20s : ERROR\n" % (item)
+                                v = j.core.tools._data_serializer_safe(getattr(self, item)).rstrip()
+                                if "\n" in v:
+                                    v = j.core.tools.text_indent(content=v, nspaces=4)
+                                    out += " - %-20s :\n{GRAY}%s{%s}\n" % (item, v, color)
+                                else:
+                                    out += " - %-20s : {GRAY}%s{%s}\n" % (item, v, color)
+
+                            except Exception as e:
+                                print(e)
+                                out += " - %-20s : {GRAY}ERROR ATTRIBUTE{%s}\n" % (item, color)
                         else:
                             out += " - %s\n" % item
                 else:
@@ -736,7 +751,7 @@ class JSBase:
 
         out = add("children", "GREEN", self._children_names_get(), out)
         out = add("properties", "YELLOW", self._properties_names_get(), out)
-        out = add("data", "GRAY", self._dataprops_names_get(), out)
+        out = add("data", "BLUE", self._dataprops_names_get(), out)
 
         out += "{RESET}"
 

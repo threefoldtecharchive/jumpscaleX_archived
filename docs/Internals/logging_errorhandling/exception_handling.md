@@ -53,7 +53,7 @@ We use the logdict as generic format for the handling.
 the initialization for them all
 
 ```python
-BaseJSException(message="something", level=None, cat=None, msgpub=None,context=None,parent_exception=None)
+BaseJSException(message="something", level=None, cat=None, msgpub=None,context=None,exception=None)
 ```
 
 - context is e.g. location where something happened
@@ -105,7 +105,7 @@ raise j.exceptions.SSHTimeout("")
   - STDOUT 	15
   - DEBUG 	10
 
-- parent_exception is the exception which comes from e.g. a try except, its to log the original exception (the parent)
+- exception is the exception which comes from e.g. a try except, its to log the original exception (the parent)
 
 ```python
 try:
@@ -120,12 +120,12 @@ arguments
 - **cat**: dot notation can be used, just to put your error in a good category
 - **context**: e.g. methodname, location id, ... the context (area) where the error happened (exception)
 - **data**: any data worth keeping 
-- **parent_exception**: see above
+- **exception**: see above
 
 ```python
 class BaseJSException(Exception):
   
-    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, parent_exception=None):
+    def __init__(self, message="", level=None, cat=None, msgpub=None, context=None, data=None, exception=None):
 
 ```
 
