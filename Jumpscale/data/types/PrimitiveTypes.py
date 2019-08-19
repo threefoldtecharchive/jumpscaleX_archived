@@ -46,12 +46,12 @@ class String(TypeBaseClass):
         except Exception as e:
             raise j.exceptions.input("cannot convert to string")
 
-        value = value.strip()
-        if len(value) > 1:
-            if value[0] == "'" and value[-1] == "'":
-                value = value.strip("'")
-            if value[0] == '"' and value[-1] == '"':
-                value = value.strip('"')
+        value2 = value.strip()
+        if len(value2) > 1:
+            if value2[0] == "'" and value2[-1] == "'":
+                value = value2.strip("'")
+            if value2[0] == '"' and value2[-1] == '"':
+                value = value2.strip('"')
 
         return value
 

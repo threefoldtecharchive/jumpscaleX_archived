@@ -41,13 +41,6 @@ class JSConfigBase(JSBase, Attr):
         if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
             raise j.exceptions.Base("combination not allowed of config and configsclass")
 
-    def _obj_cache_reset(self):
-        JSBase._obj_cache_reset(self)
-        # IS THIS RIGHT?
-        for key, obj in self._children.items():
-            del self._children[key]
-            self._children.pop(key)
-
     #### NEED TO IMPLEMENT BUT THINK FIRST
 
     def _trigger_add(self, method):
