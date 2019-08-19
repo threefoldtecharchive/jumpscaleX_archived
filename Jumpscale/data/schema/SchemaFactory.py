@@ -220,6 +220,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         :param path, is path where there are .toml schema's which will be loaded
 
+        will not load model files, only toml !
+
         """
 
         res = []

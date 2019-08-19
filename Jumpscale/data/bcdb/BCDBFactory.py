@@ -46,6 +46,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         self._BCDBModelClass = BCDBModel  # j.data.bcdb._BCDBModelClass
 
+        # will make sure the toml schema's are loaded
+        j.data.schema.add_from_path("%s/models_system" % self._dirpath)
+
         self._load()
 
     def _load(self):
@@ -73,7 +76,6 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if not self._system:
             # storclient = j.clients.sqlitedb.client_get(name="system")
             storclient = j.clients.rdb.client_get(name="system")
-            j.data.schema.add_from_path("%s/models_system" % self._dirpath)
             self._system = self.get("system", storclient=storclient, reset=reset)
         return self._system
 
