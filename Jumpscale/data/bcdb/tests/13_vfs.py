@@ -93,13 +93,8 @@ def main(self):
 
     r = vfs.get("test/data/1")
     identifier_folders = [i for i in r.list()]
-    assert (
-        len(identifier_folders) == 3
-        and "sid" in identifier_folders
-        and "url" in identifier_folders
-        and "hash" in identifier_folders
-    )
-    r = vfs.get("data/1/url")  # current bcdb is test do to last test
+    assert len(identifier_folders) > 3
+    r = vfs.get("data/1")  # current bcdb is test do to last test
     urls = [i for i in r.list()]
     print("urls:%s" % urls)
     assert (
@@ -107,7 +102,8 @@ def main(self):
         and "jumpscale.bcdb.acl.circle.2" in urls
         and "threefoldtoken.wallet.test" in urls
     )
-    r = vfs.get("/data/1/url/threefoldtoken.wallet.test/")
+
+    r = vfs.get("/data/1/threefoldtoken.wallet.test/")
 
     objs_from_test_wallet = [i for i in r.list()]
     assert len(objs_from_test_wallet) == 10
@@ -129,7 +125,7 @@ def main(self):
             assert obj["name"] == "myuser_1"
             obj_id = obj["id"]
 
-    r = vfs.get("/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/%s" % obj_id)
+    r = vfs.get("/data/1/threefoldtoken.wallet.test/%s" % obj_id)
 
     obj = j.data.serializers.json.loads(r.get())
 
@@ -140,101 +136,20 @@ def main(self):
     self._log_info("TEST GET DATA DONE")
 
     # schema path
-    r = vfs.get("schemas/sid/")
-    r2 = vfs.get("schemas/hash/")
-    r3 = vfs.get("schemas/url/")
-    schemas = [i for i in r.list()]
-    schemas2 = [i for i in r2.list()]
+    r3 = vfs.get("schemas/")
     schemas3 = [i for i in r3.list()]
-    print(schemas)
-    print(schemas2)
+
     print(schemas3)
-    assert len(schemas) == len(schemas2) == 7
+    assert len(schemas3) >= 7
     assert "threefoldtoken.wallet.test" in schemas3  # multiple url link to the same schema id ?
-    r = vfs.get("schemas/url/threefoldtoken.wallet.test")
-    schema = r.get()
-    obj = j.data.serializers.json.loads(schema)
-    assert str(obj["url"]) == "threefoldtoken.wallet.test"
-    assert "ipaddr = (ipaddr)" in str(obj["text"])
 
-    # get the same schema via sid
-    sid = vfs.get("schemas/url2sid/threefoldtoken.wallet.test")
-    r = vfs.get("schemas/sid/%s" % sid.item)
+    r = vfs.get("schemas/threefoldtoken.wallet.test")
     schema = r.get()
     obj = j.data.serializers.json.loads(schema)
     assert str(obj["url"]) == "threefoldtoken.wallet.test"
-    assert "ipaddr = (ipaddr)" in str(obj["text"])
+    assert "ipaddr" in str(obj.values())
 
-    # get the same schema via md5 hash
-    r = vfs.get("schemas/hash/%s" % obj["md5"])
-    schema = r.get()
-    obj = j.data.serializers.json.loads(schema)
-    assert str(obj["url"]) == "threefoldtoken.wallet.test"
-    assert "ipaddr = (ipaddr)" in str(obj["text"])
     self._log_info("TEST GET SCHEMA DONE")
-
-    r = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
-    obj = r.get()
-    r.delete()
-    schema_wallet_obj = j.data.serializers.json.loads(schema)
-    schema_wallet_md5 = schema_wallet_obj["md5"]
-    schema_wallet_sid = schema_wallet_obj["sid"]
-    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id)
-    ex = cm.exception
-    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
-    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        vfs.get("/data/1/hash/%s/%s" % (schema_wallet_md5, obj_id))
-    ex = cm.exception
-    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
-
-    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
-        vfs.get("/data/1/sid/%s/%s" % (schema_wallet_sid, obj_id))
-    ex = cm.exception
-    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
-
-    # test delete all data form a url get
-    r2 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id_2)
-    obj2raw = r2.get()
-    obj2 = j.data.serializers.json.loads(obj2raw)
-    assert obj2["name"] == "myuser_2"
-    assert obj2["id"] == obj_id_2
-
-    r2_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_2))
-    r2_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_2))
-    removed_obj = r2.delete()
-    for ro in removed_obj:
-        print("comparing key:%s with keys:%s" % (ro.key, [r2.key, r2_by_sid.key, r2_by_hash.key]))
-        assert ro.key == r2.key or ro.key == r2_by_sid.key or ro.key == r2_by_hash.key
-
-    # test delete all data form a sid get
-    r4_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_4))
-    obj4raw = r4_by_sid.get()
-    obj4 = j.data.serializers.json.loads(obj4raw)
-    assert obj4["name"] == "myuser_4"
-    assert obj4["id"] == obj_id_4
-
-    r4_by_url = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % (obj_id_4))
-    r4_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_4))
-    removed_obj = r4_by_sid.delete()
-    for ro in removed_obj:
-        print("comparing key:%s with keys:%s" % (ro.key, [r4_by_url.key, r4_by_sid.key, r4_by_hash.key]))
-        assert ro.key == r4_by_url.key or ro.key == r4_by_sid.key or ro.key == r4_by_hash.key
-
-    # test delete all data form a hash get
-    r5_by_hash = vfs.get("data/1/hash/%s/%s" % (schema_wallet_md5, obj_id_5))
-    obj5raw = r5_by_hash.get()
-    obj5 = j.data.serializers.json.loads(obj5raw)
-    assert obj5["name"] == "myuser_5"
-    assert obj5["id"] == obj_id_5
-
-    r5_by_url = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % (obj_id_5))
-    r5_by_sid = vfs.get("data/1/sid/%s/%s" % (schema_wallet_sid, obj_id_5))
-    removed_obj = r5_by_hash.delete()
-    for ro in removed_obj:
-        print("comparing key:%s with keys:%s" % (ro.key, [r5_by_url.key, r5_by_sid.key, r5_by_hash.key]))
-        assert ro.key == r5_by_url.key or ro.key == r5_by_sid.key or ro.key == r5_by_hash.key
-    self._log_info("TEST DELETE DATA DONE")
 
     SCHEMAS = """
     @url = ben.pc.test
@@ -251,17 +166,17 @@ def main(self):
     res = vfs.add_schemas(SCHEMAS)
     assert len(res) == 2
 
-    s1 = vfs.get("schemas/hash/%s" % (res[1].md5))
-    s2 = vfs.get("schemas/sid/%s" % (res[0].sid))
+    s1 = vfs.get("schemas/%s" % (res[1].url))
+    s2 = vfs.get("schemas/%s" % (res[0].url))
     obj1 = j.data.serializers.json.loads(s1.get())
     obj2 = j.data.serializers.json.loads(s2.get())
     assert obj1["url"] == "ben.pc.test" or obj1["url"] == "ben.pc.test.2"
     assert obj2["url"] == "ben.pc.test" or obj2["url"] == "ben.pc.test.2"
 
-    s = vfs.get("schemas/url/ben.pc.test")
+    s = vfs.get("schemas/ben.pc.test")
     obj = j.data.serializers.json.loads(s.get())
     assert obj["url"] == "ben.pc.test"
-    sch_dir = vfs.get("data/1/url")
+    sch_dir = vfs.get("data/1")
     assert "ben.pc.test.2" in [i for i in sch_dir.list()]
     self._log_info("TEST SET SCHEMAS DONE")
 
@@ -275,7 +190,7 @@ def main(self):
 
     model_obj = get_obj(1)
 
-    r3 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % obj_id_3)
+    r3 = vfs.get("data/1/threefoldtoken.wallet.test/%s" % obj_id_3)
     obj3raw = r3.get()
     obj3 = j.data.serializers.json.loads(obj3raw)
     assert obj3["id"] == obj_id_3
@@ -290,7 +205,7 @@ def main(self):
     assert obj3["email"] == "ben1@threefoldtech.com"
     assert obj3["username"] == "incredible_username1"
     # let's try to get via path
-    r3 = vfs.get("data/1/url/threefoldtoken.wallet.test/%s" % t3.id)
+    r3 = vfs.get("data/1/threefoldtoken.wallet.test/%s" % t3.id)
     obj3raw = r3.get()
     obj3 = j.data.serializers.json.loads(obj3raw)
     assert obj3["id"] == obj_id_3 == t3.id
@@ -299,26 +214,10 @@ def main(self):
 
     # let's try to add new data
     model_new_objs = [get_obj(81), get_obj(18)]
-    sid = vfs.get("schemas/url2sid/threefoldtoken.wallet.test")
-    vfs.add_datas(model_new_objs, 1, sid.item)
+    vfs.add_datas(model_new_objs, 1, "threefoldtoken.wallet.test")
 
-    # let's try to check the new data
-    r4 = vfs.get("data/1/sid/%s" % sid.item)
-    obj_ids = [i for i in r4.list()]
-
-    for o in obj_ids:
-        obj = j.data.serializers.json.loads(o)
-        if obj["email"] == "ben81@threefoldtech.com":
-            assert obj["username"] == "incredible_username81"
-            obj_id_81 = obj["id"]
-        if obj["email"] == "ben18@threefoldtech.com":
-            assert obj["username"] == "incredible_username18"
-            obj_id_18 = obj["id"]
-    assert obj_id_18
-    assert obj_id_81
-
-    # we should be able to find the same object via url
-    r4 = vfs.get("data/1/url/threefoldtoken.wallet.test/")
+    # we should be able to find the object via url
+    r4 = vfs.get("data/1/threefoldtoken.wallet.test/")
     obj_ids = [i for i in r4.list()]
 
     for o in obj_ids:
@@ -334,25 +233,11 @@ def main(self):
 
     # let's try to add new data from directory
     model_new_objs = [get_obj(42), get_obj(24)]
-    r4 = vfs.get("data/1/sid/%s" % sid.item)
+    r4 = vfs.get("data/1/threefoldtoken.wallet.test")
     res = r4.set(model_new_objs)
 
-    # let's try to check the new data
-    obj_ids = [i for i in r4.list()]
-
-    for o in obj_ids:
-        obj = j.data.serializers.json.loads(o)
-        if obj["email"] == "ben42@threefoldtech.com":
-            assert obj["username"] == "incredible_username42"
-            obj_id_42 = obj["id"]
-        if obj["email"] == "ben24@threefoldtech.com":
-            assert obj["username"] == "incredible_username24"
-            obj_id_24 = obj["id"]
-    assert obj_id_42
-    assert obj_id_24
-
-    # we should be able to find the same object via url
-    r4 = vfs.get("data/1/url/threefoldtoken.wallet.test/")
+    # we should be able to find the same object  url
+    r4 = vfs.get("data/1/threefoldtoken.wallet.test/")
     obj_ids = [i for i in r4.list()]
 
     for o in obj_ids:
@@ -367,6 +252,37 @@ def main(self):
     assert obj_id_24
 
     self._log_info("TEST SET DATA DONE")
+    r = vfs.get("data/1/threefoldtoken.wallet.test/%s" % obj_id)
+    obj = r.get()
+    r.delete()
+    schema_wallet_obj = j.data.serializers.json.loads(schema)
+
+    with test_case.assertRaises(Exception) as cm:  # can't delete an already deleted data
+        vfs.get("data/1/%s/%s" % (schema_wallet_obj["url"], obj_id))
+    ex = cm.exception
+    assert "not find obj with id:%s" % obj_id in str(ex.args[0])
+
+    # test delete data form a url get
+    r2 = vfs.get("data/1/threefoldtoken.wallet.test/%s" % obj_id_2)
+    obj2raw = r2.get()
+    obj2 = j.data.serializers.json.loads(obj2raw)
+    assert obj2["name"] == "myuser_2"
+    assert obj2["id"] == obj_id_2
+
+    removed_obj = r2.delete()
+    print("comparing key:%s with key:%s" % (removed_obj.key, r2.key))
+    assert removed_obj.key == r2.key
+
+    # test delete all data form a url
+    rdelall = vfs.get("data/1/threefoldtoken.wallet.test/")
+    objItems = rdelall.items
+    removed_objs = rdelall.delete()
+    for o in removed_objs:
+        assert o.item in objItems
+
+    self._log_info("TEST DELETE DATA DONE")
+
+    # clean state
     vfs.delete("/")
     self._log_info("TEST DONE")
     return "OK"
