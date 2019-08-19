@@ -22,18 +22,37 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+# does not use the schema's
+
 
 class BCDBMeta(j.application.JSBaseClass):
-    def __init__(self, bcdb):
-        JSBASE.__init__(self)
-        self._bcdb = bcdb
-        self._schema = j.data.schema.get_from_url("jumpscale.bcdb.meta.2")
+    """
+    #datamodel
+
+    {
+        "url":
+            {$url:[]}     #latest md5 is at end of list
+        "md5":
+            {
+                $md5:
+                    {
+                        "mid":$mid,
+                        "text":$text,
+                        "epoch":$epoch,
+                        "hasdata":$hasdata
+                    }
+            }
+    }
+
+    """
+
+    def init2(self, bcdb=None):
+        assert bcdb
         self._logger_enable()
         self._load()
 
     def reset(self):
         # make everything in metadata stor empty
-
         self._reset_runtime_metadata()
         self._bcdb.storclient.delete(0)  # remove the metadata
         self._data = None
@@ -43,103 +62,114 @@ class BCDBMeta(j.application.JSBaseClass):
         # reset the metadata which we can afford to loose
         # all of this can be rebuild from the serialized information of the metastor
         self._data = None
-        # self._namespace_last_id = 0
-        self.schemas_md5 = []  # just to know which ones we already know
 
     def _load(self):
-
         self._reset_runtime_metadata()
-
         serializeddata = self._bcdb.storclient.get(0)
-
         if serializeddata is None:
             self._log_debug("save, empty schema")
-            self._data = self._schema.new()
-            self._data.name = self._bcdb.name
-            # is the initialization of the db, alsways needs to be done first
-            serializeddata = j.data.serializers.jsxdata.dumps(self._data)
+            data = {"url": {}, "md5": {}}
+            serializeddata = j.data.serializers.msgpack.dumps(data)
             self._bcdb.storclient.set(serializeddata)
         else:
             self._log_debug("schemas load from db")
-            self._data = self._schema.new(serializeddata=serializeddata)
+            self._data = j.data.serializers.msgpack.loads(serializeddata)
 
         # walk over all schema's let the j.data.schema know that these schema's exist in right order
         for s in self._data.schemas:
             self._add_to_schema_factory(s)
 
     def _schemas_in_data_print(self):
-        for s in self._data.schemas:
-            mid = self._data.url_to_mid[s.url]
-            print(" - %-35s %s   mid:%-2s hasdata:%s" % (s.url, s.md5, mid, s.hasdata))
+        print(j.core.tools._data_serializer_safe(self._data))
 
     def _save(self):
         self._log_debug("save meta:%s" % self._bcdb.name)
-        serializeddata = j.data.serializers.jsxdata.dumps(self._data)
+        serializeddata = j.data.serializers.msgpack.dumps(self._data)
         self._bcdb.storclient.set(serializeddata, 0)  # we can now always set at 0 because is for sure already there
 
-    def _schema_set(self, schema):
+    def _schema_set(self, schema, bcdbmodel):
         """
         add the schema to the metadata if it was not done yet
         :param schema:
         :return: the model id
         """
+
+        # optimized for speed, will happen quite a lot, need to know when there is change
+
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        if not self._schema_exists(schema._md5):
-            s_obj = self._data.schemas.new()
-            s_obj.url = schema.url
-            s_obj.text = schema.text  # + "\n"  # only 1 \n at end
-            s_obj.md5 = schema._md5
-            s_obj.hasdata = schema.hasdata
-            self._url_mid_set(schema)
+        change = False  # we only want to save is there is a change
+
+        # deal with making sure that the md5 of this schema is registered as the newest one
+        if schema.url in self._data["url"]:
+            md5s = self._data["url"][schema.url]
+            if schema._md5 in md5s:
+                if schema._md5 != md5s[-1]:
+                    # means its not the latest one
+                    change = True
+                    md5s.pop(md5s.index(schema._md5))
+                    md5s.append(schema._md5)  # now at end of list again
+            else:
+                # is a new one, not in list yet
+                change = True
+                md5s = [schema._md5]
+        else:
+            change = True
+            md5s = [schema._md5]
+        if change:
+            self._data["url"][schema.url] = md5s
+
+        change2 = False
+        if schema._md5 not in self._data["md5"]:
+            change2 = True
+            d = {}
+            d["mid"] = bcdbmodel.mid
+            d["text"] = schema.text
+            d["hasdata"] = schema.hasdata
+            d["epoch"] = j.data.time.epoch
+            d["url"] = schema.url
+            self._data["md5"][schema._md5] = d
+
+        if change or change2:
             self._save()
 
-    def _add_to_schema_factory(self, schema_obj):
-        """
-        will make sure that everyone in kosmos has access to the schema's as found in the metadata of this bcdb
-        :param schema_obj:
-        :return:
-        """
-        s = schema_obj
-        isok = j.data.schema._add_url_to_md5(s.url, s.md5)
-        if not isok:
-            # means there is a newer one in memory
-            schema = j.data.schema.get_from_url(s.url)
-            self._schema_set(schema)  # tell our bdcdb metadata that this exists
-
         # don't load the full schema but put the text of schema there
-        if not j.data.schema.exists(md5=s.md5):
-            j.data.schema._md5_to_schema[s.md5] = s.text
+        if not j.data.schema.exists(md5=schema._md5):
+            j.data.schema._md5_to_schema[schema._md5] = schema.text
 
-    def _url_mid_set(self, schema):
-        url = schema.url
-        last = 0
-        if not url in self._data.url_to_mid:
-            # look for the last one
-            for item in self._data.url_to_mid.values():
-                if int(item) > last:
-                    last = int(item)
-            self._data.url_to_mid[url] = last + 1
+        # need to check in j.data.schema that this schema is the newest version
+        j.shell()
+
+    def _data_from_url(self, url):
+        if url not in self._data["url"]:
+            raise j.exceptions.Input("cannot find url in bcbd:%s" % url)
+        if len(self._data["url"][url]) == 0:
+            raise j.exceptions.Input("cannot find a schema for url in bcbd:%s (no md5s)" % url)
+        md5 = self._data["url"][url][-1]
+        if md5 not in self._data["md5"]:
+            raise j.exceptions.Input("cannot find md5 in bcbd metadafta:%s" % md5)
+        return self._data["md5"][md5]
+
+    def _mid_from_url(self, url):
+        d = self._data_from_url(url)
+        return d["mid"]
 
     def _schema_exists(self, md5):
-        assert isinstance(md5, str)
-        for s in self._data.schemas:
-            # self._log_debug("check hasdata for meta:%s" % s.url)
-            if s.md5 == md5:
-                return True
-        return False
+        return md5 in self._data["md5"]
+
+    def _schema_delete(self, md5):
+        if self._schema_exists(md5):
+            self._data["md5"].pop(md5)
 
     def hasdata_set(self, schema):
         assert schema.hasdata  # needs to be True because thats what we need to set
-        for s in self._data.schemas:
-            # self._log_debug("check hasdata for meta:%s (%s:%s)" % (s.url, s.md5, schema._md5))
-            if s.md5 == schema._md5:
-                if not s.hasdata:
-                    s.hasdata = True
-                    self._save()
-                return
-        raise j.exceptions.Value("did not find schema:%s in metadata" % schema._md5)
+        if not self._schema_exists(schema._md5):
+            raise j.exceptions.Value("did not find schema:%s in metadata" % schema._md5)
+        if not self._data["md5"][schema._md5]["hasdata"]:
+            # only save when not set yet
+            self._data["md5"][schema._md5]["hasdata"] = True
+            self._save()
 
     def __repr__(self):
         return str(self._schemas_in_data_print())

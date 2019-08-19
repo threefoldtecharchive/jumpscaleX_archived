@@ -425,6 +425,7 @@ class BCDB(j.application.JSBaseClass):
                 self._log_debug("model get from schema:%s" % schema.url)
                 if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
                     raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            self.meta._schema_set(schema)
         else:
             schema = self.schema_get(md5=md5, url=url, die=True)
 
@@ -454,7 +455,10 @@ class BCDB(j.application.JSBaseClass):
                 raise j.exceptions.Input("we could not find model from:%s, was not in bcdb or j.data.schema" % url)
 
             schema_mem = j.data.schema.get_from_url(url=url, die=False)
-            if not schema_mem:
+            if schema_mem:
+                # make sure bcdb knows about it
+                self.meta._schema_set(schema_mem)
+            else:
                 # means we don't have the schema in memory yet in j.data.schema
                 # we need to find
                 md5_newest = j.data.schema.get_from_url(url)  # the latest known one
@@ -471,6 +475,7 @@ class BCDB(j.application.JSBaseClass):
         elif md5:
             if j.data.schema.exists(md5=md5):
                 schema_mem = j.data.schema.get_from_md5(md5=md5)
+                self.meta._schema_set(schema_mem)
             else:
                 for s in self.meta._data.schemas:
                     if s.md5 == md5:
