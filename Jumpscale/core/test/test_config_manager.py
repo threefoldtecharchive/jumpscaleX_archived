@@ -72,7 +72,7 @@ class TestIConfigManager(BaseTest):
         c=j.clients.github.new("test_delete_client", token="test_delete_client"); c.save()
         c.delete(); c.save()
         self.info("Check that the client is not existing")
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             j.clients.github.get("test_delete_client")
         
         
