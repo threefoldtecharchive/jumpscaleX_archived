@@ -278,6 +278,10 @@ class BCDBModel(j.application.JSBaseClass):
         def check2(obj, args):
             dd = obj._ddict
             for propname, val in args.items():
+                if not propname in dd:
+                    raise j.exceptions.JSBUG(
+                        "find was done on argument:%s which does not exist in model." % propname, data=obj
+                    )
                 if dd[propname] != val:
                     return False
             return True

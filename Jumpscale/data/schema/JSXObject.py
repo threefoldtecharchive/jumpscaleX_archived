@@ -162,7 +162,6 @@ class JSXObject(j.application.JSBaseClass):
                             self.id = r[0].id
                             self._ddict_hr  # to trigger right serialization
                             if self._data == r[0]._data:
-                                assert self._model.sid == r[0]._model.sid
                                 return self  # means data was not changed
 
                 if not self._nosave:
