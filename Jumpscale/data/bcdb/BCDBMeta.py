@@ -31,15 +31,15 @@ class BCDBMeta(j.application.JSBaseClass):
 
     {
         "url":
-            {$url:[]}     #latest md5 is at end of list
+            {$url:[mid,[]]}     #latest md5 is at end of list, nid is the model id
         "md5":
             {
                 $md5:
                     {
-                        "mid":$mid,
                         "text":$text,
                         "epoch":$epoch,
                         "hasdata":$hasdata
+                        "url":$url
                     }
             }
     }
@@ -75,9 +75,28 @@ class BCDBMeta(j.application.JSBaseClass):
             self._log_debug("schemas load from db")
             self._data = j.data.serializers.msgpack.loads(serializeddata)
 
-        # walk over all schema's let the j.data.schema know that these schema's exist in right order
-        for s in self._data.schemas:
-            self._add_to_schema_factory(s)
+        for d in self.schema_dicts:
+            # this will guarantee right order
+            self._add_to_schema_factory(md5=d["md5"], schema_text=d["text"])
+
+    @property
+    def schema_dicts(self):
+        """
+        will walk over the data in the right order
+        :return:
+        """
+        urls = [i for i in self._data["url"].keys()]
+        urls.sort()
+        for url in urls:
+            mid, md5s = self._data["url"][url]
+            for md5 in md5s:
+                d = self._data["md5"][md5]
+                yield d
+
+    def _add_to_schema_factory(self, md5, schema_text):
+        # don't load the full schema but put the text of schema there
+        if not j.data.schema.exists(md5=md5):
+            j.data.schema._md5_to_schema[md5] = schema_text
 
     def _schemas_in_data_print(self):
         print(j.core.tools._data_serializer_safe(self._data))
@@ -87,7 +106,7 @@ class BCDBMeta(j.application.JSBaseClass):
         serializeddata = j.data.serializers.msgpack.dumps(self._data)
         self._bcdb.storclient.set(serializeddata, 0)  # we can now always set at 0 because is for sure already there
 
-    def _schema_set(self, schema, bcdbmodel):
+    def _schema_set(self, schema):
         """
         add the schema to the metadata if it was not done yet
         :param schema:
@@ -96,6 +115,13 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # optimized for speed, will happen quite a lot, need to know when there is change
 
+        def find_mid():
+            mid_highest = 1
+            for mid, md5s in self._data["url"].values():
+                if mid > mid_highest:
+                    mid_highest = mid
+            return mid_highest
+
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
@@ -103,28 +129,28 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # deal with making sure that the md5 of this schema is registered as the newest one
         if schema.url in self._data["url"]:
-            md5s = self._data["url"][schema.url]
+            mid, md5s = self._data["url"][schema.url]
             if schema._md5 in md5s:
                 if schema._md5 != md5s[-1]:
                     # means its not the latest one
                     change = True
                     md5s.pop(md5s.index(schema._md5))
                     md5s.append(schema._md5)  # now at end of list again
+                    d = [mid, md5s]
             else:
                 # is a new one, not in list yet
                 change = True
-                md5s = [schema._md5]
+                d = [mid, [schema._md5]]
         else:
             change = True
-            md5s = [schema._md5]
+            d = [find_mid(), [schema._md5]]
         if change:
-            self._data["url"][schema.url] = md5s
+            self._data["url"][schema.url] = d
 
         change2 = False
         if schema._md5 not in self._data["md5"]:
             change2 = True
             d = {}
-            d["mid"] = bcdbmodel.mid
             d["text"] = schema.text
             d["hasdata"] = schema.hasdata
             d["epoch"] = j.data.time.epoch
@@ -135,8 +161,7 @@ class BCDBMeta(j.application.JSBaseClass):
             self._save()
 
         # don't load the full schema but put the text of schema there
-        if not j.data.schema.exists(md5=schema._md5):
-            j.data.schema._md5_to_schema[schema._md5] = schema.text
+        self._add_to_schema_factory(md5=schema._md5, schema_text=schema.text)
 
         # need to check in j.data.schema that this schema is the newest version
         # this is important if someone does j.data.schema.
