@@ -56,8 +56,11 @@ class BCDBModel(j.application.JSBaseClass):
                 schema = self._schema_get()
                 assert schema
 
-        self.schema = schema
+        self._schema_url = schema.url
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+
+        if self.schema.name in bcdb._schema_url_to_model:
+            raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
 
         self.bcdb = bcdb
 
@@ -87,6 +90,10 @@ class BCDBModel(j.application.JSBaseClass):
 
         if reset:
             self.destroy()
+
+    @property
+    def schema(self):
+        return j.data.schema.get_from_url(self._schema_url)
 
     @property
     def mid(self):

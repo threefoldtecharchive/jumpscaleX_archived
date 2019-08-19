@@ -33,7 +33,6 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
     def _init(self, **kwargs):
 
         self.__code_generation_dir = None
-        # self.db = j.clients.redis.core_get()
         self.reset()
         self._JSXObjectClass = JSXObject
         self.models_in_use = False  # if this is set then will not allow certain actions to happen here
@@ -55,17 +54,14 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         return self.__code_generation_dir
 
     def reset(self):
-        self._url_to_md5 = {}  # list inside the dict because there can be more than 1 schema linked to url
+        self._url_to_md5 = {}  # NO LONGER A LIST
         self._md5_to_schema = {}
 
     def exists(self, md5=None, url=None):
         if md5:
             return md5 in self._md5_to_schema
         elif url:
-            if not url in self._url_to_md5:
-                return False
-            return len(self._url_to_md5[url]) > 0
-        return False
+            return url in self._url_to_md5
 
     def get_from_md5(self, md5):
         """
@@ -74,12 +70,13 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         assert isinstance(md5, str)
         if md5 in self._md5_to_schema:
-            item = self._md5_to_schema[md5]
-            if isinstance(item, str):
+            schema_text_or_obj = self._md5_to_schema[md5]
+            if isinstance(schema_text_or_obj, str):
                 if item.strip() == "":
                     raise j.exceptions.JSBUG("schema should never be empty string")
-                return self._add_from_text_item(item)
-            return item
+                schema = self._text_to_schema_obj(schema_text_or_obj)
+                self._md5_to_schema[md5] = schema
+            return self._md5_to_schema[md5]
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
 
@@ -91,19 +88,11 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         assert isinstance(url, str)
         url = self._urlclean(url)
         if url in self._url_to_md5:
-            if len(self._url_to_md5[url]) > 0:
-                md5 = self._url_to_md5[url][-1]
-                if md5 in self._md5_to_schema:
-                    return self.get_from_md5(md5)
-                else:
-                    if die:
-                        raise j.exceptions.Input("Could not find schema with url:%s, schema not loaded yet" % url)
-                    else:
-                        return md5
+            return self._url_to_md5[url]
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
-    def get_from_text(self, schema_text, url=None):
+    def get_from_text_multiple(self, schema_text, url=None):
         """
         will return the first schema specified if more than 1
 
@@ -111,7 +100,25 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
             Schema
         """
         assert isinstance(schema_text, str)
-        return self.add_from_text(schema_text=schema_text, url=url)[0]
+        self._check_bcdb_is_not_used()
+        res = []
+        blocks = self._schema_blocks_get(schema_text)
+        if len(blocks) > 1 and url:
+            raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
+        for block in blocks:
+            res.append(self.get_from_text(block, url=url))
+        return res
+
+    def get_from_text(self, schema_text, url=None):
+        """
+        can only be 1 schema
+
+        Returns:
+            Schema
+        """
+        assert isinstance(schema_text, str)
+        md5 = self._add_text_to_schema_obj(schema_text=schema_text, url=url)
+        self.get_from_md5(md5)
 
     def _md5(self, text):
         """
@@ -161,32 +168,21 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         return blocks
 
-    def _check_model_not_used(self):
+    def _check_bcdb_is_not_used(self):
         if self.models_in_use:
             raise j.exceptions.JSBUG("should not modify schema's when models used through this interface")
 
-    def add_from_text(self, schema_text, url=None):
+    def _add_text_to_schema_obj(self, schema_text, url=None):
         """
-        :param schema_text can be 1 or more schema's in the text
+        add the text to our structure and conver to schema object
+        :param schema_text:
+        :param url:
+        :return:
         """
-        self._check_model_not_used()
-        assert isinstance(schema_text, str)
-        res = []
-        blocks = self._schema_blocks_get(schema_text)
-        if len(blocks) > 1 and url:
-            raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
-        for block in blocks:
-            res.append(self._add_from_text_item(block, url=url))
-        return res
-
-    def _add_from_text_item(self, schema_text, url=None):
-        self._check_model_not_used()
+        self._check_bcdb_is_not_used()
         md5 = self._md5(schema_text)
         if md5 in self._md5_to_schema:
-            r = self._md5_to_schema[md5]
-            if not isinstance(r, str):
-                # it can be there is already a string there, then we can ignore
-                return self._md5_to_schema[md5]
+            return md5
 
         s = Schema(text=schema_text, md5=md5, url=url)
 
@@ -194,29 +190,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         assert s.url
 
-        self._add_md5_to_url(s.url, s._md5)
-
         return self._md5_to_schema[md5]
-
-    def _add_md5_to_url(self, url, md5):
-        """
-        will always put the md5 on the newest position
-        :param url:
-        :param md5:
-        :return: True if the url & md5 combination is new or latest in row which is ok, otherwise False
-        """
-        # add md5 to the list if its not there yet
-        url = self._urlclean(url)
-        if not url in self._url_to_md5:
-            self._url_to_md5[url] = []
-        if not md5 in self._url_to_md5[url]:
-            self._url_to_md5[url] = [md5]
-            return True
-        if self._url_to_md5[url][-1] == md5:
-            return True
-        self._url_to_md5[url].pop(self._url_to_md5[url].index(md5))
-        self._url_to_md5[url].append(md5)  # put on last position
-        return False
 
     def add_from_path(self, path=None):
         """
@@ -225,7 +199,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         will not load model files, only toml !
 
         """
-        self._check_model_not_used()
+        self._check_bcdb_is_not_used()
         res = []
         # if j.sal.fs
         if j.sal.fs.isFile(path):

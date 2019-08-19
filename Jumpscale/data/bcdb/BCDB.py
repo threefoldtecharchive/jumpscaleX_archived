@@ -99,7 +99,7 @@ class BCDB(j.application.JSBaseClass):
         self.user = None
         self.circle = None
 
-        self._index_schema_class_cache = {}  # cache for the index classes
+        # self._index_schema_class_cache = {}  # cache for the index classes
 
     def _init_system_objects(self):
 

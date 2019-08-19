@@ -83,7 +83,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
         for d in self.schema_dicts:
             # this will guarantee right order and make sure the j.data.schema knows about the new schemas
-            self._add_to_schema_factory(md5=d["md5"], schema_text=d["text"])
+            if not j.data.schema.exists(md5=d["md5"]):
+                j.data.schema._md5_to_schema[d["md5"]] = d["text"]
+            j.data.schema._url_to_md5[d["url"]] = d["md5"]
 
     @property
     def schema_dicts(self):
@@ -100,11 +102,6 @@ class BCDBMeta(j.application.JSBaseClass):
                 d2 = d.copy()
                 d["md5"] = md5
                 yield d
-
-    def _add_to_schema_factory(self, md5, schema_text):
-        # don't load the full schema but put the text of schema there
-        if not j.data.schema.exists(md5=md5):
-            j.data.schema._md5_to_schema[md5] = schema_text
 
     def _schemas_in_data_print(self):
         for d in self.schema_dicts:
@@ -174,9 +171,7 @@ class BCDBMeta(j.application.JSBaseClass):
         # don't load the full schema but put the text of schema there
         self._add_to_schema_factory(md5=schema._md5, schema_text=schema.text)
 
-        # need to check in j.data.schema that this schema is the newest version
-        # this is important if someone does j.data.schema.
-        j.data.schema._add_md5_to_url(url=schema.url, md5=schema._md5)
+        self._url_to_md5[schema.url] = schema._md5
 
     def _data_from_url(self, url):
         if url not in self._data["url"]:
