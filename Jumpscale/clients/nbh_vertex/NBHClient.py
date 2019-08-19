@@ -161,7 +161,6 @@ class NBHClient(JSConfigBase):
         params = {"OldPW": old_password, "NewPW": new_password, "ConfirmNewPW": confirm_newpassword}
         return self._request("ChangePassword", params)
 
-
     def new_position(self, account_id, buy_or_sell, amount, symbol_id, price, note="", user_defined_date=""):
         """The NewPosition operation is used to open a new position on specific a symbol for the given account number.
 
@@ -182,7 +181,11 @@ class NBHClient(JSConfigBase):
         :return: the new position ticket number
         :rtype: [type]
         """
-        params = {"AccountID": account_id, "BuySell": buy_or_sell, "Amount":amount, "SymbolID": symbol_id, "Price":price, "note":note, "UserDefinedData":user_defined_date}
+        params = {
+            "AccountID": account_id, "BuySell": buy_or_sell,
+            "Amount":amount, "SymbolID": symbol_id,
+            "Price":price, "note":note, "UserDefinedData":user_defined_date
+        }
         return self._request("NewPosition", params)
 
 
@@ -206,13 +209,18 @@ class NBHClient(JSConfigBase):
         :return: closed ticket number
         :rtype: int
         """
-        params = {"AccountID": account_id, "TicketID": ticket_id, "Amount":amount, "Price":price, "RefPrice": ref_price, "Comm": commission, "UserDefinedData":user_defined_date}
+        params = {
+            "AccountID": account_id, "TicketID": ticket_id,
+            "Amount":amount, "Price":price,
+            "RefPrice": ref_price, "Comm": commission,
+            "UserDefinedData":user_defined_date
+        }
         return self._request("ClosePosition", params)
 
 
     def detailed_openpositions_report(self, client_id, account_type, symbol_id=0, position_type=0, is_paging=False):
         """The DetailedOpenPositionsReport operation is used to get detailed open positions report that shows the open position details for all accounts
-under the given client number.
+        under the given client number.
 
         :param client_id: valid client identifier to get report for
         :type client_id: int
@@ -229,18 +237,6 @@ under the given client number.
         """
         params = {"ClientID": client_id, "AccountType": account_type, "SymbolID": symbol_id, "PositionType": position_type, "isPaging": is_paging}
         return self._request("DetailedOpenPositionsReport", params)
-
-
-    def get_accounts_ids(self, client_id):
-        """The GetAccountsIDs operation is used to get the list of account/s Id/s  which are related to a given client number.
-
-        :param client_id: valid client identifier
-        :type client_id: int
-        :return: list of account ids
-        :rtype: list
-        """
-        params = {"ClientID": client_id}
-        return self._request("GetAccountsIDs", params)
 
     def create_client(self, parent_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
                       country, email, address, readonly_login, forcechange_password):
@@ -295,6 +291,17 @@ under the given client number.
             "ForceChangePassword": forcechange_password
         }
         return self._request("CreateClient", params)
+
+    def get_client_by_id(self, client_id):
+        """The GetClientByID operation is used to get client information for a given client number.
+
+        :param client_id: client number to get its information
+        :type client_id: int
+        :return: client information
+        :rtype: dict
+        """
+        params = {"ClientID": client_id}
+        return self._request("GetClientByID", params)
 
     def update_client_info(self, client_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
                       country, email, address, readonly_login, forcechange_password):
@@ -381,13 +388,55 @@ under the given client number.
         }
         return self._request("CreateAccount", params)
 
-    def get_client_by_id(self, client_id):
-        """The GetClientByID operation is used to get client information for a given client number.
+    def get_accounts_ids(self, client_id):
+        """The GetAccountsIDs operation is used to get the list of account/s Id/s  which are related to a given client number.
 
-        :param client_id: client number to get its information
+        :param client_id: valid client identifier
         :type client_id: int
-        :return: client information
-        :rtype: dict
+        :return: list of account ids
+        :rtype: list
         """
         params = {"ClientID": client_id}
-        return self._request("GetClientByID", params)
+        return self._request("GetAccountsIDs", params)
+
+    def account_info_report(self, client_id, is_paging=False):
+        """The AccountInfoReport operation is used to get the account information report that shows the information for all accounts under the given client number.
+
+        :param client_id: valid client identifier
+        :type client_id: int
+        :param is_paging: indicates that you're calling to get the remaining records. First call must be false, next must be true.
+        :type is_paging: bool, optional
+        :return: list of accounts info report
+        :rtype: list
+        """
+        params = {"ClientID": client_id, "isPaging": is_paging}
+        return self._request("AccountInfoReport", params)
+
+    def get_account_stmt(self, account_id, from_date, to_date):
+        """The GetAccountStatement operation returns the given account statement between the starting date and ending date.
+
+        :param account_id: id of the account to generate the statement for
+        :type account_id: int
+        :param from_date: starting date for account statement query. Must be in DD/MM/YYYY format.
+        :type from_date: str
+        :param to_date: ending date for account statement query. Must be in DD/MM/YYYY format.
+        :type to_date: str
+        """
+        params = {"AccountID": account_id, "FromDate": from_date, "ToDate": to_date}
+        return self._request("GetAccountStmt", params)
+
+    def get_mw_symbols(self):
+        """The GetMWSymbols operation is used to get market watch symbol setting
+        :return:
+        :rtype:
+        """
+        return self._request("GetMWSymbols", {})
+
+    def get_mw_new_tick(self):
+        """The GetMWNewTick operation is used to get the market watch symbol data if changed and returns a list of symbols
+        which holds all symbols with their corresponding Bid/Ask, High/Low.
+        :return:
+        :rtype:
+        """
+        return self._request("GetMWNewTick", {})
+
