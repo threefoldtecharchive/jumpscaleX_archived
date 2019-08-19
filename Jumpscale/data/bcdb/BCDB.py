@@ -529,20 +529,22 @@ class BCDB(j.application.JSBaseClass):
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        if schema.key not in self._index_schema_class_cache:
+            # why is it a schema key instead of a url ?
+            # is it necessary ? as you commented the self._index_schema_class_cache ...
+            # if schema.key not in self._index_schema_class_cache:
 
-            # model with info to generate
-            imodel = BCDBIndexMeta(schema=schema)
-            imodel.include_schema = True
-            tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-            name = "bcdbindex_%s" % self.name
-            myclass = j.tools.jinja2.code_python_render(
-                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
-            )
+        # model with info to generate
+        imodel = BCDBIndexMeta(schema=schema)
+        imodel.include_schema = True
+        tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
+        name = "bcdbindex_%s" % self.name
+        myclass = j.tools.jinja2.code_python_render(
+            name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
+        )
+        # is it necessary ? as you commented the self._index_schema_class_cache ...
+        # self._index_schema_class_cache[schema.key] = myclass
 
-            self._index_schema_class_cache[schema.key] = myclass
-
-        return self._index_schema_class_cache[schema.key]
+        return myclass  # self._index_schema_class_cache[schema.key]
 
     def model_get_from_file(self, path):
         """

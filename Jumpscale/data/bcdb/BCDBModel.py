@@ -49,15 +49,21 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
+        # we should have a schema
         if not schema:
-            if hasattr(self, "_SCHEMA"):
+            if hasattr(self, "_SCHEMA"):  # what is that _schema ?
                 schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
-                schema = self._schema_get()
-                assert schema
+                schema = self._schema_get()  # _schema_get is overrided by classes like ACL USER CIRCLE NAMESPACE
+                if not schema:
+                    j.exceptions.JSBUG("BCDB Model needs a schema object or text")
         else:
             if isinstance(schema, str):
                 schema = j.data.schema.get_from_text(schema)
+            else:  # schema must be a schema object
+                assert schema.url
+
+        self._schema_url = schema.url
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
         self._schema_url = schema.url
 
@@ -99,7 +105,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     @property
     def mid(self):
-        return self.bcdb.meta._mid_from_url(self.schema.url)
+        return self.bcdb.meta._mid_from_url(self.schema.url_schema_url)
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)

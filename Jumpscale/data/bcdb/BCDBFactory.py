@@ -73,6 +73,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         sqlite based BCDB, don't need ZDB for this
         :return:
         """
+
         if not self._system:
             # storclient = j.clients.sqlitedb.client_get(name="system")
             storclient = j.clients.rdb.client_get(name="system")
