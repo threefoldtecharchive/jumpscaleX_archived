@@ -24,8 +24,8 @@ class TestIConfigManager(BaseTest):
         self.info("Create github client and save it, should success")
         c=j.clients.github.new("test_create_client", token="test_create_new_client"); c.save()
         self.info("Check that the client is created correctly")
-        self.assertIn("- name                 : test_create_client", c)
-
+        self.assertEqual("test_create_client", c.name)
+        
     def test02_create_user_with_name_exists_before(self):
         """
         TC256
@@ -55,8 +55,8 @@ class TestIConfigManager(BaseTest):
         c=j.clients.github.new("test_modify_client", token="test_modify_client"); c.save()
         c.token="test_update"; c.save()
         self.info(" check cleint token ")
-        self.assertIn("- token                : test_update", c)
-
+        self.assertEqual("test_update", c.token)
+        
     def test04_test_delete_client_for_exists_cient(self):
         """
         TC196
@@ -72,6 +72,7 @@ class TestIConfigManager(BaseTest):
         c=j.clients.github.new("test_delete_client", token="test_delete_client"); c.save()
         c.delete(); c.save()
         self.info("Check that the client is not existing")
-        j.clients.github.get("test_delete_client")
-        self.assertRaises(Exception)
+        with self.assertRaises(Exception):
+            j.clients.github.get("test_delete_client")
+        
         
