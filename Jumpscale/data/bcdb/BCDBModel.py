@@ -90,9 +90,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     @property
     def mid(self):
-        if not self.schema.url in self.bcdb.meta._data.url_to_mid:
-            raise j.exceptions.BUG("cannot find url:%s in the metadata of bcdb" % self.schema.url)
-        return self.bcdb.meta._data.url_to_mid[self.schema.url]
+        return self.bcdb.meta._mid_from_url(self.schema.url)
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)

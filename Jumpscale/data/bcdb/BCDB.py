@@ -403,9 +403,9 @@ class BCDB(j.application.JSBaseClass):
     @property
     def models(self):
         # this needs to happen to make sure all models are loaded because there is lazy loading now
-        for s in self.meta._data.schemas:
-            if s.url not in self._schema_url_to_model:
-                schema = j.data.schema.get_from_url(s.url)
+        for s in self.meta.schema_dicts:
+            if s["url"] not in self._schema_url_to_model:
+                schema = j.data.schema.get_from_url(s["url"])
                 self.model_get(schema=schema)
         for key, model in self._schema_url_to_model.items():
             yield model

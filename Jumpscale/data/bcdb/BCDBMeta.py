@@ -97,6 +97,8 @@ class BCDBMeta(j.application.JSBaseClass):
             mid, md5s = self._data["url"][url]
             for md5 in md5s:
                 d = self._data["md5"][md5]
+                d2 = d.copy()
+                d["md5"] = md5
                 yield d
 
     def _add_to_schema_factory(self, md5, schema_text):
@@ -105,7 +107,10 @@ class BCDBMeta(j.application.JSBaseClass):
             j.data.schema._md5_to_schema[md5] = schema_text
 
     def _schemas_in_data_print(self):
-        print(j.core.tools._data_serializer_safe(self._data))
+        for d in self.schema_dicts:
+            d2 = d.copy()
+            d2["mid"] = self._data["url"][d2["url"]][0]
+            print(" - {url:35} {md5} {mid:3} {hasdata} ".format(**d2))
 
     def _save(self):
         self._log_debug("save meta:%s" % self._bcdb.name)
