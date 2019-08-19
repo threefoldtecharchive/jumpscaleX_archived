@@ -578,6 +578,7 @@ class BaseJSException(Exception):
         if level:
             if isinstance(level, str):
                 level = int(level)
+
             elif isinstance(level, int):
                 pass
             else:
@@ -1244,6 +1245,7 @@ class Tools:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except Exception as e:
+                print("NEED TO INSTALL BASICS FOR DEBUG SHELL SUPPORT")
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
@@ -1995,7 +1997,7 @@ class Tools:
     @staticmethod
     def _check_interactive():
         if not MyEnv.interactive:
-            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.", "console.noninteractive")
+            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -2039,11 +2041,8 @@ class Tools:
                 print("Invalid password!")
                 retryCount = retryCount - 1
         raise Tools.exceptions.Base(
-            (
-                "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
-                % (retry, regex)
-            ),
-            "console.ask_password",
+            "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
+            % (retry, regex)
         )
 
     @staticmethod
@@ -2185,7 +2184,7 @@ class Tools:
         elif isinstance(branch, (set, list)):
             branch = [branch.strip() for branch in branch]
         else:
-            raise Tools.exceptions.Base("branch should be a string or list, now %s" % branch)
+            raise Tools.exceptions.JSBUG("branch should be a string or list, now %s" % branch)
 
         args["BRANCH"] = branch
 
@@ -2290,7 +2289,7 @@ class Tools:
             if checkoutbranch(args, branch):
                 return
 
-            raise Tools.exceptions.Base("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
+            raise Tools.exceptions.Input("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -3530,8 +3529,8 @@ class JumpscaleInstaller:
         source env.sh
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
-        kosmos 'j.core.installer_jumpscale.remove_old_parts()'
         kosmos 'j.data.nacl.configure(generate=True,interactive=False)'
+        kosmos 'j.core.installer_jumpscale.remove_old_parts()'        
         # kosmos --instruct=/tmp/instructions.toml
         kosmos 'j.core.tools.pprint("JumpscaleX init step for nacl (encryption) OK.")'
         """
@@ -3625,7 +3624,7 @@ class JumpscaleInstaller:
             if not os.path.exists(dest):
                 Tools.link(src2, dest, chmod=770)
         Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
-        Tools.execute("cd /sandbox;source env.sh;js_init generate")
+        Tools.execute("cd /sandbox;source env.sh;js_init generate", interactive=False)
 
     def web(self):
         Tools.shell()

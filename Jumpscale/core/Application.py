@@ -155,6 +155,13 @@ class Application(object):
 
     @property
     def bcdb_system(self):
+        # try:
+        #     self._j.data.nacl.default
+        # except Exception as e:
+        #     if str(e).find("could not find the path of the private key") != -1:
+        #         print("WARNING:cannot find the private key")
+        #         self._j.data.nacl.configure()
+        #     raise e
         return self._j.data.bcdb.get_system(reset=False)
 
     def bcdb_system_destroy(self):

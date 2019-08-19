@@ -221,7 +221,7 @@ class JSBaseService(j.application.JSBaseClass):
             self._log_info("action execute:\n%s" % a)
             a.time_start = j.data.time.epoch
             res = func(self, *args, **kwargs)
-            print("main res:%s" % res)
+            # print("main res:%s" % res)
             a.result = j.data.serializers.msgpack.dumps(res)
             a.save()
             event.set()

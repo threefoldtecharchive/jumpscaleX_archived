@@ -25,7 +25,7 @@ class SSHClient(SSHClientBase):
             if self.sshkey_name:
                 pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
                 if pkey:
-                    passwd = self.sshkey_obj.passphrase
+                    passwd = self.sshkey_obj.passphrase_
 
             if self.allow_agent:
                 passwd = None

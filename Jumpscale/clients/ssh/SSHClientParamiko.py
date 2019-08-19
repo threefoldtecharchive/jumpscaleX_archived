@@ -103,7 +103,7 @@ class SSHClientParamiko(SSHClientBase):
         # self.pkey = None
         # if self.key_filename is not None and self.key_filename != '':
         #     self.pkey = paramiko.RSAKey.from_private_key_file(
-        #         self.sshkey.path, password=self.sshkey.passphrase)
+        #         self.sshkey.path, password=self.sshkey.passphrase_)
 
         self._client_ = paramiko.SSHClient()
         self._client_.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -111,7 +111,7 @@ class SSHClientParamiko(SSHClientBase):
         # if self.key_filename:
         #     self.allow_agent = True
         #     self._look_for_keys = True
-        #     # if j.clients.ssh.SSHKeyGetPathFromAgent(self.key_filename, die=False) is not None and not self.passphrase:
+        #     # if j.clients.ssh.SSHKeyGetPathFromAgent(self.key_filename, die=False) is not None and not self.passphrase_:
         #     #     j.clients.ssh.ssh_keys_load(self.key_filename)
 
         start = j.data.time.getTimeEpoch()
