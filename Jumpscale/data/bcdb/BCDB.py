@@ -475,14 +475,6 @@ class BCDB(j.application.JSBaseClass):
 
         return schema
 
-    def _model_get_from_schema(self, schema, reset=False):
-        """
-        :param schema: is schema as text or as schema obj
-        :param schema_set: default needs to be on True,
-                only not needed if we have already set the schema before e.g. on load function of meta
-        :return:
-        """
-
     def model_add(self, model):
         """
 

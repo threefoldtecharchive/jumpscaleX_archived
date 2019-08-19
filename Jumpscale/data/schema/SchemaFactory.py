@@ -73,7 +73,6 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         :return: Schema
         """
         assert isinstance(md5, str)
-        md5 = md5.lower()
         if md5 in self._md5_to_schema:
             item = self._md5_to_schema[md5]
             if isinstance(item, str):

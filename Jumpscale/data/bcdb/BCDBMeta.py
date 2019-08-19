@@ -22,7 +22,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-# does not use the schema's
+# does not use the schema's any more, now custom dict
 
 
 class BCDBMeta(j.application.JSBaseClass):
@@ -76,13 +76,13 @@ class BCDBMeta(j.application.JSBaseClass):
             self._data = j.data.serializers.msgpack.loads(serializeddata)
 
         for d in self.schema_dicts:
-            # this will guarantee right order
+            # this will guarantee right order and make sure the j.data.schema knows about the new schemas
             self._add_to_schema_factory(md5=d["md5"], schema_text=d["text"])
 
     @property
     def schema_dicts(self):
         """
-        will walk over the data in the right order
+        will walk over the data in the right order (oldest to newest and url's sorted)
         :return:
         """
         urls = [i for i in self._data["url"].keys()]
