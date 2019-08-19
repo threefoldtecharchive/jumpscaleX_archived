@@ -36,6 +36,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         # self.db = j.clients.redis.core_get()
         self.reset()
         self._JSXObjectClass = JSXObject
+        self.models_in_use = False  # if this is set then will not allow certain actions to happen here
 
     @property
     def SCHEMA_CLASS(self):
@@ -161,10 +162,15 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         return blocks
 
+    def _check_model_not_used(self):
+        if self.models_in_use:
+            raise j.exceptions.JSBUG("should not modify schema's when models used through this interface")
+
     def add_from_text(self, schema_text, url=None):
         """
         :param schema_text can be 1 or more schema's in the text
         """
+        self._check_model_not_used()
         assert isinstance(schema_text, str)
         res = []
         blocks = self._schema_blocks_get(schema_text)
@@ -175,6 +181,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         return res
 
     def _add_from_text_item(self, schema_text, url=None):
+        self._check_model_not_used()
         md5 = self._md5(schema_text)
         if md5 in self._md5_to_schema:
             r = self._md5_to_schema[md5]
@@ -198,9 +205,9 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         return self._md5_to_schema[md5]
 
-    def _add_url_to_md5(self, url, md5):
+    def _add_md5_to_url(self, url, md5):
         """
-
+        will always put the md5 on the newest position
         :param url:
         :param md5:
         :return: True if the url & md5 combination is new or latest in row which is ok, otherwise False
@@ -210,10 +217,12 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if not url in self._url_to_md5:
             self._url_to_md5[url] = []
         if not md5 in self._url_to_md5[url]:
-            self._url_to_md5[url].append(md5)
+            self._url_to_md5[url] = [md5]
             return True
         if self._url_to_md5[url][-1] == md5:
             return True
+        self._url_to_md5[url].pop(self._url_to_md5[url].index(md5))
+        self._url_to_md5[url].append(md5)  # put on last position
         return False
 
     def add_from_path(self, path=None):
@@ -223,7 +232,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         will not load model files, only toml !
 
         """
-
+        self._check_model_not_used()
         res = []
         # if j.sal.fs
         if j.sal.fs.isFile(path):

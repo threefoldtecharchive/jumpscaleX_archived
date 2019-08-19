@@ -139,7 +139,8 @@ class BCDBMeta(j.application.JSBaseClass):
             j.data.schema._md5_to_schema[schema._md5] = schema.text
 
         # need to check in j.data.schema that this schema is the newest version
-        j.shell()
+        # this is important if someone does j.data.schema.
+        j.data.schema._add_md5_to_url(url=schema.url, md5=schema._md5)
 
     def _data_from_url(self, url):
         if url not in self._data["url"]:
@@ -148,7 +149,7 @@ class BCDBMeta(j.application.JSBaseClass):
             raise j.exceptions.Input("cannot find a schema for url in bcbd:%s (no md5s)" % url)
         md5 = self._data["url"][url][-1]
         if md5 not in self._data["md5"]:
-            raise j.exceptions.Input("cannot find md5 in bcbd metadafta:%s" % md5)
+            raise j.exceptions.Input("cannot find md5 in bcbd metadata:%s" % md5)
         return self._data["md5"][md5]
 
     def _mid_from_url(self, url):
