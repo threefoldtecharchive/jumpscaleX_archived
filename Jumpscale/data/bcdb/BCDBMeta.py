@@ -69,7 +69,8 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def _schemas_in_data_print(self):
         for s in self._data.schemas:
-            print(" - %s:%s (%s)" % (s.md5, s.url, s.hasdata))
+            mid = self._data.url_to_mid[s.url]
+            print(" - %-35s %s   mid:%-2s hasdata:%s" % (s.url, s.md5, mid, s.hasdata))
 
     def _save(self):
         self._log_debug("save meta:%s" % self._bcdb.name)

@@ -224,6 +224,15 @@ class DigitalOcean(j.application.JSBaseConfigClass):
             self._droplets = self.client.get_all_droplets()
         return self._droplets
 
+    def droplets_all_delete(self):
+        for droplet in self.droplets:
+            droplet.destroy()
+
     def droplets_all_shutdown(self):
         for droplet in self.droplets:
             droplet.shutdown()
+
+    def __str__(self):
+        return "digital ocean client:%s" % self.name
+
+    __repr__ = __str__

@@ -534,6 +534,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
         elif self.interpreter == "jumpscale":
             C = """
             from Jumpscale import j
+            j.application.bcdb_system
             {% if cmdpath %}
             j.sal.fs.changeDir("{{cmdpath}}")
             {% endif %}

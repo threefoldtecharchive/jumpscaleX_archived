@@ -283,24 +283,15 @@ class BCDBModelIndex(j.application.JSBaseClass):
         :return:
         """
         # schema id needs to be in to make sure its different key per schema
-        key2 = key + str(self.schema._md5)
-        # can do 900k per second
-        hash = blake2b(str(key2).encode(), digest_size=10).digest()
+        # import to use the mid because needs to be search over all versions of schema
+        if len(key) > 10:
+            # can do 900k per second
+            hash = blake2b(str(key).encode(), digest_size=10).digest()
+        else:
+            if isinstance(key, str):
+                key = key.encode()
+            hash = key
         return hash
-
-    # def get_id_from_key(self, key):
-    #     """
-    #
-    #     :param mid: schema id
-    #     :param key: key used to store
-    #     :return:
-    #     """
-    #     ids = self._key_index_getids(key,nid=nid)
-    #     if len(ids) == 1:
-    #         return ids[0]
-    #     elif len(ids) > 1:
-    #         # need to fetch obj to see what is alike
-    #         j.shell()
 
     def _key_index_find(self, delete_if_not_found=False, nid=1, **args):
         """

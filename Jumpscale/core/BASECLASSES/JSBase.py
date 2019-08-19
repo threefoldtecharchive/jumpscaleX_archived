@@ -53,7 +53,6 @@ class JSBase:
     _location = ""
     _logger_min_level = 10
     _class_children = []
-    _properties = []
 
     def __init__(self, parent=None, **kwargs):
         """
@@ -75,8 +74,19 @@ class JSBase:
 
     @property
     def _properties(self):
-        props, methods = self._inspect()
-        return props
+        if not hasattr(self, "_properties_"):
+            props, methods = self._inspect()
+            return props
+        else:
+            return self._properties_
+
+    @property
+    def _methods(self):
+        if not hasattr(self, "_methods_"):
+            props, methods = self._inspect()
+            return methods
+        else:
+            return self._methods_
 
     def __init_class(self):
 
@@ -174,6 +184,114 @@ class JSBase:
     def _key(self):
         return self._name
 
+    def _init(self, **kwargs):
+        pass
+
+    def _init_pre(self, **kwargs):
+        """
+        meant to be used by developers of the base classes
+        :return:
+        """
+        pass
+
+    def _init_pre2(self, **kwargs):
+        """
+        meant to be used by developers of the base classes
+        :return:
+        """
+        pass
+
+    def _init_post(self, **kwargs):
+        """
+        meant to be used by developers of the base classes
+        :return:
+        """
+        pass
+
+    def _obj_cache_reset(self):
+        """
+        this empties the runtime state of an obj and the logger and the testruns
+        :return:
+        """
+
+        self.__class__._test_runs = {}
+        self._cache_ = None
+        self._objid_ = None
+
+        for key, obj in self._children.items():
+            obj._obj_cache_reset()
+
+    def _obj_reset(self):
+        """
+        to remove property underlying values, good for mem reclaim or sub process management
+        :return:
+        """
+        pass
+
+    @property
+    def _dirpath(self):
+        if self.__class__._dirpath_ == "":
+            self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
+
+            if not self.__class__._dirpath_:
+                self.__class__._dirpath_ = j.sal.fs.getcwd()
+
+        return self.__class__._dirpath_
+
+    @property
+    def _objid(self):
+        if self._objid_ is None:
+            id = self.__class__._location
+            id2 = ""
+            if "_data" in self.__dict__:
+                try:
+                    id2 = self._data.name
+                except:
+                    pass
+                if id2 == "":
+                    try:
+                        if self._data.id is not None:
+                            id2 = self._data.id
+                    except:
+                        pass
+            if id2 == "":
+                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
+                    if item in self.__dict__ and self.__dict__[item]:
+                        self._log_debug("found extra for obj_id")
+                        id2 = str(self.__dict__[item])
+                        break
+            if id2 != "":
+                self._objid_ = "%s_%s" % (id, id2)
+            else:
+                self._objid_ = id
+        return self._objid_
+
+    def _logger_enable(self):
+        self._logger_set(0)
+
+    @property
+    def _cache(self):
+        if self._cache_ is None:
+            self._cache_ = j.core.cache.get(self._objid, expiration=self._cache_expiration)
+        return self._cache_
+
+    @property
+    def _ddict(self):
+        res = {}
+        for key in self.__dict__.keys():
+            if not key.startswith("_"):
+                v = self.__dict__[key]
+                if not isinstance(v, types.MethodType):
+                    res[key] = v
+        return res
+
+    def __check(self):
+        for key in self.__dict__.keys():
+            if key not in self.__class__._names_properties_:
+                raise j.exceptions.Base("a property was inserted which should not be there")
+
+    ########################## LOGGING ##########################
+
     def _logging_enable_check(self):
         """
 
@@ -267,114 +385,6 @@ class JSBase:
                         # print("%s:minlevel:%s"%(kl,minlevel))
                         kl._logger_min_level = minlevel
 
-    def _init(self, **kwargs):
-        pass
-
-    def _init_pre(self, **kwargs):
-        """
-        meant to be used by developers of the base classes
-        :return:
-        """
-        pass
-
-    def _init_pre2(self, **kwargs):
-        """
-        meant to be used by developers of the base classes
-        :return:
-        """
-        pass
-
-    def _init_post(self, **kwargs):
-        """
-        meant to be used by developers of the base classes
-        :return:
-        """
-        pass
-
-    def _obj_cache_reset(self):
-        """
-        this empties the runtime state of an obj and the logger and the testruns
-        :return:
-        """
-
-        self.__class__._test_runs = {}
-        self._cache_ = None
-        self._objid_ = None
-
-        for key, obj in self.__dict__.items():
-            del obj
-
-    def _obj_reset(self):
-        """
-        to remove property underlying values, good for mem reclaim or sub process management
-        :return:
-        """
-        pass
-
-    @property
-    def _dirpath(self):
-        if self.__class__._dirpath_ == "":
-            self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
-
-            if not self.__class__._dirpath_:
-                self.__class__._dirpath_ = j.sal.fs.getcwd()
-
-        return self.__class__._dirpath_
-
-    @property
-    def _objid(self):
-        if self._objid_ is None:
-            id = self.__class__._location
-            id2 = ""
-            if "_data" in self.__dict__:
-                try:
-                    id2 = self._data.name
-                except:
-                    pass
-                if id2 == "":
-                    try:
-                        if self._data.id is not None:
-                            id2 = self._data.id
-                    except:
-                        pass
-            if id2 == "":
-                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
-                    if item in self.__dict__ and self.__dict__[item]:
-                        self._log_debug("found extra for obj_id")
-                        id2 = str(self.__dict__[item])
-                        break
-            if id2 != "":
-                self._objid_ = "%s_%s" % (id, id2)
-            else:
-                self._objid_ = id
-        return self._objid_
-
-    def _logger_enable(self):
-        self._logger_set(0)
-
-    @property
-    def _cache(self):
-        if self._cache_ is None:
-            self._cache_ = j.core.cache.get(self._objid, expiration=self._cache_expiration)
-        return self._cache_
-
-    @property
-    def _ddict(self):
-        res = {}
-        for key in self.__dict__.keys():
-            if not key.startswith("_"):
-                v = self.__dict__[key]
-                if not isinstance(v, types.MethodType):
-                    res[key] = v
-        return res
-
-    def __check(self):
-        for key in self.__dict__.keys():
-            if key not in self.__class__._names_properties_:
-                raise j.exceptions.Base("a property was inserted which should not be there")
-
-    ################
-
     def _print(self, msg, cat=""):
         self._log(msg, cat=cat, level=15)
 
@@ -461,7 +471,7 @@ class JSBase:
                 frame_=frame_,
             )
 
-    ################
+    #################### DONE ##############################
 
     def _done_key(self, name):
         if name == "":
@@ -642,8 +652,7 @@ class JSBase:
                 everything else is a full match
 
         """
-        properties, methods = self._inspect()
-        return self._filter(filter=filter, llist=methods)
+        return self._filter(filter=filter, llist=self._methods)
 
     def _properties_names_get(self, filter=None):
         """
@@ -665,8 +674,7 @@ class JSBase:
         return res
 
     def _properties_methods_names_get(self):
-        properties, methods = self._inspect()
-        return properties + methods
+        return self._properties + self._methods
 
     def _props_all_names(self):
         l = (
@@ -714,7 +722,6 @@ class JSBase:
     ###################
 
     def __str__(self):
-        raise RuntimeError()
 
         out = "## {GRAY}{RED}%s{BLUE} %s{RESET}\n\n" % (
             # self._objcat_name,

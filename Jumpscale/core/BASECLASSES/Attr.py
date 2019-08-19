@@ -46,6 +46,10 @@ class Attr:
 
             r = self._get(name=name, die=False)
             if not r:
+                from pudb import set_trace
+
+                set_trace()
+                self._model.find(name=name)
                 raise j.exceptions.Base(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
                     % (name, self._key)
@@ -72,7 +76,8 @@ class Attr:
 
         if isinstance(self, j.application.JSConfigClass):
 
-            assert "data" not in self.__dict__
+            if key == "data":
+                raise j.exceptions.Base("protected property:%s" % key)
 
             if "_data" in self.__dict__ and key in self._model.schema.propertynames:
                 # if value != self._data.__getattribute__(key):

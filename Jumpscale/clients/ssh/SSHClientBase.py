@@ -20,6 +20,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         login = "root"
         passwd = ""
         sshkey_name = ""
+        sshkey_private_mosh_copy = ""  #is the key we will use in mosh, never use your own key
         proxy = ""
         stdout = True (B)
         forward_agent = True (B)
@@ -205,7 +206,12 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
 
-    def mosh(self, ssh_private_key_push=False):
+    def mosh(self, ssh_private_key=None):
+        """
+        if private key specified
+        :param ssh_private_key:
+        :return:
+        """
         self.executor.installer.mosh()
         if ssh_private_key_push:
             j.shell()
