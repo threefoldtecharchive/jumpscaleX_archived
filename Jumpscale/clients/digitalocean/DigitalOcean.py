@@ -15,6 +15,13 @@ class DigitalOcean(j.application.JSBaseConfigClass):
     name* = "" (S)
     token_ = "" (S)
     project_name = "" (S)
+    meta = {} (DICT)
+    vms = (LO) !jumpscale.digitalocean.vm
+        
+    @url = jumpscale.digitalocean.vm
+    name = "" (S)
+    do_id = "" (S)
+    meta = {} (DICT)    
     """
     # _CHILDCLASS = DigitalOceanVM
 
@@ -193,7 +200,9 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         self._droplets.append(droplet)
         self.reset()
 
-        # dr.droplet = droplet
+        vm = self._vm_get(name)
+        vm.do_id = droplet.id
+        self.save()
 
         def actions_wait():
             while True:
@@ -217,6 +226,25 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         sshcl.save()
 
         return droplet, sshcl
+
+    def _vm_get(self, name, new=True):
+        vm = None
+        for vm in self.vms:
+            if vm.name == name:
+                break
+        if new:
+            if not vm:
+                vm = self.vms.new()
+                vm.name = name
+        return vm
+
+    def _vm_exists(self, name):
+        return self._vm_get(name, new=False) != None
+
+    def droplet_get(self, name):
+        if not self._vm_exists(name):
+            raise j.exceptions.Input("could not find vm with name:%s" % name)
+        return self._droplet_get(name)
 
     @property
     def droplets(self):

@@ -11,7 +11,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     """
 
     _SCHEMATEXT = """
-        @url = jumpscale.sshkey.1
+        @url = jumpscale.sshclient.1
         name* = ""
         addr = ""
         port = 22
@@ -29,6 +29,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         timeout = 60
         config_msgpack = "" (bytes)     
         env_on_system_msgpack = "" (bytes)
+        meta = {} (DICT)
         """
 
     def _init(self, **kwargs):

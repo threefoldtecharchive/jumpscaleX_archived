@@ -114,7 +114,7 @@ class JSConfigs(JSConfigBase):
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
         self._children[name] = jsconfig
-        if save and not jsxobject:
+        if save:
             self._children[name].save()
             self._children[name]._autosave = True
         return self._children[name]
