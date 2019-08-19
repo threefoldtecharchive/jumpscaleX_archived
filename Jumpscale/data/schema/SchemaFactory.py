@@ -92,7 +92,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
-    def get_from_text_multiple(self, schema_text, url=None):
+    def get_from_text(self, schema_text, url=None, multiple=False):
         """
         will return the first schema specified if more than 1
 
@@ -106,10 +106,18 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if len(blocks) > 1 and url:
             raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
         for block in blocks:
-            res.append(self.get_from_text(block, url=url))
-        return res
+            res.append(self._get_from_text_single(block, url=url))
+        if multiple:
+            return res
+        return res[0]
 
-    def get_from_text(self, schema_text, url=None):
+    def get_from_text_single(self, schema_text):
+        res = self.get_from_text(schema_text, multiple=True)
+        if res == 0 or res > 1:
+            raise j.exceptions.JSBUG("can only add 1 schema in text", data=schema_text)
+        return res[0]
+
+    def _get_from_text_single(self, schema_text, url=None):
         """
         can only be 1 schema
 
@@ -118,7 +126,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         assert isinstance(schema_text, str)
         md5 = self._add_text_to_schema_obj(schema_text=schema_text, url=url)
-        self.get_from_md5(md5)
+        return self.get_from_md5(md5)
 
     def _md5(self, text):
         """
@@ -174,7 +182,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
     def _add_text_to_schema_obj(self, schema_text, url=None):
         """
-        add the text to our structure and conver to schema object
+        add the text to our structure and convert to schema object
         :param schema_text:
         :param url:
         :return:
@@ -190,7 +198,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         assert s.url
 
-        return self._md5_to_schema[md5]
+        return md5
 
     def add_from_path(self, path=None):
         """
@@ -213,14 +221,13 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
                 continue
 
             schema_text = j.sal.fs.readFile(schemapath)
-            schemas = j.data.schema.add_from_text(schema_text=schema_text)
+            schema = self.get_from_text(schema_text=schema_text)
             # toml_path = "%s.toml" % (schema.key)
             # if j.sal.fs.getBaseName(schemapath) != toml_path:
             #     toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
             #     j.sal.fs.renameFile(schemapath, toml_path)
-            for schema in schemas:
-                if schema not in res:
-                    res.append(schema)
+            if schema not in res:
+                res.append(schema)
         return res
 
     def test(self, name=""):

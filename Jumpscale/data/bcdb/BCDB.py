@@ -189,7 +189,7 @@ class BCDB(j.application.JSBaseClass):
             mid, url, md5 = schema_id.split("__")
             schema_path = "%s/%s" % (path, schema_id)
             schema_text = j.sal.fs.readFile("%s/meta.schema" % schema_path)
-            schema = j.data.schema.add_from_text(schema_text)[0]
+            schema = j.data.schema.get_from_text(schema_text)[0]
             model = self.model_get(schema=schema)
             models[md5] = model
         # now load the data

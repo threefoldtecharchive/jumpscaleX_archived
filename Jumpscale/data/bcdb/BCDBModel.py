@@ -55,6 +55,8 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 schema = self._schema_get()
                 assert schema
+        if isinstance(schema, str):
+            schema = j.data.schema.get_from_text(schema)
 
         self._schema_url = schema.url
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
