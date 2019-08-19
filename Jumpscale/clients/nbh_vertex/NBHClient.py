@@ -22,20 +22,20 @@ def to_int_or_0(x):
 
 
 validators = {
-    'num': lambda x:  int(x) and x.isdigit(),
-    'valid_userid': lambda x: x.isdigit() and int(x)>0,
+    "num": lambda x:  int(x) and x.isdigit(),
+    "valid_userid": lambda x: x.isdigit() and int(x)>0,
     "bool": lambda x: bool(int(x)),
     "int": lambda x: 0 if not x else int(x)
 }
 
 validation_rules = {
-    "VersionInfo.Rel": validators['num'],
-    "sessionid":  validators['num'],
-    "VersionInfo.Rel": validators['num'],
-    "VersionInfo.Ver": validators['num'],
-    "VersionInfo.Patch": validators['num'],
-    "VersionInfo.ForceUpdate": validators['num'],
-    "VersionInfo.UpdateType": validators['num'],
+    "VersionInfo.Rel": validators["num"],
+    "sessionid":  validators["num"],
+    "VersionInfo.Rel": validators["num"],
+    "VersionInfo.Ver": validators["num"],
+    "VersionInfo.Patch": validators["num"],
+    "VersionInfo.ForceUpdate": validators["num"],
+    "VersionInfo.UpdateType": validators["num"],
     "IsReadOnly": validators["bool"],
     "DemoClient": validators["bool"],
     "EnableNews": validators["bool"],
@@ -138,13 +138,28 @@ class NBHClient(JSConfigBase):
         resp.raise_for_status()
 
         resp_json = resp.json()
-        data = json.loads(resp_json['d'])
+        data = json.loads(resp_json["d"])
 
         return clean_data(data)
 
     def login(self):
-        params = {"username":self.username, "password":self.password_}
+        params = {"username": self.username, "password": self.password_}
         return self._request("BackofficeLogin", params)
+
+    def change_password(self, old_password, new_password, confirm_newpassword):
+        """The ChangePassword operation is used to change the logged in Dealer password with new one
+
+        :param old_password: dealer's old password
+        :type old_password: string
+        :param new_password: dealer's new password
+        :type new_password: string
+        :param confirm_newpassword: dealer's new password
+        :type confirm_newpassword: string
+        :return: true for success
+        :rtype: bool
+        """
+        params = {"OldPW": old_password, "NewPW": new_password, "ConfirmNewPW": confirm_newpassword}
+        return self._request("ChangePassword", params)
 
 
     def new_position(self, account_id, buy_or_sell, amount, symbol_id, price, note="", user_defined_date=""):
@@ -226,3 +241,153 @@ under the given client number.
         """
         params = {"ClientID": client_id}
         return self._request("GetAccountsIDs", params)
+
+    def create_client(self, parent_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
+                      country, email, address, readonly_login, forcechange_password):
+        """The CreateClient operation is used to initialize new client under the specific given parent ID.
+
+        :param parent_id: Parent Identifier  which the new client will be under it
+        :type parent_id: int
+        :param first_name: client first name
+        :type first_name: string
+        :param second_name: client second name
+        :type second_name: string
+        :param third_name: client third name
+        :type third_name: string
+        :param last_name: client last name
+        :type last_name: string
+        :param username: username for the new client
+        :type username: string
+        :param password: password for the new client
+        :type password: string
+        :param phone: client phone number
+        :type phone: string
+        :param fax: client fax number
+        :type fax: string
+        :param mobile: client mobile number
+        :type mobile: string
+        :param tel_pw: client telephone password
+        :type tel_pw: string
+        :param pob: post office box
+        :type pob: string
+        :param country: client country
+        :type country: string
+        :param email: client email
+        :type email: string
+        :param address: client address
+        :type address: string
+        :param readonly_login: indicates if the client will only monitor the trades or not
+        :type readonly_login: bool
+        :param forcechange_password: indicates if the client will have to change the password after first login or not
+        :type forcechange_password: bool
+        :return: client identifier
+        :rtype: int
+        """
+        params = {
+            "ParentID": parent_id, "FirstName": first_name,
+            "SecondName": second_name, "ThirdName": third_name,
+            "LastName": last_name, "Username": username,
+            "Password": password, "Phone": phone,
+            "Fax": fax, "Mobile": mobile,
+            "TelPW": tel_pw, "POB": pob,
+            "Country": country, "Email": email,
+            "Address": address, "ReadOnlyLogin": readonly_login,
+            "ForceChangePassword": forcechange_password
+        }
+        return self._request("CreateClient", params)
+
+    def update_client_info(self, client_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
+                      country, email, address, readonly_login, forcechange_password):
+        """The CreateClient operation is used to initialize new client under the specific given parent ID.
+
+        :param clinet_id: client number to be updated
+        :type client_id: int
+        :param first_name: client first name
+        :type first_name: string
+        :param second_name: client second name
+        :type second_name: string
+        :param third_name: client third name
+        :type third_name: string
+        :param last_name: client last name
+        :type last_name: string
+        :param username: username for the new client
+        :type username: string
+        :param password: password for the new client
+        :type password: string
+        :param phone: client phone number
+        :type phone: string
+        :param fax: client fax number
+        :type fax: string
+        :param mobile: client mobile number
+        :type mobile: string
+        :param tel_pw: client telephone password
+        :type tel_pw: string
+        :param pob: post office box
+        :type pob: string
+        :param country: client country
+        :type country: string
+        :param email: client email
+        :type email: string
+        :param address: client address
+        :type address: string
+        :param readonly_login: indicates if the client will only monitor the trades or not
+        :type readonly_login: bool
+        :param forcechange_password: indicates if the client will have to change the password after first login or not
+        :type forcechange_password: bool
+        :return: client identifier
+        :rtype: int
+        """
+        params = {
+            "ClientID": client_id, "FirstName": first_name,
+            "SecondName": second_name, "ThirdName": third_name,
+            "LastName": last_name, "Username": username,
+            "Password": password, "Phone": phone,
+            "Fax": fax, "Mobile": mobile,
+            "TelPW": tel_pw, "POB": pob,
+            "Country": country, "Email": email,
+            "Address": address, "ReadOnlyLogin": readonly_login,
+            "ForceChangePassword": forcechange_password
+        }
+        return self._request("UpdateClientInfo", params)
+
+    def create_account(self, client_id, account_id, account_type, is_demo, is_locked, dont_liquidate, is_margin, userdefined_date):
+        """CreateAccount operation is used to initialize new account at specific account type for the given client username.
+
+        :param client_id: client ID to whom you want to create account for
+        :type client_id: int
+        :param account_id: initialized account number, 0 means generate ID automatically
+        :type account_id: int
+        :param account_type: creation account type. 1 for normal account type, 2 for coverage account type.
+        :type account_type: int
+        :param is_demo: to indicate if the account is demo or not
+        :type is_demo: bool
+        :param is_locked: to indicate if the account will be locked
+        :type is_locked: bool
+        :param dont_liquidate: don't liquidate when reach Liquidation Point
+        :type dont_liquidate:  bool
+        :param is_margin: to indicate if the account is margin account or not
+        :type is_margin: bool
+        :param user_defined_date: trade open time, defaults to "" which means now
+        :type user_defined_date: str in format DD/MM/yyyy HH:mm:ss, optional
+        :return: account number
+        :rtype: int
+        """
+
+        params = {
+            "ParentID": client_id, "AccountID": account_id,
+            "AccountType": account_type, "IsDemo": is_demo,
+            "IsLocked": is_locked, "DontLiquidate": dont_liquidate,
+            "IsMargin": is_margin, "UserDefined": userdefined_date
+        }
+        return self._request("CreateAccount", params)
+
+    def get_client_by_id(self, client_id):
+        """The GetClientByID operation is used to get client information for a given client number.
+
+        :param client_id: client number to get its information
+        :type client_id: int
+        :return: client information
+        :rtype: dict
+        """
+        params = {"ClientID": client_id}
+        return self._request("GetClientByID", params)
