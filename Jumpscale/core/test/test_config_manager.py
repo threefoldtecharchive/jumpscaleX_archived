@@ -1,5 +1,5 @@
 from Jumpscale import j
-from .base_test import BaseTest
+from base_tests import BaseTest
 
 
 class TestIConfigManager(BaseTest):
@@ -21,10 +21,11 @@ class TestIConfigManager(BaseTest):
         #. Check the shema and make sure that the use is created successfully. 
         """
 
-        self.info("Create github client and save it, should success")
-        c=j.clients.github.new("test_create_client", token="test_create_new_client"); c.save()
-        self.info("Check that the client is created correctly")
-        self.assertEqual("test_create_client", c.name)
+        client_name = self.generate_random_str()
+        self.info("Create github client {} and save it, should success".format(client_name))
+        c = j.clients.github.new(client_name, token="test_create_new_client"); c.save()
+        self.info("Check that the client {} is created correctly".format(client_name))
+        self.assertEqual(client_name, c.name)
         
     def test02_create_user_with_name_exists_before(self):
         """
@@ -36,10 +37,12 @@ class TestIConfigManager(BaseTest):
         #. Check the output, should fail. 
         """
 
-        self.info("Create github user with test name, should fail.")
-        self.info("Check the creation of client is failed")
+        client_name = self.generate_random_str()
+        self.info("Create github client with {} name, should success.".format(client_name))
+        c = j.clients.github.new(client_name, token="test_create_new_client"); c.save()
+        self.info("create user with the same name {}, should fail. ".format(client_name))
         with self.assertRaises(Exception):
-            c=j.clients.github.new("test_create_client", token="test_create_new_client"); c.save()
+            c=j.clients.github.new(client_name, token="test_create_new_client"); c.save()
         
     def test03_modify_exists_client(self):
         """
@@ -51,8 +54,9 @@ class TestIConfigManager(BaseTest):
         #. Check the updated token, should success. 
         """
 
+        client_name = self.generate_random_str()
         self.info("Update github user token")
-        c=j.clients.github.new("test_modify_client", token="test_modify_client"); c.save()
+        c=j.clients.github.new(client_name, token="test_modify_client"); c.save()
         c.token="test_update"; c.save()
         self.info(" check cleint token ")
         self.assertEqual("test_update", c.token)
@@ -68,11 +72,12 @@ class TestIConfigManager(BaseTest):
 
         """
 
-        self.info("Delete test github client")
-        c=j.clients.github.new("test_delete_client", token="test_delete_client"); c.save()
+        client_name = self.generate_random_str()
+        self.info("Delete client {}".format(client_name))
+        c=j.clients.github.new(client_name, token="test_delete_client"); c.save()
         c.delete()
         self.info("Check that the client is not existing")
         with self.assertRaises(RuntimeError):
-            j.clients.github.get("test_delete_client")
+            j.clients.github.get(client_name)
         
         
