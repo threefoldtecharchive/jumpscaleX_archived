@@ -12,11 +12,4 @@ class BaseTest(unittest.TestCase):
     @staticmethod
     def info(message):
         BaseTest.LOGGER.info(message)
-        
-
-
-    
-
-
-
 
