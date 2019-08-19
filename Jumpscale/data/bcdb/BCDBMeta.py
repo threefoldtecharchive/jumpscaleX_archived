@@ -46,8 +46,13 @@ class BCDBMeta(j.application.JSBaseClass):
 
     """
 
-    def init2(self, bcdb=None):
+    def __init__(self, bcdb=None):
+
         assert bcdb
+        self._bcdb = bcdb
+
+        j.application.JSBaseClass.__init__(self)
+
         self._logger_enable()
         self._load()
 
@@ -71,6 +76,7 @@ class BCDBMeta(j.application.JSBaseClass):
             data = {"url": {}, "md5": {}}
             serializeddata = j.data.serializers.msgpack.dumps(data)
             self._bcdb.storclient.set(serializeddata)
+            self._data = data
         else:
             self._log_debug("schemas load from db")
             self._data = j.data.serializers.msgpack.loads(serializeddata)
@@ -178,8 +184,10 @@ class BCDBMeta(j.application.JSBaseClass):
         return self._data["md5"][md5]
 
     def _mid_from_url(self, url):
-        d = self._data_from_url(url)
-        return d["mid"]
+        if not url in self._data["url"]:
+            raise j.exceptions.Input("cannot find url in metadata for bcdb:%s" % url)
+        mid, md5s = self._data["url"][url]
+        return mid
 
     def _schema_exists(self, md5):
         return md5 in self._data["md5"]
