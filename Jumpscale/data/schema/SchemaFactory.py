@@ -194,13 +194,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         assert s.url
 
-        isok = self._add_url_to_md5(s.url, s._md5)
-        if not isok:
-            l = self._url_to_md5[s.url]
-            l.pop(l.index(s._md5))
-            l.append(s._md5)
-            self._url_to_md5[s.url] = l
-            # raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
+        self._add_md5_to_url(s.url, s._md5)
 
         return self._md5_to_schema[md5]
 
