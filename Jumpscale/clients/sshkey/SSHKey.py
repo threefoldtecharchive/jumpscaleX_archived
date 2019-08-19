@@ -8,7 +8,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         name* = "" (S)
         pubkey = "" (S) 
         allow_agent = True (B)
-        passphrase = "" (S)
+        passphrase_ = "" (S)
         privkey = "" (S)
         duration = 86400 (I)
         path = "" (S) #path of the private key
@@ -23,20 +23,48 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         self.autosave = True  # means every write will be saved (is optional to set)
 
-        if self.path != "" and j.sal.fs.exists(self.path):
-            if not self.privkey:
-                self.privkey = j.sal.fs.readFile(self.path)
+        if self.path == "":
+            keyspath = "%s/keys" % (j.sal.fs.getcwd())
+            if j.sal.fs.exists(keyspath):
+                self.path = keyspath + "/%s" % self.name
+                self._save()
+            else:
+                keyspath_system = j.core.tools.text_replace("{DIR_HOME}/.ssh")
+                if j.sal.fs.exists(keyspath_system):
+                    self.path = keyspath_system + "/%s" % self.name
+                    self._save()
 
-            if not self.pubkey and self.privkey:
-                path = "%s.pub" % (self.path)
-                if not j.sal.fs.exists(path):
-                    cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase)
-                    j.sal.process.execute(cmd)
-                self.pubkey = j.sal.fs.readFile(path)
-                self.save()
+        if not j.sal.fs.exists(self.path):
+            if self.privkey:
+                from pudb import set_trace
+
+                set_trace()
+                j.sal.fs.writeFile(self.path, self.privkey)
+            else:
+                self.pubkey = ""
+                self._save()
+                self.generate()
+                self._init(**kwargs)
+
+        assert j.sal.fs.exists(self.path)
+
+        if not self.privkey:
+            self.privkey = j.sal.fs.readFile(self.path)
+            self._save()
+
+        if not self.pubkey and self.privkey:
+            path = "%s.pub" % (self.path)
+            if not j.sal.fs.exists(path):
+                cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase_)
+                j.sal.process.execute(cmd)
+            self.pubkey = j.sal.fs.readFile(path)
+            self._save()
 
     def save(self):
         self._init()
+        self._save()
+
+    def _save(self):
         j.application.JSBaseConfigClass.save(self)
 
     def generate(self, reset=False):
@@ -47,15 +75,6 @@ class SSHKey(j.application.JSBaseConfigClass):
         :type reset: bool, optional
         """
         self._log_debug("generate ssh key")
-
-        if self.path == "":
-            keyspath = "%s/keys" % (j.sal.fs.getcwd())
-            keyspath_system = j.core.tools.text_replace("{DIR_HOME}/.ssh/%s" % self.name)
-            if j.sal.fs.exists(keyspath):
-                # means we are in directory where keys dir is found
-                self.path = keyspath
-            else:
-                self.path = keyspath_system
 
         if reset:
             self.delete_from_sshdir()
@@ -73,7 +92,7 @@ class SSHKey(j.application.JSBaseConfigClass):
             raise j.exceptions.Base("cannot generate key because privkey already known")
 
         if not j.sal.fs.exists(self.path) or reset:
-            cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
+            cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase_)
             j.sal.process.execute(cmd, timeout=10)
             self._init()
 
@@ -96,9 +115,9 @@ class SSHKey(j.application.JSBaseConfigClass):
         j.sal.fs.writeFile(self.path, self.privkey)
         j.sal.fs.writeFile(self.path + ".pub", self.pubkey)
 
-    def sign_ssh_data(self, data):
-        return self.agent.sign_ssh_data(data)
-        # TODO: does not work, property needs to be implemented
+    # def sign_ssh_data(self, data):
+    #     return self.agent.sign_ssh_data(data)
+    #     # TODO: does not work, property needs to be implemented
 
     def load(self, duration=3600 * 24):
         """
@@ -108,7 +127,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         :type duration: int, optional
         """
         self._log_debug("load sshkey: %s for duration:%s" % (self.name, duration))
-        j.clients.sshagent.key_load(self.path, passphrase=self.passphrase, duration=duration)
+        j.clients.sshagent.key_load(self.path, passphrase=self.passphrase_, duration=duration)
 
     def unload(self):
         cmd = "ssh-add -d %s " % (self.path)

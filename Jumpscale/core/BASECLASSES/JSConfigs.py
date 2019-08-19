@@ -19,25 +19,13 @@
 
 
 from Jumpscale import j
-from .JSBase import JSBase
-
-from .Attr import Attr
+from .JSConfigBase import JSConfigBase
 
 
-class JSConfigs(JSBase, Attr):
+class JSConfigs(JSConfigBase):
     def _init_pre(self, **kwargs):
-
+        self._triggers = []
         self._model_ = None
-        if "name" in kwargs:
-            self.name = kwargs["name"]
-
-    def __init_class_post(self):
-
-        if not hasattr(self.__class__, "_CHILDCLASS"):
-            raise j.exceptions.Base("_CHILDCLASS needs to be specified")
-
-        if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
-            raise j.exceptions.Base("combination not allowed of config and configsclass")
 
     def _process_schematext(self, schematext):
         """
@@ -88,9 +76,20 @@ class JSConfigs(JSBase, Attr):
         """
         return self.__class__._CHILDCLASS
 
-    def new(self, name, jsxobject=None, save=True, **kwargs):
-        if self.exists(name=name):
-            raise j.exceptions.Base("obj: %s already exists" % name)
+    def new(self, name, jsxobject=None, save=True, delete=True, **kwargs):
+        """
+        it it exists will delete if first when delete == True
+        :param name:
+        :param jsxobject:
+        :param save:
+        :param kwargs:
+        :return:
+        """
+        if delete:
+            self.delete(name)
+        else:
+            if self.exists(name=name):
+                raise j.exceptions.Base("cannot do new object, exists")
         return self._new(name=name, jsxobject=jsxobject, save=save, **kwargs)
 
     def _new(self, name, jsxobject=None, save=True, **kwargs):
@@ -110,6 +109,7 @@ class JSConfigs(JSBase, Attr):
                 self._parent.save()
                 assert self._parent._id
             jsxobject.parent_id = self._parent._id
+
         jsconfig_klass = self._childclass_selector(jsxobject=jsxobject)
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
@@ -147,7 +147,8 @@ class JSConfigs(JSBase, Attr):
         return jsconfig
 
     def _get(self, name="main", die=True):
-        if name is not None and name in self._children:
+        assert name
+        if name in self._children:
             return self._children[name]
 
         self._log_debug("get child:'%s'from '%s'" % (name, self._name))
@@ -242,9 +243,13 @@ class JSConfigs(JSBase, Attr):
             return self._model.find()
 
     def delete(self, name):
-        if self.exists(name=name):
-            o = self.get(name)
-            o.delete()
+        if name in self._children:
+            self._children.pop(name)
+        res = self._findData(name=name)
+        if len(res) == 0:
+            return
+        elif len(res) == 1:
+            self._model.delete(res[0].id)
 
     def exists(self, name="main"):
         """
@@ -261,13 +266,6 @@ class JSConfigs(JSBase, Attr):
             return True
         else:
             return False
-
-    def _obj_cache_reset(self):
-        JSBase._obj_cache_reset(self)
-        for key, obj in self._children.items():
-            obj._obj_cache_reset()
-            del self._children[key]
-            self._children.pop(key)
 
     def _children_names_get(self, filter=None):
         """
@@ -311,54 +309,3 @@ class JSConfigs(JSBase, Attr):
             if item not in x:
                 x.append(item)
         return self._filter(filter=filter, llist=x, nameonly=False)
-
-    def __getattr__(self, name):
-        # if private or non child then just return
-
-        if isinstance(self, j.application.JSConfigClass):
-            if name in self._model.schema.propertynames:
-                return self._data.__getattribute__(name)
-
-        if isinstance(self, j.application.JSConfigsClass):
-
-            if (
-                name.startswith("_")
-                or name in self._methods_names_get()
-                or name in self._properties_names_get()
-                or name in self._dataprops_names_get()
-            ):
-                return self.__getattribute__(name)  # else see if we can from the factory find the child object
-
-            r = self._get(name=name, die=False)
-            if not r:
-                raise j.exceptions.Base(
-                    "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
-                    % (name, self._key)
-                )
-            return r
-
-        return self.__getattribute__(name)
-
-    def __setattr__(self, key, value):
-
-        if key.startswith("_"):
-            self.__dict__[key] = value
-
-        if isinstance(self, j.application.JSConfigClass):
-            if key == "data":
-                self.__dict__[key] = value
-
-        assert "data" not in self.__dict__
-
-        if "_data" in self.__dict__ and key in self._model.schema.propertynames:
-            # if value != self._data.__getattribute__(key):
-            # self._log_debug("SET:%s:%s" % (key, value))
-            # self._update_trigger(key, value)
-            self._data.__setattr__(key, value)
-        else:
-            if key in ["_protected"]:
-                self.__dict__[key] = value
-            elif not self._protected or key in self._properties:
-                self.__dict__[key] = value
-            else:
-                raise j.exceptions.Base("protected property:%s" % key)

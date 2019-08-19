@@ -22,7 +22,7 @@ class PacketNet(JSConfigBase):
         self._projects = None
         self._projectid = None
         self._devices = None
-        self.projectname = self.project_name
+        self.project_name = self.project_name
 
     @property
     def client(self):
@@ -46,19 +46,19 @@ class PacketNet(JSConfigBase):
     @property
     def projectid(self):
         """
-        :raises RuntimeError: Project with projectname not found
+        :raises RuntimeError: Project with project_name not found
         :raises RuntimeError: More than one project found
         :return: project id
         :rtype: str
         """
 
         if self._projectid is None:
-            if self.projectname is not "":
+            if self.project_name is not "":
                 for item in self.projects:
-                    if item.name == self.projectname:
+                    if item.name == self.project_name:
                         self._projectid = item.id
                         return self._projectid
-                raise j.exceptions.Base("did not find project with name:%s" % self.projectname)
+                raise j.exceptions.Base("did not find project with name:%s" % self.project_name)
             else:
                 res = [item[0] for key, item in self.getProjects().items()]
                 if len(res) == 1:

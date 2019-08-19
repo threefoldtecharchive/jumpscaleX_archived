@@ -76,7 +76,9 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if md5 in self._md5_to_schema:
             item = self._md5_to_schema[md5]
             if isinstance(item, str):
-                return self.get_from_text(item)
+                if item.strip() == "":
+                    raise j.exceptions.JSBUG("schema should never be empty string")
+                return self._add_from_text_item(item)
             return item
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
@@ -182,19 +184,19 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         s = Schema(text=schema_text, md5=md5, url=url)
 
+        self._md5_to_schema[md5] = s
+
         assert s.url
 
         isok = self._add_url_to_md5(s.url, s._md5)
-        if isok:
-            # means did not exist yet so all ok or is same as latest one already known
-            self._md5_to_schema[s._md5] = s
-            return self._md5_to_schema[s._md5]
-        else:
+        if not isok:
             l = self._url_to_md5[s.url]
             l.pop(l.index(s._md5))
             l.append(s._md5)
             self._url_to_md5[s.url] = l
             # raise j.exceptions.Input("cannot add schema because a newer one already exists", data=schema_text)
+
+        return self._md5_to_schema[md5]
 
     def _add_url_to_md5(self, url, md5):
         """

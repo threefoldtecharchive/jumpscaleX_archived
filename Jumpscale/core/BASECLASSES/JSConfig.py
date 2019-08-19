@@ -19,20 +19,18 @@
 
 
 from Jumpscale import j
-from .JSBase import JSBase
+from .JSConfigBase import JSConfigBase
 
 """
 classes who use JSXObject for data storage but provide nice interface to enduser
 """
 
-from .Attr import Attr
 
-
-class JSConfig(JSBase, Attr):
+class JSConfig(JSConfigBase):
     def _init_pre(self, jsxobject=None, datadict={}, name=None, **kwargs):
-
         self._triggers = []
 
+        # get the model from the parent if not there use the SCHEMATEXT
         if self._parent and "_model" in self._parent.__dict__:
             self._model = self._parent._model
         else:
@@ -45,7 +43,8 @@ class JSConfig(JSBase, Attr):
             # is a fall back for situation we want to use a JSConfig class without factory JSConfigs
             self._model = j.application.bcdb_system.model_get(schema=s)
 
-        # self._model._kosmosinstance = self
+        # that way the triggers can know about this class and can call the triggers on this level
+        self._model._kosmosinstance = self
 
         if jsxobject:
             self._data = jsxobject
@@ -61,57 +60,12 @@ class JSConfig(JSBase, Attr):
         if datadict:
             self._data_update(datadict)
 
-        if name:
+        if name and self._data.name != name:
             self._data.name = name
 
-    def _init_post(self, **kwargs):
-        props, methods = self._inspect()
-        self._properties_ = props
-        self._protected = True
-
-    # def _obj_cache_reset(self):
-    #     """
-    #     puts the object back to its basic state
-    #     :return:
-    #     """
-    #     JSBase._obj_cache_reset(self)
-    #     self.__dict__["_data"] = None
-
-    def __init_class_post(self):
-        if isinstance(j.application.JSBaseConfigClass) and isinstance(j.application.JSBaseConfigsClass):
-            raise j.exceptions.Base("combination not allowed of config and configsclass")
-
     @property
-    def _properties(self):
-        return self._properties_
-
-    def _trigger_add(self, method):
-        """
-
-        triggers are called with (jsconfigs, jsconfig, action)
-
-        can register any method you want to respond on some change
-
-        - jsconfigs: the obj coming from this class, the collection of jsconfigs = jsxconfig_object
-        - jsconfig: the jsconfig object
-        - action: e.g. new, delete, get,stop, ...
-
-        return: jsconfig object
-        """
-        if method not in self._triggers:
-            self._triggers.append(method)
-
-    def _triggers_call(self, jsconfig, action=None):
-        """
-        will go over all triggers and call them with arguments given
-
-        """
-        assert isinstance(jsconfig, j.application.JSConfigClass)
-        self._log_debug("trigger: %s:%s" % (jsconfig.name, action))
-        for method in self._triggers:
-            jsconfig = method(jsconfigs=self, jsconfig=jsconfig, action=action)
-            assert isinstance(jsconfig, j.application.JSConfigClass)
-        return jsconfig
+    def name(self):
+        return self._data.name
 
     @property
     def _id(self):

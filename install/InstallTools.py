@@ -1526,7 +1526,6 @@ class Tools:
                         tb_line, Tools.pygments_pylexer, Tools.pygments_formatter
                     ).rstrip()
                 else:
-                    j.shell()
                     tb_code = tb_line
                 tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
                 C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
