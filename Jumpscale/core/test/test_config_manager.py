@@ -37,9 +37,9 @@ class TestIConfigManager(BaseTest):
         """
 
         self.info("Create github user with test name, should fail.")
-        c=j.clients.github.new("test_create_client", token="test_create_new_client"); c.save()
         self.info("Check the creation of client is failed")
-        self.assertRaises(Exception, c)
+        with self.assertRaises(Exception):
+            c=j.clients.github.new("test_create_client", token="test_create_new_client"); c.save()
         
     def test03_modify_exists_client(self):
         """
