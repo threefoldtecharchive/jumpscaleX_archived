@@ -93,6 +93,17 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
+    def is_multiple_schema_from_text(self, schema_text):
+        """
+        will return true if the schema text conatins more than one schema
+
+        Returns:
+            bool
+        """
+        assert isinstance(schema_text, str)
+        blocks = self._schema_blocks_get(schema_text)
+        return len(blocks) > 1
+
     def get_from_text(self, schema_text, url=None, multiple=False):
         """
         will return the first schema specified if more than 1
