@@ -355,8 +355,8 @@ class BCDB(j.application.JSBaseClass):
         """
 
         self.reset()
-
-        j.data.bcdb._config.pop(self.name)
+        if self.name in j.data.bcdb._config:
+            j.data.bcdb._config.pop(self.name)
         if self.name in j.data.bcdb._bcdb_instances:
             j.data.bcdb._bcdb_instances.pop(self.name)
         j.data.bcdb._config_write()
