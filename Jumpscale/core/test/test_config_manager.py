@@ -8,7 +8,9 @@ class TestIConfigManager(BaseTest):
         self.info('Test case: {}'.format(self._testMethodName))
 
     def tearDown(self):
-        pass
+        self.info("Delete DataBase")
+        j.application.bcdb_system_destroy() 
+        j.data.bcdb.destroy_all() 
 
     def test01_create_new_client(self):
         """
