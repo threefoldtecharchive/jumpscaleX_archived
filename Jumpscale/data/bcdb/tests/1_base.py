@@ -187,12 +187,12 @@ def main(self):
     pool_type = "managed,unmanaged" (E)
     """
 
-    # test("RDB", schema, sqlite=False)
-    #
-    # test("ZDB", schema_sqlite)
+    test("RDB", schema, sqlite=False)
+
+    test("ZDB", schema_sqlite)
 
     test("SQLITE", schema_sqlite)
-    test("SQLITE", schema_sqlite)
+
     # CLEAN STATE
     self._log_info("TEST BASE DONE")
     return "OK"
