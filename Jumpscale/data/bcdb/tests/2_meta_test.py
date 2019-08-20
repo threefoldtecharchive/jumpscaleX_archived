@@ -28,20 +28,15 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="meta_test")'
 
     """
-    j.servers.zdb.test_instance_start(destroydata=True)
-    # get zdb client
-    c = j.clients.zdb.client_admin_get(port=9901)
-    c.namespace_new("test", secret="1234")
-    cl1 = j.clients.zdb.client_get(name="test", addr="localhost", port=9901, secret="1234")
-    cl1.flush()
 
     bcdb, _ = self._load_test_model()
 
     assert len(bcdb.get_all()) == 0
+    assert len(bcdb.meta._data["url"]) == 7
 
-    assert len(bcdb.meta._data.schemas) == 7
-    s = bcdb.meta._data.schemas[-1]
-    assert s.url == "despiegk.test"
+    s = list(j.data.schema._url_to_md5.keys())
+
+    assert "despiegk.test" in s
 
     m = bcdb.model_get(url="despiegk.test")
 
@@ -57,7 +52,7 @@ def main(self):
 
     bcdb.meta._schema_set(s)
 
-    assert len(bcdb.meta._data.schemas) == 8
+    assert len(bcdb.meta._data["url"]) == 8
 
     assert "jumpscale.schema.test.a" in j.data.schema._url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema._url_to_md5
@@ -75,7 +70,7 @@ def main(self):
 
     assert bcdb.get_all() == []  # just to make sure its empty
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 8
+    assert len(bcdb.meta._data["url"]) == 8
 
     a = model.new()
     a.category = "acat"
@@ -98,7 +93,7 @@ def main(self):
     # lets upgrade schema to float
     s_temp = bcdb.schema_get(schema=schema_text)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
+    assert len(bcdb.meta._data["url"]) == 8  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     # lets upgrade schema to float
@@ -106,7 +101,7 @@ def main(self):
 
     model2 = bcdb.model_get(schema=s2)
 
-    assert len(bcdb.meta._data._ddict["schemas"]) == 8  # acl, user, circle, despiegktest and the 1 new one
+    assert len(bcdb.meta._data["url"]) == 8  # acl, user, circle, despiegktest and the 1 new one
 
     a3 = model2.new()
     a3.category = "acat3"
