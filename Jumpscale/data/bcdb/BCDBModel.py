@@ -52,7 +52,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         # we should have a schema
         if not schema:
-            if hasattr(self, "_SCHEMA"):  # what is that _schema ?
+            if hasattr(self, "_SCHEMA"):  # schema when defined on the class itself
                 schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
                 schema = self._schema_get()  # _schema_get is overrided by classes like ACL USER CIRCLE NAMESPACE
@@ -64,9 +64,7 @@ class BCDBModel(j.application.JSBaseClass):
             else:  # schema must be a schema object
                 assert schema.url
 
-        self._schema_url = schema.url
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
-        self._schema_url = schema.url
 
         if self.schema.url in bcdb._schema_url_to_model:
             raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
@@ -123,11 +121,11 @@ class BCDBModel(j.application.JSBaseClass):
 
     @property
     def schema(self):
-        return j.data.schema.get_from_url(self._schema_url)
+        return j.data.schema.get_from_url(self.schema.url)
 
     @property
     def mid(self):
-        return self.bcdb.meta._mid_from_url(self.schema.url_schema_url)
+        return self.bcdb.meta._mid_from_url(self.schema.url)
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
