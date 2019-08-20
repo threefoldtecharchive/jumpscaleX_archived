@@ -85,7 +85,7 @@ class ZDBServers(JSConfigs):
             self.build()
         zdb = self.test_instance_start(namespaces=["test"], restart=True, destroydata=True)
 
-        cl = zdb.client_get(nsname="test")
+        cl = zdb.client_get(name="test")
 
         assert cl.ping()
 

@@ -310,7 +310,7 @@ class BCDBVFS(j.application.JSBaseClass):
             self.change_current_bcdb(bcdb_name)
 
         if schemas_text:
-            schemas = j.data.schema.add_from_text(schemas_text)
+            schemas = j.data.schema.get_from_text(schemas_text)
             if schemas:
                 for s in schemas:
                     self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta

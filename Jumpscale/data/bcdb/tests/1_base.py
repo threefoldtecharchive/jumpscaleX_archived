@@ -192,8 +192,7 @@ def main(self):
     test("ZDB", schema_sqlite)
 
     test("SQLITE", schema_sqlite)
+
     # CLEAN STATE
-    # j.data.schema.remove_from_text(schema_sqlite)
-    # j.data.schema.remove_from_text(schema)
     self._log_info("TEST BASE DONE")
     return "OK"

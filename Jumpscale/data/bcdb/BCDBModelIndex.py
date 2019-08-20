@@ -29,7 +29,7 @@ from .BCDBDecorator import *
 
 
 class BCDBModelIndex(j.application.JSBaseClass):
-    def _init(self, bcdbmodel=None, reset=False):
+    def _init(self, model=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -43,11 +43,10 @@ class BCDBModelIndex(j.application.JSBaseClass):
             print(item.name)
         ```
         """
-        assert bcdbmodel
+        assert model
 
-        self.bcdbmodel = bcdbmodel
-        self.bcdb = bcdbmodel.bcdb
-        self.schema = bcdbmodel.schema
+        self.model = model
+        self.bcdb = model.bcdb
 
         self._ids_redis_use = True  # let only use redis for now for the id's (the id index file)
         self._ids_redis = self.bcdb._redis_index
@@ -56,7 +55,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         self.storclient = self.bcdb.storclient
         self._sonic = None
 
-        self.index_key_needed, self.index_sql_needed, self.index_text_needed = self.schema.index_needed()
+        self.index_key_needed, self.index_sql_needed, self.index_text_needed = self.model.schema.index_needed()
 
         # lets make sure indexing can happen
 
@@ -175,17 +174,17 @@ class BCDBModelIndex(j.application.JSBaseClass):
         if val:
             return (
                 self.bcdb.name,
-                "{}:{}".format(nid, self.bcdbmodel.mid),
+                "{}:{}".format(nid, self.model.mid),
                 "{}:{}".format(obj_id, property_name),
                 self._clean_text_for_sonic(val),
             )
         else:
-            return self.bcdb.name, "{}:{}".format(nid, self.bcdbmodel.mid), "{}:{}".format(obj_id, property_name)
+            return self.bcdb.name, "{}:{}".format(nid, self.model.mid), "{}:{}".format(obj_id, property_name)
 
     def _text_index_set_(self, property_name, val, obj_id, nid=1):
         if not nid:
             nid = 1
-        args = self.bcdbmodel._text_index_content_pre_(property_name, val, obj_id, nid)
+        args = self.model._text_index_content_pre_(property_name, val, obj_id, nid)
         bucket, collection, object_tag, text = self._text_index_keys_get_(*args)
         for chunk in self._chunks(text, int(self.sonic.bufsize) // 2):
             self.sonic.push(bucket, collection, object_tag, chunk)
@@ -212,7 +211,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         key = self._key_index_hsetkey_get(nid)
 
         """
-        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.bcdbmodel.mid)
+        return "bcdb:%s:%s:%s:index" % (self.bcdb.name, nid, self.model.mid)
 
     def _key_index_set_(self, property_name, val, obj_id, nid=1):
         """
@@ -327,7 +326,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
         """
         if not nid:
             nid = 1
-        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.bcdbmodel.mid)
+        return "bcdb:%s:%s:%s:ids" % (self.bcdb.name, nid, self.model.mid)
 
     def _ids_destroy(self, nid=1):
         if not nid:
@@ -378,10 +377,10 @@ class BCDBModelIndex(j.application.JSBaseClass):
 
         self._ids_init(nid=nid)
         bin_id = struct.pack("<I", id)
-        if not self.schema.hasdata:
-            self.schema.hasdata = True
-            self.bcdb.meta.hasdata_set(self.schema)  # make sure we remember in metadata that there is data
-            self.schema.hasdata = True
+        if not self.model.schema.hasdata:
+            self.model.schema.hasdata = True
+            self.bcdb.meta.hasdata_set(self.model.schema)  # make sure we remember in metadata that there is data
+            self.model.schema.hasdata = True
         if id > self._ids_last[nid]:
             if self._ids_redis_use:
                 r = self._ids_redis
@@ -553,7 +552,7 @@ class BCDBModelIndex(j.application.JSBaseClass):
             self._sql_index_db.create_table()
 
     def __str__(self):
-        out = "modelindex:%s\n" % self.schema.url
+        out = "modelindex:%s\n" % self.model.schema.url
         return out
 
     __repr__ = __str__

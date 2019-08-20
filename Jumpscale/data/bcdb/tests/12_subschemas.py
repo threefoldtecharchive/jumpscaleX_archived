@@ -103,7 +103,7 @@ def main(self):
     urls.append("jsx.subschema.3.2.2")
 
     for url in urls:
-        md5 = j.data.schema._url_to_md5[url][0]
+        md5 = j.data.schema._url_to_md5[url]
         s = bcdb.schema_get(md5=md5)  # need to start from bcdb
         assert s._md5 == md5
 

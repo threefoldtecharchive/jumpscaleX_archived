@@ -53,7 +53,7 @@ assert ss==s2
 ## add
 
 ```python
-j.data.schema.add_from_text(self, schema_text):
+j.data.schema.get_from_text(self, schema_text):
     """
     :param schema_text can be 1 or more schema's in the text
     :return a list with all schemas

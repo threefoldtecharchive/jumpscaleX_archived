@@ -99,6 +99,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
         for item in self.sshkeys:
             if item.public_key.find(pubkeyonly) != -1:
                 return item
+        j.shell()
         return None
 
     def sshkey_get(self, name):
@@ -163,6 +164,7 @@ class DigitalOcean(j.application.JSBaseConfigClass):
                 key = digitalocean.SSHKey(token=self.token_, name=sshkey_.name, public_key=sshkey_.pubkey)
                 key.create()
             sshkey_do = self._sshkey_get_default()
+            assert sshkey_do
             sshkey = sshkey_do.name
 
         if self.droplet_exists(name):

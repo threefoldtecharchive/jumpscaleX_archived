@@ -57,6 +57,10 @@ class JSConfigs(JSConfigBase):
                 s = self.__class__._CHILDCLASS._SCHEMATEXT
             t = self._process_schematext(s)
             self._model_ = bcdb.model_get(schema=t)
+            if j.core.text.strip_to_ascii_dense(t) != j.core.text.strip_to_ascii_dense(s):
+                from pudb import set_trace
+
+                set_trace()
         return self._model_
 
     def _bcdb_selector(self):
