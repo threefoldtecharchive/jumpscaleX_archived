@@ -478,7 +478,7 @@ class BCDB(j.application.JSBaseClass):
         """
 
         :param model: is the model object  : inherits of self.MODEL_CLASS
-        :return:
+        :return: the model added or found in cache
         """
         if not isinstance(model, j.data.bcdb._BCDBModelClass):
             raise j.exceptions.Base("model needs to be of type:%s" % self._BCDBModelClass)
@@ -487,6 +487,8 @@ class BCDB(j.application.JSBaseClass):
             self.meta._schema_set(model.schema)
             self._schema_property_add_if_needed(model.schema)
             self._schema_url_to_model[model.schema.url] = model
+
+        return self._schema_url_to_model[model.schema.url]
 
     def _schema_property_add_if_needed(self, schema):
         """
