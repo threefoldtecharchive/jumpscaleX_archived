@@ -84,7 +84,7 @@ class BCDBModel(j.application.JSBaseClass):
         self._kosmosinstance = None
 
         indexklass = self._index_class_generate()
-        self.index = indexklass(bcdbmodel=self, reset=reset)
+        self.index = indexklass(model=self, reset=reset)
 
         self._sonic_client = None
         # self.cache_expiration = 3600
@@ -292,7 +292,7 @@ class BCDBModel(j.application.JSBaseClass):
         self.get_from_keys(name="myname",nid=2)
         :return:
         """
-        delete_if_not_found = False
+        delete_if_not_found = True
         # if no args are provided that mean we will do a get all
         if len(args.keys()) == 0:
             res = []
@@ -317,11 +317,16 @@ class BCDBModel(j.application.JSBaseClass):
 
         res = []
         for id_ in ids:
-            res2 = self.get(id_, die=False)
+            # ids right now come from redis, they should be fone when model is gone, when they exist there they should really exist
+            res2 = self.get(id_, die=True)
             if res2 is None:
-                if delete_if_not_found:
-                    for key, val in args.items():
-                        self._key_index_delete(key, val, id_, nid=nid)
+                # only when we use file based id index then there can be situation where id is in file but not in db
+                # if id index in redis which is default now then there needs to be consistency between id index & db
+                if len(args) == 0:
+                    # means we were iterating so there could be
+                    if delete_if_not_found:
+                        for key, val in args.items():
+                            self._key_index_delete(key, val, id_, nid=nid)
             else:
                 # we now need to check if there was no false positive
                 if check2(res2, args):
@@ -472,10 +477,11 @@ class BCDBModel(j.application.JSBaseClass):
         if obj._schema.url == self._schema_url:
             obj = self._triggers_call(obj=obj, action="get")
         else:
-            if die:
-                raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
-            else:
-                return None
+            raise j.exceptions.JSBUG(
+                "no object with id {} found in {}, this means the index gave back an id which is not part of this model.".format(
+                    obj_id, self
+                )
+            )
 
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
         return obj

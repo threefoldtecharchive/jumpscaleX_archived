@@ -27,7 +27,7 @@ class {{BASENAME}}(BCDBModelIndex):
     {% if index.active %}
 
     def _sql_index_init(self):
-        self._log_info("init index:%s"%self.schema.url)
+        self._log_info("init index:%s"%self.model.schema.url)
 
         p = j.clients.peewee
 

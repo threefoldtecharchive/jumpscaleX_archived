@@ -189,9 +189,9 @@ def main(self):
 
     test("RDB", schema, sqlite=False)
 
-    test("ZDB", schema_sqlite)
+    # test("ZDB", schema_sqlite)
 
-    test("SQLITE", schema_sqlite)
+    # test("SQLITE", schema_sqlite)
 
     # CLEAN STATE
     self._log_info("TEST BASE DONE")

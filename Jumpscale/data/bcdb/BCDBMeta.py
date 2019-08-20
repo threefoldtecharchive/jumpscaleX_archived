@@ -74,9 +74,8 @@ class BCDBMeta(j.application.JSBaseClass):
         if serializeddata is None:
             self._log_debug("save, empty schema")
             data = {"url": {}, "md5": {}}
-            serializeddata = j.data.serializers.msgpack.dumps(data)
-            self._bcdb.storclient.set(serializeddata)
             self._data = data
+            self._save()
         else:
             self._log_debug("schemas load from db")
             self._data = j.data.serializers.msgpack.loads(serializeddata)
@@ -127,11 +126,11 @@ class BCDBMeta(j.application.JSBaseClass):
         # optimized for speed, will happen quite a lot, need to know when there is change
 
         def find_mid():
-            mid_highest = 1
+            mid_highest = 0
             for mid, md5s in self._data["url"].values():
                 if mid > mid_highest:
                     mid_highest = mid
-            return mid_highest
+            return mid_highest + 1
 
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")

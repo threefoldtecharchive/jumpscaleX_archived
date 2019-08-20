@@ -55,7 +55,6 @@ class BCDBIndexMeta(j.application.JSBaseClass):
         """
         """
         JSBASE.__init__(self)
-        self.schema = schema
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
