@@ -68,7 +68,7 @@ def main(self):
         """
     data = j.data.serializers.toml.loads(toml)
 
-    schema_object = j.data.schema.get_from_text(schema_package)[0]
+    schema_object = j.data.schema.get_from_text(schema_package)
     data = schema_object.new(datadict=data)
 
     # TODO: needs some tests here

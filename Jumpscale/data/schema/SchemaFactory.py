@@ -178,6 +178,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         return blocks
 
     def _check_bcdb_is_not_used(self):
+        return
         if self.models_in_use:
             raise j.exceptions.JSBUG("should not modify schema's when models used through this interface")
 
