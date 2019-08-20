@@ -146,16 +146,16 @@ class BCDB(j.application.JSBaseClass):
     def export(self, path=None, encrypt=True):
         if not path:
             raise j.exceptions.Base("export no path")
-
-        for o in list(self.meta._data.schemas):
-            m = self.model_get(schema=o.text)
+        j.shell()
+        for o in self.meta.schema_dicts:
+            m = self.model_get(schema=o["text"])
             # to make schema export ID deterministic we add the mid at the beginning of the file name
             dpath = "%s/%s__%s__%s" % (path, m.mid, m.schema.url, m.schema._md5)
             j.sal.fs.createDir(dpath)
             dpath_file = "%s/meta.schema" % (dpath)
             j.sal.fs.writeFile(dpath_file, m.schema.text)
             for obj in list(m.iterate()):
-                if obj._model.schema.url == o.url:
+                if obj._model.schema.url == o["url"]:
                     json = obj._json
                     if encrypt:
                         ext = ".encr"

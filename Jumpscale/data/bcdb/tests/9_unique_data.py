@@ -54,16 +54,9 @@ def main(self):
     &test = "" (S)
     &number = 0 (I)
     """
-    test_case = TestCase()
 
-    j.servers.zdb.test_instance_start()
-    self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
-    self.admin_zdb.namespace_new("unique", secret="1234")
-    self.zdb = j.clients.zdb.client_get(name="unique", namespace="unique", port=9901, secret="1234")
-    self.bcdb = j.data.bcdb.new("test", storclient=self.zdb, reset=True)
-    schema = self.bcdb.schema_get(schema=scm)
-    self.model = self.bcdb.model_get(schema=schema)
-    schema_obj = self.model.new()
+    bcdb, model = self._load_test_model(type="zdb", schema=scm)
+    schema_obj = model.new()
     name = "s" + str(uuid4()).replace("-", "")[:10]
     new_name = "s" + str(uuid4()).replace("-", "")[:10]
     test = "s" + str(uuid4()).replace("-", "")[:10]
@@ -75,7 +68,7 @@ def main(self):
     schema_obj.save()
 
     j.core.tools.log("Create another object and try to use same name for first one, should fail", level=20)
-    schema_obj2 = self.model.new()
+    schema_obj2 = model.new()
     schema_obj2.name = name
     schema_obj2.save()
     schema_obj2.name = "s" + str(uuid4()).replace("-", "")[:10]
@@ -93,7 +86,7 @@ def main(self):
     schema_obj2.number = number
     schema_obj2.save()
     # check that in DB only 1 matches from the past
-    r4 = self.model.find(number=number)
+    r4 = model.find(number=number)
     print(r4)
     assert r4[0].id == schema_obj.id
 
@@ -104,7 +97,7 @@ def main(self):
     schema_obj.save()
     schema_obj2.number = number
     args_search = {"number": schema_obj2.number}
-    r = self.model.find(**args_search)
+    r = model.find(**args_search)
     assert len(r) == 0
     schema_obj2.save()
 
@@ -113,15 +106,15 @@ def main(self):
     test = schema_obj2.test + ""
     number = schema_obj2.number + 0
     args_search = {"number": number}
-    r = self.model.find(**args_search)
+    r = model.find(**args_search)
     assert len(r) == 1
     schema_obj2.delete()
     # lets now check that the index has been cleaned
     args_search = {"number": number}
-    r = self.model.find(**args_search)
+    r = model.find(**args_search)
     assert len(r) == 0
     args_search = {"name": name}
-    r = self.model.find(**args_search)
+    r = model.find(**args_search)
     assert len(r) == 0
     args_search = {"test": test}
     r = schema_obj2._model.find(**args_search)
@@ -135,10 +128,11 @@ def main(self):
     j.core.tools.log(
         "Set the new object's attributes with the same attributes of the second object, should success.", level=20
     )
-    schema_obj3 = self.model.new()
+    schema_obj3 = model.new()
     assert schema_obj3.id == None
     schema_obj3.name = name
+    import pudb
 
+    pudb.set_trace()
     schema_obj3.save()
 
-    self.admin_zdb.namespace_delete("unique")
