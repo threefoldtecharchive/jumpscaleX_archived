@@ -38,6 +38,7 @@ class BuilderZeroFlist(j.builders.system._BaseClass):
         """
         Installs zflist
         """
+        self.build()
         self._copy("/sandbox/code/github/threefoldtech/0-flist/zflist/zflist", "{DIR_BIN}")
 
     @property
