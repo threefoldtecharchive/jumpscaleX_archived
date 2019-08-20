@@ -101,8 +101,6 @@ class BCDB(j.application.JSBaseClass):
         self.user = None
         self.circle = None
 
-        # self._index_schema_class_cache = {}  # cache for the index classes
-
     def _init_system_objects(self):
 
         assert self.name
@@ -529,22 +527,21 @@ class BCDB(j.application.JSBaseClass):
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-            # why is it a schema key instead of a url ?
-            # is it necessary ? as you commented the self._index_schema_class_cache ...
-            # if schema.key not in self._index_schema_class_cache:
+        # why is it a schema key instead of a url ?
+        if schema.key not in self._index_schema_class_cache:
 
-        # model with info to generate
-        imodel = BCDBIndexMeta(schema=schema)
-        imodel.include_schema = True
-        tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-        name = "bcdbindex_%s" % self.name
-        myclass = j.tools.jinja2.code_python_render(
-            name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
-        )
-        # is it necessary ? as you commented the self._index_schema_class_cache ...
-        # self._index_schema_class_cache[schema.key] = myclass
+            # model with info to generate
+            imodel = BCDBIndexMeta(schema=schema)
+            imodel.include_schema = True
+            tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
+            name = "bcdbindex_%s" % self.name
+            myclass = j.tools.jinja2.code_python_render(
+                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
+            )
 
-        return myclass  # self._index_schema_class_cache[schema.key]
+            self._index_schema_class_cache[schema.key] = myclass
+
+        return self._index_schema_class_cache[schema.key]
 
     def model_get_from_file(self, path):
         """
