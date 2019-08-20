@@ -472,7 +472,10 @@ class BCDBModel(j.application.JSBaseClass):
         if obj._schema.url == self._schema_url:
             obj = self._triggers_call(obj=obj, action="get")
         else:
-            raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
+            if die:
+                raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
+            else:
+                return None
 
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
         return obj
