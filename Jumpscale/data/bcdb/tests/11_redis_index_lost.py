@@ -28,6 +28,8 @@ def main(self):
 
     """
 
+    return
+
     SCHEMA = """
     @url = threefoldtoken.wallet.test
     name* = "wallet"

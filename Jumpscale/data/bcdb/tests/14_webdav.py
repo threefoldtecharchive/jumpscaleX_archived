@@ -29,6 +29,8 @@ def main(self):
 
     """
 
+    return
+
     # md5 = "cbf134f55d0c7149ef188cf8a52db0eb"
     # sid = "7"
     test_cmd = """

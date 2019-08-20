@@ -36,6 +36,8 @@ def main(self):
 
     """
 
+    return
+
     def do(zdb=False):
         cmd = """
         . /sandbox/env.sh;
