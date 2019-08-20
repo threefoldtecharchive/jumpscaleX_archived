@@ -519,7 +519,8 @@ class BCDB(j.application.JSBaseClass):
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl(self)
-        return self.model_add(model)
+        self.model_add(model)
+        return model
 
     def models_add_threebot(self):
         self.models_add(self._dirpath + "/models_threebot")

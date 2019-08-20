@@ -11,6 +11,7 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
         self._restic = None
         self._s3cality = None
         self._zstor = None
+        self._zflist = None
 
     @property
     def syncthing(self):
@@ -51,3 +52,11 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
 
             self._zstor = BuilderZeroStor()
         return self._zstor
+
+    @property
+    def zflist(self):
+        if self._zflist is None:
+            from .BuilderZeroFlist import BuilderZeroFlist
+
+            self._zflist = BuilderZeroFlist()
+        return self._zflist
