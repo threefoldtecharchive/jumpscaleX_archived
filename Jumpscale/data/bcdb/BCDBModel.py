@@ -33,7 +33,7 @@ from .BCDBIndexMeta import BCDBIndexMeta
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, schema=None, reset=False):
+    def __init__(self, bcdb, schema_url=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -51,22 +51,18 @@ class BCDBModel(j.application.JSBaseClass):
         JSBASE.__init__(self)
 
         # we should have a schema
-        if not schema:
-            if hasattr(self, "_SCHEMA"):  # schema when defined on the class itself
+        if not schema_url:
+            if hasattr(self, "_SCHEMA"):  # what is that _schema ?
                 schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
                 schema = self._schema_get()  # _schema_get is overrided by classes like ACL USER CIRCLE NAMESPACE
                 if not schema:
                     j.exceptions.JSBUG("BCDB Model needs a schema object or text")
-        else:
-            if isinstance(schema, str):
-                schema = j.data.schema.get_from_text(schema)
-            else:  # schema must be a schema object
-                assert schema.url
+            schema_url = schema.url
 
-        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self._schema_url = schema_url
 
-        if self.schema.url in bcdb._schema_url_to_model:
+        if self._schema_url in bcdb._schema_url_to_model:
             raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
 
         self.bcdb = bcdb
@@ -105,13 +101,13 @@ class BCDBModel(j.application.JSBaseClass):
         :return: class of the model which is used for indexing
 
         """
-        self._log_debug("generate schema index:%s" % self.schema.url)
+        self._log_debug("generate schema index:%s" % self._schema_url)
 
         # model with info to generate
         imodel = BCDBIndexMeta(schema=self.schema)
         imodel.include_schema = True
         tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._dirpath
-        name = "bcdbindex_%s" % self.schema.url
+        name = "bcdbindex_%s" % self._schema_url
         name = name.replace(".", "_")
         myclass = j.tools.jinja2.code_python_render(
             name=name, path=tpath, objForHash=self.schema._md5, reload=True, schema=self, bcdb=self.bcdb, index=imodel
@@ -121,11 +117,11 @@ class BCDBModel(j.application.JSBaseClass):
 
     @property
     def schema(self):
-        return j.data.schema.get_from_url(self.schema.url)
+        return j.data.schema.get_from_url(self._schema_url)
 
     @property
     def mid(self):
-        return self.bcdb.meta._mid_from_url(self.schema.url)
+        return self.bcdb.meta._mid_from_url(self._schema_url)
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
@@ -473,7 +469,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp)
 
-        if obj._schema.url == self.schema.url:
+        if obj._schema.url == self._schema_url:
             obj = self._triggers_call(obj=obj, action="get")
         else:
             raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
@@ -508,7 +504,7 @@ class BCDBModel(j.application.JSBaseClass):
         return property_name, val, obj_id, nid
 
     def __str__(self):
-        out = "model:%s\n" % self.schema.url
+        out = "model:%s\n" % self._schema_url
         # out += j.core.text.prefix("    ", self.schema.text)
         return out
 

@@ -422,7 +422,7 @@ class BCDB(j.application.JSBaseClass):
         # model not known yet need to create
         self._log_info("load model:%s" % schema.url)
 
-        model = BCDBModel(bcdb=self, schema=schema, reset=reset)
+        model = BCDBModel(bcdb=self, schema_url=schema.url, reset=reset)
 
         self.model_add(model)
 
