@@ -28,7 +28,8 @@ from .BCDBDecorator import *
 JSBASE = j.application.JSBaseClass
 INT_BIN_EMPTY = b"\xff\xff\xff\xff"  # is the empty value for in our key containers
 
-from .BCDBModelIndex import BCDBModelIndex
+# from .BCDBModelIndex import BCDBModelIndex
+from .BCDBIndexMeta import BCDBIndexMeta
 
 
 class BCDBModel(j.application.JSBaseClass):
@@ -88,7 +89,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._kosmosinstance = None
 
-        indexklass = bcdb._BCDBModelIndexClass_generate(schema)
+        indexklass = self._index_class_generate()
         self.index = indexklass(bcdbmodel=self, reset=reset)
 
         self._sonic_client = None
@@ -98,6 +99,27 @@ class BCDBModel(j.application.JSBaseClass):
 
         if reset:
             self.destroy()
+
+    def _index_class_generate(self):
+        """
+
+        :param schema: is schema object j.data.schema... or text
+        :return: class of the model which is used for indexing
+
+        """
+        self._log_debug("generate schema index:%s" % self.schema.url)
+
+        # model with info to generate
+        imodel = BCDBIndexMeta(schema=self.schema)
+        imodel.include_schema = True
+        tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._dirpath
+        name = "bcdbindex_%s" % self.schema.url
+        name = name.replace(".", "_")
+        myclass = j.tools.jinja2.code_python_render(
+            name=name, path=tpath, objForHash=self.schema._md5, reload=True, schema=self, bcdb=self.bcdb, index=imodel
+        )
+
+        return myclass
 
     @property
     def schema(self):

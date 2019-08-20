@@ -27,9 +27,9 @@ from Jumpscale.clients.stor_sqlite.DBSQLite import DBSQLite
 from gevent import queue
 from .BCDBModel import BCDBModel
 from .BCDBMeta import BCDBMeta
-from .BCDBDecorator import *
+
+# from .BCDBDecorator import *
 from .connectors.redis.RedisServer import RedisServer
-from .BCDBIndexMeta import BCDBIndexMeta
 from Jumpscale import j
 import sys
 import time
@@ -43,7 +43,6 @@ class BCDB(j.application.JSBaseClass):
         :param name: name for the BCDB
         :param storclient: if storclient == None then will use sqlite db
         """
-        # JSBASE.__init__(self)
 
         self._redis_index = j.clients.redis.core
         if name is None:
@@ -90,8 +89,6 @@ class BCDB(j.application.JSBaseClass):
         self._sqlite_index_client = None
 
         self._schema_url_to_model = {}
-        # is the internal cache for the schema index classes
-        self._index_schema_class_cache = {}
 
         # needed for async processing
         self.results = {}
@@ -511,37 +508,6 @@ class BCDB(j.application.JSBaseClass):
                 self.meta._schema_set(s)
                 # now see if more subtypes
                 self._schema_property_add_if_needed(s)
-
-    def _BCDBModelIndexClass_generate(self, schema):
-        """
-
-        :param schema: is schema object j.data.schema... or text
-        :return: class of the model which is used for indexing
-
-        """
-        self._log_debug("generate schema:%s" % schema.url)
-
-        if j.data.types.string.check(schema):
-            schema = j.data.schema.get_from_text(schema)
-
-        elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
-
-        # why is it a schema key instead of a url ?
-        if schema.key not in self._index_schema_class_cache:
-
-            # model with info to generate
-            imodel = BCDBIndexMeta(schema=schema)
-            imodel.include_schema = True
-            tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-            name = "bcdbindex_%s" % self.name
-            myclass = j.tools.jinja2.code_python_render(
-                name=name, path=tpath, objForHash=schema._md5, reload=True, schema=schema, bcdb=self, index=imodel
-            )
-
-            self._index_schema_class_cache[schema.key] = myclass
-
-        return self._index_schema_class_cache[schema.key]
 
     def model_get_from_file(self, path):
         """
