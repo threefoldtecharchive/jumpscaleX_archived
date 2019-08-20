@@ -12,7 +12,7 @@ class BCDBFS(j.application.JSBaseClass):
     __jslocation__ = "j.sal.bcdbfs"
 
     def _init(self, bcdb_name="bcdbfs"):
-        sql = j.clients.sqlitedb.client_get(name="bcdbfs")
+        sql = j.clients.sqlitedb.client_get(namespace="bcdbfs")
         self._bcdb = j.data.bcdb.get(bcdb_name, storclient=sql)
 
         j.data.schema.add_from_path("%s/models_threebot" % j.data.bcdb._dirpath)

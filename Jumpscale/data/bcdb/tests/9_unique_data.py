@@ -56,7 +56,7 @@ def main(self):
     j.servers.zdb.test_instance_start()
     self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
     self.admin_zdb.namespace_new("unique", secret="1234")
-    self.zdb = j.clients.zdb.client_get(name="unique", port=9901, secret="1234")
+    self.zdb = j.clients.zdb.client_get(name="unique", namespace="unique", port=9901, secret="1234")
     self.bcdb = j.data.bcdb.new("test", storclient=self.zdb, reset=True)
     schema = self.bcdb.schema_get(schema=scm)
     self.model = self.bcdb.model_get(schema=schema)

@@ -39,10 +39,9 @@ def main(self):
     
     
     """
-    zdb = j.servers.zdb.test_instance_start()
-    bcdb = j.data.bcdb.new("test", reset=True)
 
-    m = bcdb.model_get(schema=SCHEMA, reset=True)
+    db, m = self._load_test_model(type="sqlite", schema=SCHEMA)
+    bcdb = m.bcdb
 
     o = m.new()
     assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -141,10 +140,12 @@ def main(self):
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.2")) == 0
 
-    a = zdb.client_admin_get()
+    a = j.clients.zdb.client_admin_get()
     storclient2 = a.namespace_new("test2", secret="12345")
+    storclient2.flush()
 
     bcdb2 = j.data.bcdb.get("test2", storclient=storclient2)
+
     assert len(m3.find(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
     m3.destroy()

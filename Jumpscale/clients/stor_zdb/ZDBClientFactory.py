@@ -75,7 +75,8 @@ class ZDBClientFactory(j.application.JSFactoryConfigsBaseClass):
         :param secret:
         :return:
         """
-        assert namespace
+        if not namespace:
+            namespace = name
         cl = self.new(name=name, nsname=namespace, addr=addr, port=port, secret_=secret, mode=mode, admin=False)
         assert self.exists(name=name)
         return cl

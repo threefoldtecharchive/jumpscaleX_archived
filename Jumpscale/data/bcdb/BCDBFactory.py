@@ -188,7 +188,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             self._config.pop(name)
             self._config_write()
 
-    def get(self, name, reset=False):
+    def get(self, name, storclient=None, reset=False):
         """
         will create a new one or an existing one if it exists
         :param name:
@@ -202,7 +202,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             bcdb = self._bcdb_instances[name]
             assert name in self._config
             return bcdb
-
+        elif storclient:
+            return self._get(name=name, storclient=storclient, reset=reset)
         elif name in self._config:
             storclient = self._get_storclient(name)
             return self._get(name=name, storclient=storclient, reset=reset)
@@ -276,7 +277,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
                 raise j.exceptions.Input("cannot create new bcdb '%s' already exists, and reset not used" % name)
 
         if not storclient:
-            storclient = j.clients.sqlitedb.client_get(name=name)
+            storclient = j.clients.sqlitedb.client_get(namespace=name)
 
         data = {}
         assert isinstance(storclient.type, str)
