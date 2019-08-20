@@ -401,8 +401,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         assert bcdb.name == "test"
 
-        schemaobj = j.data.schema.get_from_text(schema)
-        model = bcdb.model_get(schema=schemaobj)
+        model = bcdb.model_get(schema=schema)
 
         self._log_debug("bcdb already exists")
 

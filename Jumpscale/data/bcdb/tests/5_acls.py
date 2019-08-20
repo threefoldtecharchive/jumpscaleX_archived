@@ -163,8 +163,7 @@ def main(self):
         assert a.acl.rights_check(11, "rw") is False
 
         a.save()
-        # CLEAN STATE
-        # j.data.schema.remove_from_text(schema)
+
         self._log_info("TEST ACL DONE: %s" % name)
 
     test("RDB")

@@ -51,7 +51,7 @@ def main(self):
     txt = ""
     i = 0
     """
-    s = j.data.schema.get_from_text(schema_text)
+    s = bcdb.schema_get(schema=schema_text)
 
     assert s.properties_unique == []
 
@@ -68,7 +68,7 @@ def main(self):
     assert "jumpscale.schema.test.a" in j.data.schema._url_to_md5
     assert "jumpscale.bcdb.circle.2" in j.data.schema._url_to_md5
 
-    s0 = j.data.schema.get_from_url(url="jumpscale.schema.test.a")
+    s0 = bcdb.schema_get(url="jumpscale.schema.test.a")
     s0md5 = s0._md5 + ""
 
     model = bcdb.model_get(schema=s0)
@@ -96,13 +96,13 @@ def main(self):
     assert a._model.schema._md5 == s0md5
 
     # lets upgrade schema to float
-    s_temp = j.data.schema.get_from_text(schema_text)
+    s_temp = bcdb.schema_get(schema=schema_text)
 
     assert len(bcdb.meta._data._ddict["schemas"]) == 8  # should be same because is same schema, should be same md5
     assert s_temp._md5 == s0._md5
 
     # lets upgrade schema to float
-    s2 = j.data.schema.get_from_text(schema_text)
+    s2 = bcdb.schema_get(schema=schema_text)
 
     model2 = bcdb.model_get(schema=s2)
 
@@ -132,7 +132,5 @@ def main(self):
     assert a6.id == a3.id
     assert a6.i == a3.i
 
-    # CLEAN STATE
-    # j.data.schema.remove_from_text(schema_text)
     self._log_info("TEST META DONE")
     return "OK"
