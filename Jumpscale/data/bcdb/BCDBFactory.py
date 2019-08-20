@@ -362,8 +362,7 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             storclient_admin = zdb.client_admin_get()
             assert storclient_admin.ping()
             secret = "1234"
-            storclient_admin.namespace_new(name="test_zdb", secret=secret)
-            storclient = j.clients.zdb.client_get(name="test_sdb", namespace="test_sdb")
+            storclient = storclient_admin.namespace_new(name="test_zdb", secret=secret)
             return storclient
 
         if type == "rdb":
