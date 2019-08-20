@@ -89,8 +89,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         assert isinstance(url, str)
         url = self._urlclean(url)
         if url in self._url_to_md5:
-            md5 = self._url_to_md5[url]
-            return self.get_from_md5(md5)
+            return self.get_from_md5(self._url_to_md5[url])
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
@@ -200,6 +199,9 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         self._url_to_md5[s.url] = md5
 
         assert s.url
+        # here we always update the md5 because if we are here it means
+        # that we have added a new schema
+        self._url_to_md5[s.url] = md5
 
         return md5
 
@@ -218,12 +220,12 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         else:
             paths = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
         for schemapath in paths:
-
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
             if bname.startswith("_"):
                 continue
 
             schema_text = j.sal.fs.readFile(schemapath)
+
             schema = self.get_from_text(schema_text=schema_text)
             # toml_path = "%s.toml" % (schema.key)
             # if j.sal.fs.getBaseName(schemapath) != toml_path:

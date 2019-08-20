@@ -101,8 +101,6 @@ class BCDB(j.application.JSBaseClass):
         self.user = None
         self.circle = None
 
-        # self._index_schema_class_cache = {}  # cache for the index classes
-
     def _init_system_objects(self):
 
         assert self.name
@@ -529,6 +527,7 @@ class BCDB(j.application.JSBaseClass):
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise j.exceptions.Base("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
+        # why is it a schema key instead of a url ?
         if schema.key not in self._index_schema_class_cache:
 
             # model with info to generate
