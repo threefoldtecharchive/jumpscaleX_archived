@@ -25,7 +25,9 @@ class TestIConfigManager(BaseTest):
 
         client_name = self.generate_random_str()
         self.info("Create github client {} and save it, should success".format(client_name))
-        c = j.clients.github.new(client_name, token="test_create_new_client"); c.save()
+        c = j.clients.github.new(client_name, token="test_create_new_client")
+        self.info("Saving client in database")
+        c.save()
         self.info("Check that the client {} is created correctly".format(client_name))
         self.assertEqual(client_name, c.name)
         
@@ -41,10 +43,13 @@ class TestIConfigManager(BaseTest):
 
         client_name = self.generate_random_str()
         self.info("Create github client with {} name, should success.".format(client_name))
-        c = j.clients.github.new(client_name, token="test_create_new_client"); c.save()
+        c = j.clients.github.new(client_name, token="test_create_new_client")
+        self.info("Saving client in database")
+        c.save()
         self.info("create user with the same name {}, should fail. ".format(client_name))
-        with self.assertRaises(Exception):
-            c=j.clients.github.new(client_name, token="test_create_new_client"); c.save()
+        with self.assertRaises(RuntimeError):
+            c=j.clients.github.new(client_name, token="test_create_new_client")
+            c.save()
         
     def test03_modify_exists_client(self):
         """
@@ -58,9 +63,12 @@ class TestIConfigManager(BaseTest):
 
         client_name = self.generate_random_str()
         self.info("Update github user token")
-        c=j.clients.github.new(client_name, token="test_modify_client"); c.save()
-        c.token="test_update"; c.save()
-        self.info(" check cleint token ")
+        c=j.clients.github.new(client_name, token="test_modify_client")
+        self.info("Saving client with updated token in database")
+        c.save()
+        c.token="test_update"
+        c.save()
+        self.info("Check client token")
         self.assertEqual("test_update", c.token)
         
     def test04_test_delete_client_for_exists_cient(self):
@@ -76,7 +84,8 @@ class TestIConfigManager(BaseTest):
 
         client_name = self.generate_random_str()
         self.info("Delete client {}".format(client_name))
-        c=j.clients.github.new(client_name, token="test_delete_client"); c.save()
+        c=j.clients.github.new(client_name, token="test_delete_client")
+        c.save()
         c.delete()
         self.info("Check that the client is not existing")
         with self.assertRaises(RuntimeError):
