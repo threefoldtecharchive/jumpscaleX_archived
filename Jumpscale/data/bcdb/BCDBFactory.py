@@ -389,6 +389,9 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if type == "zdb":
             bcdb.reset()  # empty
 
+        assert bcdb.storclient.get(0)
+        assert bcdb.storclient.count == 1
+
         assert bcdb.name == "test"
 
         model = bcdb.model_get(schema=schema)
@@ -398,8 +401,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         if type.lower() in ["zdb"]:
             # print(model.storclient.nsinfo["entries"])
             assert model.storclient.nsinfo["entries"] == 1
-        else:
-            assert len(model.find()) == 0
+
+        assert len(model.find()) == 0
 
         if datagen:
             for i in range(3):

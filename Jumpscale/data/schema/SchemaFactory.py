@@ -188,7 +188,6 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         :param url:
         :return:
         """
-        self._check_bcdb_is_not_used()
         md5 = self._md5(schema_text)
         if md5 in self._md5_to_schema and not isinstance(self._md5_to_schema[md5], str):
             return md5

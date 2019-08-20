@@ -72,10 +72,13 @@ class BCDBMeta(j.application.JSBaseClass):
         self._reset_runtime_metadata()
         serializeddata = self._bcdb.storclient.get(0)
         if serializeddata is None:
+            self._bcdb.storclient.flush()
             self._log_debug("save, empty schema")
             data = {"url": {}, "md5": {}}
+            serializeddata = j.data.serializers.msgpack.dumps(data)
+            self._bcdb.storclient.set(serializeddata)
             self._data = data
-            self._save()
+            assert self._bcdb.storclient.get(0) == serializeddata
         else:
             self._log_debug("schemas load from db")
             self._data = j.data.serializers.msgpack.loads(serializeddata)
