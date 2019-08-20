@@ -1,7 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builders.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system.builder_method
+builder_method = j.builders.system.builder_method
 
 CONFIG_TEMPLATE = """
 namespace: default  # 0-db namespace (required)
@@ -40,7 +40,7 @@ class BuilderZeroStor(BuilderGolangTools):
         """
         Builds zstor
         """
-        j.builder.runtimes.golang.install()
+        j.builders.runtimes.golang.install()
         self.get("github.com/threefoldtech/0-stor/cmd/zstor")
 
         # make to generate bin
@@ -53,8 +53,8 @@ class BuilderZeroStor(BuilderGolangTools):
         Installs zstor
         """
         # dependencies
-        j.builder.db.etcd.install()
-        j.builder.db.zdb.install()
+        j.builders.db.etcd.install()
+        j.builders.db.zdb.install()
 
         self._copy("{}/src/github.com/threefoldtech/0-stor/bin".format(self.DIR_GO_PATH), "{DIR_BIN}")
         j.sal.fs.writeFile(filename="/sandbox/cfg/zstor.yaml", contents=CONFIG_TEMPLATE)
@@ -68,8 +68,8 @@ class BuilderZeroStor(BuilderGolangTools):
         self.tools.dir_ensure(self.datadir)
 
         cmd = "zstor --config /sandbox/cfg/zstor.yaml daemon --listen 127.0.0.1:8000"
-        cmd_zdb = j.builder.db.zdb.startup_cmds
-        cmd_etcd = j.builder.db.etcd.startup_cmds
+        cmd_zdb = j.builders.db.zdb.startup_cmds
+        cmd_etcd = j.builders.db.etcd.startup_cmds
         cmds = [j.servers.startupcmd.get(name=self.NAME, cmd_start=cmd)]
         return cmd_zdb + cmd_etcd + cmds
 
@@ -95,21 +95,21 @@ class BuilderZeroStor(BuilderGolangTools):
         self._copy(bin_bench_path, bin_dest)
 
         # Copy zdb bin and lib
-        j.builder.db.zdb.sandbox()
-        bin_src = self.tools.joinpaths(j.builder.db.zdb.DIR_SANDBOX, "sandbox/bin")
+        j.builders.db.zdb.sandbox()
+        bin_src = self.tools.joinpaths(j.builders.db.zdb.DIR_SANDBOX, "sandbox/bin")
         self._copy(bin_src, bin_dest)
 
-        lib_src = self.tools.joinpaths(j.builder.db.zdb.DIR_SANDBOX, "sandbox/lib")
+        lib_src = self.tools.joinpaths(j.builders.db.zdb.DIR_SANDBOX, "sandbox/lib")
         lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
         self.tools.dir_ensure(lib_dest)
         j.tools.sandboxer.libs_sandbox(lib_src, lib_dest, exclude_sys_libs=False)
 
         # Copy etcd bin and lib
-        j.builder.db.etcd.sandbox()
-        bin_src = self.tools.joinpaths(j.builder.db.etcd.DIR_SANDBOX, "sandbox/bin")
+        j.builders.db.etcd.sandbox()
+        bin_src = self.tools.joinpaths(j.builders.db.etcd.DIR_SANDBOX, "sandbox/bin")
         self._copy(bin_src, bin_dest)
 
-        lib_src = self.tools.joinpaths(j.builder.db.etcd.DIR_SANDBOX, "sandbox/lib")
+        lib_src = self.tools.joinpaths(j.builders.db.etcd.DIR_SANDBOX, "sandbox/lib")
         lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
         self.tools.dir_ensure(lib_dest)
         j.tools.sandboxer.libs_sandbox(lib_src, lib_dest, exclude_sys_libs=False)
