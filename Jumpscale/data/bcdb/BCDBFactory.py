@@ -76,8 +76,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         if not self._system:
             # storclient = j.clients.sqlitedb.client_get(name="system")
-            storclient = j.clients.rdb.client_get(name="system")
-            self._system = self.get("system", storclient=storclient, reset=reset)
+            storclient = j.clients.rdb.client_get(namespace="system")
+            self._system = self._get("system", storclient=storclient, reset=reset)
         return self._system
 
     def get_test(self, reset=False):
