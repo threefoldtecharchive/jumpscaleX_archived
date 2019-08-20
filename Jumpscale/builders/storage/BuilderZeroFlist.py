@@ -19,9 +19,7 @@ class BuilderZeroFlist(j.builders.system._BaseClass):
         Builds zflist
         """
         cmd = """
-        rm /opt/*
         cd /sandbox/code/github/threefoldtech
-        rm -rf 0-flist/
         git clone -b development-v2 https://github.com/threefoldtech/0-flist.git
 
         cd 0-flist/autobuild/
@@ -62,7 +60,10 @@ class BuilderZeroFlist(j.builders.system._BaseClass):
         """
         self._remove(self.DIR_SANDBOX)
         self._remove("/sandbox/code/github/threefoldtech/0-flist")
-        self._remove("/opt/")
+        cmd = """
+         rm -rf /opt/*
+         """
+        j.sal.process.execute(cmd)
 
     @builder_method()
     def sandbox(self):
