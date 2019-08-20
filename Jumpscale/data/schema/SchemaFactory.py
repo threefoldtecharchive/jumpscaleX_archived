@@ -197,6 +197,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         s = Schema(text=schema_text, md5=md5, url=url)
 
         self._md5_to_schema[md5] = s
+        self._url_to_md5[s.url] = md5
 
         assert s.url
 
