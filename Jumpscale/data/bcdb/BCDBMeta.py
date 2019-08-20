@@ -83,9 +83,12 @@ class BCDBMeta(j.application.JSBaseClass):
 
         for d in self.schema_dicts:
             # this will guarantee right order and make sure the j.data.schema knows about the new schemas
-            if not j.data.schema.exists(md5=d["md5"]):
-                j.data.schema._md5_to_schema[d["md5"]] = d["text"]
-            j.data.schema._url_to_md5[d["url"]] = d["md5"]
+            self._add_to_schema_factory(url=d["url"], md5=d["md5"], text=d["text"])
+
+    def _add_to_schema_factory(self, md5, url, text):
+        if not j.data.schema.exists(md5=md5):
+            j.data.schema._md5_to_schema[md5] = text
+        j.data.schema._url_to_md5[url] = md5
 
     @property
     def schema_dicts(self):
@@ -168,10 +171,8 @@ class BCDBMeta(j.application.JSBaseClass):
         if change or change2:
             self._save()
 
-        # don't load the full schema but put the text of schema there
-        self._add_to_schema_factory(md5=schema._md5, schema_text=schema.text)
-
-        self._url_to_md5[schema.url] = schema._md5
+        # don't load the full schema but put the text of schema there, register to factory
+        self._add_to_schema_factory(url=schema.url, md5=schema._md5, text=schema.text)
 
     def _data_from_url(self, url):
         if url not in self._data["url"]:

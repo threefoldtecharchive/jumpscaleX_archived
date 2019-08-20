@@ -72,10 +72,11 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         if md5 in self._md5_to_schema:
             schema_text_or_obj = self._md5_to_schema[md5]
             if isinstance(schema_text_or_obj, str):
-                if item.strip() == "":
+                if schema_text_or_obj.strip() == "":
                     raise j.exceptions.JSBUG("schema should never be empty string")
-                schema = self._text_to_schema_obj(schema_text_or_obj)
-                self._md5_to_schema[md5] = schema
+                self._add_text_to_schema_obj(schema_text_or_obj)
+
+            assert isinstance(self._md5_to_schema[md5], j.data.schema.SCHEMA_CLASS)
             return self._md5_to_schema[md5]
         else:
             raise j.exceptions.Input("Could not find schema with md5:%s" % md5)
@@ -88,7 +89,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         assert isinstance(url, str)
         url = self._urlclean(url)
         if url in self._url_to_md5:
-            return self._url_to_md5[url]
+            md5 = self._url_to_md5[url]
+            return self.get_from_md5(md5)
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
@@ -189,7 +191,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         self._check_bcdb_is_not_used()
         md5 = self._md5(schema_text)
-        if md5 in self._md5_to_schema:
+        if md5 in self._md5_to_schema and not isinstance(self._md5_to_schema[md5], str):
             return md5
 
         s = Schema(text=schema_text, md5=md5, url=url)

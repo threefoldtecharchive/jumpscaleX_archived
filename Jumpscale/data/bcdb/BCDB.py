@@ -90,6 +90,8 @@ class BCDB(j.application.JSBaseClass):
         self._sqlite_index_client = None
 
         self._schema_url_to_model = {}
+        # is the internal cache for the schema index classes
+        self._index_schema_class_cache = {}
 
         # needed for async processing
         self.results = {}
@@ -472,6 +474,8 @@ class BCDB(j.application.JSBaseClass):
                 raise j.exceptions.Input("need to specify md5 or url")
 
         mid = self.meta._schema_set(schema)
+
+        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
 
         return schema
 

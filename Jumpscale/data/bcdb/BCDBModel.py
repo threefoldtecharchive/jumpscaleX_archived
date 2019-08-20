@@ -55,13 +55,13 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 schema = self._schema_get()
                 assert schema
-        if isinstance(schema, str):
-            schema = j.data.schema.get_from_text(schema)
-
-        self._schema_url = schema.url
+        else:
+            if isinstance(schema, str):
+                schema = j.data.schema.get_from_text(schema)
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self._schema_url = schema.url
 
-        if self.schema.name in bcdb._schema_url_to_model:
+        if self.schema.url in bcdb._schema_url_to_model:
             raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
 
         self.bcdb = bcdb
