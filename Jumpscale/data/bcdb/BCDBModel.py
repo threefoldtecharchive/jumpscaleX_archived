@@ -62,8 +62,9 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._schema_url = schema_url
 
-        if self._schema_url in bcdb._schema_url_to_model:
-            raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
+        # TODO: this shouls not happen!!!!
+        # if self._schema_url in bcdb._schema_url_to_model:
+        #     raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
 
         self.bcdb = bcdb
 

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = "development_jumpscale_bcdb_kds"
+DEFAULTBRANCH = "development_jumpscale"
 import socket
 import grp
 import os
@@ -83,7 +83,8 @@ try:
             res = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
         except Exception as e:
             # print("WARNING: COULD NOT YAML SERIALIZE")
-            return str(data)
+            # return str(data)
+            data = "CANNOT SERIALIZE"
         return res
 
 
@@ -95,13 +96,14 @@ except:
             try:
                 return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
             except Exception as e:
-                data = str(data)
+                # data = str(data)
+                data = "CANNOT SERIALIZE"
                 return data
 
     except:
 
         def serializer(data):
-            return str(data)
+            return "CANNOT SERIALIZE"
 
 
 class RedisTools:

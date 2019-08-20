@@ -72,7 +72,7 @@ class JSXObject2(j.data.schema._JSXObjectClass):
             raise j.exceptions.Input("object readonly, cannot set.\n%s"%self)
         #CLEAN THE OBJ
         {% if prop.has_jsxobject %}
-        val = {{prop.js_typelocation}}.clean(val,bcdb=self._model._bcdb)
+        val = {{prop.js_typelocation}}.clean(val,model=self._model)
         {% else %}
         val = {{prop.js_typelocation}}.clean(val)
         {% endif %}
