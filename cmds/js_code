@@ -123,8 +123,7 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
     repos = _search_repos(accounts, name, interactive=not force)
 
     if name is not None and len(repos) == 0:
-        print("did not find any repo")
-        sys.exit(1)
+        raise j.exceptions.Operations("did not find any repo")
 
     if action == "status":
         return _status_action(repos)

@@ -150,9 +150,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
             if self.zos._zostype == "vbox":
                 self.sshport = self.sshport - 20
                 self.model_save()
-            import sys
-
-            sys.exit()
+            raise j.exceptions.Operations("?")
 
         info = self.zosclient.client.container.list()[str(self._container_id)]["container"]
         while "pid" not in info:

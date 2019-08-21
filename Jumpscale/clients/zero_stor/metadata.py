@@ -21,7 +21,7 @@ class Metadata:
         self._stub = stubs.MetadataServiceStub(channel)
 
     def set(self, key, total_size, chunks, creation_epoch=0, last_write_epoch=0):
-        '''
+        """
         Sets metadata object give, a key, total size, chunks (as returned from the client.data stub)
 
         :param key: key (bytes)
@@ -30,7 +30,7 @@ class Metadata:
                                in the Unix epoch format, in nano seconds.
         :param last_write_epoch: defines the time this data was last modified (e.g. repaired),
                                  in the Unix epoch format, in nano seconds.
-        '''
+        """
 
         return self._stub.SetMetadata(
             model.SetMetadataRequest(
@@ -45,28 +45,24 @@ class Metadata:
         )
 
     def get(self, key):
-        '''
+        """
         Gets a metadata object
 
         :param key: key (bytes)
         :return: metadata
-        '''
-        return self._stub.GetMetadata(
-            model.GetMetadataRequest(key=key)
-        ).metadata
+        """
+        return self._stub.GetMetadata(model.GetMetadataRequest(key=key)).metadata
 
     def delete(self, key):
-        '''
+        """
         Deletes metadata object
 
         :param key: key (bytes)
-        '''
-        return self._stub.DeleteMetadata(
-            model.DeleteMetadataRequest(key=key)
-        )
+        """
+        return self._stub.DeleteMetadata(model.DeleteMetadataRequest(key=key))
 
     def list_keys(self):
-        '''
+        """
         List all keys in the namespace
-        '''
+        """
         return self._stub.ListKeys(model.ListMetadataKeysRequest())

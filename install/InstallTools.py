@@ -80,12 +80,12 @@ try:
             data = data._ddict
 
         try:
-            res = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+            data = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
         except Exception as e:
             # print("WARNING: COULD NOT YAML SERIALIZE")
             # return str(data)
             data = "CANNOT SERIALIZE"
-        return res
+        return data
 
 
 except:
@@ -1445,8 +1445,8 @@ class Tools:
         elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
             return str(data)
 
-        res = serializer(data)
-        res = Tools.text_replace(content=res, ignorecolors=True)
+        serialized = serializer(data)
+        res = Tools.text_replace(content=serialized, ignorecolors=True)
         return res
 
     @staticmethod
@@ -2243,8 +2243,7 @@ class Tools:
                                 args["MESSAGE"] = input("\nprovide commit message: ")
                                 assert args["MESSAGE"].strip() != ""
                         else:
-                            print("found changes, do not want to commit")
-                            sys.exit(1)
+                            raise j.exceptions.Input("found changes, do not want to commit")
                         C = """
                         set -x
                         cd {REPO_DIR}
@@ -3653,8 +3652,9 @@ class DockerFactory:
         if not DockerFactory.__init:
             rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
             if rc == 0 and out.find("/docker/") != -1:
-                print("Cannot continue, trying to use docker tools while we are already in a docker")
-                sys.exit(1)
+                raise j.exceptions.Operations(
+                    "Cannot continue, trying to use docker tools while we are already in a docker"
+                )
 
             MyEnv._init()
 
@@ -3663,8 +3663,7 @@ class DockerFactory:
                 MyEnv._cmd_installed["docker"] = shutil.which("docker")
 
             if not Tools.cmd_installed("docker"):
-                print("Could not find Docker installed")
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not find Docker installed")
 
     @staticmethod
     def container_get(name, portrange=1, image="despiegk/3bot"):
@@ -3945,8 +3944,7 @@ class DockerContainer:
             if self.name not in DockerFactory.containers_running():
                 Tools.execute("docker start %s" % self.name)
                 if not self.name in DockerFactory.containers_running():
-                    print("could not start container:%s" % self.name)
-                    sys.exit(1)
+                    raise j.exceptions.Operations("could not start container:%s" % self.name)
                 self.dexec("rm -f /root/.BASEINSTALL_OK")
 
         installed = False
@@ -3999,8 +3997,7 @@ class DockerContainer:
 
     def start(self):
         if not self.name in DockerFactory.containers_names():
-            print("ERROR: cannot find docker with name:%s, cannot start" % self.name)
-            sys.exit(1)
+            raise j.exceptions.Operations("ERROR: cannot find docker with name:%s, cannot start" % self.name)
         if not self.name in DockerFactory.containers_running():
             Tools.execute("docker start %s" % self.name, showout=False)
         assert self.name in DockerFactory.containers_running()
@@ -4059,12 +4056,10 @@ class DockerContainer:
             path = "%s/exports/%s.tar" % (self._path, version)
 
         if not Tools.exists(path):
-            print("could not find import file:%s" % path)
-            sys.exit(1)
+            raise j.exceptions.Operations("could not find import file:%s" % path)
 
         if not path.endswith(".tar"):
-            print("export file needs to end with .tar")
-            sys.exit(1)
+            raise j.exceptions.Operations("export file needs to end with .tar")
 
         self.stop()
         DockerFactory.image_remove(imagename)
@@ -4102,8 +4097,7 @@ class DockerContainer:
                 version = 1
             path = "%s/exports/%s.tar" % (self._path, version)
         elif not path.endswith(".tar"):
-            print("export file needs to end with .tar")
-            sys.exit(1)
+            raise j.exceptions.Operations("export file needs to end with .tar")
         if Tools.exists(path) and overwrite and not skip_if_exists:
             Tools.delete(path)
         if not Tools.exists(path):
@@ -4271,10 +4265,9 @@ class SSHAgent:
                         return None
                 name = key_names[0]
             elif len(key_names) == 0:
-                print(
+                raise j.exceptions.Operations(
                     "Cannot find a possible ssh-key, please load your possible keys in your ssh-agent or have in your homedir/.ssh"
                 )
-                sys.exit(1)
             else:
                 if MyEnv.interactive:
                     name = Tools.ask_choices("Which is your default sshkey to use", key_names)
@@ -4292,9 +4285,9 @@ class SSHAgent:
         if not sshkey:
             hdir = Tools.text_replace("{DIR_HOME}/.ssh")
             if not Tools.exists(hdir):
-                print("cannot find home dir:%s" % hdir)
-                print("\n### Please get a ssh key or generate one using ssh-keygen\n")
-                sys.exit(1)
+                msg = "cannot find home dir:%s" % hdir
+                msg += "\n### Please get a ssh key or generate one using ssh-keygen\n"
+                raise j.exceptions.Operations(msg)
             choices = []
             for item in os.listdir(hdir):
                 item2 = item.lower()
@@ -4366,15 +4359,13 @@ class SSHAgent:
             rc, out, err = Tools.execute(C, showout=True, die=False)
             if rc > 0:
                 Tools.delete("/tmp/ap-cat.sh")
-                print("Could not load sshkey with passphrase (%s)" % path)
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not load sshkey with passphrase (%s)" % path)
         else:
             # load without passphrase
             cmd = "ssh-add -t %s %s " % (duration, path)
             rc, out, err = Tools.execute(cmd, showout=True, die=False)
             if rc > 0:
-                print("Could not load sshkey without passphrase (%s)" % path)
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not load sshkey without passphrase (%s)" % path)
 
         self.reset()
 

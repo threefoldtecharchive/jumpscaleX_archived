@@ -143,7 +143,7 @@ class Jinja2(j.application.JSBaseClass):
         elif not j.sal.fs.exists(dest):
             render = True
 
-        if render:
+        if True or render:  # TODO: need to be fixed
             BASENAME = j.tools.codeloader._basename(dest)
             # means has not been rendered yet lets do
             try:

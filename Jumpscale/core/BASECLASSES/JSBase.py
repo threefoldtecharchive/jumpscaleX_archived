@@ -747,7 +747,6 @@ class JSBase:
                                     out += " - %-20s : {GRAY}%s{%s}\n" % (item, v, color)
 
                             except Exception as e:
-                                print(e)
                                 out += " - %-20s : {GRAY}ERROR ATTRIBUTE{%s}\n" % (item, color)
                         else:
                             out += " - %s\n" % item

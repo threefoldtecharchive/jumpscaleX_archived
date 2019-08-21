@@ -379,8 +379,9 @@ class GitFactory(j.application.JSBaseClass):
                                     self._log_debug(cmd)
                                     rc, out, err = self.execute(cmd, timeout=timeout, executor=executor, die=False)
                                     if rc > 0:
-                                        print("ERROR: Could not add/commit changes in :%s, please do manual." % dest)
-                                        sys.exit(1)
+                                        raise j.exceptions.Operations(
+                                            "ERROR: Could not add/commit changes in :%s, please do manual." % dest
+                                        )
                             else:
                                 raise j.exceptions.Base(
                                     "Could not pull git dir because uncommitted changes in:'%s'" % dest

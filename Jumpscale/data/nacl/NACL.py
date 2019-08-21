@@ -87,8 +87,7 @@ class NACL(j.application.JSBaseClass):
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not Tools.ask_yes_no("Did you write the words down and store them in safe place?"):
                 j.sal.fs.remove(self._path_seed)
-                print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
-                sys.exit(1)
+                raise j.exceptions.Operations("WE HAVE REMOVED THE KEY, need to restart this procedure.")
             j.tools.console.clear_screen()
 
             word3 = self.words.split(" ")[2]
