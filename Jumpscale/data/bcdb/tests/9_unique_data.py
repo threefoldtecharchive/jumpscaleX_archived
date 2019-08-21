@@ -43,8 +43,6 @@ def main(self):
     #. Set the new object's attributes with the same attributes of the second object, should success. 
     """
 
-    return
-
     j.core.tools.log("Create schema with unique attributes and save it", level=20)
 
     scm = """

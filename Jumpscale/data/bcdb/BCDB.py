@@ -146,7 +146,6 @@ class BCDB(j.application.JSBaseClass):
     def export(self, path=None, encrypt=True):
         if not path:
             raise j.exceptions.Base("export no path")
-        j.shell()
         for o in self.meta.schema_dicts:
             m = self.model_get(schema=o["text"])
             # to make schema export ID deterministic we add the mid at the beginning of the file name
@@ -186,7 +185,7 @@ class BCDB(j.application.JSBaseClass):
             mid, url, md5 = schema_id.split("__")
             schema_path = "%s/%s" % (path, schema_id)
             schema_text = j.sal.fs.readFile("%s/meta.schema" % schema_path)
-            schema = j.data.schema.get_from_text(schema_text)[0]
+            schema = j.data.schema.get_from_text(schema_text, multiple=False)
             model = self.model_get(schema=schema)
             models[md5] = model
         # now load the data
