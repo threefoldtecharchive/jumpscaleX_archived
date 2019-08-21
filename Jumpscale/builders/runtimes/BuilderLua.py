@@ -1,5 +1,5 @@
 from Jumpscale import j
-from Jumpscale.sal.bash.Profile import Profile
+from Jumpscale.tools.bash.Profile import Profile
 
 builder_method = j.builders.system.builder_method
 
