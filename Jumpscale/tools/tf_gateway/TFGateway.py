@@ -8,11 +8,19 @@ j.tools.tf_gateway.domain_register_a("ahmed", "bots.grid.tf.", "123.3.23.54")
 
 """
 
+
 class TFGateway(j.application.JSBaseClass):
     """
     tool to register tcpservices in tcprouter and coredns records
     """
+
     __jslocation__ = "j.tools.tf_gateway"
+
+    def install(self):
+        j.builders.network.tcprouter.install()
+        j.builders.network.tcprouter.start()
+        j.builders.network.coredns.install()
+        j.builders.network.coredns.start()
 
     def tcpservice_register(self, service_name, domain, service_endpoint):
         """
@@ -26,13 +34,12 @@ class TFGateway(j.application.JSBaseClass):
         :type service_endpoint: string 
         """
         service = {}
-        service['Key'] = '/tcprouter/service/{}'.format(service_name)
-        record = {"addr":service_endpoint, "sni":domain, "name":service_name}
+        service["Key"] = "/tcprouter/service/{}".format(service_name)
+        record = {"addr": service_endpoint, "sni": domain, "name": service_name}
         json_dumped_record_bytes = j.data.serializers.json.dumps(record).encode()
         b64_record = j.data.serializers.base64.encode(json_dumped_record_bytes).decode()
-        service['Value'] = b64_record
-        j.core.db.set(service['Key'], j.data.serializers.json.dumps(service))
-
+        service["Value"] = b64_record
+        j.core.db.set(service["Key"], j.data.serializers.json.dumps(service))
 
     def domain_register(self, threebot_name, bots_domain="bots.grid.tf.", record_type="a", records=None):
         """registers domain in coredns (needs to be authoritative)
@@ -63,8 +70,8 @@ class TFGateway(j.application.JSBaseClass):
             records.extend(data[record_type])
         data[record_type] = records
         j.core.db.hset(bots_domain, threebot_name, j.data.serializers.json.dumps(data))
-    
-    def domain_register_a(self, threebot_name, bots_domain, record_ip):
+
+    def domain_register_a(self, name, domain, record_ip):
         """registers A domain in coredns (needs to be authoritative)
         
         e.g: ahmed.bots.grid.tf
@@ -73,15 +80,15 @@ class TFGateway(j.application.JSBaseClass):
         - ahmed is threebot_name
         - bots_domain is bots.grid.tf
         
-        :param threebot_name: threebot_name 
+        :param threebot_name: myhost
         :type threebot_name: str
-        :param bots_domain: str, defaults to "bots.grid.tf."
+        :param bots_domain: str, defaults to "grid.tf."
         :type bots_domain: str, optional
         :param record_ip: machine ip in ipv4 format
         :type record_ip: str
         """
         if j.data.types.ipaddr.check(record_ip):
-            return self.domain_register(threebot_name, bots_domain, record_type="a", records=[{"ip": record_ip}])
+            return self.domain_register(name, domain, record_type="a", records=[{"ip": record_ip}])
         else:
             raise j.exceptions.Value("invalid ip {record_ip}".format(**locals()))
 
@@ -105,4 +112,15 @@ class TFGateway(j.application.JSBaseClass):
             return self.domain_register(threebot_name, bots_domain, record_type="aaaa", records=[{"ip": record_ip}])
         else:
             raise j.exceptions.Value("invalid ip {record_ip}".format(**locals()))
-        
+
+    def test(self):
+        """
+        kosmos 'j.tools.tf_gateway.test()'
+
+        :return:
+        """
+        self.domain_register_a("ns", "3bot.me", "134.209.90.92")
+        self.domain_register_a("a", "3bot.me", "134.209.90.92")
+
+        # to test
+        # dig @ns1.name.com a.test.3bot.me
