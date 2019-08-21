@@ -7,7 +7,6 @@ from Jumpscale import j
 JSConfigBase = j.application.JSBaseConfigClass
 
 
-
 def get_error_string(errval):
     for m in dir(errors):
         res = getattr(errors, m)
@@ -150,7 +149,7 @@ class NBHClient(JSConfigBase):
 
     def update_client_info(self, client_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
                       country, email, address, readonly_login, forcechange_password):
-        """The CreateClient operation is used to initialize new client under the specific given parent ID.
+        """The UpdateClientInfo operation is used to update information for a specific given client number.
 
         :param clinet_id: client number to be updated
         :type client_id: int
