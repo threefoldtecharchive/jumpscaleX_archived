@@ -115,7 +115,7 @@ def main(self):
     assert len(model.find()) == 3  # needs to be 3 because model is for all of them
 
     all = model2.find()
-
+    print(all)
     a4 = model2.get(all[0].id)
     a4_ = model.get(all[0].id)
     assert a4_ == a4
