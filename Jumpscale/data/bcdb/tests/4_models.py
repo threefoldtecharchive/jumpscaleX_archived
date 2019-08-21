@@ -95,7 +95,7 @@ def main(self):
 
     model.find()[0].cost == "10 USD"
     model.find()[1].cost == 15
-
+    print(model.find()[1])
     # the schema's need to be different
     assert model.find()[0]._schema._md5 != model.find()[1]._schema._md5
 

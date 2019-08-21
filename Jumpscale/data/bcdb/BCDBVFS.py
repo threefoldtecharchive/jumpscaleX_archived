@@ -446,7 +446,6 @@ class BCDBVFS(j.application.JSBaseClass):
             obj {JSXObj} -- [description]
         """
         self._log_info("data cache updated key:%s " % (key))
-        self._dirs_cache.pop(dir_key, None)
         if not key in self._dirs_cache:
             self._dirs_cache[key] = BCDBVFS_Data(self, key=key, item=obj)
         else:
@@ -470,7 +469,7 @@ class BCDBVFS(j.application.JSBaseClass):
         if "obj_id" in info:  # it means we are going to update an object
             o_id = info["obj_id"]
         else:
-            assert obj_id
+            assert not obj_id is None
             o_id = obj_id
         if info["type"] == self.directories_under_root[0]:  # must be a data key
             keybase = "%s_data_%s" % (info["bcdb_name"], info["nid"])

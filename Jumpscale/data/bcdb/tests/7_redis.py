@@ -19,6 +19,7 @@
 
 
 from Jumpscale import j
+from unittest import TestCase
 
 import redis
 
@@ -41,6 +42,7 @@ def main(self):
         . /sandbox/env.sh;
         kosmos 'j.data.bcdb.get("test").redis_server_start(port=6380)'
         """
+        test_case = TestCase()
         # WARNING bcdb get rest=true will delete and restore the db file
         # this need to be executed BEFORE the redis server startup as it will connect to the same
         # database and if the file is deleted before we end up with readonly error
@@ -53,7 +55,6 @@ def main(self):
 
         if zdb:
             cl = j.clients.zdb.client_get(name="test", namespace="test_zdb", port=9901)
-            cl.flush()
 
         # schema = j.core.text.strip(schema)
         # m = bcdb.model_get(schema=schema)
@@ -94,26 +95,30 @@ def main(self):
         if zdb:
             self._log_debug("validate list")
             print("zbd enabled c list:%s" % cl.list())
-            assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            assert len(cl.list()) == 11
 
         self._log_debug("validate added objects")
-        print(redis_cl.delete("data:1:despiegk.test2:5"))
 
-        print(redis_cl.get("data:1:despiegk.test2:7"))
+        items = redis_cl.get("data:1:despiegk.test2")
+        item0 = j.data.serializers.json.loads(items[1][0])
+        item1 = j.data.serializers.json.loads(items[1][1])
+        print(redis_cl.delete("data:1:despiegk.test2:%s" % item0["id"]))
+
+        print(redis_cl.get("data:1:despiegk.test2:%s" % item1["id"]))
         # it's deleted
-        try:
-            redis_cl.get("data:1:despiegk.test2:5")
-        except Exception as e:
-            assert str(e).find("cannot get, key:'data/1/despiegk.test2/5' not found") != -1
+        with test_case.assertRaises(Exception) as cm:
+            redis_cl.get("data:1:despiegk.test2:%s" % item0["id"])
+        ex = cm.exception
+        assert "cannot get, key:'data/1/despiegk.test2/%s' not found" % item0["id"] in str(ex.args[0])
 
-        assert redis_cl.hlen("data:1:despiegk.test2:7") == 1
+        assert redis_cl.hlen("data:1:despiegk.test2:%s" % item1["id"]) == 1
 
         assert redis_cl.hlen("data:1:despiegk.test2") == 9
 
         # there should be 10 items now there
         if zdb:
             self._log_debug("validate list2")
-            assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
+            assert len(cl.list()) == 10
 
         self._cmd.stop()
         self._cmd.wait_stopped()
@@ -148,9 +153,10 @@ def main(self):
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
         """
+
+    zdb_test(schema)
     rdb_test(schema)
     sqlite_test(schema)
-    zdb_test(schema)
 
     redis = j.servers.startupcmd.get("redis_6380")
     redis.stop()

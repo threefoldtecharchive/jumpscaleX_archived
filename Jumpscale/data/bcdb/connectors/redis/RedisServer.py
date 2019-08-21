@@ -225,7 +225,6 @@ class RedisServer(j.application.JSBaseClass):
             try:
                 key = parse_key.split("/")
                 self.vfs.add_datas(val, int(key[1]), key[2])
-
                 response.encode("OK")
                 return
             except:
@@ -306,9 +305,7 @@ class RedisServer(j.application.JSBaseClass):
         if isinstance(vfs_objs.get(), str):
             response.encode("1")
             return
-        else:
-            objs = list(self.vfs.list(parse_key))
-        response.encode(len(objs))
+        response.encode(len(vfs_objs.items))
         return
 
     def ttl(self, response, key):
