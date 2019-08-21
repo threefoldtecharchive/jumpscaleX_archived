@@ -708,6 +708,7 @@ class group_tools(JSGroup):
         self._timer = None
         self._cython = None
         self._formatters = None
+        self._bash = None
         self._time = None
         self._capacity = None
         self._team_manager = None
@@ -725,7 +726,6 @@ class group_tools(JSGroup):
         self._typechecker = None
         self._console = None
         self._expect = None
-        self._bash = None
         self._flist = None
         self._tarfile = None
         self._zipfile = None
@@ -950,6 +950,14 @@ class group_tools(JSGroup):
         return self._formatters
 
     @property
+    def bash(self):
+        if self._bash is None:
+            from Jumpscale.tools.bash.BashFactory import BashFactory
+
+            self._bash = BashFactory()
+        return self._bash
+
+    @property
     def time(self):
         if self._time is None:
             from Jumpscale.tools.time.Time import Time
@@ -1084,14 +1092,6 @@ class group_tools(JSGroup):
 
             self._expect = ExpectTool()
         return self._expect
-
-    @property
-    def bash(self):
-        if self._bash is None:
-            from Jumpscale.sal.bash.BashFactory import BashFactory
-
-            self._bash = BashFactory()
-        return self._bash
 
     @property
     def flist(self):
@@ -1660,6 +1660,7 @@ class group_sal(JSGroup):
         self._qemu_img = None
         self._btrfs = None
         self._nettools = None
+        self._flist = None
         self._ssl = None
         self._disklayout = None
         self._nic = None
@@ -1723,6 +1724,14 @@ class group_sal(JSGroup):
 
             self._nettools = NetTools()
         return self._nettools
+
+    @property
+    def flist(self):
+        if self._flist is None:
+            from Jumpscale.sal.flist.FlistManipulation import FlistManipulation
+
+            self._flist = FlistManipulation()
+        return self._flist
 
     @property
     def ssl(self):

@@ -202,4 +202,3 @@ class FlistManipulation(j.application.JSBaseClass):
         """
         newcmd = self._prefix() + cmd
         j.sal.process.execute(newcmd)
-
