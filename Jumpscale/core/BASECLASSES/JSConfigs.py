@@ -44,6 +44,7 @@ class JSConfigs(JSConfigBase):
                 if "\n" != schematext[-1]:
                     schematext += "\n"
                 schematext += "parent_id* = 0 (I)\n"
+
         return schematext
 
     @property
@@ -57,6 +58,17 @@ class JSConfigs(JSConfigBase):
                 s = self.__class__._CHILDCLASS._SCHEMATEXT
             t = self._process_schematext(s)
             self._model_ = bcdb.model_get(schema=t)
+            t2 = j.data.schema._schema_blocks_get(t)[0]
+            # if self._model_.schema._md5 != j.data.schema._md5(t2):
+            #     from pudb import set_trace
+            #
+            #     set_trace()
+            assert self._model_.schema._md5 == j.data.schema._md5(t2)
+            # if j.core.text.strip_to_ascii_dense(t) != j.core.text.strip_to_ascii_dense(s):
+            #     from pudb import set_trace
+            #
+            #     set_trace()
+
         return self._model_
 
     def _bcdb_selector(self):

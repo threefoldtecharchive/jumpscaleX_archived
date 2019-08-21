@@ -158,6 +158,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
             j.core.db.delete(key)
         j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/bcdb"))
         j.sal.fs.remove(self._config_data_path)
+        j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/codegen"))
+        j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/capnp"))
         self._load()
         assert self._config == {}
 

@@ -144,7 +144,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         """
         convert text to md5
         """
-
+        assert len(self._schema_blocks_get(text)) == 1  # need to be removed later TODO:
         original_text = text.replace(" ", "").replace("\n", "").strip()
         # print("*****\n%s\n***********\n"%(ascii_text))
         return j.data.hash.md5_string(original_text)
