@@ -213,7 +213,6 @@ class RedisServer(j.application.JSBaseClass):
         return (cat, url, key, m)
 
     def set(self, response, key, val):
-
         parse_key = key.replace(":", "/")
         if "schemas" in parse_key:
             try:
@@ -222,20 +221,11 @@ class RedisServer(j.application.JSBaseClass):
                 return
             except:
                 response.error("cannot set, key:'%s' not supported" % key)
-
         else:
             try:
                 key = parse_key.split("/")
-                type_of_set = key[2]  # url ,hash or sid
-                if type_of_set == "url":
-                    schema = self.vfs._find_schema_by_url(key[3])
-                    self.vfs.add_datas(val, int(key[1]), schema.sid)
-                elif type_of_set == "hash":
-                    schema = self.vfs._find_schema_by_hash(key[3])
-                    self.vfs.add_datas(val, int(key[1]), schema.sid)
+                self.vfs.add_datas(val, int(key[1]), key[2])
 
-                else:
-                    self.vfs.add_datas(val, int(key[1]), int(key[3]))
                 response.encode("OK")
                 return
             except:
@@ -245,7 +235,6 @@ class RedisServer(j.application.JSBaseClass):
     def get(self, response, key):
         parse_key = key.replace(":", "/")
         parse_key = parse_key.replace("_", ".")
-
         try:
             vfs_objs = self.vfs.get(self.bcdb.name + "/" + parse_key)
             if not isinstance(vfs_objs.get(), str):
@@ -282,28 +271,14 @@ class RedisServer(j.application.JSBaseClass):
 
         for i in self.vfs._bcdb_names:
             """ bcdb_instance = j.data.bcdb.get(i) """
-            sch_sids = self.vfs.get("%s/schemas/sid" % i)
-            if len(sch_sids.items) > 0:
-                for sid in sch_sids.items:
-                    res.append("{}:schemas:sid:{}".format(i, sid))
-                    res.append("{}:data:1:sid:{}".format(i, sid))
-
-                sch_urls = self.vfs.get("%s/schemas/url" % i)
+            sch_urls = self.vfs.get("%s/schemas" % i)
+            if len(sch_urls.items) > 0:
                 for url in sch_urls.items:
-                    res.append("{}:schemas:url:{}".format(i, url))
-                    res.append("{}:data:1:url:{}".format(i, url))
-
-                sch_hashes = self.vfs.get("%s/schemas/hash" % i)
-                for h in sch_hashes.items:
-                    res.append("{}:schemas:hash:{}".format(i, h))
-                    res.append("{}:data:1:hash:{}".format(i, h))
+                    res.append("{}:schemas:{}".format(i, url))
+                    res.append("{}:data:1:{}".format(i, url))
             else:
-                res.append("%s:schemas:url" % i)
-                res.append("%s:data:url" % i)
-                res.append("%s:schemas:sid" % i)
-                res.append("%s:data:sid" % i)
-                res.append("%s:schemas:hash" % i)
-                res.append("%s:data:hash" % i)
+                res.append("%s:schemas" % i)
+                res.append("%s:data" % i)
         response._array(["0", res])
 
     def hset(self, response, key, id, val):

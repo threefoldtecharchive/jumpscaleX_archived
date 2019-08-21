@@ -276,7 +276,12 @@ class BCDBVFS(j.application.JSBaseClass):
 
     def _find_schema_by_url(self, url):
         # TODO OPTIMIZE OR FIND ANOTHER WAY
-        s = self._bcdb.schema_get(url=url, die=False)
+        s = self._bcdb.schema_get(url=url)
+        return s
+
+    def _find_model_by_schema_url(self, url):
+        # TODO OPTIMIZE OR FIND ANOTHER WAY
+        s = self._bcdb.model_get(url=url)
         return s
 
     def list(self, path):
@@ -286,7 +291,7 @@ class BCDBVFS(j.application.JSBaseClass):
         self.get(path).is_dir()
 
     def add_datas(self, data_items, nid, url, bcdb_name=None):
-        """set new data items. To set data we need the bcdb name, namespace id and schema id
+        """set new data items. To set data we need the bcdb name, namespace id and schema url
         Arguments:
             data_items {list(JSXObject) | JSXObject} -- items to be added in the specified directory 
             bcdb_name {string} -- the bcdb name to be added to if None will use the current one
@@ -298,30 +303,44 @@ class BCDBVFS(j.application.JSBaseClass):
         data_dir = self.get("/%s/data/%s/%s" % (bcdb_name, nid, url))
         return data_dir.set(data_items)
 
+    def _add_schema(self, schema):
+
+        self._bcdb.meta._schema_set(schema)  # add the schema to the bcdb meta
+        self._bcdb.model_get(schema=schema)  # should create the model based on the schema
+        s_obj = self._find_schema_by_url(schema.url)
+        key_url = "%s_schemas_%s" % (self.current_bcbd_name, s_obj.url)
+
+        # we do not check if it exist as anyway it will
+        # replace the latest schema with this url
+        self._dirs_cache[key_url] = BCDBVFS_Schema(self, key=key_url, item=s_obj)
+        return s_obj
+
     def add_schemas(self, schemas_text=None, bcdb_name=None):
-        """set new schemas based on their text to the current bcdb
+        """set a new schema based on their text to the current bcdb
         Keyword Arguments:
             schemas_text {string} -- can be one or several schema text
         Returns:
-             list: all the schemas path added to the cache
+             list: all the schema path added to the cache
         """
-        added_schemas = []
+
         if bcdb_name:
             self.change_current_bcdb(bcdb_name)
 
         if schemas_text:
-            schemas = j.data.schema.get_from_text(schemas_text)
+            multiple = False
+            if j.data.schema.is_multiple_schema_from_text(schemas_text):
+                multiple = True
+            schemas = j.data.schema.get_from_text(schemas_text, multiple=multiple)
             if schemas:
-                for s in schemas:
-                    self._bcdb.meta._schema_set(s)  # add the schema to the bcdb meta
-                    self._bcdb.model_get(schema=s)  # should create the model based on the schema
-                    s_obj = self._find_schema_by_url(s.url)
-                    key_url = "%s_schemas_%s" % (self.current_bcbd_name, s_obj.url)
-                    added_schemas.append(s_obj)
-                    # we do not check if it exist as anyway it will
-                    # replace the latest schema with this url
-                    self._dirs_cache[key_url] = BCDBVFS_Schema(self, key=key_url, item=s_obj)
-        return added_schemas
+                if not multiple:
+                    self._add_schema(schemas)
+                    return [schemas]
+                else:
+                    added_schemas = []
+                    for s in schemas:
+                        added_schemas.append(self._add_schema(s))
+                    return added_schemas
+        return None
 
     def delete(self, path):
         if self._split_clean_path(path) == []:
@@ -572,7 +591,8 @@ class BCDBVFS_Data_Dir:
                 for data in items_data:
                     res.append(self.vfs._insert_data_and_update_cache(self.key, data, self._model))
             else:
-                res.append(self.vfs._insert_data_and_update_cache(self.key, items_data, self._model))
+                obj = self.vfs._insert_data_and_update_cache(self.key, items_data, self._model)
+                res.append(obj)
             self.items = [i for i in self._model.iterate(self.vfs._get_nid_from_data_key(self.key))]
             return res
         else:  # we are probably trying to add a doc in a root or bcdb path
@@ -649,10 +669,10 @@ class BCDBVFS_Schema:
             raise Exception("Schema is not present for key:%s" % self.key)
 
     def new(self, schema_text):
-        return self.vfs.add_schemas(schema_text)
+        return self.vfs.add_schema(schema_text)
 
     def set(self, schema_text):
-        raise Exception("Schemas can't be overwritten but you can create a new one via add_schemas()")
+        raise Exception("Schemas can't be overwritten but you can create a new one via add_schema()")
 
     @property
     def is_read_only(self):
