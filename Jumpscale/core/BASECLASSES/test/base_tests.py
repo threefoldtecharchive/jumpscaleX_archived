@@ -1,5 +1,4 @@
 import unittest
-import subprocess
 from loguru import logger
 from uuid import uuid4
 

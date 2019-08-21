@@ -267,12 +267,13 @@ class TestInstallationInSystem(BaseTest):
         self.info("remove jumpscale_generated file")
         os.remove("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py")
 
-        self.info("Check generate option")    
+        self.info("Check generate option")
         command = ". /sandbox/env.sh && jsx generate"
         self.os_command(command)
 
         self.info("make sure that jumpscale_generated file is generated again")
-        self.assertTrue(os.path.exists("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py"))
+        self.assertTrue(
+            os.path.exists("/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/jumpscale_generated.py"))
 
     def Test03_insystem_installation_r_option_no_jsx_before(self):
         """
@@ -282,9 +283,9 @@ class TestInstallationInSystem(BaseTest):
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
-    
+
         self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
-            self.js_branch, self.os_type ))
+            self.js_branch, self.os_type))
 
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
@@ -304,14 +305,14 @@ class TestInstallationInSystem(BaseTest):
         #. Install jumpscale from specific branch
         #. Run kosmos ,should succeed
         """
-        
+
         self.info("Install jumpscale from {} branch on {}".format(self.js_branch, self.os_type))
         output, error = self.jumpscale_installation("install")
         self.assertFalse(error)
         self.assertIn("installed successfully", output.decode())
 
         self.info("Install jumpscale from {} branch on {} using no_interactive and re-install".format(
-                self.js_branch, self.os_type ))
+            self.js_branch, self.os_type))
 
         output, error = self.jumpscale_installation("install", "-r")
         self.assertFalse(error)
@@ -338,12 +339,14 @@ class TestInstallationInSystem(BaseTest):
 
         self.info("use kosmos to create github client, make sure that there is no error")
         client_name = str(uuid.uuid4()).replace("-", "")[:10]
-        command = """. /sandbox/env.sh && echo 'c=j.clients.github.new("{}", token="test_bcdb_delete_option"); c.save()' | jsx kosmos """.format(client_name)
+        command = """. /sandbox/env.sh && echo 'c=j.clients.github.new("{}", token="test_bcdb_delete_option"); c.save()' | jsx kosmos """.format(
+            client_name)
         output, error = self.os_command(command)
         self.assertFalse(error)
 
         self.info("check that the client is existing")
-        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(client_name)
+        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(
+            client_name)
         output, error = self.os_command(command)
         self.assertFalse(error)
         self.assertIn(client_name, output.decode())
@@ -354,7 +357,8 @@ class TestInstallationInSystem(BaseTest):
         self.assertFalse(error)
 
         self.info("check that the client is not existing")
-        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(client_name)
+        command = """. /sandbox/env.sh && echo 'print(j.clients.github.get("{}").name)' | jsx kosmos """.format(
+            client_name)
         output, error = self.os_command(command)
         self.assertIn('Missing Github token or login/password', output.decode())
 
@@ -375,4 +379,3 @@ class TestInstallationInSystem(BaseTest):
         command = ". /sandbox/env.sh && jsx check"
         output, error = self.os_command(command)
         self.assertFalse(error)
-
