@@ -8,34 +8,6 @@ JSConfigBase = j.application.JSBaseConfigClass
 
 
 
-def to_bool_or_false(x):
-    try:
-        return bool(x)
-    except:
-        return False
-
-def to_int_or_0(x):
-    try:
-        return int(x)
-    except:
-        return 0
-
-conversion_rules = {
-    "VersionInfo.Rel": to_int_or_0,
-    "VersionInfo.Ver": to_int_or_0,
-    "VersionInfo.Patch": to_int_or_0,
-    "VersionInfo.ForceUpdate": to_int_or_0,
-    "VersionInfo.UpdateType": to_int_or_0,
-    "DepId": to_int_or_0,
-    "CommCalcType": to_int_or_0,
-    "ClientType": to_int_or_0,
-    "DemoClient": to_int_or_0,
-    "IsReadOnly": to_int_or_0,
-    "Sms": to_int_or_0,
-    "EnableNews":to_int_or_0,
-}
-
-
 def get_error_string(errval):
     for m in dir(errors):
         res = getattr(errors, m)
@@ -45,29 +17,11 @@ def get_error_string(errval):
 
 
 def raise_if_error(data):
+    error_string = ""
     if isinstance(data, str) or isinstance(data, int):
-        errorstring = get_error_string(str(data))
-        if errorstring:
-            raise Exception(errorstring)
-
-
-def clean_data(data):
-    if isinstance(data, dict):
-        cleaned_data_dict = {}
-        for k, v in data.items():
-            if k in conversion_rules:
-                f = conversion_rules[k]
-                cleaned_data_dict[k] = f(v)
-            else:
-                cleaned_data_dict[k] = v
-        return cleaned_data_dict
-    elif isinstance(data, list):
-        cleaned_data_list = []
-        for el in data:
-            cleaned_data_list.append(clean_data(el))
-        return cleaned_data_list
-    else:
-        return data
+        error_string = get_error_string(str(data))
+        if error_string:
+            raise Exception(error_string)
 
 
 class NBHClient(JSConfigBase):
@@ -77,10 +31,10 @@ class NBHClient(JSConfigBase):
     username = "" (S)
     password_ = "" (S)
     service_url = "" (S)
-    nbh_sig_ = (S)
-    nbh_wallet_ = (S)
+    dealer_id =  (I)
+    nbh_sig_ = "" (S)
+    nbh_wallet_ = "" (S)
     """
-
 
     def _init(self, **kwargs):
         if not self.username or not self.password_:
@@ -90,7 +44,6 @@ class NBHClient(JSConfigBase):
             raise j.exceptions.Input("Need to url to use the client")
 
         self._session = requests.session()
-        self.login()
 
     def _request(self, endpoint, params):
         url = "{}/{}".format(self.service_url, endpoint)
@@ -121,6 +74,7 @@ class NBHClient(JSConfigBase):
         :return: true for success
         :rtype: bool
         """
+        self.login()
         params = {"OldPW": old_password, "NewPW": new_password, "ConfirmNewPW": confirm_newpassword}
         return self._request("ChangePassword", params)
 
@@ -165,6 +119,7 @@ class NBHClient(JSConfigBase):
         :return: client identifier
         :rtype: int
         """
+        self.login()
         params = {
             "ParentID": parent_id, "FirstName": first_name,
             "SecondName": second_name, "ThirdName": third_name,
@@ -186,8 +141,12 @@ class NBHClient(JSConfigBase):
         :return: client information
         :rtype: dict
         """
+        self.login()
         params = {"ClientID": client_id}
-        return self._request("GetClientByID", params)
+        response = self._request("GetClientByID", params)
+        raise_if_error(response["ClientID"])
+
+        return response
 
     def update_client_info(self, client_id, first_name, second_name, third_name, last_name, username, password, phone, fax, mobile, tel_pw, pob,
                       country, email, address, readonly_login, forcechange_password):
@@ -230,6 +189,7 @@ class NBHClient(JSConfigBase):
         :return: client identifier
         :rtype: int
         """
+        self.login()
         params = {
             "ClientID": client_id, "FirstName": first_name,
             "SecondName": second_name, "ThirdName": third_name,
@@ -265,7 +225,7 @@ class NBHClient(JSConfigBase):
         :return: account number
         :rtype: int
         """
-
+        self.login()
         params = {
             "ParentID": client_id, "AccountID": account_id,
             "AccountType": account_type, "IsDemo": is_demo,
@@ -273,6 +233,27 @@ class NBHClient(JSConfigBase):
             "IsMargin": is_margin, "UserDefined": userdefined_date
         }
         return self._request("CreateAccount", params)
+
+    def get_account_by_id(self, account_id):
+        """ GetAccountByID operation is used to get information about the given account number
+
+        :param account_id: account id
+        :type account_id: int
+        """
+        self.login()
+        response  = self._request("GetAccountByID", {"AccountId": account_id})
+        raise_if_error(response["AccountID"])
+
+        return response
+
+
+    def get_client_ids(self, parent_id):
+        self.login()
+        response = self._request("GetClientsIDs", {"ParentID": parent_id})
+        if len(response) == 1:
+            raise_if_error(response[0])
+
+        return response
 
     def get_accounts_ids(self, client_id):
         """The GetAccountsIDs operation is used to get the list of account/s Id/s  which are related to a given client number.
@@ -282,8 +263,13 @@ class NBHClient(JSConfigBase):
         :return: list of account ids
         :rtype: list
         """
+        self.login()
         params = {"ClientID": client_id}
-        return self._request("GetAccountsIDs", params)
+        response = self._request("GetAccountsIDs", params)
+        if len(response) == 1:
+            raise_if_error(response[0])
+
+        return response
 
     def account_info_report(self, client_id, is_paging=False):
         """The AccountInfoReport operation is used to get the account information report that shows the information for all accounts under the given client number.
@@ -295,8 +281,32 @@ class NBHClient(JSConfigBase):
         :return: list of accounts info report
         :rtype: list
         """
+        self.login()
         params = {"ClientID": client_id, "isPaging": is_paging}
-        return self._request("AccountInfoReport", params)
+        response = self._request("AccountInfoReport", params)
+        if len(response) == 1:
+            raise_if_error(response[0]['ClientID'])
+
+        return response
+
+    def account_status_report(self, client_id, account_type, is_paging=False):
+        """The AccountInfoReport operation is used to get the account information report that shows the information for all accounts under the given client number.
+
+        :param client_id: valid client identifier
+        :type client_id: int
+        :param account_type: type of account. 1 for Normal account, 2 for Coverage.
+        :type account_type: int
+        :param is_paging: indicates that you're calling to get the remaining records. First call must be false, next must be true.
+        :type is_paging: bool, optional
+        :return: list of accounts status report
+        :rtype: list
+        """
+        self.login()
+        params = {"ClientID": client_id, "AccountType": account_type, "isPaging": is_paging}
+        response = self._request("AccountStatusReport", params)
+        if len(response) == 1:
+            raise_if_error(response[0]['ClientID'])
+        return response
 
     def get_account_stmt(self, account_id, from_date, to_date):
         """The GetAccountStatement operation returns the given account statement between the starting date and ending date.
@@ -308,8 +318,12 @@ class NBHClient(JSConfigBase):
         :param to_date: ending date for account statement query. Must be in DD/MM/YYYY format.
         :type to_date: str
         """
+        self.login()
         params = {"AccountID": account_id, "FromDate": from_date, "ToDate": to_date}
-        return self._request("GetAccountStmt", params)
+        response = self._request("GetAccountStmt", params)
+        if len(response) == 2:
+            raise_if_error(response[0])
+        return response
 
     def new_position(self, account_id, buy_or_sell, amount, symbol_id, price, note="", user_defined_date=""):
         """The NewPosition operation is used to open a new position on specific a symbol for the given account number.
@@ -331,6 +345,7 @@ class NBHClient(JSConfigBase):
         :return: the new position ticket number
         :rtype: [type]
         """
+        self.login()
         params = {
             "AccountID": account_id, "BuySell": buy_or_sell,
             "Amount":amount, "SymbolID": symbol_id,
@@ -359,6 +374,7 @@ class NBHClient(JSConfigBase):
         :return: closed ticket number
         :rtype: int
         """
+        self.login()
         params = {
             "AccountID": account_id, "TicketID": ticket_id,
             "Amount":amount, "Price":price,
@@ -385,8 +401,13 @@ class NBHClient(JSConfigBase):
         :return: list of open positions
         :rtype: list
         """
+        client = self.login()
         params = {"ClientID": client_id, "AccountType": account_type, "SymbolID": symbol_id, "PositionType": position_type, "isPaging": is_paging}
-        return self._request("DetailedOpenPositionsReport", params)
+        response = self._request("DetailedOpenPositionsReport", params)
+        if len(response) == 1:
+            raise_if_error(response[0]["ClientID"])
+
+        return response
 
     def get_mw_symbols(self):
         """The GetMWSymbols operation is used to get market watch symbol setting
