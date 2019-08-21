@@ -28,8 +28,6 @@ def main(self):
 
     """
 
-    return
-
     SCHEMA = """
     @url = threefoldtoken.wallet.test
     name* = "wallet"
@@ -39,9 +37,9 @@ def main(self):
     username = "" (S)           # User name
     
     """
+
     bcdb = j.data.bcdb.new("test", reset=True)
     m = bcdb.model_get(schema=SCHEMA)
-
     for i in range(10):
         o = m.new()
         assert o._model.schema.url == "threefoldtoken.wallet.test"
@@ -57,21 +55,27 @@ def main(self):
 
     assert "test" in j.data.bcdb._config
 
-    j.data.bcdb.bcdb_instances = {}  # make sure we don't have instances in memory
-
+    # j.data.bcdb.bcdb_instances = {}  # make sure we don't have instances in memory
+    keylength_before = len(j.core.db.keys())
+    m.index.destroy()
+    keylength_after = len(j.core.db.keys())
+    assert keylength_after < keylength_before
+    assert len(m.find()) == 0
+    bcdb.index_rebuild()
+    assert keylength_before == len(j.core.db.keys())
     # stop redis
-    j.core.redistools.core_stop()
-    assert j.core.redistools.core_running() == False
 
-    db = j.core.redistools.core_get()
-    assert j.core.redistools.core_running()
+    # j.core.redistools.core_stop()
+    # assert j.core.redistools.core_running() == False
+
+    # db = j.core.redistools.core_get()
+    # assert j.core.redistools.core_running()
 
     # check the redis is really empty
-    assert j.core.db.keys() == []
+    # assert j.core.db.keys() == []
 
-    bcdb = j.data.bcdb.get("test")
-    m = bcdb.model_get(schema=SCHEMA)
-    bcdb.index_rebuild()
+    # bcdb = j.data.bcdb.get("test")
+    # m = bcdb.model_get(schema=SCHEMA)
 
     assert len(m.find()) == 10
     r = m.get_by_name("myuser_8")
