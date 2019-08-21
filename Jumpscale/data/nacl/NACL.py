@@ -289,7 +289,7 @@ class NACL(j.application.JSBaseClass):
             public_key = self.public_key
 
             data = self.tobytes(data)
-        sealed_box = SealedBox(self.public_key)
+        sealed_box = SealedBox(public_key)
         res = sealed_box.encrypt(data)
         if hex:
             res = self._bin_to_hex(res)
