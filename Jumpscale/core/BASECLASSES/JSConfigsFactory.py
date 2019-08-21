@@ -24,6 +24,7 @@ from .JSBase import JSBase
 
 """
 factory for JSConfig & JSConfigs objects
+there need to be jsconfig or jsconfigs underneith !
 """
 
 from .Attr import Attr
