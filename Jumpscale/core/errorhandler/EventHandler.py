@@ -12,7 +12,7 @@ class EventHandler:
         will die
         """
         print("change your code to no longer use j.events...., but raise self._j.exceptions...")
-        raise self._j.exceptions.OPERATIONS(msg)
+        raise self._j.exceptions.Operations(msg)
 
     def opserror_warning(self, msg, category=""):
         """

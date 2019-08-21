@@ -387,12 +387,12 @@ class GitFactory(j.application.JSBaseClass):
                                 )
                         else:
                             if "permission denied" in err.lower():
-                                raise j.exceptions.OPERATIONS(
+                                raise j.exceptions.Operations(
                                     "prob SSH-agent not loaded, permission denied on git:%s" % url
                                 )
 
                             if "Merge conflict" in out:
-                                raise j.exceptions.OPERATIONS("merge conflict:%s" % out)
+                                raise j.exceptions.Operations("merge conflict:%s" % out)
 
                             self._log_debug(
                                 "git pull rc>0, need to implement further, check what usecase is & build interactivity around"
