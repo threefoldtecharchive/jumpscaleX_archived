@@ -1,8 +1,8 @@
 import requests
-import json
+from Jumpscale import j
+
 from . import errors
 
-from Jumpscale import j
 
 JSConfigBase = j.application.JSBaseConfigClass
 
@@ -20,7 +20,7 @@ def raise_if_error(data):
     if isinstance(data, str) or isinstance(data, int):
         error_string = get_error_string(str(data))
         if error_string:
-            raise Exception(error_string)
+            raise j.exceptions.RuntimeError(error_string)
 
 
 class NBHClient(JSConfigBase):
@@ -51,7 +51,7 @@ class NBHClient(JSConfigBase):
         resp.raise_for_status()
 
         resp_json = resp.json()
-        data = json.loads(resp_json["d"])
+        data = j.data.serializers.json.loads(resp_json["d"])
         raise_if_error(data)
         return data
 
