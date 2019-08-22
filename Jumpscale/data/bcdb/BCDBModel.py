@@ -343,7 +343,7 @@ class BCDBModel(j.application.JSBaseClass):
                         raise j.exceptions.JSBUG(
                             "find was done on argument:%s which does not exist in model." % res, data=obj
                         )
-                elif res:
+                elif check:
                     res.append(res2)
                 else:
                     self._log_warning("index system produced false positive, is not abnormal")
