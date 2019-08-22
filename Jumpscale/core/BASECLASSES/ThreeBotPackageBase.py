@@ -30,3 +30,4 @@ class ThreeBotPackageBase(JSBase):
 
         self.package_root = self._package.path
         self.gedis_server = self._package.gedis_server
+        self.openresty = self._package.openresty
