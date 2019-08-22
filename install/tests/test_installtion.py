@@ -103,13 +103,14 @@ class TestInstallationInDocker(BaseTest):
         self.info(" Check the branch of jumpscale code, should be same as installation branch.")
         command = "cat /sandbox/code/github/threefoldtech/jumpscaleX/.git/HEAD"
         output, _ = self.docker_command(command)
-        branch = output.decode()[output.decode().find("head") + 6:].replace('\n', '')
+        branch = output.decode().replace("\n", "").split("/")[-1]
         self.assertEqual(branch, self.js_branch)
 
         self.info("check  that ssh-key loaded in docker successfully")
         command = "cat /root/.ssh/authorized_keys"
         output, error = self.docker_command(command)
-        self.assertEqual(output.decode().strip("\n"), self.get_loaded_key())
+        for key in self.get_loaded_key().split('\n'):
+            self.assertIn(key, output.decode().strip("\n"))
 
     def test04_verify_container_delete_option(self):
         """
