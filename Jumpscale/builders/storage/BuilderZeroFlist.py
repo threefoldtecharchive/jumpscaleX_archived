@@ -24,10 +24,6 @@ class BuilderZeroFlist(j.builders.system._BaseClass):
 
         cd 0-flist/autobuild/
         bash zflist.sh
-
-        cd ..
-        make
-
         """
         j.sal.process.execute(cmd)
 
@@ -37,7 +33,7 @@ class BuilderZeroFlist(j.builders.system._BaseClass):
         Installs zflist
         """
         self.build()
-        self._copy("/sandbox/code/github/threefoldtech/0-flist/zflist/zflist", "{DIR_BIN}")
+        self._copy("/tmp/zflist", "{DIR_BIN}")
 
     @builder_method()
     def clean(self):

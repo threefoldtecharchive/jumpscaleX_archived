@@ -6,6 +6,7 @@ class FlistManipulation(j.application.JSBaseClass):
     this sal using zflist bin should install using `j.builders.storage.zflist.install(reset=True)`
     """
 
+    _properties_ = None
     __jslocation__ = "j.sal.flist"
 
     def __init__(self):
@@ -18,15 +19,10 @@ class FlistManipulation(j.application.JSBaseClass):
         )
 
         _, out, _ = j.sal.process.execute("zflist " + " ".join(args), showout=False)
-
-        if "cat" in args:
-            out = out.split("[+]")
-            return out[-2]
-
-        out = out.split("\n")
-        for response in out:
-            if "success" in response:
-                return j.data.serializers.json.loads(response)
+        try:
+            return j.data.serializers.json.loads(out)
+        except:
+            return out
 
     def new(self):
         """
@@ -70,76 +66,76 @@ class Flist(object):
         """
         insert local file into the flist
         """
-        return self._zflist("put", src, dest)["success"]
+        return self._zflist("put", src, dest)
 
     def put_dir(self, src, dest):
         """
         insert local directory into the flist (recursively)
         """
-        return self._zflist("putdir", src, dest)["success"]
+        return self._zflist("putdir", src, dest)
 
     def remove_file(self, path):
         """
         remove a file (not a directory)
         """
-        return self._zflist("rm", path)["success"]
+        return self._zflist("rm", path)
 
     def remove_dir(self, path):
         """
         remove a directory (recursively)
         """
-        return self._zflist("rmdir", path)["success"]
+        return self._zflist("rmdir", path)
 
     def create_dir(self, path):
         """
         create an empty directory (non-recursive)
         """
-        return self._zflist("mkdir", path)["success"]
+        return self._zflist("mkdir", path)
 
     def merge(self, flist_path):
         """
         merge another flist into the current one
         """
-        return self._zflist("merge", path)["success"]
+        return self._zflist("merge", path)
 
     def chmod(self, mode, file):
         """
         change mode of a file (like chmod command)
         chmod [reference][operator][mode] file... 
         """
-        return self._zflist("chmod", mode, file)["success"]
+        return self._zflist("chmod", mode, file)
 
     def list(self, path="/"):
         """
        list the content of a directory in flist
         """
-        return self._zflist("ls", path)["response"]
+        return self._zflist("ls", path)
 
     def list_all(self):
         """
        list full contents of files and directories
         """
-        return self._zflist("find")["response"]
+        return self._zflist("find")
 
     def set_metadata(self, hub_host="playground.hub.grid.tf", port=9910):
         """
        set metadata
         """
-        return self._zflist("metadata backend", "--host {}".format(hub_host), "--port {}".format(port))["success"]
+        return self._zflist("metadata backend", "--host {}".format(hub_host), "--port {}".format(port))
 
     def print_content(self, path):
         """
         print file contents (backend metadata required)
         """
         self.set_metadata()
-        print(self._zflist("cat", path))
+        return self._zflist("cat", path)
 
     def commit(self, path):
         """
         commit changes to a new flist
         """
         self.set_metadata()
-        return self._zflist("commit", path)["success"]
+        return self._zflist("commit", path)
 
     def close(self):
         """
