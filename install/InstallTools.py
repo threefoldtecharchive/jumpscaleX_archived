@@ -2835,7 +2835,7 @@ class MyEnv_:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             self.sshagent = SSHAgent()
-            self.sshagent.key_default
+            self.sshagent.key_default_name
         if secret is None:
             if "SECRET" not in self.config or not self.config["SECRET"]:
                 self.secret_set()  # will create a new one only when it doesn't exist
@@ -3514,7 +3514,7 @@ class JumpscaleInstaller:
         rc, _, _ = Tools.execute("ssh-add -L")
         if not rc:
             if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-                MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+                MyEnv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
@@ -3810,7 +3810,7 @@ class DockerContainer:
                 self.config.sshport = newport
                 self.config.save()
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+            MyEnv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
 
         if len(MyEnv.sshagent.keys_list()) == 0:
             raise Tools.exceptions.Base("Please load your ssh-agent with a key!")
@@ -4129,7 +4129,7 @@ class DockerContainer:
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = (
                 "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
-                % MyEnv.sshagent.key_default
+                % MyEnv.sshagent.key_default_name
             )
             Tools.execute(cmd)
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py instal -sl"
