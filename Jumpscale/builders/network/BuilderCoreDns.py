@@ -5,16 +5,12 @@ builder_method = j.builders.system.builder_method
 
 
 CONFIGTEMPLATE = """
-.{
-    etcd $domain {
-        stubzones
-        path /hosts
-        endpoint $etcd_endpoint
-        fallthrough
-        debug
+. {
+    redis  {
+        address 127.0.0.1:6379
     }
-    loadbalance
-    reload 5s
+    forward 8.8.8.8 9.9.9.9 
+
 }
 """
 
@@ -66,6 +62,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
         src = self.tools.joinpaths(self.package_path, self.NAME, self.NAME)
         self._copy(src, "{DIR_BIN}/coredns")
         j.sal.fs.writeFile(filename="/sandbox/cfg/coredns.conf", contents=CONFIGTEMPLATE)
+        self._execute("service systemd-resolved stop", die=False)
 
     def clean(self):
         self._remove(self.package_path)
@@ -104,6 +101,10 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
 
     @builder_method()
     def test(self):
+        """
+
+        :return:
+        """
         if self.running():
             self.stop()
 

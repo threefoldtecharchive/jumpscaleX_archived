@@ -33,7 +33,7 @@ def main(self):
     # sid = "7"
     test_cmd = """
     from Jumpscale import j
-    bcdb = j.data.bcdb.get("test", reset=True)
+    bcdb = j.data.bcdb.new("test", reset=True)
     vfs = j.data.bcdb._get_vfs()
     
     SCHEMA = \"\"\"
@@ -68,29 +68,25 @@ def main(self):
     session.auth = requests.auth.HTTPBasicAuth("root", "root")
 
     # test get schema by url
-    schema = session.get("http://0.0.0.0:4443/test/schemas/url/threefoldtoken.wallet.test").json()
-    assert schema["url"] == "threefoldtoken.wallet.test"
-
-    # test get schema by sid
-    schema = session.get("http://0.0.0.0:4443/test/schemas/sid/7").json()
-    assert schema["url"] == "threefoldtoken.wallet.test"
-
-    # test get schema by hash
-    schema = session.get("http://0.0.0.0:4443/test/schemas/hash/cbf134f55d0c7149ef188cf8a52db0eb").json()
+    schema = session.get("http://0.0.0.0:4443/test/schemas/threefoldtoken.wallet.test").json()
     assert schema["url"] == "threefoldtoken.wallet.test"
 
     # test get data by url
-    data = session.get("http://0.0.0.0:4443/test/data/1/url/threefoldtoken.wallet.test/1").json()
+    data = session.get("http://0.0.0.0:4443/test/data/1/threefoldtoken.wallet.test/1").json()
     assert data["name"] == "myuser_0"
+    assert data["id"] == 1
 
-    # test get data by sid
-    data = session.get("http://0.0.0.0:4443/test/data/1/sid/7/1").json()
-    assert data["name"] == "myuser_0"
-
-    # test get data by hash
-    data = session.get("http://0.0.0.0:4443/test/data/1/hash/cbf134f55d0c7149ef188cf8a52db0eb/1").json()
-    assert data["name"] == "myuser_0"
-
+   """  data["email"] = "yolo@nofear.com"
+    session.auth = requests.auth.HTTPBasicAuth("root", "root")
+    put = session.put("http://0.0.0.0:4443/test/data/1/threefoldtoken.wallet.test/1", data)
+    print(put)
+    j.shell()
+    data.pop("id")
+    data["email"] = "new@one.com"
+    post = session.post("http://0.0.0.0:4443/test/data/1/threefoldtoken.wallet.test", data)
+    print(post)
+    delete = session.delete("http://0.0.0.0:4443/test/data/1/threefoldtoken.wallet.test/1")
+    print(delete) """
     web_dav = j.servers.startupcmd.get("webdav_test")
     web_dav.stop()
     web_dav.wait_stopped()

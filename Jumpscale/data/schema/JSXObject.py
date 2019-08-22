@@ -148,11 +148,12 @@ class JSXObject(j.application.JSBaseClass):
                     # unique properties have to be indexed
                     args_search = {prop_u.name: getattr(self, prop_u.name)}
                     r = self._model.find(**args_search)
-                    msg = "could not save, was not unique.\n%s.\nfound:\n%s" % (args_search, r)
                     if len(r) > 1:
+                        msg = "could not save, was not unique.\n%s." % (args_search)
                         # can for sure not be ok
                         raise j.exceptions.Input(msg)
                     elif len(r) == 1:
+                        msg = "could not save, was not unique.\n%s." % (args_search)
                         if self.id:
                             if not self.id == r[0].id:
                                 # j.shell()
@@ -161,8 +162,10 @@ class JSXObject(j.application.JSBaseClass):
                             self.id = r[0].id
                             self._ddict_hr  # to trigger right serialization
                             if self._data == r[0]._data:
-                                assert self._model.sid == r[0]._model.sid
                                 return self  # means data was not changed
+                            else:  # means data is not the same
+                                self.id = None
+                                raise j.exceptions.Input(msg)
 
                 if not self._nosave:
                     o = self._model.set(self)

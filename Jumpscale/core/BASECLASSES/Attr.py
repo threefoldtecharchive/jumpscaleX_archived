@@ -46,10 +46,6 @@ class Attr:
 
             r = self._get(name=name, die=False)
             if not r:
-                from pudb import set_trace
-
-                set_trace()
-                self._model.find(name=name)
                 raise j.exceptions.Base(
                     "try to get attribute: '%s', instance did not exist, was also not a method or property, was on '%s'"
                     % (name, self._key)

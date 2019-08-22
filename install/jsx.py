@@ -69,8 +69,7 @@ def jumpscale_get(die=True):
         from Jumpscale import j
     except Exception as e:
         if die:
-            print("ERROR: cannot use jumpscale yet, has not been installed")
-            sys.exit(1)
+            raise j.exceptions.Operations("ERROR: cannot use jumpscale yet, has not been installed")
         return None
     return j
 
@@ -104,11 +103,10 @@ def _configure(
     j = jumpscale_get(die=False)
 
     if not j and privatekey_words:
-        print(
+        raise j.exceptions.Operations(
             "cannot load jumpscale, \
             can only configure private key when jumpscale is installed locally use jsx install..."
         )
-        sys.exit(1)
 
     if j and privatekey_words:
         j.data.nacl.configure(privkey_words=privatekey_words)
@@ -252,7 +250,7 @@ def container_install(
 
 
 def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
-    IT.MyEnv.sshagent.key_default
+    IT.MyEnv.sshagent.key_default_name
     docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
     if existcheck:
         if name not in IT.DockerFactory.containers_running():

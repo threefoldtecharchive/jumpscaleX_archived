@@ -224,9 +224,6 @@ class ExecutorBase(JSBASE):
 
         return cmds
 
-    def exists(self, path):
-        raise NotImplemented()
-
     def find(self, path):
         rc, out, err = self.execute("find %s" % path, die=False, interactive=False)
         if rc > 0:

@@ -44,6 +44,7 @@ class JSConfigs(JSConfigBase):
                 if "\n" != schematext[-1]:
                     schematext += "\n"
                 schematext += "parent_id* = 0 (I)\n"
+
         return schematext
 
     @property
@@ -55,8 +56,26 @@ class JSConfigs(JSConfigBase):
                 s = self.__class__._SCHEMATEXT
             else:
                 s = self.__class__._CHILDCLASS._SCHEMATEXT
+
             t = self._process_schematext(s)
+            t2 = j.data.schema._schema_blocks_get(t)[0]
+
+            # if j.core.text.strip_to_ascii_dense(t) != j.core.text.strip_to_ascii_dense(s):
+            #     from pudb import set_trace
+            #
+            #     set_trace()
+
             self._model_ = bcdb.model_get(schema=t)
+
+            assert self._model_.schema._md5 == j.data.schema._md5(t2)
+
+            # if self._model_.schema._md5 != j.data.schema._md5(t2):
+            #     from pudb import set_trace
+            #
+            #     set_trace()
+
+            assert self._model_.schema._md5 in self._model.bcdb.meta._data["md5"]
+
         return self._model_
 
     def _bcdb_selector(self):
@@ -76,7 +95,7 @@ class JSConfigs(JSConfigBase):
         """
         return self.__class__._CHILDCLASS
 
-    def new(self, name, jsxobject=None, save=True, delete=True, **kwargs):
+    def new(self, name, jsxobject=None, save=True, **kwargs):
         """
         it it exists will delete if first when delete == True
         :param name:
@@ -85,11 +104,8 @@ class JSConfigs(JSConfigBase):
         :param kwargs:
         :return:
         """
-        if delete:
-            self.delete(name)
-        else:
-            if self.exists(name=name):
-                raise j.exceptions.Base("cannot do new object, exists")
+        if self.exists(name=name):
+            raise j.exceptions.Base("cannot do new object, exists")
         return self._new(name=name, jsxobject=jsxobject, save=save, **kwargs)
 
     def _new(self, name, jsxobject=None, save=True, **kwargs):
@@ -114,7 +130,7 @@ class JSConfigs(JSConfigBase):
         jsconfig = jsconfig_klass(parent=self, jsxobject=jsxobject)
         jsconfig._triggers_call(jsconfig, "new")
         self._children[name] = jsconfig
-        if save and not jsxobject:
+        if save:
             self._children[name].save()
             self._children[name]._autosave = True
         return self._children[name]
@@ -136,10 +152,6 @@ class JSConfigs(JSConfigBase):
                 if not getattr(jsconfig, key) == val:
                     changed = True
                     setattr(jsconfig, key, val)
-                    # msg = "COULD NOT GET OBJ BECAUSE KWARGS GIVEN DO NOT CORRESPOND WITH OBJ IN DB\n"
-                    # msg += "kwargs: key:%s val:%s\n" % (key, val)
-                    # msg += "object was:\n%s\n" % jsconfig._data._ddict_hr_get()
-                    # raise j.exceptions.Base(msg)
             if changed and save:
                 jsconfig.save()
 
@@ -243,6 +255,7 @@ class JSConfigs(JSConfigBase):
             return self._model.find()
 
     def delete(self, name):
+        self._model
         if name in self._children:
             self._children.pop(name)
         res = self._findData(name=name)

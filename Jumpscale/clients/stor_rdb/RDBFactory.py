@@ -11,7 +11,7 @@ class RDBFactory(j.application.JSBaseFactoryClass):
         self.__jslocation__ = "j.clients.rdb"
         JSBASE.__init__(self)
 
-    def client_get(self, name="test", redisconfig_name="core", fromcache=True, redisclient=None):
+    def client_get(self, namespace="test", redisconfig_name="core", fromcache=True, redisclient=None):
         """
         :param nsname: namespace name
         :param redisconfig_name: name of the redis config client see j.clients.redis_config
@@ -20,7 +20,7 @@ class RDBFactory(j.application.JSBaseFactoryClass):
         if not redisclient:
             redisclient = j.clients.redis_config.get_client(redisconfig_name, fromcache=fromcache)
             redisclient.redisconfig_name = redisconfig_name
-        return RDBClient(nsname=name, redisclient=redisclient)
+        return RDBClient(nsname=namespace, redisclient=redisclient)
 
     def test(self):
         """

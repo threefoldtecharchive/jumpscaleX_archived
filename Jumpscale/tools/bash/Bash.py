@@ -54,7 +54,7 @@ class Bash(object):
         """
         checks cmd Exists and returns the path
         """
-        rc, out, err = self.executor.execute("source %s;which %s" % (self.profile.path, cmd), die=False, showout=False)
+        rc, out, err = self.executor.execute("source %s;which %s" % (self.profile.paths, cmd), die=False, showout=False)
         if rc > 0:
             if die:
                 raise j.exceptions.RuntimeError("Did not find command: %s" % cmd)

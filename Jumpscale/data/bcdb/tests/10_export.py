@@ -27,6 +27,7 @@ def main(self):
     kosmos 'j.data.bcdb.test(name="export")'
 
     """
+
     j.servers.zdb.test_instance_start()
 
     SCHEMA = """

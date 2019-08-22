@@ -112,7 +112,7 @@ def main(self):
         description = ""
         """
 
-    j.data.schema.add_from_text(schema_text=schema2)
+    j.data.schema.get_from_text(schema_text=schema2)
 
     s = j.data.schema.get_from_url(url="despiegk.test2")
     e = s.properties[0]  # is the enumerator

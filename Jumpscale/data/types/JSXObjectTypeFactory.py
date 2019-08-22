@@ -77,7 +77,7 @@ class JSXObjectTypeFactory(TypeBaseObjFactory):
         :return:
         """
         if model:
-            bcdb = model._bcdb
+            bcdb = model.bcdb
         else:
             bcdb = None
         if isinstance(value, j.data.schema._JSXObjectClass):

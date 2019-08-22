@@ -87,8 +87,7 @@ class NACL(j.application.JSBaseClass):
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not Tools.ask_yes_no("Did you write the words down and store them in safe place?"):
                 j.sal.fs.remove(self._path_seed)
-                print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
-                sys.exit(1)
+                raise j.exceptions.Operations("WE HAVE REMOVED THE KEY, need to restart this procedure.")
             j.tools.console.clear_screen()
 
             word3 = self.words.split(" ")[2]
@@ -196,7 +195,7 @@ class NACL(j.application.JSBaseClass):
             # TODO: ERROR, ssh-agent does not work for signing, can't figure out which key to use
             # here have shortcutted it to not use the ssh-agent but would be nice if it works
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
-            j.core.myenv.sshagent.key_default  # will make sure the default sshkey is loaded
+            j.core.myenv.sshagent.key_default_name  # will make sure the default sshkey is loaded
             key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
         else:
             key = j.core.myenv.config["SECRET"]  # is the hex of sha256 hash, need to go to binary
@@ -290,7 +289,7 @@ class NACL(j.application.JSBaseClass):
             public_key = self.public_key
 
             data = self.tobytes(data)
-        sealed_box = SealedBox(self.public_key)
+        sealed_box = SealedBox(public_key)
         res = sealed_box.encrypt(data)
         if hex:
             res = self._bin_to_hex(res)

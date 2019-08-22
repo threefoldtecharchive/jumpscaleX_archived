@@ -11,7 +11,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     """
 
     _SCHEMATEXT = """
-        @url = jumpscale.sshkey.1
+        @url = jumpscale.sshclient.1
         name* = ""
         addr = ""
         port = 22
@@ -20,7 +20,8 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         login = "root"
         passwd = ""
         sshkey_name = ""
-        sshkey_private_mosh_copy = ""  #is the key we will use in mosh, never use your own key
+        #if we want to use other key compared to the one we have by default, can specify the name here
+        sshkey_deployment = ""  
         proxy = ""
         stdout = True (B)
         forward_agent = True (B)
@@ -29,6 +30,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         timeout = 60
         config_msgpack = "" (bytes)     
         env_on_system_msgpack = "" (bytes)
+        meta = {} (DICT)
         """
 
     def _init(self, **kwargs):
@@ -202,25 +204,22 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     def shell(self, cmd=None):
         if cmd:
             j.shell()
-        cmd = "ssh {LOGIN}@{ADDR} -p {PORT}"
+        cmd = "ssh {LOGIN}@{ADDR} -A -p {PORT}"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
 
-    def mosh(self, ssh_private_key=None):
+    def mosh(self, ssh_private_key_name=None):
         """
         if private key specified
         :param ssh_private_key:
         :return:
         """
         self.executor.installer.mosh()
-        if ssh_private_key_push:
-            j.shell()
-        cmd = "mosh -ssh='ssh -oStrictHostKeyChecking=no -t -p {PORT}' {LOGIN}@{ADDR}"
-        # cmd = "mosh -p {PORT} {LOGIN}@{ADDR} -A"
+        C = j.clients.sshagent._script_get_sshload(keyname=ssh_private_key_name)
+        r = self.execute(C)
+        cmd = "mosh -ssh='ssh -tt -oStrictHostKeyChecking=no -p {PORT}' {LOGIN}@{ADDR} -p 6000:6100 'bash'"
         cmd = self._replace(cmd)
         j.sal.process.executeWithoutPipe(cmd)
-
-        return self.shell()
 
     def kosmos(self, cmd=None):
         j.shell()
@@ -408,7 +407,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             cmd = cmd.replace("'", '"')
         cmd2 = "ssh -oStrictHostKeyChecking=no -t {LOGIN}@{ADDR} -A -p {PORT} '%s'" % (cmd)
         cmd3 = self._replace(cmd2)
-        j.core.tools.execute(cmd3, interactive=True, showout=False, replace=False, asfile=True, die=die)
+        return j.core.tools.execute(cmd3, interactive=True, showout=False, replace=False, asfile=True, die=die)
 
     def _execute_script(
         self, content="", die=True, showout=True, checkok=None, sudo=False, interactive=False, timeout=None

@@ -87,7 +87,7 @@ raise j.exceptions.NotImplemented("")
 raise j.exceptions.SSHError("")
 raise j.exceptions.Halt("")
 raise j.exceptions.JSBUG("")
-raise j.exceptions.OPERATIONS("")
+raise j.exceptions.Operations("")
 raise j.exceptions.SSHTimeout("")
 ```
 

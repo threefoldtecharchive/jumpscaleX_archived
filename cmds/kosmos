@@ -162,8 +162,6 @@ if options.instruct:
 # if options.init:
 #     j.data.nacl.configure(name="default", interactive=True, generate=False)
 
-j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
-
 
 if len(args) == 1:
     j.application.interactive = True
@@ -176,6 +174,7 @@ if len(args) == 1:
         toexec = toexec.strip("'\" ").strip("'\" ")
         exec(toexec, globals(), j._locals_get({}))
 else:
+    j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
     j.application.interactive = True
     n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
     if n.load(die=False) is False:

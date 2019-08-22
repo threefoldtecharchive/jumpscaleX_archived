@@ -100,6 +100,10 @@ class JSConfig(JSConfigBase):
         assert self._model
         self._triggers_call(self, "save")
         self._data.save()
+
+        # CHECK WILL HAVE TO BE REMOVED (IS SLOW)  TODO:
+        # assert j.clients.ssh._model.bcdb.meta.find(self._model._md5) != -1
+
         self._triggers_call(self, "save_post")
 
     def edit(self):

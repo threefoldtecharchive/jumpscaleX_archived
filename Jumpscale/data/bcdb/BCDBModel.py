@@ -28,11 +28,12 @@ from .BCDBDecorator import *
 JSBASE = j.application.JSBaseClass
 INT_BIN_EMPTY = b"\xff\xff\xff\xff"  # is the empty value for in our key containers
 
-from .BCDBModelIndex import BCDBModelIndex
+# from .BCDBModelIndex import BCDBModelIndex
+from .BCDBIndexMeta import BCDBIndexMeta
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self, bcdb, schema=None, reset=False):
+    def __init__(self, bcdb, schema_url=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -49,15 +50,21 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        if not schema:
-            if hasattr(self, "_SCHEMA"):
+        # we should have a schema
+        if not schema_url:
+            if hasattr(self, "_SCHEMA"):  # what is that _schema ?
                 schema = j.data.schema.get_from_text(self._SCHEMA)
             else:
-                schema = self._schema_get()
-                assert schema
+                schema = self._schema_get()  # _schema_get is overrided by classes like ACL USER CIRCLE NAMESPACE
+                if not schema:
+                    j.exceptions.JSBUG("BCDB Model needs a schema object or text")
+            schema_url = schema.url
 
-        self.schema = schema
-        assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+        self._schema_url = schema_url
+
+        # TODO: this shouls not happen!!!!
+        # if self._schema_url in bcdb._schema_url_to_model:
+        #     raise j.exceptions.JSBUG("should never have 2 bcdbmodels for same url")
 
         self.bcdb = bcdb
 
@@ -77,8 +84,8 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._kosmosinstance = None
 
-        indexklass = bcdb._BCDBModelIndexClass_generate(schema)
-        self.index = indexklass(bcdbmodel=self, reset=reset)
+        indexklass = self._index_class_generate()
+        self.index = indexklass(model=self, reset=reset)
 
         self._sonic_client = None
         # self.cache_expiration = 3600
@@ -88,17 +95,42 @@ class BCDBModel(j.application.JSBaseClass):
         if reset:
             self.destroy()
 
+    def _index_class_generate(self):
+        """
+
+        :param schema: is schema object j.data.schema... or text
+        :return: class of the model which is used for indexing
+
+        """
+        self._log_debug("generate schema index:%s" % self._schema_url)
+
+        # model with info to generate
+        imodel = BCDBIndexMeta(schema=self.schema)
+        imodel.include_schema = True
+        tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._dirpath
+        name = "bcdbindex_%s" % self._schema_url
+        name = name.replace(".", "_")
+        myclass = j.tools.jinja2.code_python_render(
+            name=name, path=tpath, objForHash=self.schema._md5, reload=True, schema=self, bcdb=self.bcdb, index=imodel
+        )
+
+        return myclass
+
+    @property
+    def schema(self):
+        return j.data.schema.get_from_url(self._schema_url)
+
     @property
     def mid(self):
-        if not self.schema.url in self.bcdb.meta._data.url_to_mid:
-            raise j.exceptions.BUG("cannot find url:%s in the metadata of bcdb" % self.schema.url)
-        return self.bcdb.meta._data.url_to_mid[self.schema.url]
+        return self.bcdb.meta._mid_from_url(self._schema_url)
 
     def schema_change(self, schema):
         assert isinstance(schema, j.data.schema.SCHEMA_CLASS)
+
         # make sure model has the latest schema
         if self.schema._md5 != schema._md5:
-            self.schema = schema
+            self._schema_url = schema.url
+            self._log_info("schema change")
             self._triggers_call(None, "schema_change", None)
 
     @property
@@ -256,6 +288,11 @@ class BCDBModel(j.application.JSBaseClass):
                 res.append(self.get(parts[0]))
         return res
 
+    def upgrade(self, obj):
+        obj._model.schema_change(obj._model.bcdb.schema_get(url=obj._schema.url))
+        j.shell()
+        return obj
+
     def find(self, nid=1, **args):
         """
         is a the retrieval part of a very fast indexing system
@@ -263,7 +300,7 @@ class BCDBModel(j.application.JSBaseClass):
         self.get_from_keys(name="myname",nid=2)
         :return:
         """
-        delete_if_not_found = False
+        delete_if_not_found = True
         # if no args are provided that mean we will do a get all
         if len(args.keys()) == 0:
             res = []
@@ -278,23 +315,43 @@ class BCDBModel(j.application.JSBaseClass):
         def check2(obj, args):
             dd = obj._ddict
             for propname, val in args.items():
+                if not propname in dd:
+                    self._log_warning("need to update an object, could not find propname:%s" % propname, data=dd)
+                    return propname
                 if dd[propname] != val:
                     return False
             return True
 
         res = []
         for id_ in ids:
+            # ids right now come from redis, they should be fone when model is gone, when they exist there they should really exist
             res2 = self.get(id_, die=True)
             if res2 is None:
-                if delete_if_not_found:
-                    for key, val in args.items():
-                        self._key_index_delete(key, val, id_, nid=nid)
+                # only when we use file based id index then there can be situation where id is in file but not in db
+                # if id index in redis which is default now then there needs to be consistency between id index & db
+                if len(args) == 0:
+                    # means we were iterating so there could be
+                    if delete_if_not_found:
+                        for key, val in args.items():
+                            self._key_index_delete(key, val, id_, nid=nid)
             else:
                 # we now need to check if there was no false positive
-                if check2(res2, args):
+                check = check2(res2, args)
+                if isinstance(check, str):
+                    from pudb import set_trace
+
+                    set_trace()
+                    res2 = self.upgrade(res2)
+                    check = check2(res2, args)
+                    if isinstance(check, str):
+                        # means we still don't find the argument, the upgrade did notwork
+                        raise j.exceptions.JSBUG(
+                            "find was done on argument:%s which does not exist in model." % res, data=obj
+                        )
+                elif check:
                     res.append(res2)
-                # else:
-                #     self._log_warning("index system produced false positive")
+                else:
+                    self._log_warning("index system produced false positive, is not abnormal")
 
         return res
 
@@ -436,10 +493,14 @@ class BCDBModel(j.application.JSBaseClass):
 
         obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp)
 
-        if obj._schema.url == self.schema.url:
+        if obj._schema.url == self._schema_url:
             obj = self._triggers_call(obj=obj, action="get")
         else:
-            raise j.exceptions.Base("no object with id {} found in {}".format(obj_id, self))
+            raise j.exceptions.JSBUG(
+                "no object with id {} found in {}, this means the index gave back an id which is not part of this model.".format(
+                    obj_id, self
+                )
+            )
 
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
         return obj
@@ -471,7 +532,7 @@ class BCDBModel(j.application.JSBaseClass):
         return property_name, val, obj_id, nid
 
     def __str__(self):
-        out = "model:%s\n" % self.schema.url
+        out = "model:%s\n" % self._schema_url
         # out += j.core.text.prefix("    ", self.schema.text)
         return out
 

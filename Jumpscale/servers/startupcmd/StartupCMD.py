@@ -29,7 +29,7 @@ class StartupCMD(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.startupcmd.1
         name* = ""
-        cmd_start = ""
+        cmd_start = "" (s)
         interpreter = "bash,jumpscale,direct,python" (E)  #direct means we will not put in bash script
         cmd_stop = ""
         debug = False (b)
@@ -503,6 +503,8 @@ class StartupCMD(j.application.JSBaseConfigClass):
 
         if not self.cmd_start:
             raise j.exceptions.Value("please make sure self.cmd_start has been specified")
+
+        self.cmd_start = j.core.tools.text_strip(self.cmd_start)
 
         self._hardkill()
 

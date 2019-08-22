@@ -1009,7 +1009,7 @@ class SystemFS(j.application.JSBaseClass):
                 self.pathNormalize(target).replace("\\", "/"),
                 self.pathNormalize(path).replace("\\", "/"),
             )
-            print(cmd)
+            self._log_debug(cmd)
             j.sal.process.execute(cmd)
 
     @path_check(src={"required", "replace", "exists"}, dest={"required", "replace"})
@@ -1541,7 +1541,7 @@ class SystemFS(j.application.JSBaseClass):
                 f = open(filename, "r")
                 for line in f:
                     if re.match(lineregex, line):
-                        print(("%s: %s" % (filename, line)))
+                        self._log_debug(("%s: %s" % (filename, line)))
 
     cleanupString = staticmethod(cleanupString)
 

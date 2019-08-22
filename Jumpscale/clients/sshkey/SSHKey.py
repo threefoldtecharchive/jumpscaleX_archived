@@ -36,15 +36,21 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         if not j.sal.fs.exists(self.path):
             if self.privkey:
-                from pudb import set_trace
-
-                set_trace()
                 j.sal.fs.writeFile(self.path, self.privkey)
             else:
                 self.pubkey = ""
                 self._save()
                 self.generate()
                 self._init(**kwargs)
+        else:
+            if self.privkey:
+                c = j.sal.fs.readFile(self.path)
+                if not c.strip() == self.privkey.strip():
+                    raise j.exceptions.Input("mismatch between key in BCDB and in your filesystem (PRIVKEY)")
+            if self.pubkey:
+                c = j.sal.fs.readFile("%s.pub" % (self.path))
+                if not c.strip() == self.pubkey.strip():
+                    raise j.exceptions.Input("mismatch between key in BCDB and in your filesystem (PUBKEY)")
 
         assert j.sal.fs.exists(self.path)
 
@@ -59,6 +65,15 @@ class SSHKey(j.application.JSBaseConfigClass):
                 j.sal.process.execute(cmd)
             self.pubkey = j.sal.fs.readFile(path)
             self._save()
+
+    def load_from_filesystem(self):
+        """
+        look for key on filesystem & load in BCDB
+        :return:
+        """
+        self.pubkey = j.sal.fs.readFile("%s.pub" % (self.path))
+        self.privkey = j.sal.fs.readFile(self.path)
+        self._save()
 
     def save(self):
         self._init()

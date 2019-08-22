@@ -209,8 +209,7 @@ class PlatformType(object):
             elif "linux" in sys.platform.lower():
                 osname = "ubuntu"  # dirty hack, will need to do something better, but keep fast
             else:
-                print("need to fix for other types (check executorlocal")
-                sys.exit(1)
+                raise j.exceptions.Operations("need to fix for other types (check executorlocal")
         else:
             osname = self.executor.env_on_system["OS_TYPE"]
 

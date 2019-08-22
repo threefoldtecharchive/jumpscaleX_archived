@@ -1,4 +1,4 @@
-from Jumpscale.sal.bash.Profile import Profile
+from Jumpscale.tools.bash.Profile import Profile
 from Jumpscale import j
 from functools import wraps
 import inspect

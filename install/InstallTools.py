@@ -80,11 +80,12 @@ try:
             data = data._ddict
 
         try:
-            res = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
+            data = yaml.dump(data, default_flow_style=False, default_style="", indent=4, line_break="\n")
         except Exception as e:
             # print("WARNING: COULD NOT YAML SERIALIZE")
-            return str(data)
-        return res
+            # return str(data)
+            data = "CANNOT SERIALIZE"
+        return data
 
 
 except:
@@ -95,13 +96,14 @@ except:
             try:
                 return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
             except Exception as e:
-                data = str(data)
+                # data = str(data)
+                data = "CANNOT SERIALIZE"
                 return data
 
     except:
 
         def serializer(data):
-            return str(data)
+            return "CANNOT SERIALIZE"
 
 
 class RedisTools:
@@ -578,6 +580,7 @@ class BaseJSException(Exception):
         if level:
             if isinstance(level, str):
                 level = int(level)
+
             elif isinstance(level, int):
                 pass
             else:
@@ -1244,6 +1247,7 @@ class Tools:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except Exception as e:
+                print("NEED TO INSTALL BASICS FOR DEBUG SHELL SUPPORT")
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
@@ -1441,8 +1445,8 @@ class Tools:
         elif isinstance(data, int) or isinstance(data, str) or isinstance(data, list):
             return str(data)
 
-        res = serializer(data)
-        res = Tools.text_replace(content=res, ignorecolors=True)
+        serialized = serializer(data)
+        res = Tools.text_replace(content=serialized, ignorecolors=True)
         return res
 
     @staticmethod
@@ -1995,7 +1999,7 @@ class Tools:
     @staticmethod
     def _check_interactive():
         if not MyEnv.interactive:
-            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.", "console.noninteractive")
+            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -2039,11 +2043,8 @@ class Tools:
                 print("Invalid password!")
                 retryCount = retryCount - 1
         raise Tools.exceptions.Base(
-            (
-                "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
-                % (retry, regex)
-            ),
-            "console.ask_password",
+            "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
+            % (retry, regex)
         )
 
     @staticmethod
@@ -2185,7 +2186,7 @@ class Tools:
         elif isinstance(branch, (set, list)):
             branch = [branch.strip() for branch in branch]
         else:
-            raise Tools.exceptions.Base("branch should be a string or list, now %s" % branch)
+            raise Tools.exceptions.JSBUG("branch should be a string or list, now %s" % branch)
 
         args["BRANCH"] = branch
 
@@ -2242,8 +2243,7 @@ class Tools:
                                 args["MESSAGE"] = input("\nprovide commit message: ")
                                 assert args["MESSAGE"].strip() != ""
                         else:
-                            print("found changes, do not want to commit")
-                            sys.exit(1)
+                            raise j.exceptions.Input("found changes, do not want to commit")
                         C = """
                         set -x
                         cd {REPO_DIR}
@@ -2290,7 +2290,7 @@ class Tools:
             if checkoutbranch(args, branch):
                 return
 
-            raise Tools.exceptions.Base("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
+            raise Tools.exceptions.Input("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -2696,10 +2696,10 @@ class MyEnv_:
 
         --basedir=                      default ~/sandbox or /sandbox whatever exists first
         --configdir=                    default $BASEDIR/cfg
-        --codedir=                     default $BASEDIR/code
+        --codedir=                      default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --no-sshagent                  default is to use the sshagent, if you want to disable use this flag
+        --no-sshagent                   default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
         --no-interactive                default is interactive, means will ask questions
@@ -2835,7 +2835,7 @@ class MyEnv_:
             # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             self.sshagent = SSHAgent()
-            self.sshagent.key_default
+            self.sshagent.key_default_name
         if secret is None:
             if "SECRET" not in self.config or not self.config["SECRET"]:
                 self.secret_set()  # will create a new one only when it doesn't exist
@@ -3514,7 +3514,7 @@ class JumpscaleInstaller:
         rc, _, _ = Tools.execute("ssh-add -L")
         if not rc:
             if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-                MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+                MyEnv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
@@ -3530,8 +3530,8 @@ class JumpscaleInstaller:
         source env.sh
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
-        kosmos 'j.core.installer_jumpscale.remove_old_parts()'
         kosmos 'j.data.nacl.configure(generate=True,interactive=False)'
+        kosmos 'j.core.installer_jumpscale.remove_old_parts()'        
         # kosmos --instruct=/tmp/instructions.toml
         kosmos 'j.core.tools.pprint("JumpscaleX init step for nacl (encryption) OK.")'
         """
@@ -3625,7 +3625,7 @@ class JumpscaleInstaller:
             if not os.path.exists(dest):
                 Tools.link(src2, dest, chmod=770)
         Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
-        Tools.execute("cd /sandbox;source env.sh;js_init generate")
+        Tools.execute("cd /sandbox;source env.sh;js_init generate", interactive=False)
 
     def web(self):
         Tools.shell()
@@ -3652,8 +3652,9 @@ class DockerFactory:
         if not DockerFactory.__init:
             rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
             if rc == 0 and out.find("/docker/") != -1:
-                print("Cannot continue, trying to use docker tools while we are already in a docker")
-                sys.exit(1)
+                raise j.exceptions.Operations(
+                    "Cannot continue, trying to use docker tools while we are already in a docker"
+                )
 
             MyEnv._init()
 
@@ -3662,8 +3663,7 @@ class DockerFactory:
                 MyEnv._cmd_installed["docker"] = shutil.which("docker")
 
             if not Tools.cmd_installed("docker"):
-                print("Could not find Docker installed")
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not find Docker installed")
 
     @staticmethod
     def container_get(name, portrange=1, image="despiegk/3bot"):
@@ -3810,7 +3810,7 @@ class DockerContainer:
                 self.config.sshport = newport
                 self.config.save()
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
+            MyEnv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
 
         if len(MyEnv.sshagent.keys_list()) == 0:
             raise Tools.exceptions.Base("Please load your ssh-agent with a key!")
@@ -3944,8 +3944,7 @@ class DockerContainer:
             if self.name not in DockerFactory.containers_running():
                 Tools.execute("docker start %s" % self.name)
                 if not self.name in DockerFactory.containers_running():
-                    print("could not start container:%s" % self.name)
-                    sys.exit(1)
+                    raise j.exceptions.Operations("could not start container:%s" % self.name)
                 self.dexec("rm -f /root/.BASEINSTALL_OK")
 
         installed = False
@@ -3998,8 +3997,7 @@ class DockerContainer:
 
     def start(self):
         if not self.name in DockerFactory.containers_names():
-            print("ERROR: cannot find docker with name:%s, cannot start" % self.name)
-            sys.exit(1)
+            raise j.exceptions.Operations("ERROR: cannot find docker with name:%s, cannot start" % self.name)
         if not self.name in DockerFactory.containers_running():
             Tools.execute("docker start %s" % self.name, showout=False)
         assert self.name in DockerFactory.containers_running()
@@ -4058,12 +4056,10 @@ class DockerContainer:
             path = "%s/exports/%s.tar" % (self._path, version)
 
         if not Tools.exists(path):
-            print("could not find import file:%s" % path)
-            sys.exit(1)
+            raise j.exceptions.Operations("could not find import file:%s" % path)
 
         if not path.endswith(".tar"):
-            print("export file needs to end with .tar")
-            sys.exit(1)
+            raise j.exceptions.Operations("export file needs to end with .tar")
 
         self.stop()
         DockerFactory.image_remove(imagename)
@@ -4101,8 +4097,7 @@ class DockerContainer:
                 version = 1
             path = "%s/exports/%s.tar" % (self._path, version)
         elif not path.endswith(".tar"):
-            print("export file needs to end with .tar")
-            sys.exit(1)
+            raise j.exceptions.Operations("export file needs to end with .tar")
         if Tools.exists(path) and overwrite and not skip_if_exists:
             Tools.delete(path)
         if not Tools.exists(path):
@@ -4134,10 +4129,10 @@ class DockerContainer:
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = (
                 "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
-                % MyEnv.sshagent.key_default
+                % MyEnv.sshagent.key_default_name
             )
             Tools.execute(cmd)
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py instal -sl"
         else:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
@@ -4148,7 +4143,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install" % MyEnv.sshagent.key_default
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
@@ -4254,7 +4249,7 @@ class SSHAgent:
             Tools.log("load generated sshkey: %s" % path)
 
     @property
-    def key_default(self):
+    def key_default_name(self):
         """
 
         kosmos 'print(MyEnv.sshagent.key_default)'
@@ -4270,10 +4265,9 @@ class SSHAgent:
                         return None
                 name = key_names[0]
             elif len(key_names) == 0:
-                print(
+                raise j.exceptions.Operations(
                     "Cannot find a possible ssh-key, please load your possible keys in your ssh-agent or have in your homedir/.ssh"
                 )
-                sys.exit(1)
             else:
                 if MyEnv.interactive:
                     name = Tools.ask_choices("Which is your default sshkey to use", key_names)
@@ -4291,9 +4285,9 @@ class SSHAgent:
         if not sshkey:
             hdir = Tools.text_replace("{DIR_HOME}/.ssh")
             if not Tools.exists(hdir):
-                print("cannot find home dir:%s" % hdir)
-                print("\n### Please get a ssh key or generate one using ssh-keygen\n")
-                sys.exit(1)
+                msg = "cannot find home dir:%s" % hdir
+                msg += "\n### Please get a ssh key or generate one using ssh-keygen\n"
+                raise j.exceptions.Operations(msg)
             choices = []
             for item in os.listdir(hdir):
                 item2 = item.lower()
@@ -4365,15 +4359,13 @@ class SSHAgent:
             rc, out, err = Tools.execute(C, showout=True, die=False)
             if rc > 0:
                 Tools.delete("/tmp/ap-cat.sh")
-                print("Could not load sshkey with passphrase (%s)" % path)
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not load sshkey with passphrase (%s)" % path)
         else:
             # load without passphrase
             cmd = "ssh-add -t %s %s " % (duration, path)
             rc, out, err = Tools.execute(cmd, showout=True, die=False)
             if rc > 0:
-                print("Could not load sshkey without passphrase (%s)" % path)
-                sys.exit(1)
+                raise j.exceptions.Operations("Could not load sshkey without passphrase (%s)" % path)
 
         self.reset()
 
@@ -4460,6 +4452,28 @@ class SSHAgent:
     def key_paths(self):
 
         return [i[0] for i in self._keys]
+
+    def keypub_path_get(self, keyname="", die=True):
+        """
+        Returns Path of public key that is loaded in the agent
+
+        :param keyname: name of key loaded to agent to get its path, if empty will check if there is 1 loaded, defaults to ""
+        :type keyname: str, optional
+        :param die:Raise error if True,else do nothing, defaults to True
+        :type die: bool, optional
+        :raises RuntimeError: Key not found with given keyname
+        :return: path of public key
+        :rtype: str
+        """
+        keyname = j.sal.fs.getBaseName(keyname)
+        Tools.shell()
+        for item in self.keys_list():
+            if item.endswith(keyname):
+                return item
+        if die:
+            raise j.exceptions.Base(
+                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname
+            )
 
     def profile_js_configure(self):
         """
