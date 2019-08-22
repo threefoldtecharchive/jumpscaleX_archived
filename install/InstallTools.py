@@ -4127,7 +4127,12 @@ class DockerContainer:
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install -s"
+            cmd = (
+                "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py configure --sshkey %s -s"
+                % MyEnv.sshagent.key_default
+            )
+            Tools.execute(cmd)
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py instal -sl"
         else:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
@@ -4138,7 +4143,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx install -s"
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
