@@ -4132,7 +4132,7 @@ class DockerContainer:
                 % MyEnv.sshagent.key_default_name
             )
             Tools.execute(cmd)
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install -sl"
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install -s"
         else:
             print("copy installer over from where I install from")
             for item in ["jsx", "InstallTools.py"]:
