@@ -14,14 +14,12 @@ def _check_jlocation(location, classname=""):
     :param location:
     :return:
     """
-    if classname == "JSBaseClassConfig":
+    if classname == "JSBaseClassConfig" or not location.startswith("j."):
         return False
     location = location.lower()
     for item in LOCATIONS_ERROR:
         if location.startswith(item):
             return False
-    if len(location.split(".")) is not 3:
-        return False
     return True
 
 
@@ -97,18 +95,16 @@ class JSModule:
     def jsgroup_name(self):
         if self.location != "":
             splitted = self.location.split(".")
-            if len(splitted) != 3:
-                raise j.exceptions.Base("location should be 3 parts, %s in %s" % (self.location, self.path))
-            return splitted[1]
+            if len(splitted) > 3:
+                return splitted[1:-1]
+            return splitted[1:2]
         return ""
 
     @property
     def jname(self):
         if self.location != "":
             splitted = self.location.split(".")
-            if len(splitted) != 3:
-                raise j.exceptions.Base("location should be 3 parts, %s in %s" % (self.location, self.path))
-            return splitted[2]
+            return splitted[-1]
         return ""
 
     @property

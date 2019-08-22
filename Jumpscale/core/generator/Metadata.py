@@ -61,13 +61,27 @@ class Metadata:
         if reset or self.jsgroup_names == []:
             for key, jsmodule in self.jsmodules.items():
                 if jsmodule.jsgroup_name != "":
-                    if jsmodule.jsgroup_name not in self.jsgroup_names:
-                        gr = JSGroup(self, name=jsmodule.jsgroup_name)
-                        self.jsgroup_names.append(jsmodule.jsgroup_name)
-                        self.jsgroups[jsmodule.jsgroup_name] = gr
-                    else:
-                        gr = self.jsgroups[jsmodule.jsgroup_name]
-                    gr.jsmodules.append(jsmodule)
+                    for i in range(len(jsmodule.jsgroup_name)):
+                        # add parents
+                        parent = jsmodule.jsgroup_name[i]
+                        if parent not in self.jsgroup_names:
+                            gr = JSGroup(self, name=jsmodule.jsgroup_name[i])
+                            if not i:
+                                self.jsgroup_names.append(jsmodule.jsgroup_name[i])
+                            self.jsgroups[jsmodule.jsgroup_name[i]] = gr
+                        else:
+                            gr = self.jsgroups[jsmodule.jsgroup_name[i]]
+
+                        # populate children
+                        if i:
+                            for x in range(len(jsmodule.jsgroup_name)):
+                                # if "hamada" in jsmodule.jsgroup_name:
+                                #     import ipdb
+
+                                #     ipdb.set_trace()
+                                child = JSGroup(self, name=jsmodule.jsgroup_name[x])
+                                gr.child_groups.append(child)
+                        gr.jsmodules.append(jsmodule)
 
     @property
     def markdown(self):

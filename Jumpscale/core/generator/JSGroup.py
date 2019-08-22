@@ -4,10 +4,13 @@ class JSGroup:
     """
 
     def __init__(self, md, name):
+
         self._j = md._j
         self.md = md
         self.name = name.lstrip("j.")
         self.jsmodules = []
+        self.child_groups = []
+
         if "." in self.name:
             raise j.exceptions.Base("cannot be . in name for jsgroup")
 
@@ -24,7 +27,13 @@ class JSGroup:
 
     @property
     def jdir(self):
-        return "j.%s" % self.name.lower()
+        if self.child_groups:
+            full_name = "j"
+            for group in self.child_groups:
+                full_name += "." + group.name
+        else:
+            full_name = "j.%s" % self.name.lower()
+        return full_name
 
     @property
     def markdown(self):
