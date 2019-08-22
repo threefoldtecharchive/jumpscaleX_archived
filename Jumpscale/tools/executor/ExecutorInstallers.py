@@ -131,7 +131,7 @@ class ExecutorInstallers(j.application.JSBaseClass):
             "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_jumpscale/install/jsx.py\?$RANDOM > /tmp/jsx"
         )
         self.executor.execute("chmod +x /tmp/jsx")
-        cmd = "cd /tmp;python3 jsx configure --sshkey %s -s" % j.core.myenv.sshagent.key_default
+        cmd = "cd /tmp;python3 jsx configure --sshkey %s -s" % j.core.myenv.sshagent.key_default_name
         self.executor.execute(cmd, interactive=True)
         self.executor.execute("/tmp/jsx install -s", interactive=True)
 

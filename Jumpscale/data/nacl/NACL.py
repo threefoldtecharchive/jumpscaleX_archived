@@ -195,7 +195,7 @@ class NACL(j.application.JSBaseClass):
             # TODO: ERROR, ssh-agent does not work for signing, can't figure out which key to use
             # here have shortcutted it to not use the ssh-agent but would be nice if it works
             # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
-            j.core.myenv.sshagent.key_default  # will make sure the default sshkey is loaded
+            j.core.myenv.sshagent.key_default_name  # will make sure the default sshkey is loaded
             key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
         else:
             key = j.core.myenv.config["SECRET"]  # is the hex of sha256 hash, need to go to binary
