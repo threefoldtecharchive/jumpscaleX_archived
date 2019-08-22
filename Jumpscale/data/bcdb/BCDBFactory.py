@@ -68,6 +68,10 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
 
         self._system = None
 
+    @property
+    def system(self):
+        return self.get_system()
+
     def get_system(self, reset=False):
         """
         sqlite based BCDB, don't need ZDB for this
@@ -75,8 +79,8 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         """
 
         if not self._system:
-            # storclient = j.clients.sqlitedb.client_get(name="system")
-            storclient = j.clients.rdb.client_get(namespace="system")
+            storclient = j.clients.sqlitedb.client_get(namespace="system")
+            # storclient = j.clients.rdb.client_get(namespace="system")
             self._system = self._get("system", storclient=storclient, reset=reset)
         return self._system
 
@@ -160,6 +164,12 @@ class BCDBFactory(j.application.JSBaseFactoryClass):
         j.sal.fs.remove(self._config_data_path)
         j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/codegen"))
         j.sal.fs.remove(j.core.tools.text_replace("{DIR_VAR}/capnp"))
+
+        for key in j.core.db.keys("rdb*"):
+            j.core.db.delete(key)
+        for key in j.core.db.keys("queue*"):
+            j.core.db.delete(key)
+
         self._load()
         assert self._config == {}
 

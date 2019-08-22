@@ -56,18 +56,25 @@ class JSConfigs(JSConfigBase):
                 s = self.__class__._SCHEMATEXT
             else:
                 s = self.__class__._CHILDCLASS._SCHEMATEXT
+
             t = self._process_schematext(s)
-            self._model_ = bcdb.model_get(schema=t)
             t2 = j.data.schema._schema_blocks_get(t)[0]
-            # if self._model_.schema._md5 != j.data.schema._md5(t2):
-            #     from pudb import set_trace
-            #
-            #     set_trace()
-            assert self._model_.schema._md5 == j.data.schema._md5(t2)
+
             # if j.core.text.strip_to_ascii_dense(t) != j.core.text.strip_to_ascii_dense(s):
             #     from pudb import set_trace
             #
             #     set_trace()
+
+            self._model_ = bcdb.model_get(schema=t)
+
+            assert self._model_.schema._md5 == j.data.schema._md5(t2)
+
+            # if self._model_.schema._md5 != j.data.schema._md5(t2):
+            #     from pudb import set_trace
+            #
+            #     set_trace()
+
+            assert self._model_.schema._md5 in self._model.bcdb.meta._data["md5"]
 
         return self._model_
 
@@ -255,6 +262,7 @@ class JSConfigs(JSConfigBase):
             return self._model.find()
 
     def delete(self, name):
+        self._model
         if name in self._children:
             self._children.pop(name)
         res = self._findData(name=name)

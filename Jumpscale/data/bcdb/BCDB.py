@@ -416,6 +416,7 @@ class BCDB(j.application.JSBaseClass):
         if schema.url in self._schema_url_to_model:
             model = self._schema_url_to_model[schema.url]
             model.schema_change(schema)
+            self.meta._schema_set(schema)
             return model
 
         # model not known yet need to create

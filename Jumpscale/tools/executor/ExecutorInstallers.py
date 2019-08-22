@@ -96,8 +96,34 @@ class ExecutorInstallers(j.application.JSBaseClass):
         self.executor.execute_jumpscale("j.tools.executor.local.test()")
 
     @executor_method()
+    def secure(self, web=True):
+        if web:
+            C = """
+            apt install ufw -y
+            echo "y" | ufw reset
+            ufw allow 22/tcp
+            ufw allow 80/tcp
+            ufw allow 443/tcp
+            ufw allow 9900/tcp
+            #mosh
+            ufw allow 6000:6100/udp
+            echo "y" | ufw enable
+            """
+        else:
+            C = """
+            apt install ufw -y
+            echo "y" | ufw reset
+            ufw allow 22/tcp
+            ufw allow 6000:6100/udp
+            ufw allow 9900/tcp
+            echo "y" | ufw enable
+            """
+        self.executor.execute(C)
+
+    @executor_method()
     def mosh(self):
         self.executor.execute("apt install mosh -y")
+        self.secure(web=False)
 
     @executor_method()
     def jumpscale(self):

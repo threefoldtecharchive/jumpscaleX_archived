@@ -288,6 +288,10 @@ class BCDBModel(j.application.JSBaseClass):
                 res.append(self.get(parts[0]))
         return res
 
+    def upgrade(self, obj):
+        j.shell()
+        return obj
+
     def find(self, nid=1, **args):
         """
         is a the retrieval part of a very fast indexing system
@@ -311,9 +315,7 @@ class BCDBModel(j.application.JSBaseClass):
             dd = obj._ddict
             for propname, val in args.items():
                 if not propname in dd:
-                    raise j.exceptions.JSBUG(
-                        "find was done on argument:%s which does not exist in model." % propname, data=obj
-                    )
+                    return propname
                 if dd[propname] != val:
                     return False
             return True
@@ -332,10 +334,19 @@ class BCDBModel(j.application.JSBaseClass):
                             self._key_index_delete(key, val, id_, nid=nid)
             else:
                 # we now need to check if there was no false positive
-                if check2(res2, args):
+                check = check2(res2, args)
+                if isinstance(check, str):
+                    obj = self.upgrade(obj)
+                    check = check2(res2, args)
+                    if isinstance(check, str):
+                        # means we still don't find the argument, the upgrade did notwork
+                        raise j.exceptions.JSBUG(
+                            "find was done on argument:%s which does not exist in model." % res, data=obj
+                        )
+                elif res:
                     res.append(res2)
-                # else:
-                #     self._log_warning("index system produced false positive")
+                else:
+                    self._log_warning("index system produced false positive, is not abnormal")
 
         return res
 

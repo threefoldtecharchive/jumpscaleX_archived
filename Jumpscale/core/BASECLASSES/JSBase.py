@@ -63,6 +63,7 @@ class JSBase:
         self._protected = False
         self._parent = parent
         self._children = {}
+        self._properties_ = None
         if "parent" in kwargs:
             kwargs.pop("parent")
         self._init_pre(**kwargs)
@@ -74,7 +75,7 @@ class JSBase:
 
     @property
     def _properties(self):
-        if not hasattr(self, "_properties_"):
+        if self._properties_ == None:  # need to be specific None
             props, methods = self._inspect()
             return props
         else:

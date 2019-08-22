@@ -2696,10 +2696,10 @@ class MyEnv_:
 
         --basedir=                      default ~/sandbox or /sandbox whatever exists first
         --configdir=                    default $BASEDIR/cfg
-        --codedir=                     default $BASEDIR/code
+        --codedir=                      default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --no-sshagent                  default is to use the sshagent, if you want to disable use this flag
+        --no-sshagent                   default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
         --no-interactive                default is interactive, means will ask questions
@@ -4249,7 +4249,7 @@ class SSHAgent:
             Tools.log("load generated sshkey: %s" % path)
 
     @property
-    def key_default(self):
+    def key_default_name(self):
         """
 
         kosmos 'print(MyEnv.sshagent.key_default)'
@@ -4452,6 +4452,28 @@ class SSHAgent:
     def key_paths(self):
 
         return [i[0] for i in self._keys]
+
+    def keypub_path_get(self, keyname="", die=True):
+        """
+        Returns Path of public key that is loaded in the agent
+
+        :param keyname: name of key loaded to agent to get its path, if empty will check if there is 1 loaded, defaults to ""
+        :type keyname: str, optional
+        :param die:Raise error if True,else do nothing, defaults to True
+        :type die: bool, optional
+        :raises RuntimeError: Key not found with given keyname
+        :return: path of public key
+        :rtype: str
+        """
+        keyname = j.sal.fs.getBaseName(keyname)
+        Tools.shell()
+        for item in self.keys_list():
+            if item.endswith(keyname):
+                return item
+        if die:
+            raise j.exceptions.Base(
+                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname
+            )
 
     def profile_js_configure(self):
         """
