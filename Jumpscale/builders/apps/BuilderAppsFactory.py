@@ -45,9 +45,9 @@ class BuilderAppsFactory(j.builders.system._BaseFactoryClass):
     @property
     def freeflow(self):
         if self._freeflow is None:
-            from .BuilderFreeflow import BuilderFreeflow
+            from .BuilderFreeflowPages import BuilderFreeflowPages
 
-            self._freeflow = BuilderFreeflow()
+            self._freeflow = BuilderFreeflowPages()
         return self._freeflow
 
     @property
