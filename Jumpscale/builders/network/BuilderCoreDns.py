@@ -33,7 +33,6 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
 
         # install golang
         j.builders.runtimes.golang.install()
-        # j.builders.db.etcd.install()
         self.tools.dir_ensure(self.package_path)
         # redis as backend
         j.builders.db.redis.sandbox()
@@ -105,19 +104,8 @@ class BuilderCoreDns(BuilderGolangTools, j.builders.system._BaseClass):
 
         :return:
         """
-        if self.running():
-            self.stop()
-
-        j.servers.etcd.start()
-        self.start()
-        j.clients.etcd.get("test_coredns")
-        client = j.clients.coredns.get(name="test_builder", etcd_instance="test_coredns")
-        client.zone_create("example.com", "0.0.0.0")
-        client.deploy()
-        self.stop()
-        j.servers.etcd.stop()
-
-        print("TEST OK")
+        raise j.exceptions.NotImplemented
+        # TODO
 
     @builder_method()
     def uninstall(self):
