@@ -3531,7 +3531,7 @@ class JumpscaleInstaller:
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
         kosmos 'j.data.nacl.configure(generate=True,interactive=False)'
-        kosmos 'j.core.installer_jumpscale.remove_old_parts()'        
+        kosmos 'j.core.installer_jumpscale.remove_old_parts()'
         # kosmos --instruct=/tmp/instructions.toml
         kosmos 'j.core.tools.pprint("JumpscaleX init step for nacl (encryption) OK.")'
         """
@@ -4143,7 +4143,7 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default
+            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default_name
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
