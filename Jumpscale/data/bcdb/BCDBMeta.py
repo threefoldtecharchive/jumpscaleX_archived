@@ -31,14 +31,13 @@ class BCDBMeta(j.application.JSBaseClass):
 
     {
         "url":
-            {$url:[mid,[]]}     #latest md5 is at end of list, nid is the model id
+            {$url:[mid,hasdata,[]]}     #latest md5 is at end of list, nid is the model id
         "md5":
             {
                 $md5:
                     {
                         "text":$text,
                         "epoch":$epoch,
-                        "hasdata":$hasdata
                         "url":$url
                     }
             }
@@ -101,17 +100,19 @@ class BCDBMeta(j.application.JSBaseClass):
         urls = [i for i in self._data["url"].keys()]
         urls.sort()
         for url in urls:
-            mid, md5s = self._data["url"][url]
+            mid, hasdata, md5s = self._data["url"][url]
             for md5 in md5s:
                 d = self._data["md5"][md5]
                 d2 = d.copy()
                 d["md5"] = md5
+                d["hasdata"] = hasdata
                 yield d
 
     def _schemas_in_data_print(self):
         for d in self.schema_dicts:
             d2 = d.copy()
             d2["mid"] = self._data["url"][d2["url"]][0]
+            d2["hasdata"] = self._data["url"][d2["url"]][1]
             print(" - {url:35} {md5} {mid:3} {hasdata} ".format(**d2))
 
     def _save(self):
@@ -130,7 +131,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
         def find_mid():
             mid_highest = 0
-            for mid, md5s in self._data["url"].values():
+            for mid, hasdata, md5s in self._data["url"].values():
                 if mid > mid_highest:
                     mid_highest = mid
             return mid_highest + 1
@@ -142,21 +143,22 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # deal with making sure that the md5 of this schema is registered as the newest one
         if schema.url in self._data["url"]:
-            mid, md5s = self._data["url"][schema.url]
+            mid, hasdata, md5s = self._data["url"][schema.url]
             if schema._md5 in md5s:
                 if schema._md5 != md5s[-1]:
                     # means its not the latest one
                     change = True
                     md5s.pop(md5s.index(schema._md5))
                     md5s.append(schema._md5)  # now at end of list again
-                    d = [mid, md5s]
+                    d = [mid, hasdata, md5s]
             else:
                 # is a new one, not in list yet
                 change = True
-                d = [mid, [schema._md5]]
+                md5s.append(schema._md5)
+                d = [mid, False, md5s]
         else:
             change = True
-            d = [find_mid(), [schema._md5]]
+            d = [find_mid(), False, [schema._md5]]  # initial one has no data
         if change:
             self._data["url"][schema.url] = d
 
@@ -189,7 +191,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def _mid_from_url(self, url):
         if not url in self._data["url"]:
             raise j.exceptions.Input("cannot find url in metadata for bcdb:%s" % url)
-        mid, md5s = self._data["url"][url]
+        mid, hasdata, md5s = self._data["url"][url]
         return mid
 
     def _schema_exists(self, md5):
@@ -203,9 +205,11 @@ class BCDBMeta(j.application.JSBaseClass):
         assert schema.hasdata  # needs to be True because thats what we need to set
         if not self._schema_exists(schema._md5):
             raise j.exceptions.Value("did not find schema:%s in metadata" % schema._md5)
-        if not self._data["md5"][schema._md5]["hasdata"]:
+        url = schema.url
+        mid, hasdata, md5s = self._data["url"][url]
+        if not hasdata:
             # only save when not set yet
-            self._data["md5"][schema._md5]["hasdata"] = True
+            self._data["url"][url] = [mid, hasdata, md5s]
             self._save()
 
     def __repr__(self):

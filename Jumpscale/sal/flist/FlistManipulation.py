@@ -9,196 +9,144 @@ class FlistManipulation(j.application.JSBaseClass):
     __jslocation__ = "j.sal.flist"
 
     def __init__(self):
-        self.temporary_point = "/tmp"
-        self.hub_host = "playground.hub.grid.tf"
-        self.port = 9910
+        self.hub = {"host": "playground.hub.grid.tf", "port": 9910}
 
-    def _prefix(self):
-        cmd = """
-        export ZFLIST_BACKEND='{"host": "%s", "port": %s}'
-        export ZFLIST_MNT="%s"
-        
-        """ % (
-            self.hub_host,
-            self.port,
-            self.temporary_point,
+    @classmethod
+    def _zflist(cls, path, hub, *args):
+        j.sal.process.setEnvironmentVariable(
+            ["ZFLIST_BACKEND", "ZFLIST_MNT", "ZFLIST_JSON"], [j.data.serializers.json.dumps(hub), path, "1"]
         )
-        return cmd
 
-    def new_flist(self):
+        _, out, _ = j.sal.process.execute("zflist " + " ".join(args), showout=False)
+
+        if "cat" in args:
+            out = out.split("[+]")
+            return out[-2]
+
+        out = out.split("\n")
+        for response in out:
+            if "success" in response:
+                return j.data.serializers.json.loads(response)
+
+    def new(self):
         """
         initialize an empty flist to enable editing
         """
-        cmd = """
-        zflist init 
-        """
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        tmp = j.sal.fs.getTmpDirPath()
+        self._zflist(tmp, self.hub, "init")
 
-    def open_flist(self, path):
+        return Flist(tmp, self.hub)
+
+    def open(self, flist):
         """
         open an flist to enable editing
         """
-        cmd = """
-        zflist open {} 
-        """.format(
-            path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
 
-    def file_copy_from_local(self, path, dest):
+        tmp = j.sal.fs.getTmpDirPath()
+        self._zflist(tmp, self.hub, "open", flist)
+        return Flist(tmp, self.hub)
+
+
+class Flist(object):
+    def __init__(self, path, hub):
+        self.__path = path
+        self.__hub = hub
+
+    def __del__(self):
+        self.close()
+
+    @property
+    def path(self):
+        return self.__path
+
+    @property
+    def hub(self):
+        return self.__hub
+
+    def _zflist(self, *args):
+        return FlistManipulation._zflist(self.path, self.hub, *args)
+
+    def put(self, src, dest):
         """
         insert local file into the flist
         """
-        cmd = """
-        zflist put {path} {dest}
-        """.format(
-            path=path, dest=dest
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("put", src, dest)["success"]
 
-    def dir_copy_from_local(self, path, dest):
+    def put_dir(self, src, dest):
         """
         insert local directory into the flist (recursively)
         """
-        cmd = """
-        zflist putdir {path} {dest}
-        """.format(
-            path=path, dest=dest
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("putdir", src, dest)["success"]
 
     def remove_file(self, path):
         """
         remove a file (not a directory)
         """
-        cmd = """
-        zflist rm {path}
-        """.format(
-            path=path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("rm", path)["success"]
 
     def remove_dir(self, path):
         """
         remove a directory (recursively)
         """
-        cmd = """
-        zflist rmdir {path}
-        """.format(
-            path=path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("rmdir", path)["success"]
 
     def create_dir(self, path):
         """
         create an empty directory (non-recursive)
         """
-        cmd = """
-        zflist mkdir {path}
-        """.format(
-            path=path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("mkdir", path)["success"]
 
     def merge(self, flist_path):
         """
         merge another flist into the current one
         """
-        cmd = """
-        zflist merge {path}
-        """.format(
-            path=flist_path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("merge", path)["success"]
 
-    def chmod_file(self, reference, operator, mode, file_path):
+    def chmod(self, mode, file):
         """
         change mode of a file (like chmod command)
         chmod [reference][operator][mode] file... 
         """
-        cmd = """
-        zflist chmod {}{}{} {}
-        """.format(
-            reference, operator, mode, file_path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("chmod", mode, file)["success"]
 
-    def list_content(self, path="/"):
+    def list(self, path="/"):
         """
        list the content of a directory in flist
         """
-        cmd = """
-        zflist ls {path}
-        """.format(
-            path=path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("ls", path)["response"]
 
     def list_all(self):
         """
        list full contents of files and directories
         """
-        cmd = """
-        zflist find
-        """
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("find")["response"]
 
     def set_metadata(self, hub_host="playground.hub.grid.tf", port=9910):
         """
        set metadata
         """
-        cmd = """
-        zflist metadata backend --host {} --port {}
-        """.format(
-            hub_host, port
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("metadata backend", "--host {}".format(hub_host), "--port {}".format(port))["success"]
 
     def print_content(self, path):
         """
         print file contents (backend metadata required)
         """
         self.set_metadata()
-        cmd = """
-        zflist cat {}
-        """.format(
-            path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        print(self._zflist("cat", path))
 
-    def commit(self, path="/tmp/zflist_sal.flist"):
+    def commit(self, path):
         """
         commit changes to a new flist
         """
         self.set_metadata()
-        cmd = """
-        zflist commit {}
-        """.format(
-            path
-        )
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        return self._zflist("commit", path)["success"]
 
     def close(self):
         """
         close mountpoint and discard files
         """
         self.set_metadata()
-        cmd = """
-        zflist close
-        """
-        newcmd = self._prefix() + cmd
-        j.sal.process.execute(newcmd)
+        self._zflist("close")
+        j.sal.fs.remove(self.path)
+        return True
+

@@ -100,7 +100,7 @@ class SSHAgent(j.application.JSBaseClass):
     #
     # def _paramiko_key_get(self, keyname=None):
     #     if not keyname:
-    #         keyname = j.core.myenv.sshagent.key_default
+    #         keyname = j.core.myenv.sshagent.key_default_name
     #     for key in self._paramiko_keys_get():
     #         # ISSUE, is always the same name, there is no way how to figure out which sshkey to use?
     #         if key.name == keyname:

@@ -289,6 +289,7 @@ class BCDBModel(j.application.JSBaseClass):
         return res
 
     def upgrade(self, obj):
+        obj._model.schema_change(obj._model.bcdb.schema_get(url=obj._schema.url))
         j.shell()
         return obj
 
@@ -315,6 +316,7 @@ class BCDBModel(j.application.JSBaseClass):
             dd = obj._ddict
             for propname, val in args.items():
                 if not propname in dd:
+                    self._log_warning("need to update an object, could not find propname:%s" % propname, data=dd)
                     return propname
                 if dd[propname] != val:
                     return False
@@ -336,14 +338,17 @@ class BCDBModel(j.application.JSBaseClass):
                 # we now need to check if there was no false positive
                 check = check2(res2, args)
                 if isinstance(check, str):
-                    obj = self.upgrade(obj)
+                    from pudb import set_trace
+
+                    set_trace()
+                    res2 = self.upgrade(res2)
                     check = check2(res2, args)
                     if isinstance(check, str):
                         # means we still don't find the argument, the upgrade did notwork
                         raise j.exceptions.JSBUG(
                             "find was done on argument:%s which does not exist in model." % res, data=obj
                         )
-                elif res:
+                elif check:
                     res.append(res2)
                 else:
                     self._log_warning("index system produced false positive, is not abnormal")
