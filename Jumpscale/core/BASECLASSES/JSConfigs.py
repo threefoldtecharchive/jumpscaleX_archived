@@ -95,7 +95,7 @@ class JSConfigs(JSConfigBase):
         """
         return self.__class__._CHILDCLASS
 
-    def new(self, name, jsxobject=None, save=True, delete=True, **kwargs):
+    def new(self, name, jsxobject=None, save=True, **kwargs):
         """
         it it exists will delete if first when delete == True
         :param name:
@@ -104,11 +104,8 @@ class JSConfigs(JSConfigBase):
         :param kwargs:
         :return:
         """
-        if delete:
-            self.delete(name)
-        else:
-            if self.exists(name=name):
-                raise j.exceptions.Base("cannot do new object, exists")
+        if self.exists(name=name):
+            raise j.exceptions.Base("cannot do new object, exists")
         return self._new(name=name, jsxobject=jsxobject, save=save, **kwargs)
 
     def _new(self, name, jsxobject=None, save=True, **kwargs):
@@ -155,10 +152,6 @@ class JSConfigs(JSConfigBase):
                 if not getattr(jsconfig, key) == val:
                     changed = True
                     setattr(jsconfig, key, val)
-                    # msg = "COULD NOT GET OBJ BECAUSE KWARGS GIVEN DO NOT CORRESPOND WITH OBJ IN DB\n"
-                    # msg += "kwargs: key:%s val:%s\n" % (key, val)
-                    # msg += "object was:\n%s\n" % jsconfig._data._ddict_hr_get()
-                    # raise j.exceptions.Base(msg)
             if changed and save:
                 jsconfig.save()
 
