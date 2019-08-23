@@ -6,7 +6,7 @@ from Jumpscale.core.InstallTools import BaseJSException
 class TestIConfigManager(BaseTest):
     def setUp(self):
         print("\n")
-        self.info('Test case: {}'.format(self._testMethodName))
+        self.info("Test case: {}".format(self._testMethodName))
 
     def tearDown(self):
         self.info("Delete DataBase")
@@ -69,4 +69,3 @@ class TestIConfigManager(BaseTest):
         self.info("Check that the client is not existing")
         with self.assertRaises(BaseJSException):
             j.clients.github.get(client_name)
-

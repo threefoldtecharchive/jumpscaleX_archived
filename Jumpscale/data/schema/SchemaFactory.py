@@ -24,8 +24,6 @@ from .Schema import *
 from Jumpscale import j
 from .JSXObject import JSXObject
 
-JSBASE = j.application.JSBaseClass
-
 
 class SchemaFactory(j.application.JSBaseFactoryClass):
     __jslocation__ = "j.data.schema"
@@ -36,6 +34,7 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         self.reset()
         self._JSXObjectClass = JSXObject
         self.models_in_use = False  # if this is set then will not allow certain actions to happen here
+        self.children = j.application._ChildrenClass()
 
     @property
     def SCHEMA_CLASS(self):
@@ -89,7 +88,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
         assert isinstance(url, str)
         url = self._urlclean(url)
         if url in self._url_to_md5:
-            return self.get_from_md5(self._url_to_md5[url])
+            s = self.get_from_md5(self._url_to_md5[url])
+            self.children._add(s.url, s)
         if die:
             raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
@@ -208,6 +208,8 @@ class SchemaFactory(j.application.JSBaseFactoryClass):
 
         self._md5_to_schema[md5] = s
         self._url_to_md5[s.url] = md5
+
+        self.children._add(s.url, s)
 
         assert s.url
         # here we always update the md5 because if we are here it means

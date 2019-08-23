@@ -16,4 +16,4 @@ class BaseTest(unittest.TestCase):
 
     @staticmethod
     def generate_random_str():
-        return str(uuid4()).replace("-","")[:10]
+        return str(uuid4()).replace("-", "")[:10]

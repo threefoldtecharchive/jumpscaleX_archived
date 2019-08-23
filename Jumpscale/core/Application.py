@@ -14,7 +14,7 @@ from .BASECLASSES.JSConfigs import JSConfigs
 from .BASECLASSES.JSConfigsFactory import JSConfigsFactory
 from .BASECLASSES.ThreeBotPackageBase import ThreeBotPackageBase
 from .BASECLASSES.ThreeBotActorBase import ThreeBotActorBase
-
+from .BASECLASSES.Children import Children
 
 import gc
 import sys
@@ -114,6 +114,7 @@ class Application(object):
         self.JSBaseConfigsFactoryClass = JSBaseConfigsFactoryClass
         self.JSBaseFactoryClass = JSBaseFactoryClass
         self.JSConfigClass = JSConfig
+        self._ChildrenClass = Children
         self.JSConfigsClass = JSConfigs
         self.ThreeBotPackageBase = ThreeBotPackageBase
         self.ThreeBotActorBase = ThreeBotActorBase

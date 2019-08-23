@@ -74,13 +74,13 @@ class BCDB(j.application.JSBaseClass):
         else:
             self.meta = BCDBMeta(self)
 
+        j.data.nacl.default
+
         self.dataprocessor_start()
         self._init_system_objects()
 
         # all the models are loaded at this point
         self.check()
-
-        j.data.nacl.default
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 

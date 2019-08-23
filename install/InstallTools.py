@@ -4143,7 +4143,9 @@ class DockerContainer:
                     self.config.sshport, src1
                 )
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default_name
+            cmd = (
+                "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s" % MyEnv.sshagent.key_default_name
+            )
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec("apt install python3-click -y")
